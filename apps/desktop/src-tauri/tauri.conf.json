@@ -21,7 +21,6 @@
         "decorations": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "trafficLightPosition": { "x": 14, "y": 11 },
         "transparent": true,
         "shadow": true,
         "backgroundColor": "#00000000"
@@ -38,7 +37,6 @@
         "decorations": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "trafficLightPosition": { "x": 14, "y": 11 },
         "transparent": true,
         "shadow": true,
         "backgroundColor": "#00000000"

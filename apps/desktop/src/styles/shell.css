@@ -60,7 +60,9 @@ html.platform-windows body {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: stretch;
+  height: var(--inimark-titlebar-height);
   min-height: var(--inimark-titlebar-height);
+  box-sizing: border-box;
   background: var(--inimark-content-bg);
   user-select: none;
   flex-shrink: 0;
@@ -198,9 +200,10 @@ html.platform-macos .inimark-titlebar-leading {
   padding-left: var(--inimark-space-3);
 }
 
-html.platform-macos .inimark-sidebar-header {
-  min-height: var(--inimark-titlebar-height);
-  padding-left: calc(var(--inimark-space-3) + var(--inimark-mac-traffic-lights-width));
+html.platform-macos .inimark-sidebar-topbar {
+  height: var(--inimark-titlebar-height);
+  overflow: visible;
+  padding-left: var(--inimark-mac-traffic-lights-width);
   -webkit-app-region: drag;
 }
 

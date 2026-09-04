@@ -37,26 +37,12 @@
   visibility: hidden;
 }
 
-.inimark-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--inimark-space-2);
-  min-height: var(--inimark-titlebar-height);
-  padding: var(--inimark-space-2) var(--inimark-space-3);
-  border-bottom: 1px solid var(--inimark-border);
+.inimark-sidebar-topbar {
+  height: 0;
+  flex-shrink: 0;
+  background: transparent;
   -webkit-app-region: drag;
-}
-
-.inimark-sidebar-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--inimark-muted-fg);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .inimark-sidebar-empty {

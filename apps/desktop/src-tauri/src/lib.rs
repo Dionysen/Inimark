@@ -6,12 +6,15 @@ use tauri::{Manager, RunEvent, WindowEvent};
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
 
+#[cfg(target_os = "macos")]
+mod macos_traffic_lights;
+
 const WINDOW_LABELS: &[&str] = &["main", "settings"];
 
-fn finish_platform_window(window: &tauri::WebviewWindow) {
+fn finish_platform_window(_window: &tauri::WebviewWindow) {
     #[cfg(target_os = "windows")]
     {
-        let _ = window.set_shadow(true);
+        let _ = _window.set_shadow(true);
     }
 }
 
@@ -28,6 +31,8 @@ fn apply_platform_chrome(window: &tauri::WebviewWindow) {
     {
         let _ = window.set_decorations(true);
         let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
+        // Own traffic-light layout (stock wry leaves Y flush on recent macOS).
+        macos_traffic_lights::install(window);
     }
     finish_platform_window(window);
 }

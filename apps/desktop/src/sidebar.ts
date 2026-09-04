@@ -20,15 +20,10 @@ export interface SidebarController {
 export function mountSidebar(host: HTMLElement): SidebarController {
   host.className = "inimark-sidebar";
 
-  const header = document.createElement("div");
-  header.className = "inimark-sidebar-header";
-  header.setAttribute("data-tauri-drag-region", "");
-
-  const title = document.createElement("span");
-  title.className = "inimark-sidebar-title";
-  title.textContent = "Files";
-
-  header.append(title);
+  // Empty drag strip — 36px on macOS for traffic lights; collapsed elsewhere.
+  const topbar = document.createElement("div");
+  topbar.className = "inimark-sidebar-topbar";
+  topbar.setAttribute("data-tauri-drag-region", "");
 
   const treeHost = document.createElement("nav");
   treeHost.className = "inimark-tree";
@@ -96,7 +91,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   menu.append(menuPath, menuLibraries, menuDivider, menuOpen, menuClose);
   dock.append(menu);
 
-  host.append(header, treeHost, dock);
+  host.append(topbar, treeHost, dock);
 
   let activePath: string | null = null;
   let activeLibraryId: string | null = null;
