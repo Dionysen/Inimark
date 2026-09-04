@@ -27,14 +27,25 @@ describe("settings store", () => {
 });
 
 describe("settings view", () => {
-  test("mounts standalone settings layout", () => {
+  test("mounts split layout with nav topbar and searchable sections", () => {
     const host = document.createElement("div");
     document.body.append(host);
 
     const view = mountSettingsView(host);
-    expect(host.classList.contains("inimark-settings-window")).toBe(true);
+    expect(host.classList.contains("inimark-settings-shell")).toBe(true);
     expect(host.querySelector(".inimark-settings-layout")).not.toBeNull();
-    expect(host.querySelector(".inimark-settings-nav-item")).not.toBeNull();
+    expect(host.querySelector(".inimark-settings-nav-topbar")).not.toBeNull();
+    expect(host.querySelector(".inimark-settings-main-wrap")).not.toBeNull();
+
+    const search = host.querySelector<HTMLInputElement>(".inimark-settings-search-input");
+    expect(search).not.toBeNull();
+    search!.value = "theme";
+    search!.dispatchEvent(new Event("input", { bubbles: true }));
+
+    const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-settings-nav-item")];
+    const visible = items.filter((item) => !item.hidden);
+    expect(visible.length).toBe(1);
+    expect(visible[0]?.dataset.section).toBe("appearance");
 
     view.destroy();
     host.remove();

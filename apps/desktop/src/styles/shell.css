@@ -243,8 +243,9 @@ html.platform-windows .inimark-titlebar-controls--native {
   height: var(--inimark-titlebar-height);
 }
 
-.inimark-settings-shell .inimark-titlebar {
-  background: var(--inimark-bg);
+.inimark-settings-main-wrap > .inimark-titlebar {
+  background: var(--inimark-content-bg, var(--inimark-bg));
+  flex-shrink: 0;
 }
 
 html.platform-windows .inimark-titlebar-btn {

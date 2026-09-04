@@ -7,43 +7,68 @@
   overflow: hidden;
 }
 
-.inimark-settings-view-host {
-  flex: 1;
-  min-height: 0;
-}
-
-.inimark-settings-window {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-  overflow: hidden;
-}
-
 .inimark-settings-layout {
   display: grid;
   grid-template-columns: var(--inimark-settings-nav-width) 1fr;
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
+
+/* ── Left nav (full height; divider runs top → bottom) ───────────── */
 
 .inimark-settings-nav {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--inimark-space-2);
-  padding: var(--inimark-space-3);
+  min-width: 0;
+  min-height: 0;
   border-right: 1px solid var(--inimark-border);
   background: var(--inimark-surface);
-  min-width: 0;
+  overflow: visible;
 }
 
 .inimark-settings-nav.is-resizing {
   user-select: none;
 }
 
+.inimark-settings-nav-topbar {
+  height: var(--inimark-titlebar-height);
+  flex-shrink: 0;
+  background: transparent;
+  -webkit-app-region: drag;
+}
+
+html.platform-macos .inimark-settings-nav-topbar {
+  padding-left: var(--inimark-mac-traffic-lights-width);
+}
+
+.inimark-settings-nav-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-3);
+}
+
 .inimark-settings-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.inimark-settings-search-icon {
+  position: absolute;
+  left: 0.55rem;
+  color: var(--inimark-muted-fg);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.inimark-settings-search-input {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--inimark-border);
@@ -52,7 +77,43 @@
   color: var(--inimark-fg);
   font: inherit;
   font-size: 0.85rem;
-  padding: 0.4rem 0.55rem;
+  padding: 0.4rem 1.85rem 0.4rem 1.85rem;
+  outline: none;
+}
+
+.inimark-settings-search-input::placeholder {
+  color: var(--inimark-muted-fg);
+  opacity: 0.75;
+}
+
+.inimark-settings-search-input:focus {
+  border-color: color-mix(in srgb, var(--inimark-accent) 55%, var(--inimark-border));
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+}
+
+.inimark-settings-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.inimark-settings-search-clear {
+  position: absolute;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 0;
+  border-radius: var(--inimark-radius-sm);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  padding: 0;
+}
+
+.inimark-settings-search-clear:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
 }
 
 .inimark-settings-nav-list {
@@ -93,8 +154,43 @@
   font-size: 0.8rem;
 }
 
-.inimark-settings-main {
+.inimark-settings-nav-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0.75rem;
+  color: var(--inimark-muted-fg);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.inimark-settings-nav-empty .inimark-settings-search-icon {
+  position: static;
+  width: 1.35rem;
+  height: 1.35rem;
+  opacity: 0.45;
+}
+
+/* ── Right column ────────────────────────────────────────────────── */
+
+.inimark-settings-main-wrap {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  background: var(--inimark-content-bg, var(--inimark-bg));
+}
+
+.inimark-settings-main-wrap > .inimark-titlebar {
+  background: var(--inimark-content-bg, var(--inimark-bg));
+  flex-shrink: 0;
+}
+
+.inimark-settings-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
 }
 

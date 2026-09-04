@@ -7,7 +7,6 @@ import { initThemeManager } from "./themes/manager.ts";
 import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
 import { mountSettingsView } from "./settings/view.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
-import { mountTitleBar } from "./ui/titlebar.ts";
 
 initPlatform();
 const teardownScrollbars = initAutoHideScrollbars();
@@ -22,18 +21,7 @@ host.className = "inimark-settings-shell";
 void initThemeManager().then(() => {
   applySettings(loadSettings());
 
-  const titlebarHost = document.createElement("header");
-  const titlebar = mountTitleBar(titlebarHost, {
-    title: "Settings",
-    controlMode: "close-only",
-  });
-
-  const viewHost = document.createElement("div");
-  viewHost.className = "inimark-settings-view-host";
-
-  host.append(titlebarHost, viewHost);
-
-  const view = mountSettingsView(viewHost, {
+  const view = mountSettingsView(host, {
     onChange: (settings) => {
       applySettings(settings);
     },
@@ -50,7 +38,6 @@ void initThemeManager().then(() => {
 
   window.addEventListener("beforeunload", () => {
     teardownScrollbars();
-    titlebar.destroy();
     view.destroy();
   });
 });

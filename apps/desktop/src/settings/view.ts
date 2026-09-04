@@ -10,6 +10,7 @@ import {
   loadPersistedWidth,
   persistWidth,
 } from "../ui/column-resize.ts";
+import { mountTitleBar } from "../ui/titlebar.ts";
 import {
   type AppSettings,
   type EditorWidth,
@@ -34,13 +35,33 @@ type SettingsSection = "editor" | "appearance" | "shortcuts" | "libraries" | "ab
 
 const SECTION_META: Record<
   SettingsSection,
-  { title: string; subtitle: string }
+  { title: string; subtitle: string; searchTerms: string[] }
 > = {
-  editor: { title: "Editor", subtitle: "Editor display and layout" },
-  appearance: { title: "Appearance", subtitle: "Theme and visual preferences" },
-  shortcuts: { title: "Shortcuts", subtitle: "Keyboard shortcuts for common actions" },
-  libraries: { title: "Libraries", subtitle: "Manage saved folder libraries" },
-  about: { title: "About", subtitle: "Application information" },
+  editor: {
+    title: "Editor",
+    subtitle: "Editor display and layout",
+    searchTerms: ["font", "size", "width", "layout", "typography"],
+  },
+  appearance: {
+    title: "Appearance",
+    subtitle: "Theme and visual preferences",
+    searchTerms: ["theme", "color", "dark", "light", "style"],
+  },
+  shortcuts: {
+    title: "Shortcuts",
+    subtitle: "Keyboard shortcuts for common actions",
+    searchTerms: ["keyboard", "hotkey", "keymap", "binding"],
+  },
+  libraries: {
+    title: "Libraries",
+    subtitle: "Manage saved folder libraries",
+    searchTerms: ["folder", "vault", "workspace", "files"],
+  },
+  about: {
+    title: "About",
+    subtitle: "Application information",
+    searchTerms: ["version", "license", "info"],
+  },
 };
 
 const SETTINGS_NAV_WIDTH_KEY = "inimark-settings-nav-width";
@@ -48,12 +69,25 @@ const SETTINGS_NAV_WIDTH_DEFAULT = 220;
 const SETTINGS_NAV_WIDTH_MIN = 160;
 const SETTINGS_NAV_WIDTH_MAX = 420;
 
+const SEARCH_ICON = `<svg class="inimark-settings-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
+const CLEAR_ICON = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+function sectionMatches(id: SettingsSection, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const meta = SECTION_META[id];
+  if (meta.title.toLowerCase().includes(q)) return true;
+  if (meta.subtitle.toLowerCase().includes(q)) return true;
+  return meta.searchTerms.some((term) => term.includes(q) || q.includes(term));
+}
+
 export function mountSettingsView(
   host: HTMLElement,
   options?: SettingsViewOptions,
 ): SettingsViewController {
   let settings = loadSettings();
   let activeSection: SettingsSection = "editor";
+  let searchQuery = "";
   let onChangeHandler: (settings: AppSettings) => void =
     options?.onChange ?? (() => {});
   let navWidth = loadPersistedWidth(
@@ -63,23 +97,51 @@ export function mountSettingsView(
     SETTINGS_NAV_WIDTH_MAX,
   );
 
-  host.className = "inimark-settings-window";
+  host.className = "inimark-settings-shell";
+  host.replaceChildren();
 
   const layout = document.createElement("div");
   layout.className = "inimark-settings-layout";
 
+  // ── Left nav (full-height; owns traffic-light topbar) ────────────
   const nav = document.createElement("nav");
   nav.className = "inimark-settings-nav";
 
+  const navTopbar = document.createElement("div");
+  navTopbar.className = "inimark-settings-nav-topbar";
+  navTopbar.setAttribute("data-tauri-drag-region", "");
+
+  const navBody = document.createElement("div");
+  navBody.className = "inimark-settings-nav-body";
+
+  const searchWrap = document.createElement("div");
+  searchWrap.className = "inimark-settings-search";
+
   const search = document.createElement("input");
   search.type = "search";
-  search.className = "inimark-settings-search";
+  search.className = "inimark-settings-search-input";
   search.placeholder = "Search settings…";
-  search.disabled = true;
-  search.title = "Search coming soon";
+  search.setAttribute("aria-label", "Search settings");
+  search.autocomplete = "off";
+  search.spellcheck = false;
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "inimark-settings-search-clear";
+  clearBtn.title = "Clear search";
+  clearBtn.innerHTML = CLEAR_ICON;
+  clearBtn.hidden = true;
+
+  searchWrap.insertAdjacentHTML("afterbegin", SEARCH_ICON);
+  searchWrap.append(search, clearBtn);
 
   const navList = document.createElement("div");
   navList.className = "inimark-settings-nav-list";
+
+  const navEmpty = document.createElement("div");
+  navEmpty.className = "inimark-settings-nav-empty";
+  navEmpty.hidden = true;
+  navEmpty.innerHTML = `${SEARCH_ICON}<span>No matching settings</span>`;
 
   const sections: Array<{ id: SettingsSection; label: string }> = [
     { id: "editor", label: "Editor" },
@@ -106,7 +168,18 @@ export function mountSettingsView(
     navList.append(btn);
   }
 
-  nav.append(search, navList);
+  navBody.append(searchWrap, navList, navEmpty);
+  nav.append(navTopbar, navBody);
+
+  // ── Right column (topbar with window controls + content) ─────────
+  const mainWrap = document.createElement("div");
+  mainWrap.className = "inimark-settings-main-wrap";
+
+  const mainTopbar = document.createElement("header");
+  const titlebar = mountTitleBar(mainTopbar, {
+    title: "",
+    controlMode: "close-only",
+  });
 
   const main = document.createElement("div");
   main.className = "inimark-settings-main";
@@ -115,7 +188,8 @@ export function mountSettingsView(
   content.className = "inimark-settings-content";
 
   main.append(content);
-  layout.append(nav, main);
+  mainWrap.append(mainTopbar, main);
+  layout.append(nav, mainWrap);
   host.append(layout);
 
   function applyNavWidth(): void {
@@ -137,9 +211,16 @@ export function mountSettingsView(
   });
 
   function renderNav(): void {
+    let visible = 0;
     for (const [id, btn] of navButtons) {
+      const match = sectionMatches(id, searchQuery);
+      btn.hidden = !match;
       btn.classList.toggle("is-active", id === activeSection);
+      if (match) visible += 1;
     }
+    navList.hidden = visible === 0;
+    navEmpty.hidden = visible > 0;
+    clearBtn.hidden = searchQuery.trim().length === 0;
   }
 
   function createRow(
@@ -337,6 +418,17 @@ export function mountSettingsView(
     content.append(body);
   }
 
+  search.addEventListener("input", () => {
+    searchQuery = search.value;
+    renderNav();
+  });
+  clearBtn.addEventListener("click", () => {
+    search.value = "";
+    searchQuery = "";
+    renderNav();
+    search.focus();
+  });
+
   renderNav();
   renderContent();
 
@@ -350,6 +442,7 @@ export function mountSettingsView(
     },
     destroy() {
       resize.destroy();
+      titlebar.destroy();
       shortcutsCleanup?.();
       themeCleanup?.();
       host.replaceChildren();
