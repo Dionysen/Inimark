@@ -126,6 +126,60 @@
   border-top: 1px solid var(--inimark-border);
 }
 
+.inimark-settings-shortcuts-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: var(--inimark-space-3);
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-shortcuts-group {
+  margin: var(--inimark-space-3) 0 var(--inimark-space-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-shortcut-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--inimark-space-3);
+  align-items: center;
+  padding: var(--inimark-space-2) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-shortcut-label {
+  font-size: 0.92rem;
+}
+
+.inimark-settings-shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-settings-shortcut-display,
+.inimark-settings-shortcut-capture {
+  min-width: 8rem;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.55rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.inimark-settings-shortcut-capture.is-recording {
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--inimark-accent) 25%, transparent);
+}
+
 .inimark-settings-row {
   display: grid;
   grid-template-columns: 1fr auto;

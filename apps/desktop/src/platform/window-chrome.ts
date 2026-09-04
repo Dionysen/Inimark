@@ -16,9 +16,17 @@ export async function toggleMaximizeWindow(): Promise<void> {
 }
 
 export async function closeWindow(): Promise<void> {
-  if (!isTauri()) return;
+  if (!isTauri()) {
+    window.close();
+    return;
+  }
   const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  await getCurrentWindow().close();
+  const win = getCurrentWindow();
+  if (win.label === "main") {
+    await win.destroy();
+    return;
+  }
+  await win.close();
 }
 
 export async function isWindowMaximized(): Promise<boolean> {

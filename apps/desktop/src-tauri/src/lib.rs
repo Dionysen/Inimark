@@ -51,12 +51,8 @@ pub fn run() {
         .on_window_event(|window, event| match window.label() {
             "main" => {
                 if let WindowEvent::CloseRequested { api, .. } = event {
+                    // Frontend handles unsaved prompts via onCloseRequested.
                     api.prevent_close();
-                    let app = window.app_handle();
-                    if let Some(settings) = app.get_webview_window("settings") {
-                        let _ = settings.destroy();
-                    }
-                    let _ = window.destroy();
                 }
             }
             "settings" => {
@@ -71,9 +67,17 @@ pub fn run() {
         .expect("error while running tauri application")
         .run(|app_handle, event| {
             if let RunEvent::WindowEvent { label, event, .. } = event {
-                if label == "main" && matches!(event, WindowEvent::Destroyed) {
-                    // Exit only after webviews are destroyed (avoids WebView2 Error 1412).
-                    app_handle.exit(0);
+                if label == "main" {
+                    match event {
+                        WindowEvent::CloseRequested { .. } => {}
+                        WindowEvent::Destroyed => {
+                            if let Some(settings) = app_handle.get_webview_window("settings") {
+                                let _ = settings.destroy();
+                            }
+                            app_handle.exit(0);
+                        }
+                        _ => {}
+                    }
                 }
             }
         });

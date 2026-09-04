@@ -33,6 +33,7 @@ export interface TitleBarOptions {
   showWindowControls?: boolean;
   controlMode?: WindowControlMode;
   sidebarToggle?: SidebarToggleOptions;
+  onClose?: () => void | Promise<void>;
 }
 
 function markNoDrag(el: HTMLElement): void {
@@ -122,7 +123,9 @@ export function mountTitleBar(
       btnClose.className = "inimark-titlebar-btn inimark-titlebar-btn--close";
       btnClose.innerHTML = windowCloseIcon();
       markNoDrag(btnClose);
-      btnClose.addEventListener("click", () => void closeWindow());
+      btnClose.addEventListener("click", () => {
+        void (options.onClose ?? closeWindow)();
+      });
 
       controls.append(btnMinimize, btnMaximize, btnClose);
 
@@ -137,7 +140,9 @@ export function mountTitleBar(
       btnClose.className = "inimark-titlebar-btn inimark-titlebar-btn--close";
       btnClose.innerHTML = windowCloseIcon();
       markNoDrag(btnClose);
-      btnClose.addEventListener("click", () => void closeWindow());
+      btnClose.addEventListener("click", () => {
+        void (options.onClose ?? closeWindow)();
+      });
       controls.append(btnClose);
     }
 

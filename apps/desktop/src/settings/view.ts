@@ -13,6 +13,7 @@ import {
   loadSettings,
   saveSettings,
 } from "./store.ts";
+import { renderShortcutsPanel } from "./shortcuts-panel.ts";
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
@@ -24,7 +25,7 @@ export interface SettingsViewOptions {
   onChange?: (settings: AppSettings) => void;
 }
 
-type SettingsSection = "editor" | "appearance" | "libraries" | "about";
+type SettingsSection = "editor" | "appearance" | "shortcuts" | "libraries" | "about";
 
 const SECTION_META: Record<
   SettingsSection,
@@ -32,6 +33,7 @@ const SECTION_META: Record<
 > = {
   editor: { title: "Editor", subtitle: "Editor display and layout" },
   appearance: { title: "Appearance", subtitle: "Theme and visual preferences" },
+  shortcuts: { title: "Shortcuts", subtitle: "Keyboard shortcuts for common actions" },
   libraries: { title: "Libraries", subtitle: "Manage saved folder libraries" },
   about: { title: "About", subtitle: "Application information" },
 };
@@ -66,6 +68,7 @@ export function mountSettingsView(
   const sections: Array<{ id: SettingsSection; label: string }> = [
     { id: "editor", label: "Editor" },
     { id: "appearance", label: "Appearance" },
+    { id: "shortcuts", label: "Shortcuts" },
     { id: "libraries", label: "Libraries" },
     { id: "about", label: "About" },
   ];
@@ -135,7 +138,11 @@ export function mountSettingsView(
     renderContent();
   }
 
+  let shortcutsCleanup: (() => void) | null = null;
+
   function renderContent(): void {
+    shortcutsCleanup?.();
+    shortcutsCleanup = null;
     content.replaceChildren();
 
     const header = document.createElement("header");
@@ -229,6 +236,13 @@ export function mountSettingsView(
       );
     }
 
+    if (activeSection === "shortcuts") {
+      const panelHost = document.createElement("div");
+      panelHost.className = "inimark-settings-shortcuts-host";
+      body.append(panelHost);
+      shortcutsCleanup = renderShortcutsPanel(panelHost);
+    }
+
     if (activeSection === "libraries") {
       const toolbar = document.createElement("div");
       toolbar.className = "inimark-settings-libraries-toolbar";
@@ -317,6 +331,7 @@ export function mountSettingsView(
       renderContent();
     },
     destroy() {
+      shortcutsCleanup?.();
       host.replaceChildren();
       host.className = "";
     },

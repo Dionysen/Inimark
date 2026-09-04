@@ -1,5 +1,5 @@
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
-import { mountTitleBar } from "./ui/titlebar.ts";
+import { mountTitleBar, type TitleBarController } from "./ui/titlebar.ts";
 
 const SIDEBAR_OPEN_KEY = "inimark-sidebar-open";
 
@@ -9,6 +9,7 @@ export interface ShellController {
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
+  toggleSidebar(): void;
   destroy(): void;
 }
 
@@ -23,7 +24,14 @@ function loadSidebarOpen(): boolean {
   return true;
 }
 
-export function mountShell(host: HTMLElement): ShellController {
+export interface ShellMountOptions {
+  onCloseRequest?: () => void | Promise<void>;
+}
+
+export function mountShell(
+  host: HTMLElement,
+  options: ShellMountOptions = {},
+): ShellController {
   host.innerHTML = "";
   host.className = "inimark-shell";
 
@@ -34,17 +42,27 @@ export function mountShell(host: HTMLElement): ShellController {
   mainColumn.className = "inimark-main";
 
   let sidebarOpen = loadSidebarOpen();
+  let titlebar: TitleBarController;
+
+  function applySidebarState(): void {
+    host.classList.toggle("is-sidebar-closed", !sidebarOpen);
+    sidebarHost.classList.toggle("is-collapsed", !sidebarOpen);
+    titlebar.setSidebarOpen(sidebarOpen);
+  }
+
+  function toggleSidebar(): void {
+    sidebarOpen = !sidebarOpen;
+    localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
+    applySidebarState();
+  }
 
   const titlebarHost = document.createElement("header");
-  const titlebar = mountTitleBar(titlebarHost, {
+  titlebar = mountTitleBar(titlebarHost, {
     title: "Untitled",
+    onClose: options.onCloseRequest,
     sidebarToggle: {
       open: sidebarOpen,
-      onToggle: () => {
-        sidebarOpen = !sidebarOpen;
-        localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
-        applySidebarState();
-      },
+      onToggle: toggleSidebar,
     },
   });
 
@@ -53,13 +71,6 @@ export function mountShell(host: HTMLElement): ShellController {
 
   mainColumn.append(titlebarHost, editorHost);
   host.append(sidebarHost, mainColumn);
-
-  function applySidebarState(): void {
-    host.classList.toggle("is-sidebar-closed", !sidebarOpen);
-    sidebarHost.classList.toggle("is-collapsed", !sidebarOpen);
-    titlebar.setSidebarOpen(sidebarOpen);
-  }
-
   applySidebarState();
 
   let dirty = false;
@@ -84,6 +95,7 @@ export function mountShell(host: HTMLElement): ShellController {
     isDirty() {
       return dirty;
     },
+    toggleSidebar,
     destroy() {
       titlebar.destroy();
       sidebar.destroy();

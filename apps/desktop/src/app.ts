@@ -14,16 +14,22 @@ import {
   setLastLibraryId,
   upsertLibrary,
 } from "./libraries/store.ts";
+import { isTauri } from "./platform/env.ts";
+import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
   defaultExpandedDirs,
   openWorkspaceByPath,
   pickWorkspace,
   readWorkspaceFile,
+  refreshWorkspaceTree,
+  writeWorkspaceFile,
 } from "./platform/workspace.ts";
+import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
+import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 
 export interface AppController {
   editor: Editor;
@@ -34,26 +40,14 @@ export function mountApp(host: HTMLElement): AppController {
   const settings = loadSettings();
   applySettings(settings);
 
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === SETTINGS_STORAGE_KEY) {
-      applySettings(loadSettings());
-    }
-    if (event.key === LIBRARIES_STORAGE_KEY) {
-      refreshLibraryList();
-      if (activeLibraryId && !getLibraryById(activeLibraryId)) {
-        workspace = null;
-        activeFilePath = null;
-        activeLibraryId = null;
-        shell.sidebar.setWorkspace(null);
-      }
-    }
-  };
-  window.addEventListener("storage", onStorage);
-
-  const shell = mountShell(host);
+  const shell = mountShell(host, {
+    onCloseRequest: () => requestAppClose(),
+  });
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
   let activeLibraryId: string | null = null;
+  let closeInProgress = false;
+  const cleanups: Array<() => void> = [];
 
   const editor = createEditor(shell.editorHost, {
     initialContent: "# Welcome\n\nStart writing…",
@@ -74,9 +68,67 @@ export function mountApp(host: HTMLElement): AppController {
     });
   }
 
-  async function confirmDiscard(): Promise<boolean> {
+  async function saveCurrentFile(): Promise<boolean> {
+    if (workspace && activeFilePath) {
+      const result = await writeWorkspaceFile(
+        workspace,
+        activeFilePath,
+        editor.getMarkdown(),
+      );
+      if (result.status === "saved") {
+        shell.setFileName(result.name);
+        shell.setDirty(false);
+        workspace.tree = await refreshWorkspaceTree(workspace);
+        shell.sidebar.setWorkspace(workspace);
+        shell.sidebar.setActiveFile(activeFilePath);
+        persistLibrarySession();
+        return true;
+      }
+      if (result.status === "error") {
+        console.error(result.message);
+      }
+      return false;
+    }
+
+    const result = await editor.saveMarkdownFile();
+    if (result.status === "saved" || result.status === "downloaded") {
+      shell.setFileName(result.name);
+      shell.setDirty(false);
+      persistLibrarySession();
+      return true;
+    }
+    return result.status !== "error";
+  }
+
+  async function saveFileAs(): Promise<void> {
+    const result = await editor.saveMarkdownFileAs();
+    if (result.status === "saved" || result.status === "downloaded") {
+      activeFilePath = null;
+      shell.setFileName(result.name);
+      shell.sidebar.setActiveFile(null);
+      shell.setDirty(false);
+      persistLibrarySession();
+    }
+  }
+
+  function resetToUntitled(): void {
+    editor.newMarkdownFile();
+    activeFilePath = null;
+    shell.setFileName(null);
+    shell.sidebar.setActiveFile(null);
+    shell.setDirty(false);
+    persistLibrarySession();
+  }
+
+  async function confirmDiscardChanges(): Promise<boolean> {
     if (!shell.isDirty()) return true;
-    return window.confirm("Discard unsaved changes?");
+    const choice = await promptUnsavedChanges({
+      title: "Save changes?",
+      message: "Your changes will be lost if you don't save them.",
+    });
+    if (choice === "cancel") return false;
+    if (choice === "save") return saveCurrentFile();
+    return true;
   }
 
   async function openWorkspaceFile(
@@ -84,7 +136,7 @@ export function mountApp(host: HTMLElement): AppController {
     options?: { skipConfirm?: boolean },
   ): Promise<void> {
     if (!workspace) return;
-    if (!options?.skipConfirm && !(await confirmDiscard())) return;
+    if (!options?.skipConfirm && !(await confirmDiscardChanges())) return;
 
     const result = await readWorkspaceFile(workspace, path);
     if (result.status !== "opened") {
@@ -148,7 +200,7 @@ export function mountApp(host: HTMLElement): AppController {
 
   async function switchLibrary(libraryId: string): Promise<void> {
     if (libraryId === activeLibraryId) return;
-    if (!(await confirmDiscard())) return;
+    if (!(await confirmDiscardChanges())) return;
     persistLibrarySession();
     await loadLibraryById(libraryId, { restoreSession: true });
   }
@@ -163,7 +215,7 @@ export function mountApp(host: HTMLElement): AppController {
       return;
     }
 
-    if (!(await confirmDiscard())) return;
+    if (!(await confirmDiscardChanges())) return;
     persistLibrarySession();
     await activateWorkspace(picked.workspace, { restoreSession: false });
   }
@@ -174,6 +226,70 @@ export function mountApp(host: HTMLElement): AppController {
     } catch (error) {
       console.error("Failed to open settings window", error);
     }
+  }
+
+  async function openFile(): Promise<void> {
+    if (!(await confirmDiscardChanges())) return;
+    const result = await editor.openMarkdownFile();
+    if (result.status === "opened") {
+      activeFilePath = null;
+      shell.setFileName(result.name);
+      shell.sidebar.setActiveFile(null);
+      shell.setDirty(false);
+      persistLibrarySession();
+    }
+  }
+
+  async function newFile(): Promise<void> {
+    if (!(await confirmDiscardChanges())) return;
+    resetToUntitled();
+  }
+
+  async function closeCurrent(): Promise<void> {
+    if (shell.isDirty()) {
+      const choice = await promptUnsavedChanges({
+        title: "Save changes?",
+        message: "Save changes before closing this file?",
+      });
+      if (choice === "cancel") return;
+      if (choice === "save") {
+        const saved = await saveCurrentFile();
+        if (!saved) return;
+      }
+    }
+
+    if (activeFilePath) {
+      resetToUntitled();
+      return;
+    }
+
+    await requestAppClose();
+  }
+
+  async function requestAppClose(): Promise<void> {
+    if (closeInProgress) return;
+    if (shell.isDirty()) {
+      const choice = await promptUnsavedChanges({
+        title: "Save changes?",
+        message: "Your changes will be lost if you don't save them.",
+      });
+      if (choice === "cancel") return;
+      if (choice === "save") {
+        const saved = await saveCurrentFile();
+        if (!saved) return;
+      }
+    }
+
+    closeInProgress = true;
+    persistLibrarySession();
+
+    if (isTauri()) {
+      const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+      const settings = await WebviewWindow.getByLabel("settings");
+      if (settings) await settings.destroy();
+    }
+
+    await closeWindow();
   }
 
   async function restoreLastLibrary(): Promise<void> {
@@ -196,21 +312,69 @@ export function mountApp(host: HTMLElement): AppController {
     refreshLibraryList();
   });
 
+  cleanups.push(
+    mountShortcutHandler({
+      save: () => void saveCurrentFile(),
+      "save-as": () => void saveFileAs(),
+      new: () => void newFile(),
+      open: () => void openFile(),
+      "open-folder": () => void openFolder(),
+      close: () => void closeCurrent(),
+      "toggle-sidebar": () => shell.toggleSidebar(),
+      "open-settings": () => void openSettings(),
+    }),
+  );
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === SETTINGS_STORAGE_KEY) {
+      applySettings(loadSettings());
+    }
+    if (event.key === LIBRARIES_STORAGE_KEY) {
+      refreshLibraryList();
+      if (activeLibraryId && !getLibraryById(activeLibraryId)) {
+        workspace = null;
+        activeFilePath = null;
+        activeLibraryId = null;
+        shell.sidebar.setWorkspace(null);
+      }
+    }
+  };
+  window.addEventListener("storage", onStorage);
+  cleanups.push(() => window.removeEventListener("storage", onStorage));
+
+  if (isTauri()) {
+    void (async () => {
+      const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      const win = getCurrentWindow();
+      const unlistenClose = await win.onCloseRequested((event) => {
+        event.preventDefault();
+        void requestAppClose();
+      });
+      cleanups.push(unlistenClose);
+    })();
+  }
+
+  const onBeforeUnload = (event: BeforeUnloadEvent) => {
+    persistLibrarySession();
+    if (shell.isDirty()) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  };
+  window.addEventListener("beforeunload", onBeforeUnload);
+  cleanups.push(() => window.removeEventListener("beforeunload", onBeforeUnload));
+
   refreshLibraryList();
   void restoreLastLibrary();
 
   const fileName = editor.getCurrentFileName();
   if (fileName) shell.setFileName(fileName);
 
-  const onBeforeUnload = () => persistLibrarySession();
-  window.addEventListener("beforeunload", onBeforeUnload);
-
   return {
     editor,
     destroy() {
       persistLibrarySession();
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      window.removeEventListener("storage", onStorage);
+      for (const cleanup of cleanups.reverse()) cleanup();
       editor.destroy();
       shell.destroy();
     },

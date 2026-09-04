@@ -1,0 +1,44 @@
+.inimark-confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: var(--inimark-space-4);
+  background: color-mix(in srgb, #000 35%, transparent);
+}
+
+.inimark-confirm-dialog-panel {
+  width: min(26rem, 100%);
+  padding: var(--inimark-space-4);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-md);
+  background: var(--inimark-surface-raised);
+  box-shadow: var(--inimark-glass-shadow);
+}
+
+.inimark-confirm-dialog-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.inimark-confirm-dialog-message {
+  margin: var(--inimark-space-2) 0 var(--inimark-space-4);
+  color: var(--inimark-muted-fg);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.inimark-confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-confirm-dialog-btn--discard:hover:not(:disabled) {
+  background: color-mix(in srgb, #e81123 12%, var(--inimark-bg));
+  border-color: color-mix(in srgb, #e81123 35%, var(--inimark-border));
+  color: #c50f1f;
+}
