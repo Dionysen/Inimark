@@ -216,3 +216,72 @@ html.platform-windows .inimark-titlebar-btn {
   width: var(--inimark-caption-width);
   height: var(--inimark-titlebar-height);
 }
+
+/* ── Auto-hide scrollbars (transparent track; thumb on scroll or scrollbar hover) ── */
+
+.inimark-scroll-target,
+.inimark-tree,
+.inimark-editor-host,
+.inimark-settings-main,
+.inimark-settings-shortcuts,
+.ProseMirror,
+.cm-editor .cm-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.inimark-scroll-target[data-scrolling],
+.inimark-scroll-target[data-scrollbar-hover],
+.inimark-tree[data-scrolling],
+.inimark-tree[data-scrollbar-hover],
+.inimark-editor-host[data-scrolling],
+.inimark-editor-host[data-scrollbar-hover],
+.inimark-settings-main[data-scrolling],
+.inimark-settings-main[data-scrollbar-hover],
+.inimark-settings-shortcuts[data-scrolling],
+.inimark-settings-shortcuts[data-scrollbar-hover],
+.ProseMirror[data-scrolling],
+.ProseMirror[data-scrollbar-hover],
+.cm-editor .cm-scroller[data-scrolling],
+.cm-editor .cm-scroller[data-scrollbar-hover] {
+  scrollbar-color: var(--inimark-scrollbar-thumb) var(--inimark-scrollbar-track);
+}
+
+::-webkit-scrollbar {
+  width: var(--inimark-scrollbar-size);
+  height: var(--inimark-scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--inimark-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--inimark-scrollbar-radius);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  transition: background-color 0.15s ease;
+}
+
+.inimark-scroll-target[data-scrolling]::-webkit-scrollbar-thumb,
+.inimark-scroll-target[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.inimark-tree[data-scrolling]::-webkit-scrollbar-thumb,
+.inimark-tree[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.inimark-editor-host[data-scrolling]::-webkit-scrollbar-thumb,
+.inimark-editor-host[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.inimark-settings-main[data-scrolling]::-webkit-scrollbar-thumb,
+.inimark-settings-main[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.inimark-settings-shortcuts[data-scrolling]::-webkit-scrollbar-thumb,
+.inimark-settings-shortcuts[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.ProseMirror[data-scrolling]::-webkit-scrollbar-thumb,
+.ProseMirror[data-scrollbar-hover]::-webkit-scrollbar-thumb,
+.cm-editor .cm-scroller[data-scrolling]::-webkit-scrollbar-thumb,
+.cm-editor .cm-scroller[data-scrollbar-hover]::-webkit-scrollbar-thumb {
+  background-color: var(--inimark-scrollbar-thumb);
+  transition: background-color 0s;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--inimark-scrollbar-thumb-hover);
+}

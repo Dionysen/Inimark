@@ -1,7 +1,9 @@
 import { initPlatform } from "./platform/platform.ts";
+import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
 import { mountApp } from "./app.ts";
 
 initPlatform();
+const teardownScrollbars = initAutoHideScrollbars();
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) {
@@ -14,5 +16,6 @@ document.documentElement.style.colorScheme = "light";
 const app = mountApp(root);
 
 window.addEventListener("beforeunload", () => {
+  teardownScrollbars();
   app.destroy();
 });

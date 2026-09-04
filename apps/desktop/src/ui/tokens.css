@@ -41,6 +41,12 @@
   --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 70%, transparent);
   --inimark-glass-border: color-mix(in srgb, var(--inimark-border) 75%, transparent);
   --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, CanvasText 10%, transparent);
+
+  --inimark-scrollbar-size: 8px;
+  --inimark-scrollbar-radius: 4px;
+  --inimark-scrollbar-track: transparent;
+  --inimark-scrollbar-thumb: color-mix(in srgb, var(--inimark-fg) 28%, transparent);
+  --inimark-scrollbar-thumb-hover: color-mix(in srgb, var(--inimark-fg) 45%, transparent);
 }
 
 html.platform-macos {
@@ -59,4 +65,6 @@ html.platform-windows {
   --inimark-glass-bg: color-mix(in srgb, #1c1f24 78%, transparent);
   --inimark-glass-border: color-mix(in srgb, #ffffff 10%, transparent);
   --inimark-glass-shadow: 0 10px 32px color-mix(in srgb, #000 35%, transparent);
+  --inimark-scrollbar-thumb: color-mix(in srgb, #ffffff 24%, transparent);
+  --inimark-scrollbar-thumb-hover: color-mix(in srgb, #ffffff 42%, transparent);
 }

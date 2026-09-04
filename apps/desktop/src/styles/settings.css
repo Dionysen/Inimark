@@ -126,6 +126,10 @@
   border-top: 1px solid var(--inimark-border);
 }
 
+.inimark-settings-shortcuts {
+  padding-top: var(--inimark-space-2);
+}
+
 .inimark-settings-shortcuts-toolbar {
   display: flex;
   justify-content: flex-end;
