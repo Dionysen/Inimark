@@ -1,4 +1,5 @@
 @import "../ui/tokens.css";
+@import "../ui/widgets/widgets.css";
 @import "./themes.css";
 
 /* Global shell foundation — shared by every window entry (main, settings, …). */

@@ -1,0 +1,659 @@
+/* Unified control surface — all interactive widgets share these tokens & states. */
+
+.inimark-control {
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: var(--inimark-control-font-size);
+  line-height: 1.3;
+  color: var(--inimark-fg);
+  border-radius: var(--inimark-radius-control);
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition),
+    color var(--inimark-control-transition),
+    box-shadow var(--inimark-control-transition),
+    transform var(--inimark-control-transition),
+    opacity var(--inimark-control-transition);
+}
+
+.inimark-control:disabled,
+.inimark-control.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.inimark-control:focus {
+  outline: none;
+}
+
+.inimark-control:focus-visible {
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+}
+
+/* ── Field surface (inputs, select trigger, search) ─────────────── */
+
+.inimark-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  padding: 0 var(--inimark-control-padding-x);
+  border: 1px solid var(--inimark-border);
+  background: var(--inimark-control-bg);
+  color: var(--inimark-fg);
+  cursor: text;
+}
+
+.inimark-field:hover:not(:disabled):not(.is-disabled):not(.is-open) {
+  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+  background: color-mix(in srgb, var(--inimark-hover) 55%, var(--inimark-control-bg));
+}
+
+.inimark-field:focus-within,
+.inimark-field.is-open {
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+}
+
+.inimark-field__input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  outline: none;
+}
+
+.inimark-field__input::placeholder {
+  color: var(--inimark-muted-fg);
+  opacity: 0.75;
+}
+
+/* ── Button ─────────────────────────────────────────────────────── */
+
+.inimark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  padding: 0 var(--inimark-control-padding-x);
+  border: 1px solid var(--inimark-border);
+  background: var(--inimark-surface);
+  color: var(--inimark-fg);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.inimark-btn:hover:not(:disabled) {
+  background: var(--inimark-hover);
+  border-color: color-mix(in srgb, var(--inimark-accent) 40%, var(--inimark-border));
+}
+
+.inimark-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.inimark-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-btn--ghost:hover:not(:disabled) {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+  border-color: transparent;
+}
+
+.inimark-btn--primary {
+  background: var(--inimark-accent);
+  border-color: var(--inimark-accent);
+  color: var(--inimark-accent-fg);
+}
+
+.inimark-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover, var(--inimark-accent));
+  border-color: var(--accent-hover, var(--inimark-accent));
+}
+
+/* ── Icon button ────────────────────────────────────────────────── */
+
+.inimark-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  min-width: var(--inimark-control-height);
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  border-radius: var(--inimark-radius-control);
+}
+
+.inimark-icon-btn:hover:not(:disabled) {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-icon-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.inimark-icon-btn .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ── Search field ───────────────────────────────────────────────── */
+
+.inimark-search {
+  position: relative;
+  width: 100%;
+}
+
+.inimark-search .inimark-field {
+  width: 100%;
+  padding-left: calc(var(--inimark-control-padding-x) + 1.1rem);
+  padding-right: calc(var(--inimark-control-padding-x) + 1.1rem);
+}
+
+.inimark-search__icon {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--inimark-muted-fg);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.inimark-search__clear {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 0;
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--inimark-control-transition),
+    color var(--inimark-control-transition);
+}
+
+.inimark-search__clear:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+/* ── Slider ─────────────────────────────────────────────────────── */
+
+.inimark-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.inimark-slider__track-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--inimark-control-height);
+  display: flex;
+  align-items: center;
+}
+
+.inimark-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--inimark-accent) 0%,
+    var(--inimark-accent) var(--inimark-slider-fill, 0%),
+    color-mix(in srgb, var(--inimark-border) 80%, transparent) var(--inimark-slider-fill, 0%),
+    color-mix(in srgb, var(--inimark-border) 80%, transparent) 100%
+  );
+  outline: none;
+  cursor: pointer;
+  transition: background var(--inimark-control-transition);
+}
+
+.inimark-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--inimark-border) 70%, #000 10%);
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 22%, transparent);
+  cursor: grab;
+  transition: transform var(--inimark-control-transition);
+}
+
+.inimark-slider__input::-moz-range-thumb {
+  width: 14px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--inimark-border) 70%, #000 10%);
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 22%, transparent);
+  cursor: grab;
+  transition: transform var(--inimark-control-transition);
+}
+
+.inimark-slider__input:hover::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+.inimark-slider__input:active::-webkit-slider-thumb {
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.inimark-slider__input:hover::-moz-range-thumb {
+  transform: scale(1.08);
+}
+
+.inimark-slider__input:active::-moz-range-thumb {
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.inimark-slider__input:focus-visible {
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+  border-radius: 999px;
+}
+
+.inimark-slider__value {
+  min-width: 2.75rem;
+  text-align: right;
+  font-family: var(--inimark-font-mono);
+  font-size: 0.82rem;
+  color: var(--inimark-muted-fg);
+  flex-shrink: 0;
+}
+
+/* ── Select (custom) ────────────────────────────────────────────── */
+
+.inimark-select {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.inimark-select__trigger {
+  width: 100%;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.inimark-select__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-select__chevron {
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: transform var(--inimark-control-transition);
+}
+
+.inimark-select.is-open .inimark-select__chevron {
+  transform: rotate(180deg);
+}
+
+.inimark-select-panel {
+  position: fixed;
+  z-index: 10040;
+  min-width: 8rem;
+  max-height: 280px;
+  overflow: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
+  border-radius: var(--inimark-radius-control);
+  background: var(--inimark-glass-bg, var(--inimark-surface));
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 20%, transparent));
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.inimark-select-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.inimark-select-panel.is-up {
+  transform: translateY(4px);
+}
+
+.inimark-select-panel.is-up.is-open {
+  transform: translateY(0);
+}
+
+.inimark-select-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 4px);
+  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  border: 0;
+  border-radius: calc(var(--inimark-radius-control) * 0.85);
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    color var(--inimark-control-transition);
+}
+
+.inimark-select-option:hover,
+.inimark-select-option.is-active {
+  background: var(--inimark-hover);
+}
+
+.inimark-select-option.is-selected {
+  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
+  color: var(--inimark-fg);
+}
+
+.inimark-select-group {
+  margin: 0.25rem 0 0.1rem;
+  padding: 0.2rem var(--inimark-control-padding-x);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+/* ── Menu ───────────────────────────────────────────────────────── */
+
+.inimark-menu {
+  position: absolute;
+  z-index: 30;
+  min-width: 12rem;
+  padding: 0.35rem;
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
+  border-radius: var(--inimark-radius-control);
+  background: var(--inimark-glass-bg, var(--inimark-surface));
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: var(--inimark-glass-shadow);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.inimark-menu.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.inimark-menu__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.inimark-menu__heading {
+  margin: 0.35rem 0.35rem 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-menu__path {
+  margin: 0.25rem 0.45rem 0.45rem;
+  font-size: 0.75rem;
+  color: var(--inimark-muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-menu__divider {
+  height: 1px;
+  margin: 0.35rem 0.25rem;
+  background: var(--inimark-border);
+}
+
+.inimark-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  border: 0;
+  border-radius: calc(var(--inimark-radius-control) * 0.85);
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--inimark-control-transition);
+}
+
+.inimark-menu-item:hover,
+.inimark-menu-item.is-active {
+  background: var(--inimark-hover);
+}
+
+.inimark-menu-item.is-selected {
+  background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--inimark-accent);
+}
+
+.inimark-menu-item__name {
+  font-weight: 500;
+}
+
+.inimark-menu-item__meta {
+  font-size: 0.75rem;
+  color: var(--inimark-muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.inimark-menu__empty {
+  margin: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--inimark-muted-fg);
+}
+
+/* ── Tree ───────────────────────────────────────────────────────── */
+
+.inimark-tree {
+  flex: 1;
+  overflow: auto;
+  padding: var(--inimark-space-2) 0;
+}
+
+.inimark-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  padding-top: var(--inimark-tree-item-padding-y);
+  padding-bottom: var(--inimark-tree-item-padding-y);
+  padding-right: var(--inimark-space-3);
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    color var(--inimark-control-transition);
+}
+
+.inimark-tree-item:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-tree-item.is-active {
+  background: var(--inimark-active);
+  font-weight: 600;
+}
+
+.inimark-tree-item--dir {
+  color: var(--inimark-muted-fg);
+  font-weight: 600;
+}
+
+.inimark-tree-item--dir:hover {
+  color: var(--inimark-fg);
+}
+
+.inimark-tree-chevron {
+  width: 0.75rem;
+  flex-shrink: 0;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.inimark-tree-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Nav list (settings) ────────────────────────────────────────── */
+
+.inimark-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.inimark-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  border-radius: var(--inimark-radius-control);
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    color var(--inimark-control-transition),
+    box-shadow var(--inimark-control-transition);
+}
+
+.inimark-nav-item:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-nav-item.is-active {
+  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
+  color: var(--inimark-fg);
+  box-shadow: inset 2px 0 0 var(--inimark-accent);
+}
+
+.inimark-nav-item__chevron {
+  opacity: 0.55;
+  font-size: 0.8rem;
+}
+
+/* ── Toggle ─────────────────────────────────────────────────────── */
+
+.inimark-toggle {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--inimark-border) 85%, var(--inimark-fg) 15%);
+  cursor: pointer;
+  transition: background var(--inimark-control-transition);
+}
+
+.inimark-toggle.is-on {
+  background: var(--inimark-accent);
+}
+
+.inimark-toggle:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.inimark-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+}
+
+.inimark-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 25%, transparent);
+  transition: transform 160ms ease;
+}
+
+.inimark-toggle.is-on .inimark-toggle__thumb {
+  transform: translateX(18px);
+}

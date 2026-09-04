@@ -4,13 +4,20 @@ import {
   upsertLibrary,
 } from "../libraries/store.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
-import { createButton } from "../ui/button.ts";
 import {
   attachColumnResize,
   loadPersistedWidth,
   persistWidth,
 } from "../ui/column-resize.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
+import {
+  createButton,
+  createNavItem,
+  createNavList,
+  createSearchField,
+  createSelect,
+  createSlider,
+} from "../ui/widgets/index.ts";
 import {
   type AppSettings,
   type EditorWidth,
@@ -69,9 +76,6 @@ const SETTINGS_NAV_WIDTH_DEFAULT = 220;
 const SETTINGS_NAV_WIDTH_MIN = 160;
 const SETTINGS_NAV_WIDTH_MAX = 420;
 
-const SEARCH_ICON = `<svg class="inimark-settings-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
-const CLEAR_ICON = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-
 function sectionMatches(id: SettingsSection, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
@@ -114,34 +118,20 @@ export function mountSettingsView(
   const navBody = document.createElement("div");
   navBody.className = "inimark-settings-nav-body";
 
-  const searchWrap = document.createElement("div");
-  searchWrap.className = "inimark-settings-search";
+  const search = createSearchField({
+    placeholder: "Search settings…",
+    onInput(value) {
+      searchQuery = value;
+      renderNav();
+    },
+  });
 
-  const search = document.createElement("input");
-  search.type = "search";
-  search.className = "inimark-settings-search-input";
-  search.placeholder = "Search settings…";
-  search.setAttribute("aria-label", "Search settings");
-  search.autocomplete = "off";
-  search.spellcheck = false;
-
-  const clearBtn = document.createElement("button");
-  clearBtn.type = "button";
-  clearBtn.className = "inimark-settings-search-clear";
-  clearBtn.title = "Clear search";
-  clearBtn.innerHTML = CLEAR_ICON;
-  clearBtn.hidden = true;
-
-  searchWrap.insertAdjacentHTML("afterbegin", SEARCH_ICON);
-  searchWrap.append(search, clearBtn);
-
-  const navList = document.createElement("div");
-  navList.className = "inimark-settings-nav-list";
+  const navList = createNavList();
 
   const navEmpty = document.createElement("div");
   navEmpty.className = "inimark-settings-nav-empty";
   navEmpty.hidden = true;
-  navEmpty.innerHTML = `${SEARCH_ICON}<span>No matching settings</span>`;
+  navEmpty.innerHTML = `<span>No matching settings</span>`;
 
   const sections: Array<{ id: SettingsSection; label: string }> = [
     { id: "editor", label: "Editor" },
@@ -154,21 +144,20 @@ export function mountSettingsView(
   const navButtons = new Map<SettingsSection, HTMLButtonElement>();
 
   for (const section of sections) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "inimark-settings-nav-item";
-    btn.dataset.section = section.id;
-    btn.innerHTML = `<span class="inimark-settings-nav-chevron">›</span><span>${section.label}</span>`;
-    btn.addEventListener("click", () => {
-      activeSection = section.id;
-      renderNav();
-      renderContent();
+    const btn = createNavItem({
+      id: section.id,
+      label: section.label,
+      onClick() {
+        activeSection = section.id;
+        renderNav();
+        renderContent();
+      },
     });
     navButtons.set(section.id, btn);
     navList.append(btn);
   }
 
-  navBody.append(searchWrap, navList, navEmpty);
+  navBody.append(search.el, navList, navEmpty);
   nav.append(navTopbar, navBody);
 
   // ── Right column (topbar with window controls + content) ─────────
@@ -220,7 +209,6 @@ export function mountSettingsView(
     }
     navList.hidden = visible === 0;
     navEmpty.hidden = visible > 0;
-    clearBtn.hidden = searchQuery.trim().length === 0;
   }
 
   function createRow(
@@ -281,49 +269,42 @@ export function mountSettingsView(
     body.className = "inimark-settings-body";
 
     if (activeSection === "editor") {
-      const fontSize = document.createElement("input");
-      fontSize.type = "range";
-      fontSize.className = "inimark-range";
-      fontSize.min = "13";
-      fontSize.max = "22";
-      fontSize.step = "1";
-      fontSize.value = String(settings.fontSize);
-      const fontSizeValue = document.createElement("span");
-      fontSizeValue.className = "inimark-settings-value";
-      fontSizeValue.textContent = `${settings.fontSize}px`;
-      fontSize.addEventListener("input", () => {
-        const value = Number(fontSize.value);
-        fontSizeValue.textContent = `${value}px`;
-        update({ fontSize: value });
+      const fontSize = createSlider({
+        min: 13,
+        max: 22,
+        step: 1,
+        value: settings.fontSize,
+        formatValue: (value) => `${value}px`,
+        onChange(value) {
+          update({ fontSize: value });
+        },
       });
-      const fontSizeWrap = document.createElement("div");
-      fontSizeWrap.className = "inimark-settings-range-wrap";
-      fontSizeWrap.append(fontSize, fontSizeValue);
       body.append(
         createRow(
           "font_size",
           "Base font size for the editor content area.",
-          fontSizeWrap,
+          fontSize.el,
         ),
       );
 
-      const widthSelect = document.createElement("select");
-      widthSelect.className = "inimark-select";
-      for (const option of ["narrow", "medium", "wide", "full"] as EditorWidth[]) {
-        const el = document.createElement("option");
-        el.value = option;
-        el.textContent = editorWidthLabel(option);
-        widthSelect.append(el);
-      }
-      widthSelect.value = settings.editorWidth;
-      widthSelect.addEventListener("change", () => {
-        update({ editorWidth: widthSelect.value as EditorWidth });
+      const widthSelect = createSelect({
+        value: settings.editorWidth,
+        options: (["narrow", "medium", "wide", "full"] as EditorWidth[]).map(
+          (option) => ({
+            value: option,
+            label: editorWidthLabel(option),
+          }),
+        ),
+        minWidth: 140,
+        onChange(value) {
+          update({ editorWidth: value as EditorWidth });
+        },
       });
       body.append(
         createRow(
           "editor_width",
           "Maximum width of the writing column.",
-          widthSelect,
+          widthSelect.el,
         ),
       );
     }
@@ -418,17 +399,6 @@ export function mountSettingsView(
     content.append(body);
   }
 
-  search.addEventListener("input", () => {
-    searchQuery = search.value;
-    renderNav();
-  });
-  clearBtn.addEventListener("click", () => {
-    search.value = "";
-    searchQuery = "";
-    renderNav();
-    search.focus();
-  });
-
   renderNav();
   renderContent();
 
@@ -443,6 +413,7 @@ export function mountSettingsView(
     destroy() {
       resize.destroy();
       titlebar.destroy();
+      search.destroy();
       shortcutsCleanup?.();
       themeCleanup?.();
       host.replaceChildren();

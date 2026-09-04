@@ -8,6 +8,7 @@ import {
   supportsEyeDropper,
   type HsvaColor,
 } from "./color-utils.ts";
+import { createIconButton, createTextField } from "../ui/widgets/index.ts";
 
 export interface ThemeColorFieldOptions {
   label: string;
@@ -52,7 +53,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
 
   const swatch = document.createElement("button");
   swatch.type = "button";
-  swatch.className = "theme-color-swatch";
+  swatch.className = "theme-color-swatch inimark-control";
   swatch.title = "Pick color";
 
   const checker = document.createElement("span");
@@ -62,23 +63,39 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   fill.className = "theme-color-swatch-fill";
   swatch.append(checker, fill);
 
-  const text = document.createElement("input");
-  text.type = "text";
-  text.className = "theme-editor-input";
-  text.spellcheck = false;
+  const text = createTextField({
+    value,
+    mono: true,
+    onChange(next) {
+      if (open) {
+        commit(rgbaToHsva(parseColor(next)));
+      } else {
+        value = next;
+        onChange(next);
+        hsva = rgbaToHsva(parseColor(value));
+        refresh();
+      }
+    },
+  });
+  text.el.classList.add("theme-editor-color-input");
+  text.input.addEventListener("input", () => {
+    textDraft = text.input.value;
+  });
 
-  const copyBtn = document.createElement("button");
-  copyBtn.type = "button";
-  copyBtn.className = "theme-editor-icon-btn";
-  copyBtn.title = "Copy color";
+  const copyBtn = createIconButton({
+    label: "Copy color",
+    title: "Copy color",
+  });
+  copyBtn.classList.add("theme-editor-icon-btn");
   copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 
-  group.append(swatch, text, copyBtn);
+  group.append(swatch, text.el, copyBtn);
   if (supportsEyeDropper()) {
-    const dropperBtn = document.createElement("button");
-    dropperBtn.type = "button";
-    dropperBtn.className = "theme-editor-icon-btn";
-    dropperBtn.title = "Eyedropper";
+    const dropperBtn = createIconButton({
+      label: "Eyedropper",
+      title: "Eyedropper",
+    });
+    dropperBtn.classList.add("theme-editor-icon-btn");
     dropperBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 5 3 3"/><path d="M18 2c.5.5 2 2.5 2 4 0 1-.5 2-2 2s-2-.5-2-2 1.5-3.5 2-4Z"/></svg>`;
     dropperBtn.addEventListener("click", async () => {
       const hex = await pickColorWithEyeDropper();
@@ -112,8 +129,8 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     const rgba = hsvaToRgba(hsva);
     const preview = formatColor(rgba);
     fill.style.background = preview === "transparent" ? "transparent" : preview;
-    if (!open) text.value = value;
-    else text.value = textDraft;
+    if (!open) text.setValue(value);
+    else text.setValue(textDraft);
   }
 
   function placePopover(): void {
@@ -161,8 +178,12 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
       if (!svDragging) return;
       updateSv(e.clientX, e.clientY);
     });
-    sv.addEventListener("pointerup", () => { svDragging = false; });
-    sv.addEventListener("pointercancel", () => { svDragging = false; });
+    sv.addEventListener("pointerup", () => {
+      svDragging = false;
+    });
+    sv.addEventListener("pointercancel", () => {
+      svDragging = false;
+    });
 
     const sliders = document.createElement("div");
     sliders.className = "theme-color-sliders";
@@ -172,7 +193,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     const hueTrack = document.createElement("div");
     hueTrack.className = "theme-color-slider-track";
     hueTrack.style.background = hueGradient();
-    const hueSlider = createSlider(0, 360, hsva.h, (h) => commit({ ...hsva, h }));
+    const hueSlider = createHueAlphaSlider(0, 360, hsva.h, (h) => commit({ ...hsva, h }));
     hueTrack.append(hueSlider);
     hueRow.append(document.createTextNode("Hue"), hueTrack);
 
@@ -182,7 +203,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     alphaTrack.className = "theme-color-slider-track theme-color-alpha-track";
     alphaTrack.style.backgroundImage = `${checkerboardCss()}, linear-gradient(to right, transparent, ${solid})`;
     alphaTrack.style.backgroundSize = "10px 10px, 100% 100%";
-    const alphaSlider = createSlider(0, 100, Math.round(hsva.a * 100), (pct) =>
+    const alphaSlider = createHueAlphaSlider(0, 100, Math.round(hsva.a * 100), (pct) =>
       commit({ ...hsva, a: pct / 100 }),
     );
     alphaTrack.append(alphaSlider);
@@ -217,17 +238,6 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   }
 
   swatch.addEventListener("click", () => setOpen(!open));
-
-  text.addEventListener("change", () => {
-    if (open) {
-      commit(rgbaToHsva(parseColor(text.value)));
-    } else {
-      value = text.value;
-      onChange(text.value);
-      hsva = rgbaToHsva(parseColor(value));
-      refresh();
-    }
-  });
 
   copyBtn.addEventListener("click", async () => {
     try {
@@ -271,7 +281,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   });
 }
 
-function createSlider(
+function createHueAlphaSlider(
   min: number,
   max: number,
   value: number,
@@ -307,7 +317,9 @@ function createSlider(
     if (!dragging) return;
     update(e.clientX);
   });
-  el.addEventListener("pointerup", () => { dragging = false; });
+  el.addEventListener("pointerup", () => {
+    dragging = false;
+  });
 
   return el;
 }

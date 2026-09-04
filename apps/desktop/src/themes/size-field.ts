@@ -1,4 +1,5 @@
 import type { ThemeSizeToken } from "./theme-tokens.ts";
+import { createSlider, createTextField } from "../ui/widgets/index.ts";
 
 export interface ThemeSizeFieldOptions {
   label: string;
@@ -76,50 +77,58 @@ export function createThemeSizeField(options: ThemeSizeFieldOptions): HTMLElemen
   const group = document.createElement("div");
   group.className = "theme-editor-size-group";
 
-  const range = document.createElement("input");
-  range.type = "range";
-  range.className = "inimark-range";
-  range.min = String(meta.min);
-  range.max = String(meta.max);
-  range.step = String(meta.step ?? 1);
-  range.value = String(toDisplay(value, meta));
+  const slider = createSlider({
+    min: meta.min,
+    max: meta.max,
+    step: meta.step ?? 1,
+    value: toDisplay(value, meta),
+    showValue: false,
+    onInput(next) {
+      onChange(commitFromDisplay(String(next), meta));
+    },
+  });
+  slider.el.classList.add("theme-editor-size-slider");
 
-  const text = document.createElement("input");
-  text.type = "text";
-  text.className = "theme-editor-input theme-editor-size-input";
-  text.spellcheck = false;
+  const text = createTextField({
+    value: formatDisplay(value, meta),
+    mono: true,
+    onInput(next) {
+      draft = next;
+    },
+    onChange(next) {
+      editing = false;
+      onChange(commitFromDisplay(next, meta));
+    },
+  });
+  text.el.classList.add("theme-editor-size-input");
 
   function refresh(): void {
-    range.value = String(toDisplay(value, meta));
-    if (!editing) text.value = formatDisplay(value, meta);
+    slider.setValue(toDisplay(value, meta));
+    if (!editing) {
+      text.setValue(formatDisplay(value, meta));
+      draft = formatDisplay(value, meta);
+    }
   }
 
-  range.addEventListener("input", () => {
-    onChange(commitFromDisplay(String(range.value), meta));
-  });
-
-  text.addEventListener("focus", () => {
+  text.input.addEventListener("focus", () => {
     draft = formatDisplay(value, meta);
     editing = true;
   });
-  text.addEventListener("input", () => {
-    draft = text.value;
-  });
-  text.addEventListener("blur", () => {
+  text.input.addEventListener("blur", () => {
     editing = false;
     onChange(commitFromDisplay(draft, meta));
   });
-  text.addEventListener("keydown", (e) => {
+  text.input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       editing = false;
       onChange(commitFromDisplay(draft, meta));
-      text.blur();
+      text.input.blur();
     }
   });
 
   refresh();
-  group.append(range, text);
+  group.append(slider.el, text.el);
   control.append(group);
   row.append(labelBlock, control);
 

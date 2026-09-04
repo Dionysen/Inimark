@@ -12,6 +12,11 @@
 .appearance-mode-btn {
   border: none; background: transparent; color: var(--text-secondary);
   font-size: 13px; padding: 8px 14px; border-radius: 7px; cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.appearance-mode-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 .appearance-mode-btn.active {
   color: var(--accent);
@@ -27,6 +32,11 @@
 .theme-kind-tab {
   border: none; background: transparent; color: var(--text-secondary);
   font-size: 13px; padding: 8px 16px; border-radius: 7px; cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+.theme-kind-tab:hover:not(.active) {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 .theme-kind-tab.active {
   color: var(--accent);
@@ -150,12 +160,21 @@
 .theme-editor-var-name { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); }
 .theme-editor-control { flex: 1; display: flex; justify-content: flex-end; }
 .theme-editor-color-group { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; }
-.theme-color-swatch { position: relative; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; overflow: hidden; }
+.theme-color-swatch { position: relative; width: var(--inimark-control-height, 32px); height: var(--inimark-control-height, 32px); padding: 0; border: 1px solid var(--border); border-radius: var(--inimark-radius-control, 6px); cursor: pointer; overflow: hidden; flex-shrink: 0; }
 .theme-color-swatch-checker, .theme-color-swatch-fill { position: absolute; inset: 0; }
-.theme-editor-input { flex: 1; max-width: 220px; height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-surface); font-size: 12px; font-family: var(--font-mono); }
-.theme-editor-icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-surface); cursor: pointer; }
+.theme-editor-color-input { flex: 1; max-width: 220px; }
+.theme-editor-icon-btn {
+  width: var(--inimark-control-height, 32px);
+  height: var(--inimark-control-height, 32px);
+  border: 1px solid var(--border);
+  border-radius: var(--inimark-radius-control, 6px);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
 .theme-editor-size-group { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; }
-.theme-editor-size-input { max-width: 72px; text-align: center; }
+.theme-editor-size-slider { flex: 1; min-width: 0; }
+.theme-editor-size-input { max-width: 88px; flex-shrink: 0; }
+.theme-editor-size-input .inimark-field__input { text-align: center; }
 
 .theme-color-popover {
   position: fixed; z-index: 10050; width: 260px; padding: 12px;

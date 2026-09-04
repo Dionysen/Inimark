@@ -37,12 +37,12 @@ describe("settings view", () => {
     expect(host.querySelector(".inimark-settings-nav-topbar")).not.toBeNull();
     expect(host.querySelector(".inimark-settings-main-wrap")).not.toBeNull();
 
-    const search = host.querySelector<HTMLInputElement>(".inimark-settings-search-input");
+    const search = host.querySelector<HTMLInputElement>(".inimark-search .inimark-field__input");
     expect(search).not.toBeNull();
     search!.value = "theme";
     search!.dispatchEvent(new Event("input", { bubbles: true }));
 
-    const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-settings-nav-item")];
+    const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-nav-item")];
     const visible = items.filter((item) => !item.hidden);
     expect(visible.length).toBe(1);
     expect(visible[0]?.dataset.section).toBe("appearance");

@@ -56,53 +56,9 @@
   color: var(--inimark-muted-fg);
 }
 
-.inimark-tree {
-  flex: 1;
-  overflow: auto;
-  padding: var(--inimark-space-2) 0 calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
-}
-
-.inimark-tree-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--inimark-fg);
-  font: inherit;
-  font-size: 0.9rem;
-  text-align: left;
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  padding-right: var(--inimark-space-3);
-  cursor: pointer;
-}
-
-.inimark-tree-item:hover {
-  background: var(--inimark-hover);
-}
-
-.inimark-tree-item.is-active {
-  background: var(--inimark-active);
-  font-weight: 600;
-}
-
-.inimark-tree-item--dir {
-  color: var(--inimark-muted-fg);
-  font-weight: 600;
-}
-
-.inimark-tree-chevron {
-  width: 0.75rem;
-  flex-shrink: 0;
-  font-size: 0.7rem;
-}
-
-.inimark-tree-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Dock clearance only — item chrome lives in widgets.css */
+.inimark-sidebar .inimark-tree {
+  padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
 }
 
 .inimark-editor-host {
@@ -122,53 +78,6 @@
   font-size: var(--inimark-editor-font-size);
 }
 
-/* Unified button control */
-.inimark-btn {
-  border: 1px solid var(--inimark-border);
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-  border-radius: var(--inimark-radius-sm);
-  padding: 0.25rem 0.6rem;
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.inimark-btn:hover:not(:disabled) {
-  background: var(--inimark-hover);
-}
-
-.inimark-btn:focus-visible {
-  outline: 2px solid var(--inimark-focus-ring);
-  outline-offset: 1px;
-}
-
-.inimark-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.inimark-btn--ghost {
-  border-color: transparent;
-  background: transparent;
-}
-
-.inimark-btn--ghost:hover:not(:disabled) {
-  background: var(--inimark-hover);
-}
-
-.inimark-btn--primary {
-  border-color: transparent;
-  background: var(--inimark-accent);
-  color: var(--inimark-accent-fg);
-}
-
-.inimark-btn--primary:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-
 /* Frosted glass surface */
 .inimark-glass {
   background: var(--inimark-glass-bg);
@@ -182,28 +91,6 @@
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-}
-
-.inimark-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
-  border: 0;
-  border-radius: var(--inimark-radius-sm);
-  background: transparent;
-  color: var(--inimark-fg);
-  cursor: pointer;
-}
-
-.inimark-icon-btn:hover {
-  background: var(--inimark-hover);
-}
-
-.inimark-icon-btn:focus-visible {
-  outline: 2px solid var(--inimark-focus-ring);
-  outline-offset: 1px;
 }
 
 /* Sidebar dock + library bar */
@@ -255,99 +142,14 @@
   flex-shrink: 0;
 }
 
-.inimark-library-menu {
-  position: absolute;
+.inimark-sidebar-dock .inimark-menu {
   left: 0;
   right: 0;
   bottom: calc(100% + 0.45rem);
-  padding: var(--inimark-space-2);
-  border-radius: var(--inimark-radius-md);
+  min-width: 0;
+  transform: translateY(4px);
 }
 
-.inimark-library-menu-path {
-  margin: 0 0 var(--inimark-space-2);
-  padding: 0 var(--inimark-space-1);
-  font-size: 0.75rem;
-  color: var(--inimark-muted-fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inimark-library-menu-item {
-  display: block;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--inimark-fg);
-  font: inherit;
-  font-size: 0.88rem;
-  text-align: left;
-  padding: 0.45rem 0.55rem;
-  border-radius: var(--inimark-radius-sm);
-  cursor: pointer;
-}
-
-.inimark-library-menu-item:hover {
-  background: var(--inimark-hover);
-}
-
-.inimark-library-menu-divider {
-  height: 1px;
-  margin: var(--inimark-space-2) 0;
-  background: var(--inimark-border);
-}
-
-.inimark-library-menu-heading {
-  margin: 0 0 0.35rem;
-  padding: 0 var(--inimark-space-1);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--inimark-muted-fg);
-}
-
-.inimark-library-menu-empty {
-  margin: 0;
-  padding: 0.35rem var(--inimark-space-1);
-  font-size: 0.8rem;
-  color: var(--inimark-muted-fg);
-}
-
-.inimark-library-menu-library {
-  display: block;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--inimark-fg);
-  text-align: left;
-  padding: 0.45rem 0.55rem;
-  border-radius: var(--inimark-radius-sm);
-  cursor: pointer;
-}
-
-.inimark-library-menu-library:hover {
-  background: var(--inimark-hover);
-}
-
-.inimark-library-menu-library.is-active {
-  background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
-  box-shadow: inset 2px 0 0 var(--inimark-accent);
-}
-
-.inimark-library-menu-library-name {
-  display: block;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.inimark-library-menu-library-path {
-  display: block;
-  margin-top: 0.15rem;
-  font-size: 0.72rem;
-  color: var(--inimark-muted-fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.inimark-sidebar-dock .inimark-menu.is-open {
+  transform: translateY(0);
 }

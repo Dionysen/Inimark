@@ -27,6 +27,17 @@
   --inimark-space-3: 0.75rem;
   --inimark-space-4: 1rem;
 
+  /* Unified widgets — theme-editable via --control-* / --radius-control */
+  --inimark-radius-control: var(--radius-control, 6px);
+  --inimark-control-height: var(--control-height, 32px);
+  --inimark-control-padding-x: var(--control-padding-x, 10px);
+  --inimark-control-font-size: var(--control-font-size, 13px);
+  --inimark-menu-item-padding-y: var(--menu-item-padding-y, 6px);
+  --inimark-tree-item-padding-y: var(--tree-item-padding-y, 5px);
+  --inimark-control-bg: var(--bg-input, var(--inimark-content-bg));
+  --inimark-control-transition: 150ms ease;
+  --inimark-input-bg: var(--bg-input, var(--inimark-content-bg));
+
   --inimark-sidebar-width: 240px;
   --inimark-settings-nav-width: 220px;
   --inimark-window-radius: 12px;

@@ -1,5 +1,40 @@
-export { createButton, type ButtonOptions, type ButtonVariant } from "./button.ts";
-export { createIconButton, libraryIcon, settingsIcon, sidebarToggleIcon } from "./icon-button.ts";
+export {
+  createButton,
+  type ButtonOptions,
+  type ButtonVariant,
+  createIconButton,
+  libraryIcon,
+  settingsIcon,
+  sidebarToggleIcon,
+  type IconButtonOptions,
+  createTextField,
+  type TextFieldController,
+  type TextFieldOptions,
+  createSearchField,
+  type SearchFieldController,
+  type SearchFieldOptions,
+  createSlider,
+  type SliderController,
+  type SliderOptions,
+  createSelect,
+  type SelectController,
+  type SelectOption,
+  type SelectOptions,
+  createMenu,
+  type MenuController,
+  type MenuItemOptions,
+  createToggle,
+  type ToggleController,
+  type ToggleOptions,
+  createTreeHost,
+  createTreeItem,
+  type TreeItemKind,
+  type TreeItemOptions,
+  createNavItem,
+  createNavList,
+  type NavItemOptions,
+} from "./widgets/index.ts";
+
 export {
   attachColumnResize,
   loadPersistedWidth,
@@ -8,7 +43,13 @@ export {
   type ColumnResizeOptions,
   type ColumnSide,
 } from "./column-resize.ts";
-export { mountTitleBar, type TitleBarController, type TitleBarOptions, type WindowControlMode, type SidebarToggleOptions } from "./titlebar.ts";
+export {
+  mountTitleBar,
+  type TitleBarController,
+  type TitleBarOptions,
+  type WindowControlMode,
+  type SidebarToggleOptions,
+} from "./titlebar.ts";
 export {
   windowCloseIcon,
   windowMaximizeIcon,

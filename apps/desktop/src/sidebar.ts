@@ -1,4 +1,13 @@
-import { createIconButton, libraryIcon, settingsIcon } from "./ui/icon-button.ts";
+import {
+  createIconButton,
+  libraryIcon,
+  settingsIcon,
+} from "./ui/icon-button.ts";
+import {
+  createMenu,
+  createTreeHost,
+  createTreeItem,
+} from "./ui/widgets/index.ts";
 import type { LibraryRecord } from "./libraries/store.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 
@@ -25,9 +34,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   topbar.className = "inimark-sidebar-topbar";
   topbar.setAttribute("data-tauri-drag-region", "");
 
-  const treeHost = document.createElement("nav");
-  treeHost.className = "inimark-tree";
-  treeHost.setAttribute("aria-label", "Markdown files");
+  const treeHost = createTreeHost("Markdown files");
 
   function renderEmptyHint(text: string): void {
     treeHost.replaceChildren();
@@ -61,42 +68,15 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   libraryBar.append(libraryBtn, settingsBtn);
   dock.append(libraryBar);
 
-  const menu = document.createElement("div");
-  menu.className = "inimark-library-menu inimark-glass";
-  menu.hidden = true;
-  menu.setAttribute("role", "menu");
-
-  const menuPath = document.createElement("p");
-  menuPath.className = "inimark-library-menu-path";
-  menuPath.textContent = "No folder selected";
-
-  const menuLibraries = document.createElement("div");
-  menuLibraries.className = "inimark-library-menu-libraries";
-
-  const menuDivider = document.createElement("div");
-  menuDivider.className = "inimark-library-menu-divider";
-
-  const menuOpen = document.createElement("button");
-  menuOpen.type = "button";
-  menuOpen.className = "inimark-library-menu-item";
-  menuOpen.textContent = "Add library…";
-  menuOpen.setAttribute("role", "menuitem");
-
-  const menuClose = document.createElement("button");
-  menuClose.type = "button";
-  menuClose.className = "inimark-library-menu-item";
-  menuClose.textContent = "Close library";
-  menuClose.setAttribute("role", "menuitem");
-
-  menu.append(menuPath, menuLibraries, menuDivider, menuOpen, menuClose);
-  dock.append(menu);
+  const menu = createMenu();
+  dock.append(menu.el);
 
   host.append(topbar, treeHost, dock);
 
   let activePath: string | null = null;
   let activeLibraryId: string | null = null;
   let savedLibraries: LibraryRecord[] = [];
-  let menuOpenState = false;
+  let workspacePath = "";
   const expanded = new Set<string>();
   const handlers = {
     fileSelect: (_path: string): void | Promise<void> => {},
@@ -112,66 +92,68 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   }
 
   function closeMenu(): void {
-    menuOpenState = false;
-    menu.hidden = true;
+    menu.setOpen(false);
   }
 
   function toggleMenu(): void {
-    menuOpenState = !menuOpenState;
-    menu.hidden = !menuOpenState;
-    if (menuOpenState) renderLibraryList();
+    if (menu.isOpen()) {
+      closeMenu();
+      return;
+    }
+    renderLibraryList();
+    menu.setOpen(true);
   }
 
   function renderLibraryList(): void {
-    menuLibraries.replaceChildren();
+    menu.clear();
+    menu.setPath(
+      workspacePath || "No folder selected",
+      workspacePath || undefined,
+    );
+
     if (savedLibraries.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "inimark-library-menu-empty";
-      empty.textContent = "No saved libraries";
-      menuLibraries.append(empty);
-      return;
+      menu.setEmpty("No saved libraries");
+    } else {
+      menu.addHeading("Libraries");
+      for (const library of savedLibraries) {
+        menu.addItem({
+          label: library.rootName,
+          meta: library.rootPath,
+          title: library.rootPath,
+          selected: library.id === activeLibraryId,
+          onClick() {
+            closeMenu();
+            void handlers.switchLibrary(library.id);
+          },
+        });
+      }
     }
 
-    const heading = document.createElement("p");
-    heading.className = "inimark-library-menu-heading";
-    heading.textContent = "Libraries";
-    menuLibraries.append(heading);
-
-    for (const library of savedLibraries) {
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className = "inimark-library-menu-library";
-      if (library.id === activeLibraryId) row.classList.add("is-active");
-      row.setAttribute("role", "menuitem");
-      row.title = library.rootPath;
-      row.innerHTML = `
-        <span class="inimark-library-menu-library-name">${library.rootName}</span>
-        <span class="inimark-library-menu-library-path">${library.rootPath}</span>
-      `;
-      row.addEventListener("click", () => {
+    menu.addDivider();
+    menu.addItem({
+      label: "Add library…",
+      onClick() {
         closeMenu();
-        void handlers.switchLibrary(library.id);
-      });
-      menuLibraries.append(row);
-    }
+        void handlers.openFolder();
+      },
+    });
+    menu.addItem({
+      label: "Close library",
+      onClick() {
+        closeMenu();
+        handlers.closeLibrary();
+      },
+    });
   }
 
   libraryBtn.addEventListener("click", () => toggleMenu());
-  menuOpen.addEventListener("click", () => {
-    closeMenu();
-    void handlers.openFolder();
-  });
-  menuClose.addEventListener("click", () => {
-    closeMenu();
-    handlers.closeLibrary();
-  });
   settingsBtn.addEventListener("click", () => {
     closeMenu();
     handlers.openSettings();
   });
 
   document.addEventListener("click", (event) => {
-    if (!menuOpenState) return;
+    if (!menu.isOpen()) return;
     const target = event.target as Node | null;
     if (target && dock.contains(target)) return;
     closeMenu();
@@ -182,18 +164,18 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     for (const node of nodes) {
       if (node.kind === "directory") {
         const isOpen = expanded.has(node.path);
-        const row = document.createElement("button");
-        row.type = "button";
-        row.className = "inimark-tree-item inimark-tree-item--dir";
-        row.style.paddingLeft = `${0.5 + depth * 0.85}rem`;
-        row.dataset.path = node.path;
-        row.setAttribute("aria-expanded", isOpen ? "true" : "false");
-        row.innerHTML = `<span class="inimark-tree-chevron">${isOpen ? "▾" : "▸"}</span><span class="inimark-tree-label">${node.name}</span>`;
-        row.addEventListener("click", () => {
-          if (expanded.has(node.path)) expanded.delete(node.path);
-          else expanded.add(node.path);
-          notifyExpandedChange();
-          rerender();
+        const row = createTreeItem({
+          kind: "directory",
+          label: node.name,
+          path: node.path,
+          depth,
+          expanded: isOpen,
+          onClick() {
+            if (expanded.has(node.path)) expanded.delete(node.path);
+            else expanded.add(node.path);
+            notifyExpandedChange();
+            rerender();
+          },
         });
         frag.append(row);
         if (isOpen && node.children) {
@@ -202,14 +184,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         continue;
       }
 
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className = "inimark-tree-item inimark-tree-item--file";
-      if (node.path === activePath) row.classList.add("is-active");
-      row.style.paddingLeft = `${1.35 + depth * 0.85}rem`;
-      row.dataset.path = node.path;
-      row.innerHTML = `<span class="inimark-tree-label">${node.name}</span>`;
-      row.addEventListener("click", () => void handlers.fileSelect(node.path));
+      const row = createTreeItem({
+        kind: "file",
+        label: node.name,
+        path: node.path,
+        depth,
+        active: node.path === activePath,
+        onClick() {
+          void handlers.fileSelect(node.path);
+        },
+      });
       frag.append(row);
     }
     return frag;
@@ -231,9 +215,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       currentTree = [];
       activePath = null;
       activeLibraryId = null;
+      workspacePath = "";
       libraryLabel.textContent = "No library";
-      menuPath.textContent = "No folder selected";
-      menuPath.title = "";
       expanded.clear();
       renderEmptyHint("No folder selected");
       renderLibraryList();
@@ -241,9 +224,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     }
 
     currentTree = workspace.tree;
+    workspacePath = workspace.rootPath;
     libraryLabel.textContent = workspace.rootName;
-    menuPath.textContent = workspace.rootPath;
-    menuPath.title = workspace.rootPath;
     rerender();
     renderLibraryList();
   }
@@ -286,6 +268,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       handlers.expandedDirsChange = handler;
     },
     destroy() {
+      menu.destroy();
       host.replaceChildren();
     },
   };

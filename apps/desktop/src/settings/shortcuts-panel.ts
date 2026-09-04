@@ -1,4 +1,4 @@
-import { createButton } from "../ui/button.ts";
+import { createButton } from "../ui/widgets/index.ts";
 import {
   DEFAULT_SHORTCUTS,
   type ShortcutBinding,

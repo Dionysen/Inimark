@@ -53,105 +53,8 @@ html.platform-macos .inimark-settings-nav-topbar {
   padding: var(--inimark-space-3);
 }
 
-.inimark-settings-search {
-  position: relative;
-  display: flex;
-  align-items: center;
+.inimark-settings-nav-body > .inimark-search {
   flex-shrink: 0;
-}
-
-.inimark-settings-search-icon {
-  position: absolute;
-  left: 0.55rem;
-  color: var(--inimark-muted-fg);
-  opacity: 0.65;
-  pointer-events: none;
-}
-
-.inimark-settings-search-input {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--inimark-border);
-  border-radius: var(--inimark-radius-sm);
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 0.4rem 1.85rem 0.4rem 1.85rem;
-  outline: none;
-}
-
-.inimark-settings-search-input::placeholder {
-  color: var(--inimark-muted-fg);
-  opacity: 0.75;
-}
-
-.inimark-settings-search-input:focus {
-  border-color: color-mix(in srgb, var(--inimark-accent) 55%, var(--inimark-border));
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
-}
-
-.inimark-settings-search-input::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.inimark-settings-search-clear {
-  position: absolute;
-  right: 0.35rem;
-  display: grid;
-  place-items: center;
-  width: 1.35rem;
-  height: 1.35rem;
-  border: 0;
-  border-radius: var(--inimark-radius-sm);
-  background: transparent;
-  color: var(--inimark-muted-fg);
-  cursor: pointer;
-  padding: 0;
-}
-
-.inimark-settings-search-clear:hover {
-  color: var(--inimark-fg);
-  background: var(--inimark-hover);
-}
-
-.inimark-settings-nav-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.inimark-settings-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--inimark-muted-fg);
-  font: inherit;
-  font-size: 0.9rem;
-  text-align: left;
-  padding: 0.45rem 0.55rem;
-  border-radius: var(--inimark-radius-sm);
-  cursor: pointer;
-}
-
-.inimark-settings-nav-item:hover {
-  background: var(--inimark-hover);
-  color: var(--inimark-fg);
-}
-
-.inimark-settings-nav-item.is-active {
-  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
-  color: var(--inimark-fg);
-  box-shadow: inset 2px 0 0 var(--inimark-accent);
-}
-
-.inimark-settings-nav-chevron {
-  opacity: 0.55;
-  font-size: 0.8rem;
 }
 
 .inimark-settings-nav-empty {
@@ -163,13 +66,6 @@ html.platform-macos .inimark-settings-nav-topbar {
   color: var(--inimark-muted-fg);
   font-size: 0.85rem;
   text-align: center;
-}
-
-.inimark-settings-nav-empty .inimark-settings-search-icon {
-  position: static;
-  width: 1.35rem;
-  height: 1.35rem;
-  opacity: 0.45;
 }
 
 /* ── Right column ────────────────────────────────────────────────── */
@@ -311,34 +207,10 @@ html.platform-macos .inimark-settings-nav-topbar {
   min-width: 11rem;
 }
 
-.inimark-select {
+.inimark-settings-row-control .inimark-select,
+.inimark-settings-row-control .inimark-slider {
   width: 100%;
-  border: 1px solid var(--inimark-border);
-  border-radius: var(--inimark-radius-sm);
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 0.35rem 0.5rem;
-}
-
-.inimark-settings-range-wrap {
-  display: flex;
-  align-items: center;
-  gap: var(--inimark-space-2);
-  width: 100%;
-}
-
-.inimark-range {
-  flex: 1;
-}
-
-.inimark-settings-value {
-  min-width: 2.5rem;
-  text-align: right;
-  font-family: var(--inimark-font-mono);
-  font-size: 0.82rem;
-  color: var(--inimark-muted-fg);
+  min-width: 11rem;
 }
 
 .inimark-about {
@@ -358,33 +230,6 @@ html.platform-macos .inimark-settings-nav-topbar {
   color: var(--inimark-muted-fg);
   font-size: 0.9rem;
   line-height: 1.5;
-}
-
-.inimark-btn {
-  border: 1px solid var(--inimark-border);
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-  border-radius: var(--inimark-radius-sm);
-  padding: 0.25rem 0.6rem;
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  cursor: pointer;
-}
-
-.inimark-btn:hover:not(:disabled) {
-  background: var(--inimark-hover);
-}
-
-.inimark-btn--ghost {
-  border-color: transparent;
-  background: transparent;
-}
-
-.inimark-btn--primary {
-  border-color: var(--inimark-accent);
-  background: var(--inimark-accent);
-  color: var(--inimark-accent-fg);
 }
 
 .inimark-settings-libraries-toolbar {

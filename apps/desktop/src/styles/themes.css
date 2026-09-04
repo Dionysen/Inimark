@@ -29,6 +29,13 @@
   --sidebar-chrome-opacity: 1;
   /* 选中 Tab 相对背景的不透明度增量（可调） */
   --sidebar-tab-active-opacity-delta: 0.18;
+  /* Unified control chrome (theme-editable) */
+  --radius-control: 6px;
+  --control-height: 32px;
+  --control-padding-x: 10px;
+  --control-font-size: 13px;
+  --menu-item-padding-y: 6px;
+  --tree-item-padding-y: 5px;
 }
 
 /* ── 白色主题 ── */
