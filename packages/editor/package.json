@@ -1,0 +1,54 @@
+{
+  "name": "@md/editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typora-style WYSIWYG Markdown editor (forked from typora-web)",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/lib.ts",
+    "./widgets.css": "./src/styles/widgets.css",
+    "./theme-typora.css": "./src/styles/theme-typora.css",
+    "./theme-github.css": "./src/styles/theme-github.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build --config vite.lib.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-lezer": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/language-data": "^6.5.2",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.43.0",
+    "@lezer/highlight": "1.2.3",
+    "isomorphic-dompurify": "^4.1.0",
+    "katex": "^0.16.46",
+    "markdown-it": "^14.1.1",
+    "markdown-it-emoji": "^3.0.0",
+    "mermaid": "^11.15.0",
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-history": "^1.5.0",
+    "prosemirror-inputrules": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.4",
+    "prosemirror-schema-basic": "^1.2.4",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-transform": "^1.12.0",
+    "prosemirror-view": "^1.41.8"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/markdown-it": "^14.1.2",
+    "happy-dom": "^20.9.0",
+    "jsdom": "^30.0.1",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

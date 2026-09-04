@@ -1,0 +1,22 @@
+node_modules/
+dist/
+target/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Tauri
+apps/desktop/src-tauri/gen/
+
+# Upstream clone (local reference only)
+_upstream-typora-web/
+
+# Editor build output
+packages/editor/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,12 @@
+Md Markdown Editor
+Copyright (c) 2026 Md Contributors
+
+This product includes software developed by third parties:
+
+---
+typora-web (editor core)
+Copyright (c) Yanzhen Yu
+Licensed under the MIT License
+Source: https://github.com/Albert-PZY/typora-web
+(Forked from https://github.com/Yuyz0112/typora-web)
+See packages/editor/UPSTREAM-LICENSE for the full license text.

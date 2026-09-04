@@ -1,0 +1,15 @@
+{
+  "name": "md-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "dev": "pnpm --filter @md/desktop dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:editor": "pnpm --filter @md/editor test",
+    "test:desktop": "pnpm --filter @md/desktop test",
+    "typecheck": "pnpm -r typecheck",
+    "tauri": "pnpm --filter @md/desktop tauri"
+  }
+}

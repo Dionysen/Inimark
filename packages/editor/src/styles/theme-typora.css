@@ -1,0 +1,261 @@
+/*
+ * Typora-flavored minimal theme.
+ *
+ * Aesthetic only. Light, thin, restrained — closer to a manuscript
+ * than a GitHub README. No heading underlines, light borders, soft
+ * code background, generous line-height.
+ *
+ * All rules scope to `.ProseMirror` — the theme only styles the
+ * editor body, never the surrounding website chrome.
+ */
+
+.ProseMirror {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  /* Comfortable long-form measure: slightly larger type, open leading.
+   * Column width is controlled by the host paper (.page-home), not here,
+   * so wide blocks (tables, Mermaid) can still use full editor width. */
+  font-size: 17px;
+  line-height: 1.78;
+  color: #2c2c2c;
+  word-wrap: break-word;
+  letter-spacing: 0.005em;
+}
+
+/* ─── headings ───────────────────────────────────────────────────── */
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  margin: 1.75em 0 0.7em;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #1f1f1f;
+  letter-spacing: -0.01em;
+}
+.ProseMirror > :first-child { margin-top: 0; }
+.ProseMirror h1 { font-size: 1.7em; margin-top: 0.4em; }
+.ProseMirror h2 { font-size: 1.38em; }
+.ProseMirror h3 { font-size: 1.18em; }
+.ProseMirror h4 { font-size: 1.05em; }
+.ProseMirror h5 { font-size: 1em; }
+.ProseMirror h6 { font-size: 0.95em; color: #666; }
+
+/* ─── paragraphs ─────────────────────────────────────────────────── */
+.ProseMirror p { margin: 0 0 1.05em; }
+.ProseMirror p:last-child { margin-bottom: 0; }
+
+/* ─── links ──────────────────────────────────────────────────────── */
+.ProseMirror a {
+  color: #4078c0;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(64, 120, 192, 0.25);
+}
+.ProseMirror a:hover {
+  border-bottom-color: #4078c0;
+}
+
+/* ─── inline code / pre ──────────────────────────────────────────── */
+.ProseMirror code {
+  font-family: "SF Mono", "Source Code Pro", Consolas, ui-monospace, monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.35em;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 3px;
+  white-space: break-spaces;
+}
+.ProseMirror pre {
+  font-family: "SF Mono", "Source Code Pro", Consolas, ui-monospace, monospace;
+  font-size: 0.88em;
+  line-height: 1.5;
+  background: #f8f8f8;
+  padding: 12px 14px;
+  margin: 0 0 1em;
+  border-radius: 4px;
+  overflow-x: hidden;
+  overflow-y: visible;
+  border: 1px solid #ececec;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.ProseMirror pre code {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ─── blockquote ─────────────────────────────────────────────────── */
+.ProseMirror blockquote {
+  margin: 0 0 1em;
+  padding: 0 0 0 1em;
+  color: #666;
+  border-left: 3px solid #ddd;
+}
+.ProseMirror blockquote > :first-child { margin-top: 0; }
+.ProseMirror blockquote > :last-child { margin-bottom: 0; }
+.ProseMirror blockquote.md-alert {
+  --md-alert-color: #6a737d;
+  --md-alert-bg: rgba(106, 115, 125, 0.08);
+  margin: 0 0 1em;
+  padding: 0.78em 1em 0.82em;
+  color: #2d333b;
+  background: var(--md-alert-bg);
+  border: 1px solid rgba(106, 115, 125, 0.18);
+  border-left: 4px solid var(--md-alert-color);
+  border-radius: 4px;
+}
+.ProseMirror blockquote.md-alert::before {
+  content: attr(data-alert-source);
+  display: block;
+  margin: 0 0 0.35em;
+  color: var(--md-alert-color);
+  font-size: 0.9em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.ProseMirror blockquote.md-alert > :first-child { margin-top: 0; }
+.ProseMirror blockquote.md-alert > :last-child { margin-bottom: 0; }
+.ProseMirror blockquote.md-alert-note {
+  --md-alert-color: #6a737d;
+  --md-alert-bg: rgba(106, 115, 125, 0.08);
+}
+.ProseMirror blockquote.md-alert-tip {
+  --md-alert-color: #00a1a7;
+  --md-alert-bg: rgba(0, 161, 167, 0.08);
+}
+.ProseMirror blockquote.md-alert-important {
+  --md-alert-color: #8250df;
+  --md-alert-bg: rgba(130, 80, 223, 0.09);
+}
+.ProseMirror blockquote.md-alert-warning {
+  --md-alert-color: #9a6700;
+  --md-alert-bg: rgba(154, 103, 0, 0.1);
+}
+.ProseMirror blockquote.md-alert-danger {
+  --md-alert-color: #cf222e;
+  --md-alert-bg: rgba(207, 34, 46, 0.08);
+}
+
+/* ─── lists ──────────────────────────────────────────────────────── */
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0 0 1em;
+  padding-left: 1.6em;
+}
+.ProseMirror ul ul,
+.ProseMirror ul ol,
+.ProseMirror ol ul,
+.ProseMirror ol ol { margin-bottom: 0; }
+.ProseMirror li > p { margin-bottom: 0; }
+
+/* ─── horizontal rule ────────────────────────────────────────────── */
+.ProseMirror hr {
+  height: 1px;
+  padding: 0;
+  margin: 1.6em 0;
+  background: #ddd;
+  border: 0;
+}
+
+/* ─── tables (cells; layout from widgets.css) ────────────────────── */
+.ProseMirror table th,
+.ProseMirror table td {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+.ProseMirror table th {
+  font-weight: 600;
+  background: #fafafa;
+}
+
+/* ─── extension marks ────────────────────────────────────────────── */
+.ProseMirror mark {
+  background: #fff3a3;
+  color: inherit;
+  padding: 0 0.1em;
+  border-radius: 2px;
+}
+.ProseMirror del { color: inherit; }
+
+/* ─── built-in dark appearance ──────────────────────────────────── */
+:root[data-appearance="dark"] .ProseMirror {
+  color: #d2cdc3;
+}
+:root[data-appearance="dark"] .ProseMirror h1,
+:root[data-appearance="dark"] .ProseMirror h2,
+:root[data-appearance="dark"] .ProseMirror h3,
+:root[data-appearance="dark"] .ProseMirror h4,
+:root[data-appearance="dark"] .ProseMirror h5,
+:root[data-appearance="dark"] .ProseMirror h6 {
+  color: #e8e3d9;
+}
+:root[data-appearance="dark"] .ProseMirror h6 { color: #9b958c; }
+:root[data-appearance="dark"] .ProseMirror a {
+  color: #8ab4e7;
+  border-bottom-color: rgba(138, 180, 231, 0.32);
+}
+:root[data-appearance="dark"] .ProseMirror a:hover {
+  border-bottom-color: #8ab4e7;
+}
+:root[data-appearance="dark"] .ProseMirror code {
+  background: rgba(232, 225, 214, 0.09);
+}
+:root[data-appearance="dark"] .ProseMirror pre {
+  color: #e4ded4;
+  background: #34373b;
+  border-color: #474b51;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset;
+}
+:root[data-appearance="dark"] .ProseMirror blockquote {
+  color: #aaa399;
+  border-left-color: #4a4d52;
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert {
+  color: #d8d3ca;
+  border-color: rgba(170, 163, 153, 0.17);
+  border-left-color: var(--md-alert-color);
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-note {
+  --md-alert-color: #9b958c;
+  --md-alert-bg: rgba(155, 149, 140, 0.11);
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-tip {
+  --md-alert-color: #4fd1cf;
+  --md-alert-bg: rgba(79, 209, 207, 0.1);
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-important {
+  --md-alert-color: #b994f4;
+  --md-alert-bg: rgba(185, 148, 244, 0.11);
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-warning {
+  --md-alert-color: #d4a72c;
+  --md-alert-bg: rgba(212, 167, 44, 0.11);
+}
+:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-danger {
+  --md-alert-color: #ff7b72;
+  --md-alert-bg: rgba(255, 123, 114, 0.1);
+}
+:root[data-appearance="dark"] .ProseMirror hr {
+  background: #3c3f43;
+}
+:root[data-appearance="dark"] .ProseMirror table th,
+:root[data-appearance="dark"] .ProseMirror table td {
+  border-color: #3c3f43;
+}
+:root[data-appearance="dark"] .ProseMirror table th {
+  background: #26282c;
+}
+:root[data-appearance="dark"] .ProseMirror mark {
+  background: #645a24;
+  color: #f3ecd8;
+}

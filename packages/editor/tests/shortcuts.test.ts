@@ -1,0 +1,94 @@
+﻿import { describe, expect, test } from "vitest";
+import { TextSelection } from "prosemirror-state";
+
+import { apply, setup } from "./utils.ts";
+import { serialize } from "../src/serializer.ts";
+
+function selectText(md: string, from: number, to: number) {
+  const state = setup(md);
+  return state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+}
+
+describe("common editing shortcuts", () => {
+  test("Mod-b wraps the selection in strong delimiters", () => {
+    const state = selectText("bold", 1, 5);
+    const next = apply(state, ["<Mod-b>"]);
+    expect(serialize(next.doc)).toBe("**bold**");
+  });
+
+  test("Mod-i wraps the selection in emphasis delimiters", () => {
+    const state = selectText("em", 1, 3);
+    const next = apply(state, ["<Mod-i>"]);
+    expect(serialize(next.doc)).toBe("*em*");
+  });
+
+  test("Mod-k inserts an empty inline link shell at the cursor", () => {
+    const next = apply(setup("go"), ["<Mod-k>", "x"]);
+    expect(serialize(next.doc)).toBe("go[x](url)");
+  });
+
+  test("format shortcuts wrap underline, inline code, and strikethrough", () => {
+    expect(serialize(apply(selectText("text", 1, 5), ["<Mod-u>"]).doc)).toBe("<u>text</u>");
+    expect(serialize(apply(selectText("text", 1, 5), ["<Mod-Shift-`>"]).doc)).toBe("`text`");
+    expect(serialize(apply(selectText("text", 1, 5), ["<Alt-Shift-5>"]).doc)).toBe("~~text~~");
+  });
+
+  test("Mod-k wraps selected text in a link shell", () => {
+    const next = apply(selectText("docs", 1, 5), ["<Mod-k>"]);
+    expect(serialize(next.doc)).toBe("[docs](url)");
+  });
+
+  test("Mod-1 turns the current paragraph into an ATX heading", () => {
+    const next = apply(setup("Title"), ["<Mod-1>"]);
+    expect(serialize(next.doc)).toBe("# Title");
+  });
+
+  test("Mod-0 turns the current heading into a paragraph", () => {
+    const next = apply(setup("# Title"), ["<Mod-0>"]);
+    expect(serialize(next.doc)).toBe("Title");
+  });
+
+  test("Mod-Shift-M inserts a math block", () => {
+    const next = apply(setup(""), ["<Mod-Shift-M>"]);
+    expect(serialize(next.doc)).toBe("$$\n\n$$");
+  });
+
+  test("Shift-Enter inserts a Markdown hard break", () => {
+    const next = apply(setup("line"), ["<Shift-Enter>", "next"]);
+    expect(serialize(next.doc)).toBe("line  \nnext");
+  });
+
+  test("Shift-Enter keeps following text after a hard break node", () => {
+    const next = apply(setup("line"), ["<Shift-Enter>", "next"]);
+    const paragraph = next.doc.firstChild;
+    expect(paragraph?.childCount).toBe(3);
+    expect(paragraph?.child(0).textContent).toBe("line");
+    expect(paragraph?.child(1).type.name).toBe("hard_break");
+    expect(paragraph?.child(2).textContent).toBe("next");
+  });
+
+  test("Mod-Shift-K inserts an empty fenced code block shell", () => {
+    const next = apply(setup(""), ["<Mod-Shift-K>"]);
+    expect(serialize(next.doc)).toBe("```\n\n```");
+  });
+
+  test("Mod-Shift-Q wraps the current paragraph in a blockquote", () => {
+    const next = apply(setup("quote"), ["<Mod-Shift-Q>"]);
+    expect(serialize(next.doc)).toBe("> quote");
+  });
+
+  test("Mod-Shift-8 wraps the current paragraph in a bullet list", () => {
+    const next = apply(setup("item"), ["<Mod-Shift-8>"]);
+    expect(serialize(next.doc)).toBe("- item");
+  });
+
+  test("Mod-Shift-x turns the current paragraph into a task list", () => {
+    const next = apply(setup("item"), ["<Mod-Shift-x>"]);
+    expect(serialize(next.doc)).toBe("- [ ] item");
+  });
+
+  test("undo and redo are wired through common shortcuts", () => {
+    const next = apply(setup(""), ["a", "<Mod-z>", "<Mod-y>"]);
+    expect(serialize(next.doc)).toBe("a");
+  });
+});
