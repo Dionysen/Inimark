@@ -6,6 +6,11 @@ import {
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import { createButton } from "../ui/button.ts";
 import {
+  attachColumnResize,
+  loadPersistedWidth,
+  persistWidth,
+} from "../ui/column-resize.ts";
+import {
   type AppSettings,
   type EditorWidth,
   editorWidthLabel,
@@ -38,6 +43,11 @@ const SECTION_META: Record<
   about: { title: "About", subtitle: "Application information" },
 };
 
+const SETTINGS_NAV_WIDTH_KEY = "inimark-settings-nav-width";
+const SETTINGS_NAV_WIDTH_DEFAULT = 220;
+const SETTINGS_NAV_WIDTH_MIN = 160;
+const SETTINGS_NAV_WIDTH_MAX = 420;
+
 export function mountSettingsView(
   host: HTMLElement,
   options?: SettingsViewOptions,
@@ -46,6 +56,12 @@ export function mountSettingsView(
   let activeSection: SettingsSection = "editor";
   let onChangeHandler: (settings: AppSettings) => void =
     options?.onChange ?? (() => {});
+  let navWidth = loadPersistedWidth(
+    SETTINGS_NAV_WIDTH_KEY,
+    SETTINGS_NAV_WIDTH_DEFAULT,
+    SETTINGS_NAV_WIDTH_MIN,
+    SETTINGS_NAV_WIDTH_MAX,
+  );
 
   host.className = "inimark-settings-window";
 
@@ -101,6 +117,24 @@ export function mountSettingsView(
   main.append(content);
   layout.append(nav, main);
   host.append(layout);
+
+  function applyNavWidth(): void {
+    layout.style.setProperty("--inimark-settings-nav-width", `${navWidth}px`);
+  }
+
+  applyNavWidth();
+
+  const resize = attachColumnResize(nav, {
+    side: "left",
+    minWidth: SETTINGS_NAV_WIDTH_MIN,
+    maxWidth: SETTINGS_NAV_WIDTH_MAX,
+    getWidth: () => navWidth,
+    onWidthChange(width) {
+      navWidth = width;
+      applyNavWidth();
+      persistWidth(SETTINGS_NAV_WIDTH_KEY, width);
+    },
+  });
 
   function renderNav(): void {
     for (const [id, btn] of navButtons) {
@@ -315,6 +349,7 @@ export function mountSettingsView(
       renderContent();
     },
     destroy() {
+      resize.destroy();
       shortcutsCleanup?.();
       themeCleanup?.();
       host.replaceChildren();

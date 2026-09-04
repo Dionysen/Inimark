@@ -23,18 +23,24 @@
 
 .inimark-settings-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: var(--inimark-settings-nav-width) 1fr;
   flex: 1;
   min-height: 0;
 }
 
 .inimark-settings-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--inimark-space-2);
   padding: var(--inimark-space-3);
   border-right: 1px solid var(--inimark-border);
   background: var(--inimark-surface);
+  min-width: 0;
+}
+
+.inimark-settings-nav.is-resizing {
+  user-select: none;
 }
 
 .inimark-settings-search {

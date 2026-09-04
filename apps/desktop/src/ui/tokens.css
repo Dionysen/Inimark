@@ -27,7 +27,8 @@
   --inimark-space-3: 0.75rem;
   --inimark-space-4: 1rem;
 
-  --inimark-sidebar-width: 15rem;
+  --inimark-sidebar-width: 240px;
+  --inimark-settings-nav-width: 220px;
   --inimark-window-radius: 12px;
   --inimark-mac-traffic-lights-width: 0px;
   --inimark-caption-width: 2.75rem;

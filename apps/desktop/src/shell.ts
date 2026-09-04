@@ -1,7 +1,17 @@
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
+import {
+  attachColumnResize,
+  loadPersistedWidth,
+  persistWidth,
+  type ColumnResizeController,
+} from "./ui/column-resize.ts";
 import { mountTitleBar, type TitleBarController } from "./ui/titlebar.ts";
 
 const SIDEBAR_OPEN_KEY = "inimark-sidebar-open";
+const SIDEBAR_WIDTH_KEY = "inimark-sidebar-width";
+const SIDEBAR_WIDTH_DEFAULT = 240;
+const SIDEBAR_WIDTH_MIN = 180;
+const SIDEBAR_WIDTH_MAX = 480;
 
 export interface ShellController {
   editorHost: HTMLElement;
@@ -42,7 +52,17 @@ export function mountShell(
   mainColumn.className = "inimark-main";
 
   let sidebarOpen = loadSidebarOpen();
+  let sidebarWidth = loadPersistedWidth(
+    SIDEBAR_WIDTH_KEY,
+    SIDEBAR_WIDTH_DEFAULT,
+    SIDEBAR_WIDTH_MIN,
+    SIDEBAR_WIDTH_MAX,
+  );
   let titlebar: TitleBarController;
+
+  function applySidebarWidth(): void {
+    host.style.setProperty("--inimark-sidebar-width", `${sidebarWidth}px`);
+  }
 
   function applySidebarState(): void {
     host.classList.toggle("is-sidebar-closed", !sidebarOpen);
@@ -71,7 +91,20 @@ export function mountShell(
 
   mainColumn.append(titlebarHost, editorHost);
   host.append(sidebarHost, mainColumn);
+  applySidebarWidth();
   applySidebarState();
+
+  const resize: ColumnResizeController = attachColumnResize(sidebarHost, {
+    side: "left",
+    minWidth: SIDEBAR_WIDTH_MIN,
+    maxWidth: SIDEBAR_WIDTH_MAX,
+    getWidth: () => sidebarWidth,
+    onWidthChange(width) {
+      sidebarWidth = width;
+      applySidebarWidth();
+      persistWidth(SIDEBAR_WIDTH_KEY, width);
+    },
+  });
 
   let dirty = false;
   let fileName: string | null = null;
@@ -97,6 +130,7 @@ export function mountShell(
     },
     toggleSidebar,
     destroy() {
+      resize.destroy();
       titlebar.destroy();
       sidebar.destroy();
       host.replaceChildren();

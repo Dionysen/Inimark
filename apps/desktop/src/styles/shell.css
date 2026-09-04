@@ -54,6 +54,37 @@ html.platform-windows body {
   background: var(--inimark-bg);
 }
 
+/* ── Column resize handle (sidebar / settings nav) ──────────────── */
+.inimark-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+  background: transparent;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-resize-handle--left {
+  right: -4px;
+}
+
+.inimark-resize-handle--right {
+  left: -4px;
+}
+
+.inimark-sidebar.is-collapsed .inimark-resize-handle,
+.inimark-shell.is-sidebar-closed .inimark-resize-handle {
+  display: none;
+}
+
+body.is-column-resizing,
+body.is-column-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
 /* ── Custom titlebar ─────────────────────────────────────────────── */
 
 .inimark-titlebar {

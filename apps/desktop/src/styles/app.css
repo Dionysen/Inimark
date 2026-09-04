@@ -28,13 +28,18 @@
   border-right: 1px solid var(--inimark-border);
   background: var(--inimark-surface);
   position: relative;
-  overflow: hidden;
+  /* visible so the resize handle can overhang the border */
+  overflow: visible;
 }
 
 .inimark-sidebar.is-collapsed {
   border-right: none;
   pointer-events: none;
   visibility: hidden;
+}
+
+.inimark-sidebar.is-resizing {
+  user-select: none;
 }
 
 .inimark-sidebar-topbar {
