@@ -68,6 +68,10 @@ html.platform-macos .inimark-settings-nav-topbar {
   text-align: center;
 }
 
+.inimark-settings-nav-empty[hidden] {
+  display: none;
+}
+
 /* ── Right column ────────────────────────────────────────────────── */
 
 .inimark-settings-main-wrap {
@@ -92,36 +96,6 @@ html.platform-macos .inimark-settings-nav-topbar {
 
 .inimark-settings-content {
   padding: var(--inimark-space-4);
-}
-
-.inimark-settings-header {
-  margin-bottom: var(--inimark-space-4);
-}
-
-.inimark-settings-badge {
-  display: inline-block;
-  margin-bottom: var(--inimark-space-2);
-  padding: 0.1rem 0.45rem;
-  border: 1px solid var(--inimark-border);
-  border-radius: 999px;
-  font-size: 0.72rem;
-  color: var(--inimark-muted-fg);
-}
-
-.inimark-settings-title {
-  margin: 0;
-  font-size: 1.45rem;
-  font-weight: 600;
-}
-
-.inimark-settings-subtitle {
-  margin: 0.35rem 0 0;
-  color: var(--inimark-muted-fg);
-  font-size: 0.9rem;
-}
-
-.inimark-settings-body {
-  border-top: 1px solid var(--inimark-border);
 }
 
 .inimark-settings-shortcuts {
@@ -192,8 +166,9 @@ html.platform-macos .inimark-settings-nav-topbar {
 }
 
 .inimark-settings-row-title {
-  font-family: var(--inimark-font-mono);
+  font-family: var(--inimark-font-ui);
   font-size: 0.92rem;
+  font-weight: 500;
 }
 
 .inimark-settings-row-desc {

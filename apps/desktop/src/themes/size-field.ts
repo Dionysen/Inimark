@@ -91,7 +91,6 @@ export function createThemeSizeField(options: ThemeSizeFieldOptions): HTMLElemen
 
   const text = createTextField({
     value: formatDisplay(value, meta),
-    mono: true,
     onInput(next) {
       draft = next;
     },

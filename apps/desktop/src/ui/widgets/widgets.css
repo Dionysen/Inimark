@@ -580,9 +580,7 @@
 }
 
 .inimark-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: block;
   width: 100%;
   border: 0;
   background: transparent;
@@ -607,12 +605,6 @@
 .inimark-nav-item.is-active {
   background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
   color: var(--inimark-fg);
-  box-shadow: inset 2px 0 0 var(--inimark-accent);
-}
-
-.inimark-nav-item__chevron {
-  opacity: 0.55;
-  font-size: 0.8rem;
 }
 
 /* ── Toggle ─────────────────────────────────────────────────────── */

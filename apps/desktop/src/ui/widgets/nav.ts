@@ -17,9 +17,7 @@ export function createNavItem(options: NavItemOptions): HTMLButtonElement {
   btn.className = "inimark-nav-item";
   btn.dataset.section = options.id;
   if (options.active) btn.classList.add("is-active");
-  btn.innerHTML = `<span class="inimark-nav-item__chevron">›</span><span></span>`;
-  const label = btn.querySelector("span:last-child");
-  if (label) label.textContent = options.label;
+  btn.textContent = options.label;
   if (options.onClick) btn.addEventListener("click", options.onClick);
   return btn;
 }

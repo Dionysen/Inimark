@@ -157,7 +157,7 @@
 .theme-editor-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px; }
 .theme-editor-label-block { width: 140px; flex-shrink: 0; }
 .theme-editor-label { font-size: 13px; font-weight: 500; display: block; }
-.theme-editor-var-name { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono); }
+.theme-editor-var-name { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-ui, var(--inimark-font-ui)); }
 .theme-editor-control { flex: 1; display: flex; justify-content: flex-end; }
 .theme-editor-color-group { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; }
 .theme-color-swatch { position: relative; width: var(--inimark-control-height, 32px); height: var(--inimark-control-height, 32px); padding: 0; border: 1px solid var(--border); border-radius: var(--inimark-radius-control, 6px); cursor: pointer; overflow: hidden; flex-shrink: 0; }

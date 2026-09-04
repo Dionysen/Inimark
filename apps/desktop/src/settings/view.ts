@@ -207,8 +207,9 @@ export function mountSettingsView(
       btn.classList.toggle("is-active", id === activeSection);
       if (match) visible += 1;
     }
-    navList.hidden = visible === 0;
-    navEmpty.hidden = visible > 0;
+    const querying = searchQuery.trim().length > 0;
+    navList.hidden = querying && visible === 0;
+    navEmpty.hidden = !(querying && visible === 0);
   }
 
   function createRow(
@@ -251,20 +252,6 @@ export function mountSettingsView(
     themeCleanup = null;
     content.replaceChildren();
 
-    const header = document.createElement("header");
-    header.className = "inimark-settings-header";
-    const badge = document.createElement("span");
-    badge.className = "inimark-settings-badge";
-    badge.textContent = "User";
-    const title = document.createElement("h2");
-    title.className = "inimark-settings-title";
-    title.textContent = SECTION_META[activeSection].title;
-    const subtitle = document.createElement("p");
-    subtitle.className = "inimark-settings-subtitle";
-    subtitle.textContent = SECTION_META[activeSection].subtitle;
-    header.append(badge, title, subtitle);
-    content.append(header);
-
     const body = document.createElement("div");
     body.className = "inimark-settings-body";
 
@@ -281,7 +268,7 @@ export function mountSettingsView(
       });
       body.append(
         createRow(
-          "font_size",
+          "Font size",
           "Base font size for the editor content area.",
           fontSize.el,
         ),
@@ -302,7 +289,7 @@ export function mountSettingsView(
       });
       body.append(
         createRow(
-          "editor_width",
+          "Editor width",
           "Maximum width of the writing column.",
           widthSelect.el,
         ),

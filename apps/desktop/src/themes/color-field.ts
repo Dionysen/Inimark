@@ -65,7 +65,6 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
 
   const text = createTextField({
     value,
-    mono: true,
     onChange(next) {
       if (open) {
         commit(rgbaToHsva(parseColor(next)));
