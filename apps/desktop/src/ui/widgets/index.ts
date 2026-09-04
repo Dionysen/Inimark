@@ -23,6 +23,8 @@ export { createMenu, type MenuController, type MenuItemOptions } from "./menu.ts
 export { createToggle, type ToggleController, type ToggleOptions } from "./toggle.ts";
 export {
   createTreeHost,
+  createTreeBranch,
+  createTreeChildren,
   createTreeItem,
   type TreeItemKind,
   type TreeItemOptions,

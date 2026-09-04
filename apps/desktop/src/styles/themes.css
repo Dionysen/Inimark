@@ -36,6 +36,10 @@
   --control-font-size: 13px;
   --menu-item-padding-y: 6px;
   --tree-item-padding-y: 5px;
+  --tree-indent-hint-color: var(--border);
+  --tree-indent-hint-width: 1px;
+  --tree-indent-hint-size: 14px;
+  --tree-indent-hint-visible: 1;
   /* Editor content tokens (theme-editable) */
   --radius-code-block: 8px;
   --radius-code-inline: 4px;

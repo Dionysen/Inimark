@@ -16,6 +16,7 @@ import {
 import { syncAccentRgb } from "../themes/color-utils.ts";
 import { createThemeColorField } from "../themes/color-field.ts";
 import { createThemeSizeField } from "../themes/size-field.ts";
+import { createThemeToggleField } from "../themes/toggle-field.ts";
 import { BUILTIN_THEME_LABELS, themeLabel } from "../themes/labels.ts";
 import {
   getCustomThemeCss,
@@ -588,7 +589,7 @@ export function renderThemePanel(host: HTMLElement): () => void {
           }) as FieldDestroyable;
           if (row.destroy) fieldCleanups.push(row.destroy);
           group.append(row);
-        } else {
+        } else if (field.kind === "size") {
           group.append(
             createThemeSizeField({
               label: themeLabel(field.meta.labelKey),
@@ -598,6 +599,15 @@ export function renderThemePanel(host: HTMLElement): () => void {
               onChange: (val) => handleVariableChange(field.variable.name, val),
             }),
           );
+        } else {
+          const row = createThemeToggleField({
+            label: themeLabel(field.meta.labelKey),
+            varName: field.variable.name,
+            value: field.variable.value,
+            onChange: (val) => handleVariableChange(field.variable.name, val),
+          });
+          fieldCleanups.push(row.destroy);
+          group.append(row);
         }
       }
       variablesHost.append(group);

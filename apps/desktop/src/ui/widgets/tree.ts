@@ -17,25 +17,52 @@ export function createTreeHost(ariaLabel = "Files"): HTMLElement {
   return tree;
 }
 
+/** Branch wrapper — row + optional nested children (Inimark tree pattern). */
+export function createTreeBranch(): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "inimark-tree-branch";
+  return el;
+}
+
+/**
+ * Children group for an expanded directory.
+ * `--tree-depth` is the *parent* depth so the guide lines up with that row's chevron.
+ */
+export function createTreeChildren(parentDepth: number): HTMLElement {
+  const el = document.createElement("div");
+  el.className = "inimark-tree-children";
+  el.style.setProperty("--tree-depth", String(parentDepth));
+  return el;
+}
+
 export function createTreeItem(options: TreeItemOptions): HTMLButtonElement {
   const depth = options.depth ?? 0;
   const row = document.createElement("button");
   row.type = "button";
   row.className = `inimark-tree-item inimark-tree-item--${options.kind === "directory" ? "dir" : "file"}`;
   row.dataset.path = options.path;
+  row.style.setProperty("--tree-depth", String(depth));
   if (options.active) row.classList.add("is-active");
 
   if (options.kind === "directory") {
-    row.style.paddingLeft = `${0.5 + depth * 0.85}rem`;
     row.setAttribute("aria-expanded", options.expanded ? "true" : "false");
-    row.innerHTML = `<span class="inimark-tree-chevron">${options.expanded ? "▾" : "▸"}</span><span class="inimark-tree-label"></span>`;
+    const chevron = document.createElement("span");
+    chevron.className = "inimark-tree-chevron";
+    chevron.textContent = options.expanded ? "▾" : "▸";
+    const label = document.createElement("span");
+    label.className = "inimark-tree-label";
+    label.textContent = options.label;
+    row.append(chevron, label);
   } else {
-    row.style.paddingLeft = `${1.35 + depth * 0.85}rem`;
-    row.innerHTML = `<span class="inimark-tree-label"></span>`;
+    const spacer = document.createElement("span");
+    spacer.className = "inimark-tree-icon-spacer";
+    spacer.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.className = "inimark-tree-label";
+    label.textContent = options.label;
+    row.append(spacer, label);
   }
 
-  const label = row.querySelector(".inimark-tree-label");
-  if (label) label.textContent = options.label;
   if (options.onClick) row.addEventListener("click", options.onClick);
   return row;
 }

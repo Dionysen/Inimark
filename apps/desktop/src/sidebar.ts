@@ -5,6 +5,8 @@ import {
 } from "./ui/icon-button.ts";
 import {
   createMenu,
+  createTreeBranch,
+  createTreeChildren,
   createTreeHost,
   createTreeItem,
 } from "./ui/widgets/index.ts";
@@ -168,6 +170,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function renderTree(nodes: WorkspaceTreeNode[], depth = 0): DocumentFragment {
     const frag = document.createDocumentFragment();
     for (const node of nodes) {
+      const branch = createTreeBranch();
+
       if (node.kind === "directory") {
         const isOpen = expanded.has(node.path);
         const row = createTreeItem({
@@ -183,10 +187,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
             rerender();
           },
         });
-        frag.append(row);
-        if (isOpen && node.children) {
-          frag.append(renderTree(node.children, depth + 1));
+        branch.append(row);
+        if (isOpen && node.children && node.children.length > 0) {
+          const children = createTreeChildren(depth);
+          children.append(renderTree(node.children, depth + 1));
+          branch.append(children);
         }
+        frag.append(branch);
         continue;
       }
 
@@ -200,7 +207,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           void handlers.fileSelect(node.path);
         },
       });
-      frag.append(row);
+      branch.append(row);
+      frag.append(branch);
     }
     return frag;
   }

@@ -43,6 +43,12 @@ export interface ThemeSizeToken {
   asPercent?: boolean;
 }
 
+export interface ThemeToggleToken {
+  name: string;
+  section: ThemeEditorSectionId;
+  labelKey: string;
+}
+
 export interface ThemeEditorSectionDef {
   id: ThemeEditorSectionId;
   /** i18n key under settings.theme.* */
@@ -78,6 +84,7 @@ export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
   { name: "--accent-hover", section: "chrome", labelKey: "accentHover" },
   { name: "--accent-rgb", section: "chrome", labelKey: "accentRgb", hidden: true },
   { name: "--danger", section: "chrome", labelKey: "danger" },
+  { name: "--tree-indent-hint-color", section: "chrome", labelKey: "treeIndentHintColor" },
   // 正文
   { name: "--bg-primary", section: "body", labelKey: "bgPrimary" },
   { name: "--text-primary", section: "body", labelKey: "textPrimary" },
@@ -127,6 +134,8 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
   { name: "--control-font-size", section: "chrome", labelKey: "controlFontSize", min: 11, max: 18 },
   { name: "--menu-item-padding-y", section: "chrome", labelKey: "menuItemPaddingY", min: 2, max: 16 },
   { name: "--tree-item-padding-y", section: "chrome", labelKey: "treeItemPaddingY", min: 2, max: 16 },
+  { name: "--tree-indent-hint-width", section: "chrome", labelKey: "treeIndentHintWidth", min: 1, max: 4 },
+  { name: "--tree-indent-hint-size", section: "chrome", labelKey: "treeIndentHintSize", min: 8, max: 28 },
   { name: "--radius-code-block", section: "codeBlock", labelKey: "radiusCodeBlock", min: 0, max: 24 },
   { name: "--radius-code-inline", section: "codeInline", labelKey: "radiusCodeInline", min: 0, max: 16 },
   { name: "--padding-code-inline-y", section: "codeInline", labelKey: "paddingCodeInlineY", min: 0, max: 16 },
@@ -144,9 +153,19 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
   { name: "--scrollbar-size", section: "scrollbar", labelKey: "scrollbarSize", min: 4, max: 20 },
 ];
 
+/** Boolean-ish 0/1 tokens shown as toggles in the theme editor. */
+export const THEME_TOGGLE_SCHEMA: ThemeToggleToken[] = [
+  {
+    name: "--tree-indent-hint-visible",
+    section: "chrome",
+    labelKey: "treeIndentHintVisible",
+  },
+];
+
 export type ThemeEditorField =
   | { kind: "color"; variable: ThemeVariable; meta: ThemeColorToken }
-  | { kind: "size"; variable: ThemeVariable; meta: ThemeSizeToken };
+  | { kind: "size"; variable: ThemeVariable; meta: ThemeSizeToken }
+  | { kind: "toggle"; variable: ThemeVariable; meta: ThemeToggleToken };
 
 export interface ThemeEditorSectionView {
   id: ThemeEditorSectionId;
@@ -168,6 +187,9 @@ const PRESERVED_NON_COLOR = [
   "--control-font-size",
   "--menu-item-padding-y",
   "--tree-item-padding-y",
+  "--tree-indent-hint-width",
+  "--tree-indent-hint-size",
+  "--tree-indent-hint-visible",
   "--radius-code-block",
   "--radius-code-inline",
   "--padding-code-inline-y",
@@ -460,6 +482,9 @@ const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--control-font-size", value: "13px", type: "size" },
   { name: "--menu-item-padding-y", value: "6px", type: "size" },
   { name: "--tree-item-padding-y", value: "5px", type: "size" },
+  { name: "--tree-indent-hint-width", value: "1px", type: "size" },
+  { name: "--tree-indent-hint-size", value: "14px", type: "size" },
+  { name: "--tree-indent-hint-visible", value: "1", type: "size" },
   { name: "--radius-code-block", value: "8px", type: "size" },
   { name: "--radius-code-inline", value: "4px", type: "size" },
   { name: "--padding-code-inline-y", value: "3px", type: "size" },
@@ -505,6 +530,9 @@ function resolveColorTokenValue(
   }
   if (token.name === "--tag-border" && colors["--accent-rgb"]) {
     return `rgba(${colors["--accent-rgb"]}, 0.2)`;
+  }
+  if (token.name === "--tree-indent-hint-color" && colors["--border"]) {
+    return colors["--border"];
   }
   return defaults[token.name] ?? LIGHT_DEFAULTS[token.name] ?? "#ffffff";
 }
@@ -605,6 +633,10 @@ export function getSizeTokenMeta(name: string): ThemeSizeToken | undefined {
   return THEME_SIZE_SCHEMA.find((t) => t.name === name);
 }
 
+export function getToggleTokenMeta(name: string): ThemeToggleToken | undefined {
+  return THEME_TOGGLE_SCHEMA.find((t) => t.name === name);
+}
+
 export function getEditableColorVariables(variables: ThemeVariable[]): ThemeVariable[] {
   const hidden = new Set(
     THEME_COLOR_SCHEMA.filter((t) => t.hidden).map((t) => t.name),
@@ -620,6 +652,14 @@ export function buildThemeEditorSections(variables: ThemeVariable[]): ThemeEdito
   const resolveColor = (token: ThemeColorToken): ThemeVariable => {
     const existing = byName.get(token.name);
     if (existing) return { ...existing, type: "color" };
+    if (token.name === "--tree-indent-hint-color") {
+      const border = byName.get("--border");
+      return {
+        name: token.name,
+        value: border?.value ?? LIGHT_DEFAULTS["--border"] ?? "#45475a",
+        type: "color",
+      };
+    }
     return {
       name: token.name,
       value: LIGHT_DEFAULTS[token.name] ?? "#ffffff",
@@ -638,6 +678,17 @@ export function buildThemeEditorSections(variables: ThemeVariable[]): ThemeEdito
     };
   };
 
+  const resolveToggle = (token: ThemeToggleToken): ThemeVariable => {
+    const existing = byName.get(token.name);
+    if (existing) return { ...existing, type: "size" };
+    const fallback = DEFAULT_SIZES.find((d) => d.name === token.name);
+    return {
+      name: token.name,
+      value: fallback?.value ?? "1",
+      type: "size",
+    };
+  };
+
   return THEME_EDITOR_SECTIONS.map((section) => {
     const fields: ThemeEditorField[] = [];
 
@@ -648,6 +699,10 @@ export function buildThemeEditorSections(variables: ThemeVariable[]): ThemeEdito
     for (const token of THEME_SIZE_SCHEMA) {
       if (token.section !== section.id) continue;
       fields.push({ kind: "size", variable: resolveSize(token), meta: token });
+    }
+    for (const token of THEME_TOGGLE_SCHEMA) {
+      if (token.section !== section.id) continue;
+      fields.push({ kind: "toggle", variable: resolveToggle(token), meta: token });
     }
 
     return {

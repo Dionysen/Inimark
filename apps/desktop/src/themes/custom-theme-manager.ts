@@ -30,6 +30,7 @@ const MANIFEST_FILE = "manifest.json";
 const COLOR_PATTERNS = [
   /^--bg-/, /^--text-/, /^--accent/, /^--border$/, /^--danger$/,
   /^--scrollbar-/, /^--metadata-/, /^--blockquote-/, /^--table-/, /^--tag-/,
+  /^--tree-indent-hint-color$/,
   /^--ring$/, /^--card/, /^--popover/, /^--primary/, /^--secondary/,
   /^--muted/, /^--destructive$/, /^--input$/, /^--sidebar/,
   /^--breathe/, /^--highlight/, /^--hljs-/,
@@ -51,6 +52,7 @@ const SIZE_PATTERNS = [
   /^--control-/,
   /^--menu-item-/,
   /^--tree-item-/,
+  /^--tree-indent-hint-/,
 ];
 
 // ── Path Helpers ─────────────────────────────────────────────────────
