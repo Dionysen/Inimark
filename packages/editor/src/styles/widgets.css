@@ -23,6 +23,7 @@
  * consumers can override with their own font / colors. */
 .typora-web-wrap { display: block; }
 .typora-web-editor-host { display: block; }
+.typora-web-editor-host[hidden] { display: none; }
 .typora-web-source-editor {
   display: block;
   width: 100%;

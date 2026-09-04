@@ -1,4 +1,5 @@
-﻿import { describe, expect, test } from "vitest";
+﻿import { readFileSync } from "node:fs";
+import { describe, expect, test } from "vitest";
 
 import { createEditor } from "../src/lib.ts";
 
@@ -214,6 +215,13 @@ const SAMPLES: Array<{ name: string; md: string }> = [
 ];
 
 describe("source ⇄ preview mode pollution", () => {
+  test("widgets.css hides rendered host when [hidden] is set", () => {
+    const widgetsCss = readFileSync("src/styles/widgets.css", "utf8");
+    expect(widgetsCss).toMatch(
+      /\.typora-web-editor-host\[hidden\]\s*\{\s*display:\s*none;/,
+    );
+  });
+
   for (const sample of SAMPLES) {
     test(`stable multi-cycle: ${sample.name}`, () => {
       expectStableAfterFirstCycle(sample.md);
