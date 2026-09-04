@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import { mountApp } from "../src/app.ts";
+import { mountShell } from "../src/shell.ts";
+import type { Workspace } from "../src/platform/types.ts";
 
 describe("desktop app shell", () => {
   test("mounts editor and exposes markdown API", () => {
@@ -14,6 +16,35 @@ describe("desktop app shell", () => {
     expect(app.editor.getMarkdown()).toBe("# Hello from test");
 
     app.destroy();
+    host.remove();
+  });
+
+  test("renders sidebar and unified toolbar controls", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    const shell = mountShell(host);
+    expect(host.querySelector(".inimark-sidebar")).not.toBeNull();
+    expect(host.querySelector(".inimark-tree")).not.toBeNull();
+    expect(host.querySelectorAll(".inimark-btn").length).toBeGreaterThan(0);
+
+    const workspace: Workspace = {
+      rootPath: "/vault",
+      rootName: "vault",
+      tree: [
+        {
+          name: "notes",
+          path: "notes",
+          kind: "directory",
+          children: [{ name: "intro.md", path: "notes/intro.md", kind: "file" }],
+        },
+      ],
+    };
+
+    shell.sidebar.setWorkspace(workspace);
+    expect(host.querySelector(".inimark-tree-item--file")?.textContent).toContain("intro.md");
+
+    shell.destroy();
     host.remove();
   });
 });

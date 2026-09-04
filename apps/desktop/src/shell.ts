@@ -1,10 +1,16 @@
+import { createButton } from "./ui/button.ts";
+import { mountSidebar, type SidebarController } from "./sidebar.ts";
+
 export interface ShellController {
   editorHost: HTMLElement;
+  sidebar: SidebarController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
+  isDirty(): boolean;
   setStatus(text: string): void;
   onNew(handler: () => void): void;
   onOpen(handler: () => void | Promise<void>): void;
+  onOpenFolder(handler: () => void | Promise<void>): void;
   onSave(handler: () => void | Promise<void>): void;
   onSaveAs(handler: () => void | Promise<void>): void;
   onToggleAppearance(handler: () => void): void;
@@ -25,49 +31,48 @@ export function mountShell(host: HTMLElement): ShellController {
   const actions = document.createElement("div");
   actions.className = "inimark-toolbar-actions";
 
-  const btnNew = document.createElement("button");
-  btnNew.type = "button";
-  btnNew.textContent = "New";
-  const btnOpen = document.createElement("button");
-  btnOpen.type = "button";
-  btnOpen.textContent = "Open";
-  const btnSave = document.createElement("button");
-  btnSave.type = "button";
-  btnSave.textContent = "Save";
-  const btnSaveAs = document.createElement("button");
-  btnSaveAs.type = "button";
-  btnSaveAs.textContent = "Save As";
-  const btnTheme = document.createElement("button");
-  btnTheme.type = "button";
-  btnTheme.textContent = "Theme";
+  const btnNew = createButton({ label: "New", onClick: () => handlers.new() });
+  const btnOpen = createButton({ label: "Open", onClick: () => void handlers.open() });
+  const btnOpenFolder = createButton({
+    label: "Open Folder",
+    onClick: () => void handlers.openFolder(),
+  });
+  const btnSave = createButton({ label: "Save", onClick: () => void handlers.save() });
+  const btnSaveAs = createButton({ label: "Save As", onClick: () => void handlers.saveAs() });
+  const btnTheme = createButton({ label: "Theme", onClick: () => handlers.theme() });
 
-  actions.append(btnNew, btnOpen, btnSave, btnSaveAs, btnTheme);
+  actions.append(btnNew, btnOpen, btnOpenFolder, btnSave, btnSaveAs, btnTheme);
   toolbar.append(title, actions);
+
+  const body = document.createElement("div");
+  body.className = "inimark-body";
+
+  const sidebarHost = document.createElement("aside");
+  const sidebar = mountSidebar(sidebarHost);
 
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";
+
+  body.append(sidebarHost, editorHost);
 
   const statusBar = document.createElement("footer");
   statusBar.className = "inimark-statusbar";
   statusBar.textContent = "Ready";
 
-  host.append(toolbar, editorHost, statusBar);
+  host.append(toolbar, body, statusBar);
 
   let dirty = false;
   let fileName: string | null = null;
   const handlers = {
     new: (): void => {},
-    open: async (): Promise<void> => {},
-    save: async (): Promise<void> => {},
-    saveAs: async (): Promise<void> => {},
+    open: (): void | Promise<void> => {},
+    openFolder: (): void | Promise<void> => {},
+    save: (): void | Promise<void> => {},
+    saveAs: (): void | Promise<void> => {},
     theme: (): void => {},
   };
 
-  btnNew.addEventListener("click", () => handlers.new());
-  btnOpen.addEventListener("click", () => void handlers.open());
-  btnSave.addEventListener("click", () => void handlers.save());
-  btnSaveAs.addEventListener("click", () => void handlers.saveAs());
-  btnTheme.addEventListener("click", () => handlers.theme());
+  sidebar.onOpenFolder(() => handlers.openFolder());
 
   function renderTitle() {
     const base = fileName ?? "Untitled";
@@ -76,6 +81,7 @@ export function mountShell(host: HTMLElement): ShellController {
 
   return {
     editorHost,
+    sidebar,
     setFileName(name) {
       fileName = name;
       renderTitle();
@@ -83,6 +89,9 @@ export function mountShell(host: HTMLElement): ShellController {
     setDirty(value) {
       dirty = value;
       renderTitle();
+    },
+    isDirty() {
+      return dirty;
     },
     setStatus(text) {
       statusBar.textContent = text;
@@ -92,6 +101,9 @@ export function mountShell(host: HTMLElement): ShellController {
     },
     onOpen(handler) {
       handlers.open = handler;
+    },
+    onOpenFolder(handler) {
+      handlers.openFolder = handler;
     },
     onSave(handler) {
       handlers.save = handler;
@@ -103,6 +115,7 @@ export function mountShell(host: HTMLElement): ShellController {
       handlers.theme = handler;
     },
     destroy() {
+      sidebar.destroy();
       host.replaceChildren();
     },
   };

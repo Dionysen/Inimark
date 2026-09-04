@@ -7,3 +7,5 @@
 
 export { createEditor } from "./editor-api.ts";
 export type { Editor, EditorOptions } from "./editor-api.ts";
+export { pickMarkdownDirectory, readMarkdownFileHandle } from "./local-files.ts";
+export type { MarkdownTreeEntry } from "./local-files.ts";

@@ -1,0 +1,36 @@
+/* Inimark design tokens — single source for shell chrome theming. */
+
+:root {
+  color-scheme: light dark;
+
+  --inimark-font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --inimark-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --inimark-fg: CanvasText;
+  --inimark-bg: Canvas;
+  --inimark-muted-fg: color-mix(in srgb, CanvasText 65%, transparent);
+  --inimark-border: color-mix(in srgb, CanvasText 12%, transparent);
+  --inimark-surface: color-mix(in srgb, Canvas 96%, CanvasText 4%);
+  --inimark-surface-raised: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+  --inimark-hover: color-mix(in srgb, Canvas 90%, CanvasText 10%);
+  --inimark-active: color-mix(in srgb, Canvas 84%, CanvasText 16%);
+  --inimark-accent: #3b6fd9;
+  --inimark-accent-fg: #fff;
+  --inimark-focus-ring: color-mix(in srgb, var(--inimark-accent) 45%, transparent);
+
+  --inimark-radius-sm: 0.35rem;
+  --inimark-radius-md: 0.5rem;
+  --inimark-space-1: 0.25rem;
+  --inimark-space-2: 0.5rem;
+  --inimark-space-3: 0.75rem;
+  --inimark-space-4: 1rem;
+
+  --inimark-sidebar-width: 15rem;
+  --inimark-toolbar-height: 2.75rem;
+  --inimark-statusbar-height: 1.75rem;
+}
+
+:root[data-appearance="dark"] {
+  --inimark-accent: #6b9fff;
+  --inimark-accent-fg: #101214;
+}

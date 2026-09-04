@@ -1,9 +1,4 @@
-:root {
-  color-scheme: light dark;
-  --inimark-toolbar-bg: color-mix(in srgb, Canvas 92%, CanvasText 8%);
-  --inimark-border: color-mix(in srgb, CanvasText 12%, transparent);
-  --inimark-status-fg: color-mix(in srgb, CanvasText 65%, transparent);
-}
+@import "../ui/tokens.css";
 
 html,
 body,
@@ -13,14 +8,14 @@ body,
 }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: Canvas;
-  color: CanvasText;
+  font-family: var(--inimark-font-ui);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
 }
 
 .inimark-shell {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: var(--inimark-toolbar-height) 1fr var(--inimark-statusbar-height);
   height: 100%;
   min-height: 100vh;
 }
@@ -29,10 +24,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 0.75rem;
+  gap: var(--inimark-space-4);
+  padding: 0 var(--inimark-space-3);
   border-bottom: 1px solid var(--inimark-border);
-  background: var(--inimark-toolbar-bg);
+  background: var(--inimark-surface-raised);
 }
 
 .inimark-title {
@@ -45,25 +40,103 @@ body {
 .inimark-toolbar-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--inimark-space-1);
 }
 
-.inimark-toolbar-actions button {
-  border: 1px solid var(--inimark-border);
-  background: Canvas;
-  color: CanvasText;
-  border-radius: 0.4rem;
-  padding: 0.25rem 0.6rem;
+.inimark-body {
+  display: grid;
+  grid-template-columns: var(--inimark-sidebar-width) 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inimark-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--inimark-border);
+  background: var(--inimark-surface);
+}
+
+.inimark-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-2) var(--inimark-space-3);
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-sidebar-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-sidebar-empty {
+  margin: var(--inimark-space-4) var(--inimark-space-3);
+  font-size: 0.85rem;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-tree {
+  flex: 1;
+  overflow: auto;
+  padding: var(--inimark-space-2) 0;
+}
+
+.inimark-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  padding-right: var(--inimark-space-3);
   cursor: pointer;
 }
 
-.inimark-toolbar-actions button:hover {
-  background: color-mix(in srgb, Canvas 90%, CanvasText 10%);
+.inimark-tree-item:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-tree-item.is-active {
+  background: var(--inimark-active);
+  font-weight: 600;
+}
+
+.inimark-tree-item--dir {
+  color: var(--inimark-muted-fg);
+  font-weight: 600;
+}
+
+.inimark-tree-chevron {
+  width: 0.75rem;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
+
+.inimark-tree-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inimark-editor-host {
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  min-width: 0;
 }
 
 .inimark-editor-host .typora-web-wrap {
@@ -72,8 +145,58 @@ body {
 }
 
 .inimark-statusbar {
-  padding: 0.35rem 0.75rem;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--inimark-space-3);
   border-top: 1px solid var(--inimark-border);
   font-size: 0.85rem;
-  color: var(--inimark-status-fg);
+  color: var(--inimark-muted-fg);
+  background: var(--inimark-surface);
+}
+
+/* Unified button control */
+.inimark-btn {
+  border: 1px solid var(--inimark-border);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  border-radius: var(--inimark-radius-sm);
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.inimark-btn:hover:not(:disabled) {
+  background: var(--inimark-hover);
+}
+
+.inimark-btn:focus-visible {
+  outline: 2px solid var(--inimark-focus-ring);
+  outline-offset: 1px;
+}
+
+.inimark-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inimark-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.inimark-btn--ghost:hover:not(:disabled) {
+  background: var(--inimark-hover);
+}
+
+.inimark-btn--primary {
+  border-color: transparent;
+  background: var(--inimark-accent);
+  color: var(--inimark-accent-fg);
+}
+
+.inimark-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
