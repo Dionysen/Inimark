@@ -3,11 +3,51 @@
 
 use tauri::{Manager, RunEvent, WindowEvent};
 
+#[cfg(target_os = "macos")]
+use tauri::TitleBarStyle;
+
+const WINDOW_LABELS: &[&str] = &["main", "settings"];
+
+fn finish_platform_window(window: &tauri::WebviewWindow) {
+    #[cfg(target_os = "windows")]
+    {
+        let _ = window.set_shadow(true);
+    }
+}
+
+fn apply_platform_chrome(window: &tauri::WebviewWindow) {
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = window.set_decorations(false);
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let _ = window.set_shadow(true);
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = window.set_decorations(true);
+        let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
+    }
+    finish_platform_window(window);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .setup(|app| {
+            for label in WINDOW_LABELS {
+                if let Some(window) = app.get_webview_window(label) {
+                    apply_platform_chrome(&window);
+                    if *label == "settings" {
+                        let _ = window.hide();
+                    }
+                }
+            }
+            Ok(())
+        })
         .on_window_event(|window, event| match window.label() {
             "main" => {
                 if let WindowEvent::CloseRequested { api, .. } = event {

@@ -1,0 +1,183 @@
+@import "../ui/tokens.css";
+
+/* Global shell foundation — shared by every window entry (main, settings, …). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+#app {
+  height: 100%;
+  background: var(--inimark-bg);
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* Linux: transparent window + CSS corner clip */
+html.platform-linux #app {
+  border-radius: var(--inimark-window-radius);
+  overflow: hidden;
+  overflow: clip;
+}
+
+/* macOS: clip-path visual rounding (avoid overflow — WKWebView ghost selection) */
+html.platform-macos #app {
+  border-radius: var(--inimark-window-radius);
+  overflow: visible;
+  clip-path: inset(0 round var(--inimark-window-radius));
+}
+
+/* Windows: opaque window; DWM provides system rounding */
+html.platform-windows,
+html.platform-windows body {
+  background: var(--inimark-bg);
+}
+
+/* ── Custom titlebar ─────────────────────────────────────────────── */
+
+.inimark-titlebar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: stretch;
+  min-height: var(--inimark-titlebar-height);
+  background: var(--inimark-content-bg);
+  user-select: none;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.inimark-titlebar-leading,
+.inimark-titlebar-center {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  -webkit-app-region: drag;
+}
+
+.inimark-titlebar-leading {
+  padding-left: var(--inimark-space-3);
+  padding-right: var(--inimark-space-2);
+}
+
+.inimark-titlebar-center {
+  justify-content: center;
+  padding: 0 var(--inimark-space-2);
+}
+
+.inimark-titlebar-brand {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-titlebar-title {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--inimark-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-titlebar-trailing {
+  display: flex;
+  align-items: stretch;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-titlebar-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.inimark-titlebar-btn {
+  display: grid;
+  place-items: center;
+  width: var(--inimark-caption-width);
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
+}
+
+.inimark-titlebar-btn:hover {
+  background: var(--inimark-caption-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-titlebar-btn:active {
+  background: color-mix(in srgb, var(--inimark-fg) 16%, transparent);
+}
+
+.inimark-titlebar-btn--close:hover {
+  background: var(--inimark-caption-close-hover);
+  color: #fff;
+}
+
+.inimark-titlebar-btn--close:active {
+  background: #c50f1f;
+  color: #fff;
+}
+
+.inimark-titlebar-icon {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+/* macOS: system traffic lights — hide custom caption buttons */
+html.platform-macos .inimark-titlebar-controls--native {
+  display: none !important;
+}
+
+html.platform-macos .inimark-titlebar-leading {
+  padding-left: var(--inimark-space-3);
+}
+
+html.platform-macos .inimark-sidebar-header {
+  min-height: var(--inimark-titlebar-height);
+  padding-left: calc(var(--inimark-space-3) + var(--inimark-mac-traffic-lights-width));
+  -webkit-app-region: drag;
+}
+
+/* Windows: Win11-style caption buttons */
+html.platform-windows .inimark-titlebar-controls--native {
+  height: var(--inimark-titlebar-height);
+}
+
+.inimark-settings-shell .inimark-titlebar {
+  background: var(--inimark-bg);
+}
+
+html.platform-windows .inimark-titlebar-btn {
+  width: var(--inimark-caption-width);
+  height: var(--inimark-titlebar-height);
+}

@@ -10,13 +10,21 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "main",
         "title": "Inimark",
         "width": 1100,
         "height": 760,
-        "resizable": true
+        "resizable": true,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 14, "y": 11 },
+        "transparent": true,
+        "shadow": true,
+        "backgroundColor": "#00000000"
       },
       {
         "label": "settings",
@@ -26,7 +34,14 @@
         "height": 640,
         "resizable": true,
         "center": true,
-        "visible": false
+        "visible": false,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 14, "y": 11 },
+        "transparent": true,
+        "shadow": true,
+        "backgroundColor": "#00000000"
       }
     ],
     "security": {

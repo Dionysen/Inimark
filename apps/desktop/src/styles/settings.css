@@ -1,14 +1,19 @@
-html,
-body {
-  margin: 0;
-  height: 100%;
+.inimark-settings-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   background: var(--inimark-bg);
   color: var(--inimark-fg);
-  font-family: var(--inimark-font-sans);
+  overflow: hidden;
+}
+
+.inimark-settings-view-host {
+  flex: 1;
+  min-height: 0;
 }
 
 .inimark-settings-window {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--inimark-bg);

@@ -22,6 +22,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   const header = document.createElement("div");
   header.className = "inimark-sidebar-header";
+  header.setAttribute("data-tauri-drag-region", "");
 
   const title = document.createElement("span");
   title.className = "inimark-sidebar-title";

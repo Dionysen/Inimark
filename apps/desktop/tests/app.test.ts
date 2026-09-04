@@ -19,15 +19,17 @@ describe("desktop app shell", () => {
     host.remove();
   });
 
-  test("renders sidebar and unified toolbar controls", () => {
+  test("renders sidebar and titlebar", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
 
     const shell = mountShell(host);
+    expect(host.querySelector(".inimark-titlebar")).not.toBeNull();
     expect(host.querySelector(".inimark-sidebar")).not.toBeNull();
     expect(host.querySelector(".inimark-tree")).not.toBeNull();
     expect(host.querySelector(".inimark-library-bar")).not.toBeNull();
-    expect(host.querySelectorAll(".inimark-btn").length).toBeGreaterThan(0);
+    expect(host.querySelector(".inimark-toolbar")).toBeNull();
+    expect(host.querySelector(".inimark-statusbar")).toBeNull();
 
     const workspace: Workspace = {
       rootPath: "/vault",

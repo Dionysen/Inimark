@@ -1,4 +1,7 @@
+import { initPlatform } from "./platform/platform.ts";
 import { mountApp } from "./app.ts";
+
+initPlatform();
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) {

@@ -12,6 +12,7 @@
   --inimark-border: color-mix(in srgb, CanvasText 12%, transparent);
   --inimark-surface: color-mix(in srgb, Canvas 96%, CanvasText 4%);
   --inimark-surface-raised: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+  --inimark-content-bg: #faf8f4;
   --inimark-hover: color-mix(in srgb, Canvas 90%, CanvasText 10%);
   --inimark-active: color-mix(in srgb, Canvas 84%, CanvasText 16%);
   --inimark-accent: #3b6fd9;
@@ -26,8 +27,12 @@
   --inimark-space-4: 1rem;
 
   --inimark-sidebar-width: 15rem;
-  --inimark-toolbar-height: 2.75rem;
-  --inimark-statusbar-height: 1.75rem;
+  --inimark-window-radius: 12px;
+  --inimark-mac-traffic-lights-width: 0px;
+  --inimark-caption-width: 2.75rem;
+  --inimark-caption-hover: color-mix(in srgb, var(--inimark-fg) 10%, transparent);
+  --inimark-caption-close-hover: #e81123;
+  --inimark-titlebar-height: 2.25rem;
   --inimark-sidebar-dock-height: 3.25rem;
 
   --inimark-editor-font-size: 16px;
@@ -38,9 +43,19 @@
   --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, CanvasText 10%, transparent);
 }
 
+html.platform-macos {
+  --inimark-mac-traffic-lights-width: 72px;
+}
+
+html.platform-windows {
+  --inimark-caption-width: 46px;
+  --inimark-titlebar-height: 36px;
+}
+
 :root[data-appearance="dark"] {
   --inimark-accent: #6b9fff;
   --inimark-accent-fg: #101214;
+  --inimark-content-bg: #16171a;
   --inimark-glass-bg: color-mix(in srgb, #1c1f24 78%, transparent);
   --inimark-glass-border: color-mix(in srgb, #ffffff 10%, transparent);
   --inimark-glass-shadow: 0 10px 32px color-mix(in srgb, #000 35%, transparent);

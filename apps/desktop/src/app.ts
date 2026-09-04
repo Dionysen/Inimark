@@ -20,8 +20,6 @@ import {
   openWorkspaceByPath,
   pickWorkspace,
   readWorkspaceFile,
-  refreshWorkspaceTree,
-  writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
@@ -47,7 +45,6 @@ export function mountApp(host: HTMLElement): AppController {
         activeFilePath = null;
         activeLibraryId = null;
         shell.sidebar.setWorkspace(null);
-        shell.setStatus("Current library was removed");
       }
     }
   };
@@ -60,9 +57,8 @@ export function mountApp(host: HTMLElement): AppController {
 
   const editor = createEditor(shell.editorHost, {
     initialContent: "# Welcome\n\nStart writing…",
-    onChange: (markdown) => {
+    onChange: () => {
       shell.setDirty(true);
-      shell.setStatus(markdown.length > 0 ? `${markdown.length} chars` : "Empty");
     },
   });
 
@@ -92,7 +88,9 @@ export function mountApp(host: HTMLElement): AppController {
 
     const result = await readWorkspaceFile(workspace, path);
     if (result.status !== "opened") {
-      shell.setStatus(result.status === "error" ? result.message : "Unable to open file");
+      if (result.status === "error") {
+        console.error(result.message);
+      }
       return;
     }
 
@@ -101,7 +99,6 @@ export function mountApp(host: HTMLElement): AppController {
     shell.setFileName(result.name);
     shell.sidebar.setActiveFile(path);
     shell.setDirty(false);
-    shell.setStatus(`Opened ${result.name}`);
     persistLibrarySession();
   }
 
@@ -122,7 +119,6 @@ export function mountApp(host: HTMLElement): AppController {
         ? session.expandedDirs
         : defaultExpandedDirs(workspace);
     shell.sidebar.setExpandedDirs(expandedDirs);
-    shell.setStatus(`Library: ${workspace.rootName}`);
 
     if (options?.restoreSession && session.activeFilePath) {
       await openWorkspaceFile(session.activeFilePath, { skipConfirm: true });
@@ -141,9 +137,9 @@ export function mountApp(host: HTMLElement): AppController {
 
     const result = await openWorkspaceByPath(record.rootPath);
     if (result.status !== "picked") {
-      shell.setStatus(
-        result.status === "error" ? result.message : "Unable to open library",
-      );
+      if (result.status === "error") {
+        console.error(result.message);
+      }
       return;
     }
 
@@ -161,11 +157,9 @@ export function mountApp(host: HTMLElement): AppController {
     const picked = await pickWorkspace();
     if (picked.status === "cancelled") return;
     if (picked.status !== "picked") {
-      shell.setStatus(
-        picked.status === "unsupported"
-          ? "Folder picker is not supported in this environment"
-          : picked.message,
-      );
+      if (picked.status === "error") {
+        console.error(picked.message);
+      }
       return;
     }
 
@@ -179,9 +173,6 @@ export function mountApp(host: HTMLElement): AppController {
       await openSettingsWindow();
     } catch (error) {
       console.error("Failed to open settings window", error);
-      shell.setStatus(
-        error instanceof Error ? error.message : "Could not open settings window",
-      );
     }
   }
 
@@ -203,74 +194,6 @@ export function mountApp(host: HTMLElement): AppController {
     activeLibraryId = null;
     shell.sidebar.setWorkspace(null);
     refreshLibraryList();
-    shell.setStatus("Library closed");
-  });
-
-  shell.onNew(async () => {
-    if (!(await confirmDiscard())) return;
-    editor.newMarkdownFile();
-    activeFilePath = null;
-    shell.setFileName(null);
-    shell.sidebar.setActiveFile(null);
-    shell.setDirty(false);
-    persistLibrarySession();
-  });
-
-  shell.onOpen(async () => {
-    if (!(await confirmDiscard())) return;
-    const result = await editor.openMarkdownFile();
-    if (result.status === "opened") {
-      activeFilePath = null;
-      shell.setFileName(result.name);
-      shell.sidebar.setActiveFile(null);
-      shell.setDirty(false);
-      persistLibrarySession();
-    }
-  });
-
-  shell.onOpenFolder(() => void openFolder());
-
-  shell.onSave(async () => {
-    if (workspace && activeFilePath) {
-      const result = await writeWorkspaceFile(
-        workspace,
-        activeFilePath,
-        editor.getMarkdown(),
-      );
-      if (result.status === "saved") {
-        shell.setFileName(result.name);
-        shell.setDirty(false);
-        shell.setStatus(`Saved ${result.name}`);
-        workspace.tree = await refreshWorkspaceTree(workspace);
-        shell.sidebar.setWorkspace(workspace);
-        shell.sidebar.setActiveFile(activeFilePath);
-        persistLibrarySession();
-      } else if (result.status === "error") {
-        shell.setStatus(result.message);
-      }
-      return;
-    }
-
-    const result = await editor.saveMarkdownFile();
-    if (result.status === "saved" || result.status === "downloaded") {
-      shell.setFileName(result.name);
-      shell.setDirty(false);
-    }
-  });
-
-  shell.onSaveAs(async () => {
-    const result = await editor.saveMarkdownFileAs();
-    if (result.status === "saved" || result.status === "downloaded") {
-      activeFilePath = null;
-      shell.setFileName(result.name);
-      shell.sidebar.setActiveFile(null);
-      shell.setDirty(false);
-      persistLibrarySession();
-    }
-  });
-
-  shell.onToggleAppearance(() => {
-    void openSettings();
   });
 
   refreshLibraryList();

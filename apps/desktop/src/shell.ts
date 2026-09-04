@@ -1,5 +1,5 @@
-import { createButton } from "./ui/button.ts";
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
+import { mountTitleBar } from "./ui/titlebar.ts";
 
 export interface ShellController {
   editorHost: HTMLElement;
@@ -7,13 +7,6 @@ export interface ShellController {
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
-  setStatus(text: string): void;
-  onNew(handler: () => void): void;
-  onOpen(handler: () => void | Promise<void>): void;
-  onOpenFolder(handler: () => void | Promise<void>): void;
-  onSave(handler: () => void | Promise<void>): void;
-  onSaveAs(handler: () => void | Promise<void>): void;
-  onToggleAppearance(handler: () => void): void;
   destroy(): void;
 }
 
@@ -21,62 +14,30 @@ export function mountShell(host: HTMLElement): ShellController {
   host.innerHTML = "";
   host.className = "inimark-shell";
 
-  const toolbar = document.createElement("header");
-  toolbar.className = "inimark-toolbar";
-
-  const title = document.createElement("span");
-  title.className = "inimark-title";
-  title.textContent = "Untitled";
-
-  const actions = document.createElement("div");
-  actions.className = "inimark-toolbar-actions";
-
-  const btnNew = createButton({ label: "New", onClick: () => handlers.new() });
-  const btnOpen = createButton({ label: "Open", onClick: () => void handlers.open() });
-  const btnOpenFolder = createButton({
-    label: "Open Folder",
-    onClick: () => void handlers.openFolder(),
-  });
-  const btnSave = createButton({ label: "Save", onClick: () => void handlers.save() });
-  const btnSaveAs = createButton({ label: "Save As", onClick: () => void handlers.saveAs() });
-  const btnTheme = createButton({ label: "Settings", onClick: () => handlers.theme() });
-
-  actions.append(btnNew, btnOpen, btnOpenFolder, btnSave, btnSaveAs, btnTheme);
-  toolbar.append(title, actions);
-
-  const body = document.createElement("div");
-  body.className = "inimark-body";
-
   const sidebarHost = document.createElement("aside");
   const sidebar = mountSidebar(sidebarHost);
+
+  const mainColumn = document.createElement("div");
+  mainColumn.className = "inimark-main";
+
+  const titlebarHost = document.createElement("header");
+  const titlebar = mountTitleBar(titlebarHost, {
+    appName: "Inimark",
+    title: "Untitled",
+  });
 
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";
 
-  body.append(sidebarHost, editorHost);
-
-  const statusBar = document.createElement("footer");
-  statusBar.className = "inimark-statusbar";
-  statusBar.textContent = "Ready";
-
-  host.append(toolbar, body, statusBar);
+  mainColumn.append(titlebarHost, editorHost);
+  host.append(sidebarHost, mainColumn);
 
   let dirty = false;
   let fileName: string | null = null;
-  const handlers = {
-    new: (): void => {},
-    open: (): void | Promise<void> => {},
-    openFolder: (): void | Promise<void> => {},
-    save: (): void | Promise<void> => {},
-    saveAs: (): void | Promise<void> => {},
-    theme: (): void => {},
-  };
-
-  sidebar.onOpenFolder(() => handlers.openFolder());
 
   function renderTitle() {
     const base = fileName ?? "Untitled";
-    title.textContent = dirty ? `${base} •` : base;
+    titlebar.setTitle(dirty ? `${base} •` : base);
   }
 
   return {
@@ -93,28 +54,8 @@ export function mountShell(host: HTMLElement): ShellController {
     isDirty() {
       return dirty;
     },
-    setStatus(text) {
-      statusBar.textContent = text;
-    },
-    onNew(handler) {
-      handlers.new = handler;
-    },
-    onOpen(handler) {
-      handlers.open = handler;
-    },
-    onOpenFolder(handler) {
-      handlers.openFolder = handler;
-    },
-    onSave(handler) {
-      handlers.save = handler;
-    },
-    onSaveAs(handler) {
-      handlers.saveAs = handler;
-    },
-    onToggleAppearance(handler) {
-      handlers.theme = handler;
-    },
     destroy() {
+      titlebar.destroy();
       sidebar.destroy();
       host.replaceChildren();
     },

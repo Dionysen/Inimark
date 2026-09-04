@@ -1,53 +1,19 @@
-@import "../ui/tokens.css";
-
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  font-family: var(--inimark-font-ui);
-  background: var(--inimark-bg);
-  color: var(--inimark-fg);
-}
+@import "./shell.css";
 
 .inimark-shell {
   display: grid;
-  grid-template-rows: var(--inimark-toolbar-height) 1fr var(--inimark-statusbar-height);
+  grid-template-columns: var(--inimark-sidebar-width) 1fr;
   height: 100%;
   min-height: 100vh;
+  background: var(--inimark-bg);
 }
 
-.inimark-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--inimark-space-4);
-  padding: 0 var(--inimark-space-3);
-  border-bottom: 1px solid var(--inimark-border);
-  background: var(--inimark-surface-raised);
-}
-
-.inimark-title {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inimark-toolbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--inimark-space-1);
-}
-
-.inimark-body {
+.inimark-main {
   display: grid;
-  grid-template-columns: var(--inimark-sidebar-width) 1fr;
+  grid-template-rows: var(--inimark-titlebar-height) 1fr;
   min-height: 0;
-  overflow: hidden;
+  min-width: 0;
+  background: var(--inimark-content-bg);
 }
 
 .inimark-sidebar {
@@ -64,8 +30,10 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--inimark-space-2);
+  min-height: var(--inimark-titlebar-height);
   padding: var(--inimark-space-2) var(--inimark-space-3);
   border-bottom: 1px solid var(--inimark-border);
+  -webkit-app-region: drag;
 }
 
 .inimark-sidebar-title {
@@ -138,6 +106,7 @@ body {
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;
+  background: var(--inimark-content-bg);
 }
 
 .inimark-editor-host .typora-web-wrap {
@@ -148,16 +117,6 @@ body {
 .inimark-editor-host .ProseMirror,
 .inimark-editor-host .typora-web-source-editor .cm-content {
   font-size: var(--inimark-editor-font-size);
-}
-
-.inimark-statusbar {
-  display: flex;
-  align-items: center;
-  padding: 0 var(--inimark-space-3);
-  border-top: 1px solid var(--inimark-border);
-  font-size: 0.85rem;
-  color: var(--inimark-muted-fg);
-  background: var(--inimark-surface);
 }
 
 /* Unified button control */
