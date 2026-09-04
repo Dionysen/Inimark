@@ -158,6 +158,7 @@ class ThemeManager {
 
     this.unlistenCodeCss = await listen<CodeThemeCssPayload>(CODE_THEME_CSS_EVENT, (event) => {
       const { id, css, enable } = event.payload;
+      // Apply only — do not re-emit or windows echo forever and freeze.
       this.injectOrUpdateCodeThemeStyle(id, css, enable);
     });
 
@@ -372,7 +373,9 @@ class ThemeManager {
     const manifest = await importCodeThemeFile(filePath, name);
     const css = await getCodeThemeCss(manifest.id);
     if (css) {
-      this.injectOrUpdateCodeThemeStyle(manifest.id, expandCodeThemeCss(css), false);
+      const expanded = expandCodeThemeCss(css);
+      this.injectOrUpdateCodeThemeStyle(manifest.id, expanded, false);
+      emit(CODE_THEME_CSS_EVENT, { id: manifest.id, css: expanded, enable: false }).catch(() => {});
     }
     this.customCodeThemes = [...this.customCodeThemes, manifest];
     this.notify();
@@ -392,6 +395,7 @@ class ThemeManager {
   previewCodeThemeVariables(id: string, variables: ThemeVariable[]): void {
     const css = expandCodeThemeCss(buildCodeThemeCss(variables));
     this.injectOrUpdateCodeThemeStyle(id, css, true);
+    emit(CODE_THEME_CSS_EVENT, { id, css, enable: true }).catch(() => {});
   }
 
   async updateCodeThemeVariables(
@@ -401,7 +405,9 @@ class ThemeManager {
   ): Promise<void> {
     const manifest = await persistCodeThemeVariables(id, variables, isDark);
     const css = expandCodeThemeCss(buildCodeThemeCss(variables));
-    this.injectOrUpdateCodeThemeStyle(id, css, this.getSnapshot().codeTheme === id);
+    const enable = this.getSnapshot().codeTheme === id;
+    this.injectOrUpdateCodeThemeStyle(id, css, enable);
+    emit(CODE_THEME_CSS_EVENT, { id, css, enable }).catch(() => {});
     if (manifest) {
       this.customCodeThemes = this.customCodeThemes.map((m) => (m.id === id ? manifest : m));
       this.notify();
@@ -413,7 +419,11 @@ class ThemeManager {
     if (!vars) throw new Error(`Unknown builtin code theme: ${builtinId}`);
     const manifest = await createCodeThemeFromVariables(name, vars, getBuiltinCodeThemeIsDark(builtinId));
     const css = await getCodeThemeCss(manifest.id);
-    if (css) this.injectOrUpdateCodeThemeStyle(manifest.id, expandCodeThemeCss(css), false);
+    if (css) {
+      const expanded = expandCodeThemeCss(css);
+      this.injectOrUpdateCodeThemeStyle(manifest.id, expanded, false);
+      emit(CODE_THEME_CSS_EVENT, { id: manifest.id, css: expanded, enable: false }).catch(() => {});
+    }
     this.customCodeThemes = [...this.customCodeThemes, manifest];
     this.notify();
     return manifest;
@@ -457,7 +467,11 @@ class ThemeManager {
     for (const id of [result.preferredCodeTheme.light, result.preferredCodeTheme.dark]) {
       try {
         const css = await getCodeThemeCss(id);
-        if (css) this.injectOrUpdateCodeThemeStyle(id, expandCodeThemeCss(css), false);
+        if (css) {
+          const expanded = expandCodeThemeCss(css);
+          this.injectOrUpdateCodeThemeStyle(id, expanded, false);
+          emit(CODE_THEME_CSS_EVENT, { id, css: expanded, enable: false }).catch(() => {});
+        }
       } catch {
         /* ignore */
       }
@@ -610,7 +624,6 @@ class ThemeManager {
       window.dispatchEvent(new CustomEvent("code-theme-changed"));
       window.dispatchEvent(new CustomEvent("typora-web:appearancechange"));
     }
-    emit(CODE_THEME_CSS_EVENT, { id, css, enable }).catch(() => {});
   }
 }
 

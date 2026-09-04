@@ -608,7 +608,13 @@ export function renderThemePanel(host: HTMLElement): () => void {
   }
 
   async function handleSaveCodeEdit(manifest: CustomCodeTheme): Promise<void> {
-    await themeManager.updateCodeThemeVariables(manifest.id, editCodeVariables);
+    try {
+      await themeManager.updateCodeThemeVariables(manifest.id, editCodeVariables);
+    } catch (err) {
+      console.error("Save code theme failed", err);
+      alert(`Save failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      return;
+    }
     editingCodeTheme = null;
     render();
   }
@@ -616,9 +622,11 @@ export function renderThemePanel(host: HTMLElement): () => void {
   async function handleCancelCodeEdit(manifest: CustomCodeTheme): Promise<void> {
     try {
       const css = await getCodeThemeCss(manifest.id);
-      themeManager.previewCodeThemeVariables(manifest.id, parseCssVariables(css));
-    } catch {
-      /* ignore */
+      if (css) {
+        themeManager.previewCodeThemeVariables(manifest.id, parseCssVariables(css));
+      }
+    } catch (err) {
+      console.error("Cancel code theme edit failed", err);
     }
     editingCodeTheme = null;
     render();
