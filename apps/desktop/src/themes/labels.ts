@@ -31,6 +31,8 @@ export const THEME_TOKEN_LABELS: Record<string, string> = {
   bgCode: "Code block background",
   bgCodeInline: "Inline code background",
   textCode: "Inline code text",
+  codeInlineBorder: "Inline code border",
+  codeInlineBorderWidth: "Inline code border width",
   blockquoteBorder: "Blockquote border",
   blockquoteBg: "Blockquote background",
   blockquoteText: "Blockquote text",

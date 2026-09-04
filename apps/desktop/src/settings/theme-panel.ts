@@ -115,6 +115,8 @@ interface EditPreview {
   border: string;
   codeBg: string;
   codeText: string;
+  codeBorder: string;
+  codeBorderWidth: string;
   radiusInline: string;
   paddingInlineY: string;
   paddingInlineX: string;
@@ -144,6 +146,8 @@ function computeEditPreview(vars: ThemeVariable[]): EditPreview {
     border: get("--border", "#a5cfc0"),
     codeBg: get("--bg-code-inline", "rgba(78, 178, 137, 0.08)"),
     codeText: get("--text-code", "#e83e8c"),
+    codeBorder: get("--code-inline-border", get("--border", "#a5cfc0")),
+    codeBorderWidth: get("--code-inline-border-width", "1px"),
     radiusInline: get("--radius-code-inline", "4px"),
     paddingInlineY: get("--padding-code-inline-y", "3px"),
     paddingInlineX: get("--padding-code-inline-x", "6px"),
@@ -516,7 +520,9 @@ export function renderThemePanel(host: HTMLElement): () => void {
     inlineCode.className = "theme-editor-preview-inline-code";
     inlineCode.style.background = editPreview.codeBg;
     inlineCode.style.color = editPreview.codeText;
-    inlineCode.style.borderColor = editPreview.border;
+    inlineCode.style.borderColor = editPreview.codeBorder;
+    inlineCode.style.borderWidth = editPreview.codeBorderWidth;
+    inlineCode.style.borderStyle = "solid";
     inlineCode.style.borderRadius = editPreview.radiusInline;
     inlineCode.style.padding = `${editPreview.paddingInlineY} ${editPreview.paddingInlineX}`;
     inlineCode.textContent = "inline_code";

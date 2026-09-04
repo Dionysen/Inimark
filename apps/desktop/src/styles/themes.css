@@ -45,6 +45,8 @@
   --radius-code-inline: 4px;
   --padding-code-inline-y: 3px;
   --padding-code-inline-x: 6px;
+  --code-inline-border: var(--border);
+  --code-inline-border-width: 1px;
   --blockquote-border: var(--border);
   --blockquote-bg: transparent;
   --blockquote-text: var(--text-secondary);

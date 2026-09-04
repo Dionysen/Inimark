@@ -178,7 +178,11 @@
 .theme-editor-preview-editor { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 16px; }
 .theme-editor-preview-text { font-size: 13px; }
 .theme-editor-preview-accent { display: inline-flex; align-self: flex-start; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #fff; }
-.theme-editor-preview-inline-code { font-family: var(--font-mono); font-size: 12px; border: 1px solid; }
+.theme-editor-preview-inline-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border-style: solid;
+}
 
 .theme-editor-variables {
   display: flex;

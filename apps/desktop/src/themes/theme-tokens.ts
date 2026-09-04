@@ -96,6 +96,7 @@ export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
   // 行内代码
   { name: "--bg-code-inline", section: "codeInline", labelKey: "bgCodeInline" },
   { name: "--text-code", section: "codeInline", labelKey: "textCode" },
+  { name: "--code-inline-border", section: "codeInline", labelKey: "codeInlineBorder" },
   // 引用块
   { name: "--blockquote-border", section: "blockquote", labelKey: "blockquoteBorder" },
   { name: "--blockquote-bg", section: "blockquote", labelKey: "blockquoteBg" },
@@ -140,6 +141,13 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
   { name: "--radius-code-inline", section: "codeInline", labelKey: "radiusCodeInline", min: 0, max: 16 },
   { name: "--padding-code-inline-y", section: "codeInline", labelKey: "paddingCodeInlineY", min: 0, max: 16 },
   { name: "--padding-code-inline-x", section: "codeInline", labelKey: "paddingCodeInlineX", min: 0, max: 24 },
+  {
+    name: "--code-inline-border-width",
+    section: "codeInline",
+    labelKey: "codeInlineBorderWidth",
+    min: 0,
+    max: 8,
+  },
   { name: "--blockquote-border-width", section: "blockquote", labelKey: "blockquoteBorderWidth", min: 0, max: 16 },
   { name: "--padding-blockquote-y", section: "blockquote", labelKey: "paddingBlockquoteY", min: 0, max: 32 },
   { name: "--padding-blockquote-x", section: "blockquote", labelKey: "paddingBlockquoteX", min: 0, max: 48 },
@@ -194,6 +202,7 @@ const PRESERVED_NON_COLOR = [
   "--radius-code-inline",
   "--padding-code-inline-y",
   "--padding-code-inline-x",
+  "--code-inline-border-width",
   "--radius-metadata",
   "--margin-metadata-bottom",
   "--blockquote-border-width",
@@ -226,6 +235,7 @@ const LIGHT_DEFAULTS: Record<string, string> = {
   "--accent-hover": "#1d4ed8",
   "--danger": "#dc2626",
   "--border": "#d1d9e6",
+  "--code-inline-border": "#d1d9e6",
   "--scrollbar-thumb": "#d1d9e6",
   "--scrollbar-thumb-hover": "#94a3b8",
   "--scrollbar-track": "transparent",
@@ -260,6 +270,7 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--accent-hover": "#3a88fe",
   "--danger": "#e06c75",
   "--border": "rgba(145, 145, 145, 0.159)",
+  "--code-inline-border": "rgba(145, 145, 145, 0.159)",
   "--scrollbar-thumb": "#aaaaaa",
   "--scrollbar-thumb-hover": "#6B6B6B",
   "--scrollbar-track": "transparent",
@@ -387,6 +398,7 @@ const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--radius-code-inline", value: "4px", type: "size" },
   { name: "--padding-code-inline-y", value: "3px", type: "size" },
   { name: "--padding-code-inline-x", value: "6px", type: "size" },
+  { name: "--code-inline-border-width", value: "1px", type: "size" },
   { name: "--radius-metadata", value: "8px", type: "size" },
   { name: "--margin-metadata-bottom", value: "16px", type: "size" },
   { name: "--blockquote-border-width", value: "3px", type: "size" },
@@ -411,6 +423,7 @@ function resolveColorTokenValue(
     return colors["--text-secondary"];
   }
   if (token.name === "--scrollbar-track") return colors[token.name] ?? "transparent";
+  if (token.name === "--code-inline-border" && colors["--border"]) return colors["--border"];
   if (token.name === "--metadata-bg" && colors["--bg-secondary"]) return colors["--bg-secondary"];
   if (token.name === "--metadata-border" && colors["--border"]) return colors["--border"];
   if (token.name === "--blockquote-border" && colors["--border"]) return colors["--border"];
