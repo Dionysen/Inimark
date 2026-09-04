@@ -49,14 +49,17 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   const dock = document.createElement("div");
   dock.className = "inimark-sidebar-dock";
 
-  const libraryBar = document.createElement("div");
-  libraryBar.className = "inimark-library-bar inimark-glass";
+  const libraryWrap = document.createElement("div");
+  libraryWrap.className = "inimark-library-bar-wrap";
 
-  const libraryBtn = document.createElement("button");
-  libraryBtn.type = "button";
-  libraryBtn.className = "inimark-library-bar-main";
-  libraryBtn.innerHTML = `${libraryIcon()}<span class="inimark-library-bar-label">No library</span>`;
-  const libraryLabel = libraryBtn.querySelector(".inimark-library-bar-label")!;
+  const libraryBar = document.createElement("button");
+  libraryBar.type = "button";
+  libraryBar.className = "inimark-library-bar";
+  libraryBar.setAttribute("aria-haspopup", "menu");
+  libraryBar.setAttribute("aria-expanded", "false");
+  libraryBar.title = "Libraries";
+  libraryBar.innerHTML = `${libraryIcon()}<span class="inimark-library-bar-label">No library</span>`;
+  const libraryLabel = libraryBar.querySelector(".inimark-library-bar-label")!;
 
   const settingsBtn = createIconButton({
     label: "Settings",
@@ -65,8 +68,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   settingsBtn.classList.add("inimark-library-bar-settings");
   settingsBtn.innerHTML = settingsIcon();
 
-  libraryBar.append(libraryBtn, settingsBtn);
-  dock.append(libraryBar);
+  libraryWrap.append(libraryBar, settingsBtn);
+  dock.append(libraryWrap);
 
   const menu = createMenu();
   dock.append(menu.el);
@@ -93,6 +96,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function closeMenu(): void {
     menu.setOpen(false);
+    libraryBar.setAttribute("aria-expanded", "false");
   }
 
   function toggleMenu(): void {
@@ -102,6 +106,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     }
     renderLibraryList();
     menu.setOpen(true);
+    libraryBar.setAttribute("aria-expanded", "true");
   }
 
   function renderLibraryList(): void {
@@ -146,8 +151,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
   }
 
-  libraryBtn.addEventListener("click", () => toggleMenu());
-  settingsBtn.addEventListener("click", () => {
+  libraryBar.addEventListener("click", () => toggleMenu());
+  settingsBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     closeMenu();
     handlers.openSettings();
   });

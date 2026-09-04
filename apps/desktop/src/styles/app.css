@@ -79,11 +79,13 @@
   font-family: var(--editor-font, var(--inimark-font-ui));
 }
 
-/* Frosted glass surface */
+/* Frosted / liquid glass surface */
 .inimark-glass {
   background: var(--inimark-glass-bg);
-  backdrop-filter: blur(18px) saturate(1.25);
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(var(--inimark-glass-blur, 24px))
+    saturate(var(--inimark-glass-saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 24px))
+    saturate(var(--inimark-glass-saturate, 180%));
   border: 1px solid var(--inimark-glass-border);
   box-shadow: var(--inimark-glass-shadow);
 }
@@ -94,54 +96,175 @@
   flex-shrink: 0;
 }
 
-/* Sidebar dock + library bar */
+/* Sidebar dock + library bar
+   Optical model from @dpawlikowski/liquid-glass (WKWebView-safe):
+   thin sheen + separate soft tint + blur/saturate — no solid color-mix base. */
 .inimark-sidebar-dock {
   position: absolute;
   left: var(--inimark-space-2);
   right: var(--inimark-space-2);
   bottom: var(--inimark-space-2);
   z-index: 2;
+  isolation: isolate;
+}
+
+.inimark-library-bar,
+.inimark-sidebar-dock .inimark-menu {
+  --_o: var(--sidebar-chrome-opacity, 1);
+  --_blur: calc(var(--inimark-lg-blur, 10px) * (0.55 + 0.45 * var(--_o)));
+  --_sat: var(--inimark-lg-saturate, 180%);
+  --_bright: var(--inimark-lg-brightness, 1.05);
+  --_tint: var(--inimark-lg-tint, 255 255 255);
+  --_fill: calc(var(--inimark-lg-fill, 0.22) * var(--_o));
+  --_border: calc(var(--inimark-lg-border, 0.42) * var(--_o));
+  isolation: isolate;
+  /* Menu clips; library bar stays visible so lift shadow isn't cut off */
+  /* Surface sheen only — keep alpha low so backdrop stays visible */
+  background: linear-gradient(
+    135deg,
+    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-hi, 0.3) * var(--_o))),
+    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-mid, 0.06) * var(--_o))) 40%,
+    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-lo, 0.14) * var(--_o)))
+  );
+  -webkit-backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
+  backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
+  border: 1px solid rgb(255 255 255 / var(--_border));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
+    inset 0 0 10px 2px rgb(255 255 255 / calc(0.1 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.06 * var(--_o))),
+    0 8px 28px rgb(0 0 0 / calc(0.14 * var(--_o)));
+}
+
+/* Soft milk tint behind content (liquid-glass ::before) */
+.inimark-library-bar::before,
+.inimark-sidebar-dock .inimark-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: rgb(var(--_tint) / var(--_fill));
+}
+
+/* Specular rim — below content so screen-blend doesn't wash text */
+.inimark-library-bar::after,
+.inimark-sidebar-dock .inimark-menu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
+    inset 0 -14px 28px rgb(255 255 255 / calc(0.06 * var(--_o)));
+  background: linear-gradient(
+    90deg,
+    transparent 8%,
+    rgb(255 255 255 / calc(0.35 * var(--_o))) 48%,
+    transparent 92%
+  );
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top center;
+  mix-blend-mode: screen;
+}
+
+.inimark-library-bar > *,
+.inimark-sidebar-dock .inimark-menu > * {
+  position: relative;
+  z-index: 2;
+}
+
+.inimark-library-bar-wrap {
+  position: relative;
+  /* Motion lives on the wrap so settings rides along with chrome */
+  transition: transform 420ms cubic-bezier(0.22, 1.7, 0.36, 1);
+}
+
+/* Only the main chrome control drives the lift — not the settings hit target */
+.inimark-library-bar-wrap:has(.inimark-library-bar:hover) {
+  transform: translateY(-1px);
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:active) {
+  transition-duration: 80ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+  transform: translateY(1px) scale(0.985);
 }
 
 .inimark-library-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--inimark-space-1);
-  min-height: 2.5rem;
-  padding: 0.2rem 0.35rem 0.2rem 0.5rem;
-  border-radius: 999px;
-  opacity: var(--sidebar-chrome-opacity, 1);
-}
-
-.inimark-library-bar-main {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
+  width: 100%;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0.45rem 2.55rem 0.45rem 0.85rem;
+  border-radius: 999px;
   color: var(--inimark-fg);
   font: inherit;
   font-size: 0.88rem;
   text-align: left;
   cursor: pointer;
-  padding: 0.35rem 0.45rem;
-  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    box-shadow 420ms cubic-bezier(0.22, 1.5, 0.36, 1),
+    border-color 200ms ease,
+    filter 200ms ease;
 }
 
-.inimark-library-bar-main:hover {
-  background: color-mix(in srgb, var(--inimark-hover) 65%, transparent);
+.inimark-library-bar-wrap:has(.inimark-library-bar:hover) .inimark-library-bar {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
+    inset 0 0 12px 3px rgb(255 255 255 / calc(0.12 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.05 * var(--_o))),
+    0 10px 32px rgb(0 0 0 / calc(0.2 * var(--_o))),
+    0 2px 6px rgb(0 0 0 / calc(0.1 * var(--_o)));
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:active) .inimark-library-bar {
+  transition-duration: 80ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.32 * var(--_o))),
+    inset 0 2px 8px rgb(0 0 0 / calc(0.12 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
+    0 4px 14px rgb(0 0 0 / calc(0.12 * var(--_o)));
+}
+
+.inimark-library-bar:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--inimark-accent) 65%, transparent);
+  outline-offset: 2px;
 }
 
 .inimark-library-bar-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .inimark-library-bar-settings {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0.3rem;
+  z-index: 4;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  margin-block: auto;
   flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.inimark-library-bar-settings:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .inimark-sidebar-dock .inimark-menu {
@@ -149,9 +272,34 @@
   right: 0;
   bottom: calc(100% + 0.45rem);
   min-width: 0;
-  transform: translateY(4px);
+  border-radius: 14px;
+  overflow: hidden;
+  /* Slightly denser fill than the pill so menu text stays readable */
+  --inimark-lg-fill: 0.28;
+  --inimark-lg-blur: 12px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
+    inset 0 0 12px 2px rgb(255 255 255 / calc(0.08 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
+    0 12px 40px rgb(0 0 0 / calc(0.18 * var(--_o)));
+  transform: translateY(6px) scale(0.98);
+  transform-origin: bottom center;
 }
 
 .inimark-sidebar-dock .inimark-menu.is-open {
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+
+:root[data-appearance="dark"] .inimark-library-bar,
+:root[data-appearance="dark"] .inimark-sidebar-dock .inimark-menu {
+  /* Dark chrome: keep white frost, slightly lower fill for more see-through */
+  --inimark-lg-fill: 0.14;
+  --inimark-lg-brightness: 1.08;
+  --inimark-lg-sheen-hi: 0.22;
+  --inimark-lg-sheen-mid: 0.04;
+  --inimark-lg-sheen-lo: 0.1;
+}
+
+:root[data-appearance="dark"] .inimark-sidebar-dock .inimark-menu {
+  --inimark-lg-fill: 0.2;
 }

@@ -18,11 +18,13 @@ export function createIconButton(options: IconButtonOptions): HTMLButtonElement 
 }
 
 export function libraryIcon(): string {
-  return `<svg class="inimark-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2.5 3A1.5 1.5 0 0 1 4 1.5h2.2l.8.8H12A1.5 1.5 0 0 1 13.5 3.8v9.7A1.5 1.5 0 0 1 12 15H4a1.5 1.5 0 0 1-1.5-1.5V3zm1 0v10.5h8.5V3.8H6.6L5.8 3H3.5z"/></svg>`;
+  /* Three books — document library */
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 4.5h3.25v15H5.25A1.25 1.25 0 0 1 4 18.25V4.5z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7.25 4.5H11v15H7.25"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11.75 5.75 20 4v14.5l-8.25 1.75V5.75z"/></svg>`;
 }
 
 export function settingsIcon(): string {
-  return `<svg class="inimark-icon" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 4.75a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5zm0-2.6a.75.75 0 0 1 .7.48l.2.55 1.02.15a.75.75 0 0 1 .42 1.28l-.74.72.17 1.02a.75.75 0 0 1-1.09.79L8 10.9l-.92.48a.75.75 0 0 1-1.09-.79l.17-1.02-.74-.72a.75.75 0 0 1 .42-1.28l1.02-.15.2-.55A.75.75 0 0 1 8 2.15z"/></svg>`;
+  /* Gear with hub */
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/></svg>`;
 }
 
 /** Sidebar panel toggle — open=true shows filled left pane. */

@@ -52,9 +52,27 @@
   --inimark-editor-font-size: var(--editor-font-size, 16px);
   --inimark-editor-max-width: 48rem;
 
-  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 70%, transparent);
-  --inimark-glass-border: color-mix(in srgb, var(--inimark-border) 75%, transparent);
-  --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  /* Panels / menus — denser frost for readability */
+  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 42%, transparent);
+  --inimark-glass-border: color-mix(in srgb, #fff 22%, transparent);
+  --inimark-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 6%, transparent),
+    0 8px 28px color-mix(in srgb, #000 18%, transparent);
+  --inimark-glass-blur: 18px;
+  --inimark-glass-saturate: 180%;
+
+  /* Dock chrome — tuned from @dpawlikowski/liquid-glass (subtle overlay) */
+  --inimark-lg-blur: 10px;
+  --inimark-lg-saturate: 180%;
+  --inimark-lg-brightness: 1.05;
+  --inimark-lg-tint: 255 255 255;
+  --inimark-lg-fill: 0.22;
+  --inimark-lg-border: 0.42;
+  --inimark-lg-sheen-hi: 0.3;
+  --inimark-lg-sheen-mid: 0.06;
+  --inimark-lg-sheen-lo: 0.14;
 
   --inimark-scrollbar-size: var(--scrollbar-size, 8px);
   --inimark-scrollbar-radius: var(--radius-scrollbar, 4px);
@@ -73,5 +91,10 @@ html.platform-windows {
 
 :root[data-appearance="dark"] {
   --inimark-accent-fg: #101214;
-  --inimark-glass-shadow: 0 10px 32px color-mix(in srgb, #000 35%, transparent);
+  --inimark-glass-border: color-mix(in srgb, #fff 16%, transparent);
+  --inimark-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 22%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 28%, transparent),
+    0 12px 36px color-mix(in srgb, #000 42%, transparent);
 }

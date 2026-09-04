@@ -456,17 +456,19 @@
   min-width: 12rem;
   padding: 0.35rem;
   border: 1px solid var(--inimark-glass-border, var(--inimark-border));
-  border-radius: var(--inimark-radius-control);
+  border-radius: 12px;
   background: var(--inimark-glass-bg, var(--inimark-surface));
-  backdrop-filter: blur(18px) saturate(1.25);
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(var(--inimark-glass-blur, 24px))
+    saturate(var(--inimark-glass-saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 24px))
+    saturate(var(--inimark-glass-saturate, 180%));
   box-shadow: var(--inimark-glass-shadow);
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
   transition:
-    opacity 140ms ease,
-    transform 140ms ease;
+    opacity 160ms ease,
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .inimark-menu.is-open {
@@ -530,7 +532,6 @@
 
 .inimark-menu-item.is-selected {
   background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
-  box-shadow: inset 2px 0 0 var(--inimark-accent);
 }
 
 .inimark-menu-item__name {
