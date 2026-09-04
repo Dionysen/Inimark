@@ -1,6 +1,6 @@
-import { createEditor, type Editor } from "@md/editor";
-import "@md/editor/widgets.css";
-import "@md/editor/theme-typora.css";
+import { createEditor, type Editor } from "@inimark/editor";
+import "@inimark/editor/widgets.css";
+import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
 import "./styles/app.css";
 import { mountShell } from "./shell.ts";

@@ -13,17 +13,17 @@ export interface ShellController {
 
 export function mountShell(host: HTMLElement): ShellController {
   host.innerHTML = "";
-  host.className = "md-shell";
+  host.className = "inimark-shell";
 
   const toolbar = document.createElement("header");
-  toolbar.className = "md-toolbar";
+  toolbar.className = "inimark-toolbar";
 
   const title = document.createElement("span");
-  title.className = "md-title";
+  title.className = "inimark-title";
   title.textContent = "Untitled";
 
   const actions = document.createElement("div");
-  actions.className = "md-toolbar-actions";
+  actions.className = "inimark-toolbar-actions";
 
   const btnNew = document.createElement("button");
   btnNew.type = "button";
@@ -45,10 +45,10 @@ export function mountShell(host: HTMLElement): ShellController {
   toolbar.append(title, actions);
 
   const editorHost = document.createElement("main");
-  editorHost.className = "md-editor-host";
+  editorHost.className = "inimark-editor-host";
 
   const statusBar = document.createElement("footer");
-  statusBar.className = "md-statusbar";
+  statusBar.className = "inimark-statusbar";
   statusBar.textContent = "Ready";
 
   host.append(toolbar, editorHost, statusBar);

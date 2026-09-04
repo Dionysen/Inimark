@@ -1,4 +1,4 @@
-# @md/editor
+# @inimark/editor
 
 Typora-style WYSIWYG Markdown editor core, integrated from [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web).
 

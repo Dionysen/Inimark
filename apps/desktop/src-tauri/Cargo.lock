@@ -1500,6 +1500,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "inimark-desktop"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1763,18 +1775,6 @@ dependencies = [
  "log",
  "tendril",
  "web_atoms",
-]
-
-[[package]]
-name = "md-desktop"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
 ]
 
 [[package]]

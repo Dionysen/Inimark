@@ -1,15 +1,15 @@
 {
-  "name": "md-monorepo",
+  "name": "inimark",
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
-    "dev": "pnpm --filter @md/desktop dev",
+    "dev": "pnpm --filter @inimark/desktop dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "test:editor": "pnpm --filter @md/editor test",
-    "test:desktop": "pnpm --filter @md/desktop test",
+    "test:editor": "pnpm --filter @inimark/editor test",
+    "test:desktop": "pnpm --filter @inimark/desktop test",
     "typecheck": "pnpm -r typecheck",
-    "tauri": "pnpm --filter @md/desktop tauri"
+    "tauri": "pnpm --filter @inimark/desktop tauri"
   }
 }

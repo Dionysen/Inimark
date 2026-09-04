@@ -10,7 +10,7 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@md/editor':
+      '@inimark/editor':
         specifier: workspace:*
         version: link:../../packages/editor
       '@tauri-apps/api':

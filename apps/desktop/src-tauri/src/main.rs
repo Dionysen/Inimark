@@ -1,3 +1,3 @@
 fn main() {
-    md_desktop_lib::run();
+    inimark_desktop_lib::run();
 }

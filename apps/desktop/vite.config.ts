@@ -7,18 +7,18 @@ const editorRoot = resolve(__dirname, "../../packages/editor");
 
 const editorAliases = [
   {
-    find: "@md/editor/widgets.css",
+    find: "@inimark/editor/widgets.css",
     replacement: resolve(editorRoot, "src/styles/widgets.css"),
   },
   {
-    find: "@md/editor/theme-typora.css",
+    find: "@inimark/editor/theme-typora.css",
     replacement: resolve(editorRoot, "src/styles/theme-typora.css"),
   },
   {
-    find: "@md/editor/theme-github.css",
+    find: "@inimark/editor/theme-github.css",
     replacement: resolve(editorRoot, "src/styles/theme-github.css"),
   },
-  { find: "@md/editor", replacement: resolve(editorRoot, "src/lib.ts") },
+  { find: "@inimark/editor", replacement: resolve(editorRoot, "src/lib.ts") },
 ];
 
 export default defineConfig({

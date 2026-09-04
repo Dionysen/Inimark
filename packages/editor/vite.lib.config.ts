@@ -7,7 +7,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "src/lib.ts"),
       formats: ["es"],
-      fileName: "md-editor",
+      fileName: "inimark-editor",
     },
     outDir: "dist",
     emptyOutDir: true,

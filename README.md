@@ -1,4 +1,4 @@
-# Md Editor
+# Inimark
 
 Native Markdown editor built with **Tauri 2** (Rust) and a **typora-web**-based WYSIWYG core.
 
@@ -6,11 +6,11 @@ Native Markdown editor built with **Tauri 2** (Rust) and a **typora-web**-based 
 
 ```
 apps/desktop/          Tauri shell + minimal UI chrome
-packages/editor/       @md/editor — typora-web fork (ProseMirror)
+packages/editor/       @inimark/editor — typora-web fork (ProseMirror)
 ```
 
-- **Editor core** (`@md/editor`): forked from [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web) (MIT). See `NOTICE` and `packages/editor/UPSTREAM-LICENSE`.
-- **Desktop app** (`@md/desktop`): Vite + TypeScript host; Rust backend reserved for native I/O extensions.
+- **Editor core** (`@inimark/editor`): forked from [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web) (MIT). See `NOTICE` and `packages/editor/UPSTREAM-LICENSE`.
+- **Desktop app** (`@inimark/desktop`): Vite + TypeScript host; Rust backend reserved for native I/O extensions.
 
 ## Prerequisites
 

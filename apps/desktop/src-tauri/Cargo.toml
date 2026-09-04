@@ -1,12 +1,12 @@
 [package]
-name = "md-desktop"
+name = "inimark-desktop"
 version = "0.1.0"
-description = "Native Markdown editor"
-authors = ["Md Contributors"]
+description = "Inimark — native Markdown editor"
+authors = ["Dionysen"]
 edition = "2021"
 
 [lib]
-name = "md_desktop_lib"
+name = "inimark_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

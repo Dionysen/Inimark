@@ -1,8 +1,8 @@
 :root {
   color-scheme: light dark;
-  --md-toolbar-bg: color-mix(in srgb, Canvas 92%, CanvasText 8%);
-  --md-border: color-mix(in srgb, CanvasText 12%, transparent);
-  --md-status-fg: color-mix(in srgb, CanvasText 65%, transparent);
+  --inimark-toolbar-bg: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+  --inimark-border: color-mix(in srgb, CanvasText 12%, transparent);
+  --inimark-status-fg: color-mix(in srgb, CanvasText 65%, transparent);
 }
 
 html,
@@ -18,38 +18,38 @@ body {
   color: CanvasText;
 }
 
-.md-shell {
+.inimark-shell {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 100%;
   min-height: 100vh;
 }
 
-.md-toolbar {
+.inimark-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--md-border);
-  background: var(--md-toolbar-bg);
+  border-bottom: 1px solid var(--inimark-border);
+  background: var(--inimark-toolbar-bg);
 }
 
-.md-title {
+.inimark-title {
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.md-toolbar-actions {
+.inimark-toolbar-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
 
-.md-toolbar-actions button {
-  border: 1px solid var(--md-border);
+.inimark-toolbar-actions button {
+  border: 1px solid var(--inimark-border);
   background: Canvas;
   color: CanvasText;
   border-radius: 0.4rem;
@@ -57,23 +57,23 @@ body {
   cursor: pointer;
 }
 
-.md-toolbar-actions button:hover {
+.inimark-toolbar-actions button:hover {
   background: color-mix(in srgb, Canvas 90%, CanvasText 10%);
 }
 
-.md-editor-host {
+.inimark-editor-host {
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
 }
 
-.md-editor-host .typora-web-wrap {
+.inimark-editor-host .typora-web-wrap {
   max-width: 48rem;
   margin: 0 auto;
 }
 
-.md-statusbar {
+.inimark-statusbar {
   padding: 0.35rem 0.75rem;
-  border-top: 1px solid var(--md-border);
+  border-top: 1px solid var(--inimark-border);
   font-size: 0.85rem;
-  color: var(--md-status-fg);
+  color: var(--inimark-status-fg);
 }
