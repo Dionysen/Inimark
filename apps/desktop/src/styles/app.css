@@ -106,6 +106,26 @@
   bottom: var(--inimark-space-2);
   z-index: 2;
   isolation: isolate;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+html[data-auto-hide-library-bar="true"] .inimark-sidebar-dock {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+}
+
+html[data-auto-hide-library-bar="true"] .inimark-sidebar:hover .inimark-sidebar-dock,
+html[data-auto-hide-library-bar="true"] .inimark-sidebar-dock:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+/* Typewriter: keep caret line centered while editing */
+html[data-typewriter="true"] .ProseMirror {
+  padding-top: 40vh;
+  padding-bottom: 40vh;
 }
 
 .inimark-library-bar,

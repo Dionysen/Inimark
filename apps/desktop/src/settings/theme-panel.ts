@@ -466,14 +466,8 @@ export function renderThemePanel(host: HTMLElement): () => void {
     const header = document.createElement("div");
     header.className = "theme-editor-header";
 
-    const backBtn = document.createElement("button");
-    backBtn.type = "button";
-    backBtn.className = "theme-editor-back";
-    backBtn.textContent = "Back";
-    backBtn.addEventListener("click", () => void handleCancelAppEdit(manifest));
-
     const title = document.createElement("h3");
-    title.className = "settings-section-title";
+    title.className = "theme-editor-title";
     title.textContent = `Edit theme: ${manifest.name}`;
 
     const actions = document.createElement("div");
@@ -489,7 +483,7 @@ export function renderThemePanel(host: HTMLElement): () => void {
     cancelBtn.textContent = "Cancel";
     cancelBtn.addEventListener("click", () => void handleCancelAppEdit(manifest));
     actions.append(saveBtn, cancelBtn);
-    header.append(backBtn, title, actions);
+    header.append(title, actions);
 
     const preview = document.createElement("div");
     preview.className = "theme-editor-preview theme-editor-preview-rich";
@@ -656,14 +650,8 @@ export function renderThemePanel(host: HTMLElement): () => void {
     const header = document.createElement("div");
     header.className = "theme-editor-header";
 
-    const backBtn = document.createElement("button");
-    backBtn.type = "button";
-    backBtn.className = "theme-editor-back";
-    backBtn.textContent = "Back";
-    backBtn.addEventListener("click", () => void handleCancelCodeEdit(manifest));
-
     const title = document.createElement("h3");
-    title.className = "settings-section-title";
+    title.className = "theme-editor-title";
     title.textContent = `Edit code theme: ${manifest.name}`;
 
     const actions = document.createElement("div");
@@ -679,7 +667,7 @@ export function renderThemePanel(host: HTMLElement): () => void {
     cancelBtn.textContent = "Cancel";
     cancelBtn.addEventListener("click", () => void handleCancelCodeEdit(manifest));
     actions.append(saveBtn, cancelBtn);
-    header.append(backBtn, title, actions);
+    header.append(title, actions);
 
     const previewWrap = createCodePreviewBlock(previewStyle, () => {
       /* re-render handled in tab click */

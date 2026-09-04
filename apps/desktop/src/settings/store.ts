@@ -1,18 +1,102 @@
 export type EditorWidth = "narrow" | "medium" | "wide" | "full";
 export type AppearanceMode = "light" | "dark" | "system";
+export type MenuDensity = "compact" | "normal" | "comfortable";
+export type ImageStorageMode = "library-assets" | "fixed-directory";
+export type ImageFilenameFormat = "original" | "timestamp" | "both";
+
+export interface MarkdownFormatSettings {
+  formatOnSave: boolean;
+  cjkSpacing: boolean;
+  trimTrailingWhitespace: boolean;
+  ensureFinalNewline: boolean;
+  normalizeBlankLines: boolean;
+}
+
+export interface ImageSettings {
+  storageMode: ImageStorageMode;
+  filenameFormat: ImageFilenameFormat;
+  autoCreateAssetsDir: boolean;
+  fixedDirectoryPath: string;
+}
 
 export interface AppSettings {
   fontSize: number;
+  codeFontSize: number;
   editorWidth: EditorWidth;
   appearance: AppearanceMode;
+  editorFont: string;
+  codeFont: string;
+  uiFont: string;
+  lineHeight: number;
+  paragraphSpacing: number;
+  codeLineHeight: number;
+  typewriterMode: boolean;
+  autoSave: boolean;
+  markdownFormat: MarkdownFormatSettings;
+  menuDensity: MenuDensity;
+  autoHideLibraryBar: boolean;
+  image: ImageSettings;
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
 
+export const FONT_PRESETS = {
+  system: {
+    label: "System UI",
+    css: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+  serif: {
+    label: "Serif",
+    css: 'Georgia, "Times New Roman", "Songti SC", serif',
+  },
+  rounded: {
+    label: "Rounded Sans",
+    css: '"Avenir Next", "Segoe UI", "PingFang SC", sans-serif',
+  },
+  mono: {
+    label: "Monospace",
+    css: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  },
+  code: {
+    label: "Code",
+    css: '"Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace',
+  },
+} as const;
+
+export type FontPresetId = keyof typeof FONT_PRESETS;
+
+export const DEFAULT_MARKDOWN_FORMAT: MarkdownFormatSettings = {
+  formatOnSave: false,
+  cjkSpacing: false,
+  trimTrailingWhitespace: true,
+  ensureFinalNewline: true,
+  normalizeBlankLines: true,
+};
+
+export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
+  storageMode: "library-assets",
+  filenameFormat: "both",
+  autoCreateAssetsDir: true,
+  fixedDirectoryPath: "",
+};
+
 export const DEFAULT_SETTINGS: AppSettings = {
   fontSize: 16,
+  codeFontSize: 14,
   editorWidth: "medium",
   appearance: "light",
+  editorFont: "system",
+  codeFont: "code",
+  uiFont: "system",
+  lineHeight: 1.8,
+  paragraphSpacing: 1.05,
+  codeLineHeight: 1.5,
+  typewriterMode: false,
+  autoSave: false,
+  markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
+  menuDensity: "normal",
+  autoHideLibraryBar: false,
+  image: { ...DEFAULT_IMAGE_SETTINGS },
 };
 
 const EDITOR_WIDTHS: Record<EditorWidth, string> = {
@@ -22,22 +106,45 @@ const EDITOR_WIDTHS: Record<EditorWidth, string> = {
   full: "100%",
 };
 
+const DENSITY_VARS: Record<
+  MenuDensity,
+  { controlHeight: string; controlPaddingX: string; menuItemPaddingY: string; treeItemPaddingY: string }
+> = {
+  compact: {
+    controlHeight: "28px",
+    controlPaddingX: "8px",
+    menuItemPaddingY: "4px",
+    treeItemPaddingY: "3px",
+  },
+  normal: {
+    controlHeight: "32px",
+    controlPaddingX: "10px",
+    menuItemPaddingY: "6px",
+    treeItemPaddingY: "5px",
+  },
+  comfortable: {
+    controlHeight: "36px",
+    controlPaddingX: "12px",
+    menuItemPaddingY: "8px",
+    treeItemPaddingY: "7px",
+  },
+};
+
+function resolveFontCss(presetId: string, fallback: FontPresetId): string {
+  if (presetId in FONT_PRESETS) {
+    return FONT_PRESETS[presetId as FontPresetId].css;
+  }
+  return FONT_PRESETS[fallback].css;
+}
+
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_SETTINGS };
+    if (!raw) return structuredClone(DEFAULT_SETTINGS);
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    return {
-      fontSize: clampFontSize(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize),
-      editorWidth: isEditorWidth(parsed.editorWidth)
-        ? parsed.editorWidth
-        : DEFAULT_SETTINGS.editorWidth,
-      appearance: isAppearance(parsed.appearance)
-        ? parsed.appearance
-        : DEFAULT_SETTINGS.appearance,
-    };
+    return normalizeSettings(parsed);
   } catch {
-    return { ...DEFAULT_SETTINGS };
+    return structuredClone(DEFAULT_SETTINGS);
   }
 }
 
@@ -48,10 +155,28 @@ export function saveSettings(settings: AppSettings): void {
 export function applySettings(settings: AppSettings): void {
   const root = document.documentElement;
   root.style.setProperty("--inimark-editor-font-size", `${settings.fontSize}px`);
+  root.style.setProperty("--editor-font-size", `${settings.fontSize}px`);
+  root.style.setProperty("--font-mono-size", `${settings.codeFontSize}px`);
   root.style.setProperty(
     "--inimark-editor-max-width",
     EDITOR_WIDTHS[settings.editorWidth],
   );
+  root.style.setProperty("--editor-font", resolveFontCss(settings.editorFont, "system"));
+  root.style.setProperty("--font-mono", resolveFontCss(settings.codeFont, "code"));
+  root.style.setProperty("--font-ui", resolveFontCss(settings.uiFont, "system"));
+  root.style.setProperty("--editor-line-height", String(settings.lineHeight));
+  root.style.setProperty("--editor-paragraph-spacing", `${settings.paragraphSpacing}em`);
+  root.style.setProperty("--code-line-height", String(settings.codeLineHeight));
+
+  const density = DENSITY_VARS[settings.menuDensity];
+  root.style.setProperty("--control-height", density.controlHeight);
+  root.style.setProperty("--control-padding-x", density.controlPaddingX);
+  root.style.setProperty("--menu-item-padding-y", density.menuItemPaddingY);
+  root.style.setProperty("--tree-item-padding-y", density.treeItemPaddingY);
+
+  root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
+  root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
+  root.dataset.menuDensity = settings.menuDensity;
 }
 
 export function resolveAppearance(mode: AppearanceMode): "light" | "dark" {
@@ -74,8 +199,91 @@ export function editorWidthLabel(width: EditorWidth): string {
   }
 }
 
-function clampFontSize(value: number): number {
-  return Math.min(22, Math.max(13, Math.round(value)));
+export function menuDensityLabel(density: MenuDensity): string {
+  switch (density) {
+    case "compact":
+      return "Compact";
+    case "normal":
+      return "Normal";
+    case "comfortable":
+      return "Comfortable";
+  }
+}
+
+export function fontPresetOptions(
+  ids: FontPresetId[],
+): Array<{ value: string; label: string }> {
+  return ids.map((id) => ({ value: id, label: FONT_PRESETS[id].label }));
+}
+
+function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
+  const format = {
+    ...DEFAULT_MARKDOWN_FORMAT,
+    ...(parsed.markdownFormat ?? {}),
+  };
+  const image = {
+    ...DEFAULT_IMAGE_SETTINGS,
+    ...(parsed.image ?? {}),
+  };
+  return {
+    fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, 10, 24),
+    codeFontSize: clamp(parsed.codeFontSize ?? DEFAULT_SETTINGS.codeFontSize, 10, 24),
+    editorWidth: isEditorWidth(parsed.editorWidth)
+      ? parsed.editorWidth
+      : DEFAULT_SETTINGS.editorWidth,
+    appearance: isAppearance(parsed.appearance)
+      ? parsed.appearance
+      : DEFAULT_SETTINGS.appearance,
+    editorFont: isFontPreset(parsed.editorFont) ? parsed.editorFont : DEFAULT_SETTINGS.editorFont,
+    codeFont: isFontPreset(parsed.codeFont) ? parsed.codeFont : DEFAULT_SETTINGS.codeFont,
+    uiFont: isFontPreset(parsed.uiFont) ? parsed.uiFont : DEFAULT_SETTINGS.uiFont,
+    lineHeight: clampFloat(parsed.lineHeight ?? DEFAULT_SETTINGS.lineHeight, 1.2, 2.8),
+    paragraphSpacing: clampFloat(
+      parsed.paragraphSpacing ?? DEFAULT_SETTINGS.paragraphSpacing,
+      0,
+      2,
+    ),
+    codeLineHeight: clampFloat(
+      parsed.codeLineHeight ?? DEFAULT_SETTINGS.codeLineHeight,
+      1.1,
+      2.4,
+    ),
+    typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
+    autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
+    markdownFormat: {
+      formatOnSave: Boolean(format.formatOnSave),
+      cjkSpacing: Boolean(format.cjkSpacing),
+      trimTrailingWhitespace: Boolean(format.trimTrailingWhitespace),
+      ensureFinalNewline: Boolean(format.ensureFinalNewline),
+      normalizeBlankLines: Boolean(format.normalizeBlankLines),
+    },
+    menuDensity: isMenuDensity(parsed.menuDensity)
+      ? parsed.menuDensity
+      : DEFAULT_SETTINGS.menuDensity,
+    autoHideLibraryBar: Boolean(
+      parsed.autoHideLibraryBar ?? DEFAULT_SETTINGS.autoHideLibraryBar,
+    ),
+    image: {
+      storageMode: isImageStorageMode(image.storageMode)
+        ? image.storageMode
+        : DEFAULT_IMAGE_SETTINGS.storageMode,
+      filenameFormat: isImageFilenameFormat(image.filenameFormat)
+        ? image.filenameFormat
+        : DEFAULT_IMAGE_SETTINGS.filenameFormat,
+      autoCreateAssetsDir: Boolean(image.autoCreateAssetsDir),
+      fixedDirectoryPath:
+        typeof image.fixedDirectoryPath === "string" ? image.fixedDirectoryPath : "",
+    },
+  };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function clampFloat(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, Math.round(value * 10) / 10));
 }
 
 function isEditorWidth(value: unknown): value is EditorWidth {
@@ -84,4 +292,20 @@ function isEditorWidth(value: unknown): value is EditorWidth {
 
 function isAppearance(value: unknown): value is AppearanceMode {
   return value === "light" || value === "dark" || value === "system";
+}
+
+function isMenuDensity(value: unknown): value is MenuDensity {
+  return value === "compact" || value === "normal" || value === "comfortable";
+}
+
+function isFontPreset(value: unknown): value is FontPresetId {
+  return typeof value === "string" && value in FONT_PRESETS;
+}
+
+function isImageStorageMode(value: unknown): value is ImageStorageMode {
+  return value === "library-assets" || value === "fixed-directory";
+}
+
+function isImageFilenameFormat(value: unknown): value is ImageFilenameFormat {
+  return value === "original" || value === "timestamp" || value === "both";
 }

@@ -27,6 +27,7 @@ import {
 } from "./platform/workspace.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
+import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
@@ -37,7 +38,7 @@ export interface AppController {
 }
 
 export function mountApp(host: HTMLElement): AppController {
-  const settings = loadSettings();
+  let settings = loadSettings();
   applySettings(settings);
 
   const shell = mountShell(host, {
@@ -47,14 +48,39 @@ export function mountApp(host: HTMLElement): AppController {
   let activeFilePath: string | null = null;
   let activeLibraryId: string | null = null;
   let closeInProgress = false;
+  let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
   const cleanups: Array<() => void> = [];
 
   const editor = createEditor(shell.editorHost, {
     initialContent: "# Welcome\n\nStart writing…",
     onChange: () => {
       shell.setDirty(true);
+      scheduleAutoSave();
     },
   });
+
+  function clearAutoSaveTimer(): void {
+    if (autoSaveTimer != null) {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = null;
+    }
+  }
+
+  function scheduleAutoSave(): void {
+    clearAutoSaveTimer();
+    if (!settings.autoSave) return;
+    if (!workspace || !activeFilePath) return;
+    autoSaveTimer = setTimeout(() => {
+      autoSaveTimer = null;
+      void saveCurrentFile({ quiet: true });
+    }, 900);
+  }
+
+  function currentMarkdownForSave(): string {
+    const raw = editor.getMarkdown();
+    if (!settings.markdownFormat.formatOnSave) return raw;
+    return formatMarkdown(raw, settings.markdownFormat);
+  }
 
   function refreshLibraryList(): void {
     shell.sidebar.setSavedLibraries(listLibraries(), activeLibraryId);
@@ -68,14 +94,15 @@ export function mountApp(host: HTMLElement): AppController {
     });
   }
 
-  async function saveCurrentFile(): Promise<boolean> {
+  async function saveCurrentFile(options?: { quiet?: boolean }): Promise<boolean> {
+    const markdown = currentMarkdownForSave();
     if (workspace && activeFilePath) {
-      const result = await writeWorkspaceFile(
-        workspace,
-        activeFilePath,
-        editor.getMarkdown(),
-      );
+      const result = await writeWorkspaceFile(workspace, activeFilePath, markdown);
       if (result.status === "saved") {
+        if (settings.markdownFormat.formatOnSave) {
+          const current = editor.getMarkdown();
+          if (current !== markdown) editor.setMarkdown(markdown);
+        }
         shell.setFileName(result.name);
         shell.setDirty(false);
         workspace.tree = await refreshWorkspaceTree(workspace);
@@ -84,7 +111,7 @@ export function mountApp(host: HTMLElement): AppController {
         persistLibrarySession();
         return true;
       }
-      if (result.status === "error") {
+      if (result.status === "error" && !options?.quiet) {
         console.error(result.message);
       }
       return false;
@@ -327,7 +354,8 @@ export function mountApp(host: HTMLElement): AppController {
 
   const onStorage = (event: StorageEvent) => {
     if (event.key === SETTINGS_STORAGE_KEY) {
-      applySettings(loadSettings());
+      settings = loadSettings();
+      applySettings(settings);
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       refreshLibraryList();
@@ -373,6 +401,7 @@ export function mountApp(host: HTMLElement): AppController {
   return {
     editor,
     destroy() {
+      clearAutoSaveTimer();
       persistLibrarySession();
       for (const cleanup of cleanups.reverse()) cleanup();
       editor.destroy();

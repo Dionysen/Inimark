@@ -249,3 +249,33 @@ html.platform-macos .inimark-settings-nav-topbar {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.inimark-settings-section-title {
+  margin: var(--inimark-space-4) 0 var(--inimark-space-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-section-title:first-child {
+  margin-top: 0;
+}
+
+.inimark-settings-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  min-width: 0;
+}
+
+.inimark-settings-inline-controls .inimark-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.inimark-about-links {
+  display: flex;
+  gap: var(--inimark-space-2);
+  margin-top: var(--inimark-space-3);
+}

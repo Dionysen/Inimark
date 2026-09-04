@@ -1,20 +1,46 @@
 import { describe, expect, test, beforeEach } from "vitest";
 
-import { applySettings, loadSettings, saveSettings } from "../src/settings/store.ts";
+import {
+  applySettings,
+  DEFAULT_SETTINGS,
+  loadSettings,
+  saveSettings,
+} from "../src/settings/store.ts";
 import { mountSettingsView } from "../src/settings/view.ts";
 
 describe("settings store", () => {
+  const memory = new Map<string, string>();
+
   beforeEach(() => {
-    localStorage.clear();
+    memory.clear();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: (key: string) => memory.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          memory.set(key, value);
+        },
+        removeItem: (key: string) => {
+          memory.delete(key);
+        },
+      },
+    });
     document.documentElement.style.removeProperty("--inimark-editor-font-size");
     document.documentElement.style.removeProperty("--inimark-editor-max-width");
   });
 
   test("persists and applies editor preferences", () => {
-    saveSettings({ fontSize: 18, editorWidth: "wide", appearance: "dark" });
+    saveSettings({
+      ...DEFAULT_SETTINGS,
+      fontSize: 18,
+      editorWidth: "wide",
+      appearance: "dark",
+      autoSave: true,
+    });
     const loaded = loadSettings();
     expect(loaded.fontSize).toBe(18);
     expect(loaded.editorWidth).toBe("wide");
+    expect(loaded.autoSave).toBe(true);
 
     applySettings(loaded);
     expect(document.documentElement.style.getPropertyValue("--inimark-editor-font-size")).toBe(
@@ -45,7 +71,7 @@ describe("settings view", () => {
     const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-nav-item")];
     const visible = items.filter((item) => !item.hidden);
     expect(visible.length).toBe(1);
-    expect(visible[0]?.dataset.section).toBe("appearance");
+    expect(visible[0]?.dataset.section).toBe("theme");
 
     view.destroy();
     host.remove();
