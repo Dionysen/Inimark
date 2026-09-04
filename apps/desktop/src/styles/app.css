@@ -8,6 +8,10 @@
   background: var(--inimark-bg);
 }
 
+.inimark-shell.is-sidebar-closed {
+  grid-template-columns: 0 1fr;
+}
+
 .inimark-main {
   display: grid;
   grid-template-rows: var(--inimark-titlebar-height) 1fr;
@@ -20,9 +24,17 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   border-right: 1px solid var(--inimark-border);
   background: var(--inimark-surface);
   position: relative;
+  overflow: hidden;
+}
+
+.inimark-sidebar.is-collapsed {
+  border-right: none;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .inimark-sidebar-header {

@@ -28,6 +28,7 @@ describe("desktop app shell", () => {
     expect(host.querySelector(".inimark-sidebar")).not.toBeNull();
     expect(host.querySelector(".inimark-tree")).not.toBeNull();
     expect(host.querySelector(".inimark-library-bar")).not.toBeNull();
+    expect(host.querySelector(".inimark-sidebar-toggle-btn")).not.toBeNull();
     expect(host.querySelector(".inimark-toolbar")).toBeNull();
     expect(host.querySelector(".inimark-statusbar")).toBeNull();
 

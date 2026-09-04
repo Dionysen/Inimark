@@ -6,7 +6,7 @@ import {
   supportsWindowChrome,
   toggleMaximizeWindow,
 } from "../platform/window-chrome.ts";
-import { createIconButton } from "./icon-button.ts";
+import { createIconButton, sidebarToggleIcon } from "./icon-button.ts";
 import {
   windowCloseIcon,
   windowMaximizeIcon,
@@ -18,15 +18,21 @@ export type WindowControlMode = "full" | "close-only";
 
 export interface TitleBarController {
   setTitle(title: string): void;
+  setSidebarOpen(open: boolean): void;
   destroy(): void;
 }
 
+export interface SidebarToggleOptions {
+  open: boolean;
+  onToggle: () => void;
+}
+
 export interface TitleBarOptions {
-  appName?: string;
   title?: string;
   /** When omitted, shows custom controls in Tauri on non-macOS platforms. */
   showWindowControls?: boolean;
   controlMode?: WindowControlMode;
+  sidebarToggle?: SidebarToggleOptions;
 }
 
 function markNoDrag(el: HTMLElement): void {
@@ -38,12 +44,12 @@ export function mountTitleBar(
   host: HTMLElement,
   options: TitleBarOptions = {},
 ): TitleBarController {
-  const appName = options.appName ?? "Inimark";
   const controlMode = options.controlMode ?? "full";
   const showControls =
     !usesNativeWindowControls() &&
     (options.showWindowControls ?? supportsWindowChrome());
   let unlistenMaximize: (() => void) | null = null;
+  let sidebarOpen = options.sidebarToggle?.open ?? true;
 
   host.className = "inimark-titlebar";
   host.setAttribute("data-tauri-drag-region", "deep");
@@ -51,9 +57,18 @@ export function mountTitleBar(
   const leading = document.createElement("div");
   leading.className = "inimark-titlebar-leading";
 
-  const brand = document.createElement("span");
-  brand.className = "inimark-titlebar-brand";
-  brand.textContent = appName;
+  let sidebarToggleBtn: HTMLButtonElement | null = null;
+  if (options.sidebarToggle) {
+    sidebarToggleBtn = createIconButton({
+      label: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+      title: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+      onClick: options.sidebarToggle.onToggle,
+    });
+    sidebarToggleBtn.className = "inimark-sidebar-toggle-btn";
+    sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
+    markNoDrag(sidebarToggleBtn);
+    leading.append(sidebarToggleBtn);
+  }
 
   const center = document.createElement("div");
   center.className = "inimark-titlebar-center";
@@ -66,7 +81,6 @@ export function mountTitleBar(
   trailing.className = "inimark-titlebar-trailing";
   markNoDrag(trailing);
 
-  leading.append(brand);
   center.append(titleEl);
 
   if (showControls) {
@@ -139,9 +153,23 @@ export function mountTitleBar(
   leading.addEventListener("dblclick", onDoubleClick);
   center.addEventListener("dblclick", onDoubleClick);
 
+  function updateSidebarToggle(): void {
+    if (!sidebarToggleBtn) return;
+    sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
+    sidebarToggleBtn.title = sidebarOpen ? "Collapse sidebar" : "Expand sidebar";
+    sidebarToggleBtn.setAttribute(
+      "aria-label",
+      sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+    );
+  }
+
   return {
     setTitle(title) {
       titleEl.textContent = title;
+    },
+    setSidebarOpen(open) {
+      sidebarOpen = open;
+      updateSidebarToggle();
     },
     destroy() {
       unlistenMaximize?.();

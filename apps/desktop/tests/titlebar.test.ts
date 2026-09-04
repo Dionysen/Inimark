@@ -29,17 +29,41 @@ describe("titlebar", () => {
   test("mounts with deep drag region and document title", () => {
     const host = document.createElement("header");
     const titlebar = mountTitleBar(host, {
-      appName: "Inimark",
       title: "Untitled",
       showWindowControls: false,
     });
 
     expect(host.getAttribute("data-tauri-drag-region")).toBe("deep");
     expect(host.querySelector(".inimark-titlebar-title")?.textContent).toBe("Untitled");
-    expect(host.querySelector(".inimark-titlebar-brand")?.textContent).toBe("Inimark");
+    expect(host.querySelector(".inimark-titlebar-brand")).toBeNull();
 
     titlebar.setTitle("Notes.md");
     expect(host.querySelector(".inimark-titlebar-title")?.textContent).toBe("Notes.md");
+
+    titlebar.destroy();
+  });
+
+  test("renders sidebar toggle button when configured", () => {
+    let open = true;
+    const host = document.createElement("header");
+    const titlebar = mountTitleBar(host, {
+      showWindowControls: false,
+      sidebarToggle: {
+        open,
+        onToggle: () => {
+          open = !open;
+          titlebar.setSidebarOpen(open);
+        },
+      },
+    });
+
+    const toggle = host.querySelector<HTMLButtonElement>(".inimark-sidebar-toggle-btn");
+    expect(toggle).not.toBeNull();
+    expect(toggle?.title).toBe("Collapse sidebar");
+
+    toggle?.click();
+    expect(open).toBe(false);
+    expect(toggle?.title).toBe("Expand sidebar");
 
     titlebar.destroy();
   });

@@ -77,6 +77,41 @@ html.platform-windows body {
 .inimark-titlebar-leading {
   padding-left: var(--inimark-space-3);
   padding-right: var(--inimark-space-2);
+  gap: var(--inimark-space-1);
+}
+
+.inimark-sidebar-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.45rem;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.inimark-sidebar-toggle-btn:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-sidebar-toggle-btn:active {
+  transform: scale(0.93);
+}
+
+.inimark-icon--sidebar-toggle {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+html.platform-macos .inimark-shell.is-sidebar-closed .inimark-titlebar-leading {
+  padding-left: calc(var(--inimark-space-3) + var(--inimark-mac-traffic-lights-width));
 }
 
 .inimark-titlebar-center {

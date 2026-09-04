@@ -19,7 +19,6 @@ applySettings(loadSettings());
 
 const titlebarHost = document.createElement("header");
 const titlebar = mountTitleBar(titlebarHost, {
-  appName: "Inimark",
   title: "Settings",
   controlMode: "close-only",
 });
