@@ -122,12 +122,6 @@ html[data-auto-hide-library-bar="true"] .inimark-sidebar-dock:focus-within {
   transform: none;
 }
 
-/* Typewriter: keep caret line centered while editing */
-html[data-typewriter="true"] .ProseMirror {
-  padding-top: 40vh;
-  padding-bottom: 40vh;
-}
-
 .inimark-library-bar,
 .inimark-sidebar-dock .inimark-menu {
   --_o: var(--sidebar-chrome-opacity, 1);

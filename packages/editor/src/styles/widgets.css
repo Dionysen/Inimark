@@ -99,7 +99,9 @@
   opacity: 1;
 }
 .typora-web-wrap.tw-typewriter-mode .ProseMirror {
-  scroll-margin-block: 45vh;
+  /* Half-viewport padding so first/last lines can sit at vertical center */
+  padding-top: var(--typewriter-pad, 0px);
+  padding-bottom: var(--typewriter-pad, 0px);
 }
 
 /* HTML comment — wraps the entire `<!-- ... -->` source. The chars

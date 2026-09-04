@@ -58,6 +58,7 @@ export function mountApp(host: HTMLElement): AppController {
       scheduleAutoSave();
     },
   });
+  editor.setTypewriterMode(settings.typewriterMode);
 
   function clearAutoSaveTimer(): void {
     if (autoSaveTimer != null) {
@@ -356,6 +357,7 @@ export function mountApp(host: HTMLElement): AppController {
     if (event.key === SETTINGS_STORAGE_KEY) {
       settings = loadSettings();
       applySettings(settings);
+      editor.setTypewriterMode(settings.typewriterMode);
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       refreshLibraryList();

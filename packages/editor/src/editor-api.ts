@@ -94,8 +94,83 @@ export function createEditor(
   let sourceView: EmbeddedCodeMirrorEditor | null = null;
   let inSource = false;
   let typewriterMode = false;
+  let typewriterRaf: number | null = null;
+  /** True while the primary button is held (drag-select); skip typewriter scroll until release. */
+  let pointerSelecting = false;
   let currentFileHandle: FileSystemFileHandle | null = null;
   let currentFileName: string | null = null;
+
+  function findScrollContainer(): HTMLElement {
+    let el: HTMLElement | null = host;
+    while (el && el !== document.documentElement) {
+      const { overflowY } = getComputedStyle(el);
+      if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return host;
+  }
+
+  function applyTypewriterPad(): void {
+    if (!typewriterMode) {
+      wrap.style.removeProperty("--typewriter-pad");
+      return;
+    }
+    const sc = findScrollContainer();
+    const pad = Math.max(0, Math.floor(sc.clientHeight * 0.45));
+    wrap.style.setProperty("--typewriter-pad", `${pad}px`);
+  }
+
+  function scrollCursorToCenterNow(): void {
+    if (inSource || pointerSelecting) return;
+    try {
+      const sc = findScrollContainer();
+      const coords = view.coordsAtPos(view.state.selection.head);
+      const lineCenter = (coords.top + coords.bottom) / 2;
+      const containerTop = sc.getBoundingClientRect().top;
+      const lineCenterInContent = lineCenter - containerTop + sc.scrollTop;
+      sc.scrollTop = Math.max(0, lineCenterInContent - sc.clientHeight / 2);
+    } catch {
+      /* ignore layout races */
+    }
+  }
+
+  function scheduleScrollCursorToCenter(): void {
+    if (!typewriterMode || inSource || pointerSelecting) return;
+    if (typewriterRaf != null) return;
+    typewriterRaf = requestAnimationFrame(() => {
+      typewriterRaf = null;
+      scrollCursorToCenterNow();
+    });
+  }
+
+  function endPointerSelecting(): void {
+    if (!pointerSelecting) return;
+    pointerSelecting = false;
+    document.removeEventListener("mouseup", endPointerSelecting, true);
+    document.removeEventListener("pointerup", endPointerSelecting, true);
+    document.removeEventListener("pointercancel", endPointerSelecting, true);
+    if (typewriterMode) scheduleScrollCursorToCenter();
+  }
+
+  function beginPointerSelecting(): void {
+    if (pointerSelecting) return;
+    pointerSelecting = true;
+    if (typewriterRaf != null) {
+      cancelAnimationFrame(typewriterRaf);
+      typewriterRaf = null;
+    }
+    document.addEventListener("mouseup", endPointerSelecting, true);
+    document.addEventListener("pointerup", endPointerSelecting, true);
+    document.addEventListener("pointercancel", endPointerSelecting, true);
+  }
+
+  function onTypewriterResize(): void {
+    if (!typewriterMode) return;
+    applyTypewriterPad();
+    scheduleScrollCursorToCenter();
+  }
 
   function buildView(initialMd: string): EditorView {
     const doc = initialMd ? parse(initialMd) : schema.nodes.doc.createAndFill()!;
@@ -114,12 +189,22 @@ export function createEditor(
       dispatchTransaction(tr) {
         const next = v.state.apply(tr);
         v.updateState(next);
-        if (typewriterMode) scrollRenderedCursorToCenter();
+        if (typewriterMode && (tr.selectionSet || tr.docChanged)) {
+          scheduleScrollCursorToCenter();
+        }
         if (tr.docChanged) options.onChange?.(serialize(next.doc));
       },
       handleDOMEvents: {
         focus: () => { options.onFocus?.(); return false; },
         blur: () => { options.onBlur?.(); return false; },
+        mousedown: (_view, event) => {
+          if (event.button === 0) beginPointerSelecting();
+          return false;
+        },
+        pointerdown: (_view, event) => {
+          if (event.isPrimary && event.button === 0) beginPointerSelecting();
+          return false;
+        },
       },
     });
     return v;
@@ -134,20 +219,15 @@ export function createEditor(
       dispatchFocusMode(view.state, (tr) => view.updateState(view.state.apply(tr)), true);
     }
     syncModeClasses();
+    if (typewriterMode) {
+      applyTypewriterPad();
+      scheduleScrollCursorToCenter();
+    }
   }
 
   function syncModeClasses(): void {
     wrap.classList.toggle("tw-focus-mode", readFocusMode(view.state));
     wrap.classList.toggle("tw-typewriter-mode", typewriterMode);
-  }
-
-  function scrollRenderedCursorToCenter(): void {
-    try {
-      const coords = view.coordsAtPos(view.state.selection.head);
-      const pageY = coords.top + window.scrollY;
-      const target = Math.max(0, pageY - window.innerHeight / 2);
-      window.scrollTo({ top: target, behavior: "smooth" });
-    } catch {}
   }
 
   function restorePageScroll(top: number): void {
@@ -318,8 +398,10 @@ export function createEditor(
     setTypewriterMode(enabled: boolean): void {
       typewriterMode = enabled;
       syncModeClasses();
+      applyTypewriterPad();
       if (enabled) {
-        if (!inSource) scrollRenderedCursorToCenter();
+        // Wait a frame so padding is laid out before measuring caret.
+        scheduleScrollCursorToCenter();
       }
     },
     isTypewriterMode(): boolean {
@@ -383,6 +465,12 @@ export function createEditor(
     },
     destroy(): void {
       window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("resize", onTypewriterResize);
+      document.removeEventListener("mouseup", endPointerSelecting, true);
+      document.removeEventListener("pointerup", endPointerSelecting, true);
+      document.removeEventListener("pointercancel", endPointerSelecting, true);
+      if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
+      wrap.style.removeProperty("--typewriter-pad");
       sourceView?.destroy();
       view.destroy();
       wrap.remove();
@@ -392,5 +480,6 @@ export function createEditor(
     },
   };
   syncModeClasses();
+  window.addEventListener("resize", onTypewriterResize);
   return controller;
 }

@@ -53,17 +53,29 @@ describe("editor modes", () => {
     }
   });
 
-  test("typewriter mode toggles with F9 and requests cursor centering", () => {
+  test("typewriter mode toggles with F9 and requests cursor centering", async () => {
     const host = document.createElement("div");
+    host.style.overflow = "auto";
+    host.style.height = "200px";
     document.body.appendChild(host);
     const editor = createEditor(host, { initialContent: "one" });
-    const oldScrollTo = window.scrollTo;
     const oldCoordsAtPos = editor.view.coordsAtPos;
-    let scrollCalls = 0;
     try {
-      window.scrollTo = (() => {
-        scrollCalls++;
-      }) as typeof window.scrollTo;
+      Object.defineProperty(host, "clientHeight", { configurable: true, get: () => 200 });
+      host.getBoundingClientRect = () =>
+        ({
+          top: 0,
+          bottom: 200,
+          left: 0,
+          right: 100,
+          width: 100,
+          height: 200,
+          x: 0,
+          y: 0,
+          toJSON() {
+            return {};
+          },
+        }) as DOMRect;
       editor.view.coordsAtPos = (() => ({
         top: 480,
         bottom: 500,
@@ -74,10 +86,14 @@ describe("editor modes", () => {
       editor.view.dom.dispatchEvent(new KeyboardEvent("keydown", { key: "F9", bubbles: true }));
 
       expect(editor.isTypewriterMode()).toBe(true);
-      expect(scrollCalls).toBe(1);
+      expect(host.querySelector(".typora-web-wrap")?.getAttribute("style") ?? "").toContain(
+        "--typewriter-pad",
+      );
+
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      expect(host.scrollTop).toBeGreaterThan(0);
     } finally {
       editor.view.coordsAtPos = oldCoordsAtPos;
-      window.scrollTo = oldScrollTo;
       editor.destroy();
       host.remove();
     }
