@@ -25,6 +25,7 @@ import {
   refreshWorkspaceTree,
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
+import { mountEditorFontZoom } from "./editor/font-zoom.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
 import { formatMarkdown } from "./settings/markdown-format.ts";
@@ -59,6 +60,17 @@ export function mountApp(host: HTMLElement): AppController {
     },
   });
   editor.setTypewriterMode(settings.typewriterMode);
+
+  cleanups.push(
+    mountEditorFontZoom({
+      editorHost: shell.editorHost,
+      toastHost: shell.mainColumn,
+      getSettings: () => settings,
+      setSettings(next) {
+        settings = next;
+      },
+    }),
+  );
 
   function clearAutoSaveTimer(): void {
     if (autoSaveTimer != null) {

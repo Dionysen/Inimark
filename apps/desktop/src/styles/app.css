@@ -18,6 +18,7 @@
   min-height: 0;
   min-width: 0;
   background: var(--inimark-content-bg);
+  position: relative;
 }
 
 .inimark-sidebar {
@@ -66,6 +67,38 @@
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;
   background: var(--inimark-content-bg);
+}
+
+/* Ctrl/Cmd + wheel font zoom toast (centered under titlebar) */
+.inimark-font-size-indicator {
+  position: absolute;
+  top: calc(var(--inimark-titlebar-height) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--bg-primary, var(--inimark-content-bg));
+  border: 1px solid var(--border, var(--inimark-border));
+  color: var(--text-primary, var(--inimark-fg));
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: inimark-font-size-indicator-in 0.15s ease;
+}
+
+@keyframes inimark-font-size-indicator-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 .inimark-editor-host .typora-web-wrap {

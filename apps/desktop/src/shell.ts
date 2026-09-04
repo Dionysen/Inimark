@@ -15,6 +15,7 @@ const SIDEBAR_WIDTH_MAX = 480;
 
 export interface ShellController {
   editorHost: HTMLElement;
+  mainColumn: HTMLElement;
   sidebar: SidebarController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
@@ -116,6 +117,7 @@ export function mountShell(
 
   return {
     editorHost,
+    mainColumn,
     sidebar,
     setFileName(name) {
       fileName = name;
