@@ -1,13 +1,19 @@
 import { createIconButton, libraryIcon, settingsIcon } from "./ui/icon-button.ts";
+import type { LibraryRecord } from "./libraries/store.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 
 export interface SidebarController {
   setWorkspace(workspace: Workspace | null): void;
   setActiveFile(path: string | null): void;
+  setSavedLibraries(libraries: LibraryRecord[], activeLibraryId: string | null): void;
+  setExpandedDirs(dirs: string[]): void;
+  getExpandedDirs(): string[];
   onFileSelect(handler: (path: string) => void | Promise<void>): void;
   onOpenFolder(handler: () => void | Promise<void>): void;
   onOpenSettings(handler: () => void): void;
   onCloseLibrary(handler: () => void): void;
+  onSwitchLibrary(handler: (libraryId: string) => void | Promise<void>): void;
+  onExpandedDirsChange(handler: (dirs: string[]) => void): void;
   destroy(): void;
 }
 
@@ -68,10 +74,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   menuPath.className = "inimark-library-menu-path";
   menuPath.textContent = "No folder selected";
 
+  const menuLibraries = document.createElement("div");
+  menuLibraries.className = "inimark-library-menu-libraries";
+
+  const menuDivider = document.createElement("div");
+  menuDivider.className = "inimark-library-menu-divider";
+
   const menuOpen = document.createElement("button");
   menuOpen.type = "button";
   menuOpen.className = "inimark-library-menu-item";
-  menuOpen.textContent = "Open folder…";
+  menuOpen.textContent = "Add library…";
   menuOpen.setAttribute("role", "menuitem");
 
   const menuClose = document.createElement("button");
@@ -80,12 +92,14 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   menuClose.textContent = "Close library";
   menuClose.setAttribute("role", "menuitem");
 
-  menu.append(menuPath, menuOpen, menuClose);
+  menu.append(menuPath, menuLibraries, menuDivider, menuOpen, menuClose);
   dock.append(menu);
 
   host.append(header, treeHost, dock);
 
   let activePath: string | null = null;
+  let activeLibraryId: string | null = null;
+  let savedLibraries: LibraryRecord[] = [];
   let menuOpenState = false;
   const expanded = new Set<string>();
   const handlers = {
@@ -93,7 +107,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     openFolder: (): void | Promise<void> => {},
     openSettings: (): void => {},
     closeLibrary: (): void => {},
+    switchLibrary: (_libraryId: string): void | Promise<void> => {},
+    expandedDirsChange: (_dirs: string[]): void => {},
   };
+
+  function notifyExpandedChange(): void {
+    handlers.expandedDirsChange([...expanded]);
+  }
 
   function closeMenu(): void {
     menuOpenState = false;
@@ -103,6 +123,41 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function toggleMenu(): void {
     menuOpenState = !menuOpenState;
     menu.hidden = !menuOpenState;
+    if (menuOpenState) renderLibraryList();
+  }
+
+  function renderLibraryList(): void {
+    menuLibraries.replaceChildren();
+    if (savedLibraries.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "inimark-library-menu-empty";
+      empty.textContent = "No saved libraries";
+      menuLibraries.append(empty);
+      return;
+    }
+
+    const heading = document.createElement("p");
+    heading.className = "inimark-library-menu-heading";
+    heading.textContent = "Libraries";
+    menuLibraries.append(heading);
+
+    for (const library of savedLibraries) {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "inimark-library-menu-library";
+      if (library.id === activeLibraryId) row.classList.add("is-active");
+      row.setAttribute("role", "menuitem");
+      row.title = library.rootPath;
+      row.innerHTML = `
+        <span class="inimark-library-menu-library-name">${library.rootName}</span>
+        <span class="inimark-library-menu-library-path">${library.rootPath}</span>
+      `;
+      row.addEventListener("click", () => {
+        closeMenu();
+        void handlers.switchLibrary(library.id);
+      });
+      menuLibraries.append(row);
+    }
   }
 
   libraryBtn.addEventListener("click", () => toggleMenu());
@@ -141,6 +196,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         row.addEventListener("click", () => {
           if (expanded.has(node.path)) expanded.delete(node.path);
           else expanded.add(node.path);
+          notifyExpandedChange();
           rerender();
         });
         frag.append(row);
@@ -178,10 +234,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (!workspace) {
       currentTree = [];
       activePath = null;
+      activeLibraryId = null;
       libraryLabel.textContent = "No library";
       menuPath.textContent = "No folder selected";
       menuPath.title = "";
+      expanded.clear();
       renderEmptyHint("No folder selected");
+      renderLibraryList();
       return;
     }
 
@@ -189,11 +248,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     libraryLabel.textContent = workspace.rootName;
     menuPath.textContent = workspace.rootPath;
     menuPath.title = workspace.rootPath;
-    expanded.clear();
-    for (const node of workspace.tree) {
-      if (node.kind === "directory") expanded.add(node.path);
-    }
     rerender();
+    renderLibraryList();
   }
 
   return {
@@ -201,6 +257,19 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     setActiveFile(path) {
       activePath = path;
       rerender();
+    },
+    setSavedLibraries(libraries, activeId) {
+      savedLibraries = libraries;
+      activeLibraryId = activeId;
+      renderLibraryList();
+    },
+    setExpandedDirs(dirs) {
+      expanded.clear();
+      for (const dir of dirs) expanded.add(dir);
+      if (currentTree.length > 0) rerender();
+    },
+    getExpandedDirs() {
+      return [...expanded];
     },
     onFileSelect(handler) {
       handlers.fileSelect = handler;
@@ -213,6 +282,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     onCloseLibrary(handler) {
       handlers.closeLibrary = handler;
+    },
+    onSwitchLibrary(handler) {
+      handlers.switchLibrary = handler;
+    },
+    onExpandedDirsChange(handler) {
+      handlers.expandedDirsChange = handler;
     },
     destroy() {
       host.replaceChildren();

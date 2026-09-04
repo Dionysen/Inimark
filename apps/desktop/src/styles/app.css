@@ -329,3 +329,63 @@ body {
 .inimark-library-menu-item:hover {
   background: var(--inimark-hover);
 }
+
+.inimark-library-menu-divider {
+  height: 1px;
+  margin: var(--inimark-space-2) 0;
+  background: var(--inimark-border);
+}
+
+.inimark-library-menu-heading {
+  margin: 0 0 0.35rem;
+  padding: 0 var(--inimark-space-1);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-library-menu-empty {
+  margin: 0;
+  padding: 0.35rem var(--inimark-space-1);
+  font-size: 0.8rem;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-library-menu-library {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  text-align: left;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--inimark-radius-sm);
+  cursor: pointer;
+}
+
+.inimark-library-menu-library:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-library-menu-library.is-active {
+  background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--inimark-accent);
+}
+
+.inimark-library-menu-library-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.inimark-library-menu-library-path {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--inimark-muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

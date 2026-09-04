@@ -63,8 +63,14 @@ async function readDirectoryEntries(
   return { name: directory.name, path: basePath, kind: "directory", children };
 }
 
+export async function buildMarkdownTreeFromDirectory(
+  directory: FileSystemDirectoryHandle,
+): Promise<MarkdownTreeEntry> {
+  return readDirectoryEntries(directory);
+}
+
 export async function pickMarkdownDirectory(): Promise<
-  | { status: "picked"; tree: MarkdownTreeEntry }
+  | { status: "picked"; tree: MarkdownTreeEntry; directoryHandle: FileSystemDirectoryHandle }
   | { status: "cancelled" }
   | { status: "unsupported" }
   | { status: "error"; message: string }
@@ -72,7 +78,11 @@ export async function pickMarkdownDirectory(): Promise<
   if (!window.showDirectoryPicker) return { status: "unsupported" };
   try {
     const handle = await window.showDirectoryPicker({ mode: "read" });
-    return { status: "picked", tree: await readDirectoryEntries(handle) };
+    return {
+      status: "picked",
+      tree: await readDirectoryEntries(handle),
+      directoryHandle: handle,
+    };
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       return { status: "cancelled" };

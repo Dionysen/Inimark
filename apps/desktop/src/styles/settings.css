@@ -194,3 +194,73 @@ body {
   font-size: 0.9rem;
   line-height: 1.5;
 }
+
+.inimark-btn {
+  border: 1px solid var(--inimark-border);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  border-radius: var(--inimark-radius-sm);
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.inimark-btn:hover:not(:disabled) {
+  background: var(--inimark-hover);
+}
+
+.inimark-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.inimark-btn--primary {
+  border-color: var(--inimark-accent);
+  background: var(--inimark-accent);
+  color: var(--inimark-accent-fg);
+}
+
+.inimark-settings-libraries-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--inimark-space-3) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-libraries-empty {
+  margin: var(--inimark-space-3) 0 0;
+  color: var(--inimark-muted-fg);
+  font-size: 0.9rem;
+}
+
+.inimark-settings-libraries-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding-top: var(--inimark-space-3);
+}
+
+.inimark-settings-library-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--inimark-space-3);
+  align-items: center;
+  padding: var(--inimark-space-2) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-library-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.inimark-settings-library-path {
+  margin-top: 0.2rem;
+  color: var(--inimark-muted-fg);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

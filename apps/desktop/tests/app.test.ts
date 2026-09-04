@@ -43,6 +43,7 @@ describe("desktop app shell", () => {
     };
 
     shell.sidebar.setWorkspace(workspace);
+    shell.sidebar.setExpandedDirs(["notes"]);
     expect(host.querySelector(".inimark-tree-item--file")?.textContent).toContain("intro.md");
 
     shell.destroy();

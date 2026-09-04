@@ -3,8 +3,21 @@ import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
 import "./styles/app.css";
+import {
+  getLastLibraryId,
+  getLibraryById,
+  getLibrarySession,
+  LIBRARIES_STORAGE_KEY,
+  libraryIdFromPath,
+  listLibraries,
+  saveLibrarySession,
+  setLastLibraryId,
+  upsertLibrary,
+} from "./libraries/store.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
+  defaultExpandedDirs,
+  openWorkspaceByPath,
   pickWorkspace,
   readWorkspaceFile,
   refreshWorkspaceTree,
@@ -27,12 +40,23 @@ export function mountApp(host: HTMLElement): AppController {
     if (event.key === SETTINGS_STORAGE_KEY) {
       applySettings(loadSettings());
     }
+    if (event.key === LIBRARIES_STORAGE_KEY) {
+      refreshLibraryList();
+      if (activeLibraryId && !getLibraryById(activeLibraryId)) {
+        workspace = null;
+        activeFilePath = null;
+        activeLibraryId = null;
+        shell.sidebar.setWorkspace(null);
+        shell.setStatus("Current library was removed");
+      }
+    }
   };
   window.addEventListener("storage", onStorage);
 
   const shell = mountShell(host);
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
+  let activeLibraryId: string | null = null;
 
   const editor = createEditor(shell.editorHost, {
     initialContent: "# Welcome\n\nStart writing…",
@@ -42,14 +66,29 @@ export function mountApp(host: HTMLElement): AppController {
     },
   });
 
+  function refreshLibraryList(): void {
+    shell.sidebar.setSavedLibraries(listLibraries(), activeLibraryId);
+  }
+
+  function persistLibrarySession(): void {
+    if (!workspace || !activeLibraryId) return;
+    saveLibrarySession(activeLibraryId, {
+      activeFilePath,
+      expandedDirs: shell.sidebar.getExpandedDirs(),
+    });
+  }
+
   async function confirmDiscard(): Promise<boolean> {
     if (!shell.isDirty()) return true;
     return window.confirm("Discard unsaved changes?");
   }
 
-  async function openWorkspaceFile(path: string): Promise<void> {
+  async function openWorkspaceFile(
+    path: string,
+    options?: { skipConfirm?: boolean },
+  ): Promise<void> {
     if (!workspace) return;
-    if (!(await confirmDiscard())) return;
+    if (!options?.skipConfirm && !(await confirmDiscard())) return;
 
     const result = await readWorkspaceFile(workspace, path);
     if (result.status !== "opened") {
@@ -63,6 +102,59 @@ export function mountApp(host: HTMLElement): AppController {
     shell.sidebar.setActiveFile(path);
     shell.setDirty(false);
     shell.setStatus(`Opened ${result.name}`);
+    persistLibrarySession();
+  }
+
+  async function activateWorkspace(
+    next: Workspace,
+    options?: { restoreSession?: boolean },
+  ): Promise<void> {
+    workspace = next;
+    activeLibraryId = libraryIdFromPath(workspace.rootPath);
+    upsertLibrary(workspace.rootPath, workspace.rootName);
+    setLastLibraryId(activeLibraryId);
+    refreshLibraryList();
+    shell.sidebar.setWorkspace(workspace);
+
+    const session = getLibrarySession(activeLibraryId);
+    const expandedDirs =
+      options?.restoreSession && session.expandedDirs.length > 0
+        ? session.expandedDirs
+        : defaultExpandedDirs(workspace);
+    shell.sidebar.setExpandedDirs(expandedDirs);
+    shell.setStatus(`Library: ${workspace.rootName}`);
+
+    if (options?.restoreSession && session.activeFilePath) {
+      await openWorkspaceFile(session.activeFilePath, { skipConfirm: true });
+    } else {
+      activeFilePath = null;
+      shell.sidebar.setActiveFile(null);
+    }
+  }
+
+  async function loadLibraryById(
+    libraryId: string,
+    options?: { restoreSession?: boolean },
+  ): Promise<void> {
+    const record = getLibraryById(libraryId);
+    if (!record) return;
+
+    const result = await openWorkspaceByPath(record.rootPath);
+    if (result.status !== "picked") {
+      shell.setStatus(
+        result.status === "error" ? result.message : "Unable to open library",
+      );
+      return;
+    }
+
+    await activateWorkspace(result.workspace, options);
+  }
+
+  async function switchLibrary(libraryId: string): Promise<void> {
+    if (libraryId === activeLibraryId) return;
+    if (!(await confirmDiscard())) return;
+    persistLibrarySession();
+    await loadLibraryById(libraryId, { restoreSession: true });
   }
 
   async function openFolder(): Promise<void> {
@@ -77,9 +169,9 @@ export function mountApp(host: HTMLElement): AppController {
       return;
     }
 
-    workspace = picked.workspace;
-    shell.sidebar.setWorkspace(workspace);
-    shell.setStatus(`Library: ${workspace.rootName}`);
+    if (!(await confirmDiscard())) return;
+    persistLibrarySession();
+    await activateWorkspace(picked.workspace, { restoreSession: false });
   }
 
   async function openSettings(): Promise<void> {
@@ -93,13 +185,24 @@ export function mountApp(host: HTMLElement): AppController {
     }
   }
 
+  async function restoreLastLibrary(): Promise<void> {
+    const lastId = getLastLibraryId();
+    if (!lastId) return;
+    await loadLibraryById(lastId, { restoreSession: true });
+  }
+
   shell.sidebar.onFileSelect((path) => void openWorkspaceFile(path));
   shell.sidebar.onOpenFolder(() => void openFolder());
   shell.sidebar.onOpenSettings(() => void openSettings());
+  shell.sidebar.onSwitchLibrary((libraryId) => void switchLibrary(libraryId));
+  shell.sidebar.onExpandedDirsChange(() => persistLibrarySession());
   shell.sidebar.onCloseLibrary(() => {
+    persistLibrarySession();
     workspace = null;
     activeFilePath = null;
+    activeLibraryId = null;
     shell.sidebar.setWorkspace(null);
+    refreshLibraryList();
     shell.setStatus("Library closed");
   });
 
@@ -110,6 +213,7 @@ export function mountApp(host: HTMLElement): AppController {
     shell.setFileName(null);
     shell.sidebar.setActiveFile(null);
     shell.setDirty(false);
+    persistLibrarySession();
   });
 
   shell.onOpen(async () => {
@@ -120,6 +224,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(null);
       shell.setDirty(false);
+      persistLibrarySession();
     }
   });
 
@@ -139,6 +244,7 @@ export function mountApp(host: HTMLElement): AppController {
         workspace.tree = await refreshWorkspaceTree(workspace);
         shell.sidebar.setWorkspace(workspace);
         shell.sidebar.setActiveFile(activeFilePath);
+        persistLibrarySession();
       } else if (result.status === "error") {
         shell.setStatus(result.message);
       }
@@ -159,6 +265,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(null);
       shell.setDirty(false);
+      persistLibrarySession();
     }
   });
 
@@ -166,12 +273,20 @@ export function mountApp(host: HTMLElement): AppController {
     void openSettings();
   });
 
+  refreshLibraryList();
+  void restoreLastLibrary();
+
   const fileName = editor.getCurrentFileName();
   if (fileName) shell.setFileName(fileName);
+
+  const onBeforeUnload = () => persistLibrarySession();
+  window.addEventListener("beforeunload", onBeforeUnload);
 
   return {
     editor,
     destroy() {
+      persistLibrarySession();
+      window.removeEventListener("beforeunload", onBeforeUnload);
       window.removeEventListener("storage", onStorage);
       editor.destroy();
       shell.destroy();

@@ -1,8 +1,16 @@
 import {
+  buildMarkdownTreeFromDirectory,
   pickMarkdownDirectory,
   readMarkdownFileHandle,
 } from "@inimark/editor";
 
+import {
+  deleteDirectoryHandle,
+  ensureDirectoryPermission,
+  loadDirectoryHandle,
+  saveDirectoryHandle,
+} from "../libraries/handles.ts";
+import { libraryIdFromPath, upsertLibrary } from "../libraries/store.ts";
 import { fileNameFromPath, isTauri, joinWorkspacePath } from "./env.ts";
 import type {
   Workspace,
@@ -11,25 +19,14 @@ import type {
   WorkspaceTreeNode,
 } from "./types.ts";
 
-const LAST_WORKSPACE_KEY = "inimark:lastWorkspace";
-
-export function getLastWorkspacePath(): string | null {
-  try {
-    return localStorage.getItem(LAST_WORKSPACE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function rememberWorkspacePath(path: string): void {
-  try {
-    localStorage.setItem(LAST_WORKSPACE_KEY, path);
-  } catch {}
-}
-
 export async function pickWorkspace(): Promise<WorkspacePickResult> {
   if (isTauri()) return pickWorkspaceTauri();
   return pickWorkspaceBrowser();
+}
+
+export async function openWorkspaceByPath(rootPath: string): Promise<WorkspacePickResult> {
+  if (isTauri()) return openWorkspaceByPathTauri(rootPath);
+  return openWorkspaceByPathBrowser(rootPath);
 }
 
 export async function readWorkspaceFile(
@@ -56,16 +53,60 @@ export async function refreshWorkspaceTree(
   return workspace.tree;
 }
 
+export function defaultExpandedDirs(workspace: Workspace): string[] {
+  return workspace.tree
+    .filter((node) => node.kind === "directory")
+    .map((node) => node.path);
+}
+
+function toWorkspaceTree(nodes: WorkspaceTreeNode[] | undefined): WorkspaceTreeNode[] {
+  return nodes ?? [];
+}
+
 async function pickWorkspaceBrowser(): Promise<WorkspacePickResult> {
   const picked = await pickMarkdownDirectory();
   if (picked.status !== "picked") return picked;
   const workspace: Workspace = {
     rootPath: picked.tree.path,
     rootName: picked.tree.name,
-    tree: picked.tree.children ?? [],
+    tree: toWorkspaceTree(picked.tree.children),
   };
-  rememberWorkspacePath(workspace.rootPath);
+  const libraryId = libraryIdFromPath(workspace.rootPath);
+  await saveDirectoryHandle(libraryId, picked.directoryHandle);
+  upsertLibrary(workspace.rootPath, workspace.rootName);
   return { status: "picked", workspace };
+}
+
+async function openWorkspaceByPathBrowser(rootPath: string): Promise<WorkspacePickResult> {
+  const libraryId = libraryIdFromPath(rootPath);
+  const handle = await loadDirectoryHandle(libraryId);
+  if (!handle) {
+    return {
+      status: "error",
+      message: "Library access expired. Open the folder again from the library menu.",
+    };
+  }
+
+  const allowed = await ensureDirectoryPermission(handle);
+  if (!allowed) {
+    return { status: "error", message: "Permission denied for library folder." };
+  }
+
+  try {
+    const tree = await buildMarkdownTreeFromDirectory(handle);
+    const workspace: Workspace = {
+      rootPath: tree.path,
+      rootName: tree.name,
+      tree: toWorkspaceTree(tree.children),
+    };
+    upsertLibrary(workspace.rootPath, workspace.rootName);
+    return { status: "picked", workspace };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 async function readWorkspaceFileBrowser(
@@ -132,13 +173,24 @@ async function pickWorkspaceTauri(): Promise<WorkspacePickResult> {
     });
     if (selected === null) return { status: "cancelled" };
     const rootPath = typeof selected === "string" ? selected : selected;
+    return openWorkspaceByPathTauri(rootPath);
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function openWorkspaceByPathTauri(rootPath: string): Promise<WorkspacePickResult> {
+  try {
     const tree = await buildTauriTree(rootPath);
     const workspace: Workspace = {
       rootPath,
       rootName: fileNameFromPath(rootPath),
       tree,
     };
-    rememberWorkspacePath(rootPath);
+    upsertLibrary(rootPath, workspace.rootName);
     return { status: "picked", workspace };
   } catch (error) {
     return {
@@ -228,6 +280,12 @@ async function writeWorkspaceFileTauri(
       status: "error",
       message: error instanceof Error ? error.message : String(error),
     };
+  }
+}
+
+export async function removeLibraryAccess(libraryId: string): Promise<void> {
+  if (!isTauri()) {
+    await deleteDirectoryHandle(libraryId);
   }
 }
 

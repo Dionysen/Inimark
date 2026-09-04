@@ -1,4 +1,11 @@
 import {
+  listLibraries,
+  removeLibrary,
+  upsertLibrary,
+} from "../libraries/store.ts";
+import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
+import { createButton } from "../ui/button.ts";
+import {
   type AppSettings,
   type AppearanceMode,
   type EditorWidth,
@@ -9,6 +16,7 @@ import {
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
+  refresh(): void;
   destroy(): void;
 }
 
@@ -16,7 +24,17 @@ export interface SettingsViewOptions {
   onChange?: (settings: AppSettings) => void;
 }
 
-type SettingsSection = "editor" | "appearance" | "about";
+type SettingsSection = "editor" | "appearance" | "libraries" | "about";
+
+const SECTION_META: Record<
+  SettingsSection,
+  { title: string; subtitle: string }
+> = {
+  editor: { title: "Editor", subtitle: "Editor display and layout" },
+  appearance: { title: "Appearance", subtitle: "Theme and visual preferences" },
+  libraries: { title: "Libraries", subtitle: "Manage saved folder libraries" },
+  about: { title: "About", subtitle: "Application information" },
+};
 
 export function mountSettingsView(
   host: HTMLElement,
@@ -48,6 +66,7 @@ export function mountSettingsView(
   const sections: Array<{ id: SettingsSection; label: string }> = [
     { id: "editor", label: "Editor" },
     { id: "appearance", label: "Appearance" },
+    { id: "libraries", label: "Libraries" },
     { id: "about", label: "About" },
   ];
 
@@ -126,20 +145,10 @@ export function mountSettingsView(
     badge.textContent = "User";
     const title = document.createElement("h2");
     title.className = "inimark-settings-title";
-    title.textContent =
-      activeSection === "editor"
-        ? "Editor"
-        : activeSection === "appearance"
-          ? "Appearance"
-          : "About";
+    title.textContent = SECTION_META[activeSection].title;
     const subtitle = document.createElement("p");
     subtitle.className = "inimark-settings-subtitle";
-    subtitle.textContent =
-      activeSection === "editor"
-        ? "Editor display and layout"
-        : activeSection === "appearance"
-          ? "Theme and visual preferences"
-          : "Application information";
+    subtitle.textContent = SECTION_META[activeSection].subtitle;
     header.append(badge, title, subtitle);
     content.append(header);
 
@@ -220,6 +229,67 @@ export function mountSettingsView(
       );
     }
 
+    if (activeSection === "libraries") {
+      const toolbar = document.createElement("div");
+      toolbar.className = "inimark-settings-libraries-toolbar";
+      const addBtn = createButton({
+        label: "Add library…",
+        variant: "primary",
+        onClick: () => {
+          void (async () => {
+            const picked = await pickWorkspace();
+            if (picked.status !== "picked") return;
+            upsertLibrary(picked.workspace.rootPath, picked.workspace.rootName);
+            renderContent();
+          })();
+        },
+      });
+      toolbar.append(addBtn);
+      body.append(toolbar);
+
+      const libraries = listLibraries();
+      if (libraries.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "inimark-settings-libraries-empty";
+        empty.textContent = "No libraries saved yet. Add a folder to get started.";
+        body.append(empty);
+      } else {
+        const list = document.createElement("div");
+        list.className = "inimark-settings-libraries-list";
+        for (const library of libraries) {
+          const item = document.createElement("div");
+          item.className = "inimark-settings-library-item";
+
+          const meta = document.createElement("div");
+          meta.className = "inimark-settings-library-meta";
+          const name = document.createElement("div");
+          name.className = "inimark-settings-library-name";
+          name.textContent = library.rootName;
+          const path = document.createElement("div");
+          path.className = "inimark-settings-library-path";
+          path.textContent = library.rootPath;
+          path.title = library.rootPath;
+          meta.append(name, path);
+
+          const removeBtn = createButton({
+            label: "Remove",
+            variant: "ghost",
+            onClick: () => {
+              void (async () => {
+                removeLibrary(library.id);
+                await removeLibraryAccess(library.id);
+                renderContent();
+              })();
+            },
+          });
+
+          item.append(meta, removeBtn);
+          list.append(item);
+        }
+        body.append(list);
+      }
+    }
+
     if (activeSection === "about") {
       const about = document.createElement("div");
       about.className = "inimark-about";
@@ -241,6 +311,10 @@ export function mountSettingsView(
   return {
     onChange(handler) {
       onChangeHandler = handler;
+    },
+    refresh() {
+      renderNav();
+      renderContent();
     },
     destroy() {
       host.replaceChildren();
