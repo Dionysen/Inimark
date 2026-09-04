@@ -117,7 +117,7 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
     labelKey: "sidebarChromeOpacity",
     min: 0,
     max: 100,
-    step: 5,
+    step: 1,
     unit: "",
     asPercent: true,
   },

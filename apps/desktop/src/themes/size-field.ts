@@ -84,7 +84,14 @@ export function createThemeSizeField(options: ThemeSizeFieldOptions): HTMLElemen
     value: toDisplay(value, meta),
     showValue: false,
     onInput(next) {
-      onChange(commitFromDisplay(String(next), meta));
+      const committed = commitFromDisplay(String(next), meta);
+      value = committed;
+      if (!editing) {
+        const display = formatDisplay(committed, meta);
+        text.setValue(display);
+        draft = display;
+      }
+      onChange(committed);
     },
   });
   slider.el.classList.add("theme-editor-size-slider");

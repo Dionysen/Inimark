@@ -187,23 +187,14 @@ describe("CodeMirror 6 code editing and highlighting", () => {
     }
   });
 
-  test("code editors expose balanced theme variables", async () => {
-    const host = document.createElement("div");
-    document.body.appendChild(host);
-    const editor = createEditor(host, {
-      initialContent: '```ts\ntype EditorMode = "focus";\n```',
-    });
+  test("code highlighter inherits --tw-code-* instead of hardcoding them on .cm-editor", () => {
+    const highlighterSource = readFileSync("src/code-highlighter.ts", "utf8");
 
-    try {
-      await Promise.resolve();
-      const codeEditor = host.querySelector<HTMLElement>(".typora-web-code-editor .cm-editor");
-
-      expect(codeEditor).not.toBeNull();
-      expect(getComputedStyle(codeEditor!).getPropertyValue("--tw-code-keyword").trim()).toBe("#7b4f9d");
-      expect(getComputedStyle(codeEditor!).getPropertyValue("--tw-code-string").trim()).toBe("#8a5a28");
-    } finally {
-      editor.destroy();
-      host.remove();
-    }
+    expect(highlighterSource).toContain('color: "var(--tw-code-keyword');
+    expect(highlighterSource).toContain('color: "var(--tw-code-string');
+    // Must not re-declare palette on the CM root (that blocks document code themes).
+    expect(highlighterSource).not.toMatch(
+      /CodeMirrorView\.theme\(\{[\s\S]*?"--tw-code-keyword"\s*:/,
+    );
   });
 });

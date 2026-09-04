@@ -76,6 +76,7 @@
 .inimark-editor-host .ProseMirror,
 .inimark-editor-host .typora-web-source-editor .cm-content {
   font-size: var(--inimark-editor-font-size);
+  font-family: var(--editor-font, var(--inimark-font-ui));
 }
 
 /* Frosted glass surface */
@@ -109,6 +110,7 @@
   min-height: 2.5rem;
   padding: 0.2rem 0.35rem 0.2rem 0.5rem;
   border-radius: 999px;
+  opacity: var(--sidebar-chrome-opacity, 1);
 }
 
 .inimark-library-bar-main {

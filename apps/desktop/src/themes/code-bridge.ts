@@ -8,28 +8,43 @@ const HLJS_TO_TW: Record<string, string> = {
   "--hljs-built_in": "--tw-code-function",
 };
 
+function deriveTwVars(hljs: Record<string, string>): Record<string, string> {
+  const tw: Record<string, string> = {};
+  for (const [hljsName, value] of Object.entries(hljs)) {
+    const mapped = HLJS_TO_TW[hljsName];
+    if (mapped) tw[mapped] = value;
+  }
+  // Tokens without a 1:1 hljs source — derive so CodeMirror highlighting is complete.
+  tw["--tw-code-type"] ??= tw["--tw-code-keyword"] ?? "#0f766e";
+  tw["--tw-code-function"] ??= "#2468a2";
+  tw["--tw-code-name"] ??= "inherit";
+  tw["--tw-code-punctuation"] ??= tw["--tw-code-comment"] ?? "#6f6a64";
+  tw["--tw-code-meta"] ??= tw["--tw-code-comment"] ?? "#77736c";
+  tw["--tw-code-invalid"] ??= "#b42318";
+  return tw;
+}
+
+/** Expand a CSS blob that defines --hljs-* into a :root block with --tw-code-* too. */
 export function expandCodeThemeCss(hljsCss: string): string {
-  const vars = [...hljsCss.matchAll(/(--hljs-[\w-]+)\s*:\s*([^;]+);/g)];
-  const twLines = vars
-    .map(([name, value]) => {
-      const tw = HLJS_TO_TW[name];
-      return tw ? `  ${tw}: ${value.trim()};` : "";
-    })
-    .filter(Boolean);
-  if (twLines.length === 0) return hljsCss;
-  return `${hljsCss.trim()}\n:root {\n${twLines.join("\n")}\n}`;
+  const vars: Record<string, string> = {};
+  for (const match of hljsCss.matchAll(/(--hljs-[\w-]+)\s*:\s*([^;]+);/g)) {
+    const name = match[1];
+    const value = match[2];
+    if (name && value) vars[name] = value.trim();
+  }
+  if (Object.keys(vars).length === 0) return hljsCss;
+  return buildCodeThemeStyleContent(vars);
 }
 
 export function buildCodeThemeStyleContent(variables: Record<string, string>): string {
-  const hljsLines = Object.entries(variables)
-    .filter(([k]) => k.startsWith("--hljs-"))
-    .map(([k, v]) => `  ${k}: ${v};`);
-  const twLines = Object.entries(variables)
-    .filter(([k]) => k.startsWith("--hljs-"))
-    .map(([k, v]) => {
-      const tw = HLJS_TO_TW[k];
-      return tw ? `  ${tw}: ${v};` : "";
-    })
-    .filter(Boolean);
-  return `:root {\n${hljsLines.join("\n")}\n${twLines.join("\n")}\n}`;
+  const hljs: Record<string, string> = {};
+  for (const [k, v] of Object.entries(variables)) {
+    if (k.startsWith("--hljs-")) hljs[k] = v;
+  }
+  const tw = deriveTwVars(hljs);
+  const lines = [
+    ...Object.entries(hljs).map(([k, v]) => `  ${k}: ${v};`),
+    ...Object.entries(tw).map(([k, v]) => `  ${k}: ${v};`),
+  ];
+  return `:root {\n${lines.join("\n")}\n}`;
 }

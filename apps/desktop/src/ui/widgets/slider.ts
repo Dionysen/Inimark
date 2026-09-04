@@ -54,11 +54,24 @@ export function createSlider(options: SliderOptions): SliderController {
     if (showValue) valueEl.textContent = format(value);
   }
 
+  function setDragging(dragging: boolean): void {
+    root.classList.toggle("is-dragging", dragging);
+  }
+
+  const endDrag = (): void => setDragging(false);
+
+  input.addEventListener("pointerdown", () => setDragging(true));
+  input.addEventListener("pointerup", endDrag);
+  input.addEventListener("pointercancel", endDrag);
+  input.addEventListener("lostpointercapture", endDrag);
+  input.addEventListener("blur", endDrag);
+
   input.addEventListener("input", () => {
     syncFill();
     options.onInput?.(Number(input.value));
   });
   input.addEventListener("change", () => {
+    endDrag();
     options.onChange?.(Number(input.value));
   });
 

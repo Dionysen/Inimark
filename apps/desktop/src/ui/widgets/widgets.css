@@ -220,7 +220,8 @@
   position: relative;
   flex: 1;
   min-width: 0;
-  height: var(--inimark-control-height);
+  /* Tall hit target while the visual track stays thin */
+  height: 28px;
   display: flex;
   align-items: center;
 }
@@ -229,73 +230,111 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 28px;
   margin: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.inimark-slider__input::-webkit-slider-runnable-track {
+  height: 6px;
   border-radius: 999px;
   background: linear-gradient(
     to right,
     var(--inimark-accent) 0%,
     var(--inimark-accent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 80%, transparent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 80%, transparent) 100%
+    color-mix(in srgb, var(--inimark-border) 75%, transparent) var(--inimark-slider-fill, 0%),
+    color-mix(in srgb, var(--inimark-border) 75%, transparent) 100%
   );
-  outline: none;
-  cursor: pointer;
-  transition: background var(--inimark-control-transition);
+}
+
+.inimark-slider__input::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(
+    to right,
+    var(--inimark-accent) 0%,
+    var(--inimark-accent) var(--inimark-slider-fill, 0%),
+    color-mix(in srgb, var(--inimark-border) 75%, transparent) var(--inimark-slider-fill, 0%),
+    color-mix(in srgb, var(--inimark-border) 75%, transparent) 100%
+  );
 }
 
 .inimark-slider__input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
+  width: 18px;
   height: 18px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid color-mix(in srgb, var(--inimark-border) 70%, #000 10%);
-  box-shadow: 0 1px 3px color-mix(in srgb, #000 22%, transparent);
+  margin-top: -6px; /* center on 6px track */
+  border-radius: 50%;
+  background: var(--inimark-accent);
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--inimark-border) 55%, transparent),
+    0 1px 3px color-mix(in srgb, #000 22%, transparent);
   cursor: grab;
-  transition: transform var(--inimark-control-transition);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    filter 120ms ease;
 }
 
 .inimark-slider__input::-moz-range-thumb {
-  width: 14px;
+  width: 18px;
   height: 18px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid color-mix(in srgb, var(--inimark-border) 70%, #000 10%);
-  box-shadow: 0 1px 3px color-mix(in srgb, #000 22%, transparent);
+  border-radius: 50%;
+  background: var(--inimark-accent);
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--inimark-border) 55%, transparent),
+    0 1px 3px color-mix(in srgb, #000 22%, transparent);
   cursor: grab;
-  transition: transform var(--inimark-control-transition);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    filter 120ms ease;
 }
 
-.inimark-slider__input:hover::-webkit-slider-thumb {
-  transform: scale(1.08);
-}
-
-.inimark-slider__input:active::-webkit-slider-thumb {
-  transform: scale(0.95);
+.inimark-slider__input:hover::-webkit-slider-thumb,
+.inimark-slider.is-dragging .inimark-slider__input::-webkit-slider-thumb {
+  filter: brightness(1.08);
+  transform: scale(1.12);
   cursor: grabbing;
 }
 
-.inimark-slider__input:hover::-moz-range-thumb {
-  transform: scale(1.08);
-}
-
-.inimark-slider__input:active::-moz-range-thumb {
-  transform: scale(0.95);
+.inimark-slider__input:hover::-moz-range-thumb,
+.inimark-slider.is-dragging .inimark-slider__input::-moz-range-thumb {
+  filter: brightness(1.08);
+  transform: scale(1.12);
   cursor: grabbing;
 }
 
 .inimark-slider__input:focus-visible {
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
-  border-radius: 999px;
+  box-shadow: none;
+}
+
+.inimark-slider__input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px var(--inimark-focus-ring),
+    0 1px 3px color-mix(in srgb, #000 22%, transparent);
+}
+
+.inimark-slider__input:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 3px var(--inimark-focus-ring),
+    0 1px 3px color-mix(in srgb, #000 22%, transparent);
 }
 
 .inimark-slider__value {
   min-width: 2.75rem;
   text-align: right;
-  font-family: var(--inimark-font-mono);
+  font-family: var(--inimark-font-ui);
   font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
   color: var(--inimark-muted-fg);
   flex-shrink: 0;
 }

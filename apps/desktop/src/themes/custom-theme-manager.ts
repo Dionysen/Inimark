@@ -48,6 +48,9 @@ const SIZE_PATTERNS = [
   /^--margin-/,
   /^--scrollbar-size$/,
   /^--blockquote-border-width$/,
+  /^--control-/,
+  /^--menu-item-/,
+  /^--tree-item-/,
 ];
 
 // ── Path Helpers ─────────────────────────────────────────────────────

@@ -5,19 +5,31 @@
  * than a GitHub README. No heading underlines, light borders, soft
  * code background, generous line-height.
  *
+ * Colors / radii / paddings read theme CSS variables so the theme
+ * editor and code themes actually affect the live editor.
+ *
  * All rules scope to `.ProseMirror` — the theme only styles the
  * editor body, never the surrounding website chrome.
  */
 
 .ProseMirror {
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Helvetica,
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: var(
+    --editor-font,
+    -apple-system,
+    "PingFang SC",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji"
+  );
   /* Comfortable long-form measure: slightly larger type, open leading.
    * Column width is controlled by the host paper (.page-home), not here,
    * so wide blocks (tables, Mermaid) can still use full editor width. */
-  font-size: 17px;
+  font-size: var(--editor-font-size, 17px);
   line-height: 1.78;
-  color: #2c2c2c;
+  color: var(--text-primary, #2c2c2c);
   word-wrap: break-word;
   letter-spacing: 0.005em;
 }
@@ -32,7 +44,7 @@
   margin: 1.75em 0 0.7em;
   font-weight: 600;
   line-height: 1.35;
-  color: #1f1f1f;
+  color: var(--text-primary, #1f1f1f);
   letter-spacing: -0.01em;
 }
 .ProseMirror > :first-child { margin-top: 0; }
@@ -41,7 +53,7 @@
 .ProseMirror h3 { font-size: 1.18em; }
 .ProseMirror h4 { font-size: 1.05em; }
 .ProseMirror h5 { font-size: 1em; }
-.ProseMirror h6 { font-size: 0.95em; color: #666; }
+.ProseMirror h6 { font-size: 0.95em; color: var(--text-secondary, #666); }
 
 /* ─── paragraphs ─────────────────────────────────────────────────── */
 .ProseMirror p { margin: 0 0 1.05em; }
@@ -49,35 +61,59 @@
 
 /* ─── links ──────────────────────────────────────────────────────── */
 .ProseMirror a {
-  color: #4078c0;
+  color: var(--accent, #4078c0);
   text-decoration: none;
-  border-bottom: 1px solid rgba(64, 120, 192, 0.25);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #4078c0) 25%, transparent);
 }
 .ProseMirror a:hover {
-  border-bottom-color: #4078c0;
+  color: var(--accent-hover, var(--accent, #4078c0));
+  border-bottom-color: var(--accent-hover, var(--accent, #4078c0));
+}
+
+/* ─── strong ─────────────────────────────────────────────────────── */
+.ProseMirror strong,
+.ProseMirror b {
+  color: var(--text-strong, inherit);
+  font-weight: 600;
 }
 
 /* ─── inline code / pre ──────────────────────────────────────────── */
 .ProseMirror code {
-  font-family: "SF Mono", "Source Code Pro", Consolas, ui-monospace, monospace;
+  font-family: var(
+    --font-mono,
+    "SF Mono",
+    "Source Code Pro",
+    Consolas,
+    ui-monospace,
+    monospace
+  );
   font-size: 0.9em;
-  padding: 0.15em 0.35em;
+  padding: var(--padding-code-inline-y, 0.15em) var(--padding-code-inline-x, 0.35em);
   margin: 0;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 3px;
+  background: var(--bg-code-inline, rgba(0, 0, 0, 0.04));
+  color: var(--text-code, inherit);
+  border-radius: var(--radius-code-inline, 3px);
   white-space: break-spaces;
 }
 .ProseMirror pre {
-  font-family: "SF Mono", "Source Code Pro", Consolas, ui-monospace, monospace;
-  font-size: 0.88em;
+  font-family: var(
+    --font-mono,
+    "SF Mono",
+    "Source Code Pro",
+    Consolas,
+    ui-monospace,
+    monospace
+  );
+  font-size: var(--font-mono-size, 0.88em);
   line-height: 1.5;
-  background: #f8f8f8;
+  background: var(--bg-code, #f8f8f8);
+  color: var(--text-primary, inherit);
   padding: 12px 14px;
   margin: 0 0 1em;
-  border-radius: 4px;
+  border-radius: var(--radius-code-block, 4px);
   overflow-x: hidden;
   overflow-y: visible;
-  border: 1px solid #ececec;
+  border: 1px solid var(--border, #ececec);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -86,6 +122,7 @@
   padding: 0;
   margin: 0;
   background: transparent;
+  color: inherit;
   border-radius: 0;
   font-size: 100%;
   white-space: pre-wrap;
@@ -96,9 +133,11 @@
 /* ─── blockquote ─────────────────────────────────────────────────── */
 .ProseMirror blockquote {
   margin: 0 0 1em;
-  padding: 0 0 0 1em;
-  color: #666;
-  border-left: 3px solid #ddd;
+  padding: var(--padding-blockquote-y, 0) var(--padding-blockquote-x, 1em);
+  color: var(--blockquote-text, var(--text-secondary, #666));
+  background: var(--blockquote-bg, transparent);
+  border-left: var(--blockquote-border-width, 3px) solid
+    var(--blockquote-border, var(--border, #ddd));
 }
 .ProseMirror blockquote > :first-child { margin-top: 0; }
 .ProseMirror blockquote > :last-child { margin-bottom: 0; }
@@ -107,11 +146,11 @@
   --md-alert-bg: rgba(106, 115, 125, 0.08);
   margin: 0 0 1em;
   padding: 0.78em 1em 0.82em;
-  color: #2d333b;
+  color: var(--text-primary, #2d333b);
   background: var(--md-alert-bg);
-  border: 1px solid rgba(106, 115, 125, 0.18);
+  border: 1px solid color-mix(in srgb, var(--md-alert-color) 18%, transparent);
   border-left: 4px solid var(--md-alert-color);
-  border-radius: 4px;
+  border-radius: var(--radius-code-block, 4px);
 }
 .ProseMirror blockquote.md-alert::before {
   content: attr(data-alert-source);
@@ -141,8 +180,8 @@
   --md-alert-bg: rgba(154, 103, 0, 0.1);
 }
 .ProseMirror blockquote.md-alert-danger {
-  --md-alert-color: #cf222e;
-  --md-alert-bg: rgba(207, 34, 46, 0.08);
+  --md-alert-color: var(--danger, #cf222e);
+  --md-alert-bg: color-mix(in srgb, var(--danger, #cf222e) 8%, transparent);
 }
 
 /* ─── lists ──────────────────────────────────────────────────────── */
@@ -162,20 +201,37 @@
   height: 1px;
   padding: 0;
   margin: 1.6em 0;
-  background: #ddd;
+  background: var(--border, #ddd);
   border: 0;
 }
 
 /* ─── tables (cells; layout from widgets.css) ────────────────────── */
+.ProseMirror table {
+  border-radius: var(--radius-table, 0);
+  overflow: hidden;
+}
 .ProseMirror table th,
 .ProseMirror table td {
   padding: 6px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border, #ddd);
   vertical-align: top;
+  background: var(--table-cell-bg, transparent);
 }
 .ProseMirror table th {
   font-weight: 600;
-  background: #fafafa;
+  background: var(--table-header-bg, var(--bg-secondary, #fafafa));
+}
+
+/* ─── tags (when present) ────────────────────────────────────────── */
+.ProseMirror .tag,
+.ProseMirror [data-type="tag"] {
+  display: inline-block;
+  background: var(--tag-bg, color-mix(in srgb, var(--accent, #4078c0) 15%, transparent));
+  color: var(--tag-text, var(--accent, #4078c0));
+  border: 1px solid var(--tag-border, color-mix(in srgb, var(--accent, #4078c0) 20%, transparent));
+  border-radius: var(--radius-tag, 10px);
+  padding: var(--padding-tag-y, 1px) var(--padding-tag-x, 8px);
+  font-size: 0.9em;
 }
 
 /* ─── extension marks ────────────────────────────────────────────── */
@@ -186,76 +242,3 @@
   border-radius: 2px;
 }
 .ProseMirror del { color: inherit; }
-
-/* ─── built-in dark appearance ──────────────────────────────────── */
-:root[data-appearance="dark"] .ProseMirror {
-  color: #d2cdc3;
-}
-:root[data-appearance="dark"] .ProseMirror h1,
-:root[data-appearance="dark"] .ProseMirror h2,
-:root[data-appearance="dark"] .ProseMirror h3,
-:root[data-appearance="dark"] .ProseMirror h4,
-:root[data-appearance="dark"] .ProseMirror h5,
-:root[data-appearance="dark"] .ProseMirror h6 {
-  color: #e8e3d9;
-}
-:root[data-appearance="dark"] .ProseMirror h6 { color: #9b958c; }
-:root[data-appearance="dark"] .ProseMirror a {
-  color: #8ab4e7;
-  border-bottom-color: rgba(138, 180, 231, 0.32);
-}
-:root[data-appearance="dark"] .ProseMirror a:hover {
-  border-bottom-color: #8ab4e7;
-}
-:root[data-appearance="dark"] .ProseMirror code {
-  background: rgba(232, 225, 214, 0.09);
-}
-:root[data-appearance="dark"] .ProseMirror pre {
-  color: #e4ded4;
-  background: #34373b;
-  border-color: #474b51;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset;
-}
-:root[data-appearance="dark"] .ProseMirror blockquote {
-  color: #aaa399;
-  border-left-color: #4a4d52;
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert {
-  color: #d8d3ca;
-  border-color: rgba(170, 163, 153, 0.17);
-  border-left-color: var(--md-alert-color);
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-note {
-  --md-alert-color: #9b958c;
-  --md-alert-bg: rgba(155, 149, 140, 0.11);
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-tip {
-  --md-alert-color: #4fd1cf;
-  --md-alert-bg: rgba(79, 209, 207, 0.1);
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-important {
-  --md-alert-color: #b994f4;
-  --md-alert-bg: rgba(185, 148, 244, 0.11);
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-warning {
-  --md-alert-color: #d4a72c;
-  --md-alert-bg: rgba(212, 167, 44, 0.11);
-}
-:root[data-appearance="dark"] .ProseMirror blockquote.md-alert-danger {
-  --md-alert-color: #ff7b72;
-  --md-alert-bg: rgba(255, 123, 114, 0.1);
-}
-:root[data-appearance="dark"] .ProseMirror hr {
-  background: #3c3f43;
-}
-:root[data-appearance="dark"] .ProseMirror table th,
-:root[data-appearance="dark"] .ProseMirror table td {
-  border-color: #3c3f43;
-}
-:root[data-appearance="dark"] .ProseMirror table th {
-  background: #26282c;
-}
-:root[data-appearance="dark"] .ProseMirror mark {
-  background: #645a24;
-  color: #f3ecd8;
-}

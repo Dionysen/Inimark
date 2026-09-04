@@ -36,6 +36,41 @@
   --control-font-size: 13px;
   --menu-item-padding-y: 6px;
   --tree-item-padding-y: 5px;
+  /* Editor content tokens (theme-editable) */
+  --radius-code-block: 8px;
+  --radius-code-inline: 4px;
+  --padding-code-inline-y: 3px;
+  --padding-code-inline-x: 6px;
+  --blockquote-border: var(--border);
+  --blockquote-bg: transparent;
+  --blockquote-text: var(--text-secondary);
+  --blockquote-border-width: 3px;
+  --padding-blockquote-y: 4px;
+  --padding-blockquote-x: 16px;
+  --table-header-bg: var(--bg-secondary);
+  --table-cell-bg: transparent;
+  --radius-table: 0px;
+  --metadata-bg: var(--bg-code);
+  --metadata-border: var(--border);
+  --tag-bg: color-mix(in srgb, var(--accent) 15%, transparent);
+  --tag-text: var(--accent);
+  --tag-border: color-mix(in srgb, var(--accent) 20%, transparent);
+  --radius-tag: 10px;
+  --padding-tag-y: 1px;
+  --padding-tag-x: 8px;
+  --radius-metadata: 8px;
+  --margin-metadata-bottom: 16px;
+  /* CodeMirror syntax — overridden by active code theme */
+  --tw-code-comment: var(--hljs-comment, #9a9690);
+  --tw-code-keyword: var(--hljs-keyword, #c9a7e8);
+  --tw-code-string: var(--hljs-string, #e5aa7a);
+  --tw-code-literal: var(--hljs-number, #c9c277);
+  --tw-code-type: var(--hljs-keyword, #8bc8bd);
+  --tw-code-function: var(--hljs-built_in, #9fbee8);
+  --tw-code-name: inherit;
+  --tw-code-punctuation: var(--hljs-comment, #c3bdb4);
+  --tw-code-meta: var(--hljs-comment, #a8a29a);
+  --tw-code-invalid: var(--danger, #ff8f86);
 }
 
 /* ── 白色主题 ── */

@@ -18,7 +18,7 @@ import {
   withPreferredCode,
 } from "./appearance.ts";
 import { isBuiltinTheme } from "./builtin.ts";
-import { buildCodeThemeStyleContent } from "./code-bridge.ts";
+import { buildCodeThemeStyleContent, expandCodeThemeCss } from "./code-bridge.ts";
 import { CODE_THEMES, type CustomCodeTheme } from "./code-themes.ts";
 import { getBuiltinCodeThemeIsDark, getBuiltinCodeThemeVariables } from "./code-theme-tokens.ts";
 import {
@@ -625,13 +625,4 @@ export async function initThemeManager(): Promise<ThemeManager> {
   const mgr = getThemeManager();
   await mgr.init();
   return mgr;
-}
-
-function expandCodeThemeCss(css: string): string {
-  const vars: Record<string, string> = {};
-  for (const match of css.matchAll(/(--hljs-[\w-]+)\s*:\s*([^;]+);/g)) {
-    vars[match[1]] = match[2].trim();
-  }
-  if (Object.keys(vars).length === 0) return css;
-  return buildCodeThemeStyleContent(vars);
 }
