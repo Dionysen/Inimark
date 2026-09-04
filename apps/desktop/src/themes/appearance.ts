@@ -1,5 +1,9 @@
 import { CODE_THEMES } from "./code-themes.ts";
-import { BUILTIN_THEMES, type BuiltinThemeName } from "./builtin.ts";
+import {
+  BUILTIN_THEMES,
+  normalizeAppThemeId,
+  type BuiltinThemeName,
+} from "./builtin.ts";
 
 export type AppearanceMode = "system" | "light" | "dark";
 export type ResolvedAppearance = "light" | "dark";
@@ -16,8 +20,8 @@ export interface AppearanceState {
 }
 
 export const DEFAULT_APP_THEME_PAIR: ThemePair = {
-  light: "mint",
-  dark: "mint-dark",
+  light: "light",
+  dark: "dark",
 };
 
 export const DEFAULT_CODE_THEME_PAIR: ThemePair = {
@@ -27,16 +31,9 @@ export const DEFAULT_CODE_THEME_PAIR: ThemePair = {
 
 /** Catalog hint for built-in themes (preview / legacy migration only — not used for selection). */
 export const BUILTIN_THEME_IS_DARK: Record<BuiltinThemeName, boolean> = {
-  white: false,
-  mint: false,
-  "mint-dark": true,
-  "modern-dark": true,
-  "claude-code": false,
-  purple: false,
-  hermes: false,
-  next: false,
-  slate: false,
-  ocean: false,
+  light: false,
+  grey: false,
+  dark: true,
 };
 
 export const APPEARANCE_MODE_KEY = "inimark-appearance-mode";
@@ -115,6 +112,14 @@ function parsePair(raw: string | null, fallback: ThemePair): ThemePair {
   }
 }
 
+function parseAppThemePair(raw: string | null, fallback: ThemePair): ThemePair {
+  const pair = parsePair(raw, fallback);
+  return {
+    light: normalizeAppThemeId(pair.light, fallback.light as BuiltinThemeName),
+    dark: normalizeAppThemeId(pair.dark, fallback.dark as BuiltinThemeName),
+  };
+}
+
 function parseMode(raw: string | null): AppearanceMode | null {
   if (raw === "system" || raw === "light" || raw === "dark") return raw;
   return null;
@@ -125,9 +130,9 @@ export function loadAppearanceState(): AppearanceState {
   try {
     const existingMode = parseMode(localStorage.getItem(APPEARANCE_MODE_KEY));
     if (existingMode) {
-      return {
+      const state: AppearanceState = {
         appearanceMode: existingMode,
-        preferredAppTheme: parsePair(
+        preferredAppTheme: parseAppThemePair(
           localStorage.getItem(PREFERRED_APP_THEME_KEY),
           DEFAULT_APP_THEME_PAIR,
         ),
@@ -136,10 +141,13 @@ export function loadAppearanceState(): AppearanceState {
           DEFAULT_CODE_THEME_PAIR,
         ),
       };
+      persistAppearanceState(state);
+      return state;
     }
 
     // ── Migrate from legacy keys ──
-    const oldTheme = localStorage.getItem(LEGACY_THEME_KEY) || DEFAULT_APP_THEME_PAIR.light;
+    const oldThemeRaw = localStorage.getItem(LEGACY_THEME_KEY) || DEFAULT_APP_THEME_PAIR.light;
+    const oldTheme = normalizeAppThemeId(oldThemeRaw, "light");
     const oldCode = localStorage.getItem(LEGACY_CODE_THEME_KEY) || "auto";
     const oldAppDark = inferThemeIdIsDark(oldTheme);
 

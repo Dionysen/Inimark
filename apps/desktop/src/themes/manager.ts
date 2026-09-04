@@ -555,7 +555,7 @@ class ThemeManager {
       }
       document.documentElement.dataset.theme = theme;
     } else {
-      document.documentElement.dataset.theme = "mint";
+      document.documentElement.dataset.theme = "light";
     }
 
     document.documentElement.dataset.appearance = resolvedMode;

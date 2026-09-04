@@ -77,8 +77,8 @@
   --tw-code-invalid: var(--danger, #ff8f86);
 }
 
-/* ── 白色主题 ── */
-[data-theme="white"] {
+/* ── Light（原 White） ── */
+[data-theme="light"] {
   --bg-primary: #ffffff;
   --bg-secondary: #f5f7fa;
   --bg-surface: #f1f5f9;
@@ -102,59 +102,35 @@
   --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* ── Mint 主题（浅色） ── */
-[data-theme="mint"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #d9ede5;
-  --bg-surface: #ecf6f2;
-  --bg-hover: rgba(78, 178, 137, 0.12);
-  --bg-tertiary: #c5e3d7;
-  --bg-code: #f0f7f4;
-  --bg-code-inline: rgba(78, 178, 137, 0.08);
-  --bg-input: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #6B6B6B;
-  --text-tertiary: #9ca3af;
+/* ── Grey（原 Slate） ── */
+[data-theme="grey"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-surface: #f8fafc;
+  --bg-hover: rgba(71, 85, 105, 0.08);
+  --bg-tertiary: #e2e8f0;
+  --bg-code: #f1f5f9;
+  --bg-code-inline: rgba(100, 116, 139, 0.08);
+  --bg-input: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
   --text-strong: #bd387d;
   --text-code: #e83e8c;
-  --accent: #4eb289;
-  --accent-rgb: 78, 178, 137;
-  --accent-hover: #3a9e6e;
-  --border: #a5cfc0;
-  --danger: #e06c75;
+  --accent: #475569;
+  --accent-rgb: 71, 85, 105;
+  --accent-hover: #334155;
+  --border: #e2e8f0;
+  --danger: #dc2626;
   --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --editor-font-size: 16px;
+  --font-mono-size: 14px;
 }
 
-/* ── Mint Dark 主题（深色） ── */
-/* ── Mint Dark 主题（深色） ── */
-[data-theme="mint-dark"] {
-  --bg-primary: #272729;
-  --bg-secondary: #232325;
-  --bg-surface: #333336;
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-tertiary: #2e2e31;
-  --bg-code: #2d2d30;
-  --bg-code-inline: rgba(78, 178, 137, 0.12);
-  --bg-input: #272729;
-  --text-primary: #cccccc;
-  --text-secondary: #818286;
-  --text-tertiary: #5c5e63;
-  --text-strong: #bd387d;
-  --text-code: #f5c2e7;
-  --accent: #4eb289;
-  --accent-rgb: 78, 178, 137;
-  --accent-hover: #5fc99e;
-  --border: #39393a;
-  --danger: #e06c75;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-/* ── Modern Dark 主题（深色） ── */
-[data-theme="modern-dark"] {
+/* ── Dark（原 Modern Dark） ── */
+[data-theme="dark"] {
   --bg-primary: #1b1d24;
   --bg-secondary: #111217;
   --bg-surface: #1b1d24;
@@ -207,166 +183,4 @@
   --padding-tag-x: 3px;
   --radius-scrollbar: 2px;
   --scrollbar-size: 6px;
-}
-
-/* ── Claude Code 主题（浅色，Anthropic 风格） ── */
-[data-theme="claude-code"] {
-  --bg-primary: #faf8f5;
-  --bg-secondary: #f0ece6;
-  --bg-surface: #f5f1eb;
-  --bg-hover: rgba(196, 122, 42, 0.1);
-  --bg-tertiary: #e8e2d8;
-  --bg-code: #f0ece6;
-  --bg-code-inline: rgba(196, 122, 42, 0.08);
-  --bg-input: #faf8f5;
-  --text-primary: #1a1a1a;
-  --text-secondary: #6b6560;
-  --text-tertiary: #9a948c;
-  --text-strong: #bd387d;
-  --text-code: #c47a2a;
-  --accent: #c47a2a;
-  --accent-rgb: 196, 122, 42;
-  --accent-hover: #a86420;
-  --border: #ddd6cc;
-  --danger: #c94432;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
-}
-
-/* ── Purple 主题（浅色） ── */
-[data-theme="purple"] {
-  --bg-primary: #faf5ff;
-  --bg-secondary: #f3e8ff;
-  --bg-surface: #f5f0ff;
-  --bg-hover: rgba(124, 58, 237, 0.1);
-  --bg-tertiary: #ebe0ff;
-  --bg-code: #f3f0ff;
-  --bg-code-inline: rgba(124, 58, 237, 0.08);
-  --bg-input: #faf5ff;
-  --text-primary: #1e1b2e;
-  --text-secondary: #6b6580;
-  --text-tertiary: #9b95b0;
-  --text-strong: #bd387d;
-  --text-code: #7c3aed;
-  --accent: #7c3aed;
-  --accent-rgb: 124, 58, 237;
-  --accent-hover: #6d28d9;
-  --border: #ddd6ee;
-  --danger: #dc2626;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
-}
-
-/* ── Hermes 主题（浅色，Nous Research 风格） ── */
-[data-theme="hermes"] {
-  --bg-primary: #f0f1ff;
-  --bg-secondary: #e4e6ff;
-  --bg-surface: #eaeaFF;
-  --bg-hover: rgba(0, 0, 242, 0.08);
-  --bg-tertiary: #d8dbff;
-  --bg-code: #eaeaFF;
-  --bg-code-inline: rgba(0, 0, 242, 0.08);
-  --bg-input: #f0f1ff;
-  --text-primary: #1a1a4e;
-  --text-secondary: #5a5a8a;
-  --text-tertiary: #8a8ab0;
-  --text-strong: #bd387d;
-  --text-code: #0000f2;
-  --accent: #0000f2;
-  --accent-rgb: 0, 0, 242;
-  --accent-hover: #2020ff;
-  --border: rgba(0, 0, 242, 0.12);
-  --danger: #dc2626;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
-}
-
-/* ── NexT 主题（浅色，Hexo NexT Pisces 风格） ── */
-[data-theme="next"] {
-  --bg-primary: #fffef8;
-  --bg-secondary: #f8f7f2;
-  --bg-surface: #f3f2ed;
-  --bg-hover: rgba(0, 121, 107, 0.08);
-  --bg-tertiary: #ebeae4;
-  --bg-code: #f3f2ed;
-  --bg-code-inline: rgba(0, 121, 107, 0.08);
-  --bg-input: #fffef8;
-  --text-primary: #4a4a4a;
-  --text-secondary: #8a8a8a;
-  --text-tertiary: #b0b0b0;
-  --text-strong: #bd387d;
-  --text-code: #00796b;
-  --accent: #00796b;
-  --accent-rgb: 0, 121, 107;
-  --accent-hover: #00695c;
-  --border: #e0ddd6;
-  --danger: #d32f2f;
-  --font-mono: Consolas, Menlo, monospace, "PingFang SC", "Microsoft YaHei";
-  --font-ui: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
-}
-
-/* ── Slate 主题（浅色，石墨灰简约风格） ── */
-[data-theme="slate"] {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #f1f5f9;
-  --bg-surface: #f8fafc;
-  --bg-hover: rgba(71, 85, 105, 0.08);
-  --bg-tertiary: #e2e8f0;
-  --bg-code: #f1f5f9;
-  --bg-code-inline: rgba(100, 116, 139, 0.08);
-  --bg-input: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-tertiary: #94a3b8;
-  --text-strong: #bd387d;
-  --text-code: #e83e8c;
-  --accent: #475569;
-  --accent-rgb: 71, 85, 105;
-  --accent-hover: #334155;
-  --border: #e2e8f0;
-  --danger: #dc2626;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
-}
-
-/* ── Ocean 主题（浅色，海洋冷色调） ── */
-[data-theme="ocean"] {
-  --bg-primary: #f0f9ff;
-  --bg-secondary: #e0f2fe;
-  --bg-surface: #f0f9ff;
-  --bg-hover: rgba(8, 145, 178, 0.1);
-  --bg-tertiary: #bae6fd;
-  --bg-code: #f0f9ff;
-  --bg-code-inline: rgba(8, 145, 178, 0.08);
-  --bg-input: #f0f9ff;
-  --text-primary: #0c4a6e;
-  --text-secondary: #64748b;
-  --text-tertiary: #94a3b8;
-  --text-strong: #bd387d;
-  --text-code: #0891b2;
-  --accent: #0891b2;
-  --accent-rgb: 8, 145, 178;
-  --accent-hover: #0e7490;
-  --border: #a5f3fc;
-  --danger: #dc2626;
-  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --editor-font-size: 16px;
-  --font-mono-size: 14px;
 }

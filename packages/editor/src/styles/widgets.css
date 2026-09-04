@@ -222,7 +222,6 @@
   padding: 10px 14px;
   margin: 8px 0 var(--margin-metadata-bottom, 16px);
   border: 1px solid var(--metadata-border, var(--border, transparent));
-  border-left: 3px solid var(--accent, #b58900);
   border-radius: var(--radius-metadata, 4px);
 }
 
@@ -625,7 +624,6 @@
   color: var(--text-secondary, #d8d3ca);
   background: var(--metadata-bg, var(--bg-code, #292722));
   border-color: var(--metadata-border, var(--border, #3c3f43));
-  border-left-color: var(--accent, #b08d42);
 }
 :root[data-appearance="dark"] .ProseMirror .toc {
   background: #24262a;

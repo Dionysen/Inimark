@@ -78,16 +78,9 @@ export const THEME_TOKEN_LABELS: Record<string, string> = {
 };
 
 export const BUILTIN_THEME_LABELS: Record<string, string> = {
-  white: "White",
-  mint: "Mint",
-  "mint-dark": "Mint Dark",
-  "modern-dark": "Modern Dark",
-  "claude-code": "Claude Code",
-  purple: "Purple",
-  hermes: "Hermes",
-  next: "NexT",
-  slate: "Slate",
-  ocean: "Ocean",
+  light: "Light",
+  grey: "Grey",
+  dark: "Dark",
 };
 
 export function themeLabel(key: string, fallback?: string): string {

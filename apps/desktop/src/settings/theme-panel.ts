@@ -40,16 +40,9 @@ export function getThemeSlotSelection(
 }
 
 const BUILTIN_PREVIEW_COLORS: Record<string, string[]> = {
-  white: ["#ffffff", "#2563eb", "#1e293b", "#d1d9e6"],
-  mint: ["#ffffff", "#4eb289", "#1e293b", "#a5cfc0"],
-  "mint-dark": ["#272729", "#4eb289", "#cccccc", "#39393a"],
-  "modern-dark": ["#1b1d24", "#74a7fe", "#cccccc", "#111217"],
-  "claude-code": ["#faf8f5", "#c47a2a", "#1a1a1a", "#ddd6cc"],
-  purple: ["#faf5ff", "#7c3aed", "#1e1b2e", "#ddd6ee"],
-  hermes: ["#f0f1ff", "#0000f2", "#1a1a4e", "rgba(0,0,242,0.12)"],
-  next: ["#fffef8", "#00796b", "#4a4a4a", "#e0ddd6"],
-  slate: ["#f8fafc", "#475569", "#0f172a", "#e2e8f0"],
-  ocean: ["#f0f9ff", "#0891b2", "#0c4a6e", "#a5f3fc"],
+  light: ["#ffffff", "#2563eb", "#1e293b", "#d1d9e6"],
+  grey: ["#f8fafc", "#475569", "#0f172a", "#e2e8f0"],
+  dark: ["#1b1d24", "#74a7fe", "#cccccc", "#111217"],
 };
 
 const CODE_SAMPLE_LABELS: Record<string, string> = {
@@ -348,7 +341,7 @@ export function renderThemePanel(host: HTMLElement): () => void {
 
   async function openEditor(manifest: ThemeManifest, variables: ThemeVariable[]): Promise<void> {
     const merged = syncAccentRgb(
-      mergeWithSchema(variables, getBuiltinColorMap("mint") ?? undefined),
+      mergeWithSchema(variables, getBuiltinColorMap("light") ?? undefined),
     ) as ThemeVariable[];
     editVariables = merged;
     editPreview = computeEditPreview(merged);
