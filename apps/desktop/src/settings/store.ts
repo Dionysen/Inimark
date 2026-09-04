@@ -52,10 +52,6 @@ export function applySettings(settings: AppSettings): void {
     "--inimark-editor-max-width",
     EDITOR_WIDTHS[settings.editorWidth],
   );
-
-  const appearance = resolveAppearance(settings.appearance);
-  root.dataset.appearance = appearance;
-  root.style.colorScheme = appearance;
 }
 
 export function resolveAppearance(mode: AppearanceMode): "light" | "dark" {

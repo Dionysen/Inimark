@@ -20,7 +20,9 @@ describe("settings store", () => {
     expect(document.documentElement.style.getPropertyValue("--inimark-editor-font-size")).toBe(
       "18px",
     );
-    expect(document.documentElement.dataset.appearance).toBe("dark");
+    expect(document.documentElement.style.getPropertyValue("--inimark-editor-max-width")).toBe(
+      "60rem",
+    );
   });
 });
 

@@ -1,23 +1,24 @@
-/* Inimark design tokens — single source for shell chrome theming. */
+/* Inimark design tokens — shell chrome aliases mapped to theme variables. */
 
 :root {
   color-scheme: light dark;
 
-  --inimark-font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --inimark-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Theme-driven shell tokens (see styles/themes.css for [data-theme] blocks) */
+  --inimark-font-ui: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --inimark-font-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 
-  --inimark-fg: CanvasText;
-  --inimark-bg: Canvas;
-  --inimark-muted-fg: color-mix(in srgb, CanvasText 65%, transparent);
-  --inimark-border: color-mix(in srgb, CanvasText 12%, transparent);
-  --inimark-surface: color-mix(in srgb, Canvas 96%, CanvasText 4%);
-  --inimark-surface-raised: color-mix(in srgb, Canvas 92%, CanvasText 8%);
-  --inimark-content-bg: #faf8f4;
-  --inimark-hover: color-mix(in srgb, Canvas 90%, CanvasText 10%);
-  --inimark-active: color-mix(in srgb, Canvas 84%, CanvasText 16%);
-  --inimark-accent: #3b6fd9;
+  --inimark-fg: var(--text-primary);
+  --inimark-bg: var(--bg-secondary);
+  --inimark-muted-fg: var(--text-secondary);
+  --inimark-border: var(--border);
+  --inimark-surface: var(--bg-surface);
+  --inimark-surface-raised: var(--bg-tertiary);
+  --inimark-content-bg: var(--bg-primary);
+  --inimark-hover: var(--bg-hover);
+  --inimark-active: color-mix(in srgb, var(--bg-hover) 75%, var(--text-primary) 25%);
+  --inimark-accent: var(--accent);
   --inimark-accent-fg: #fff;
-  --inimark-focus-ring: color-mix(in srgb, var(--inimark-accent) 45%, transparent);
+  --inimark-focus-ring: color-mix(in srgb, var(--accent) 45%, transparent);
 
   --inimark-radius-sm: 0.35rem;
   --inimark-radius-md: 0.5rem;
@@ -35,18 +36,18 @@
   --inimark-titlebar-height: 2.25rem;
   --inimark-sidebar-dock-height: 3.25rem;
 
-  --inimark-editor-font-size: 16px;
+  --inimark-editor-font-size: var(--editor-font-size, 16px);
   --inimark-editor-max-width: 48rem;
 
   --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 70%, transparent);
   --inimark-glass-border: color-mix(in srgb, var(--inimark-border) 75%, transparent);
-  --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, CanvasText 10%, transparent);
+  --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, var(--text-primary) 10%, transparent);
 
-  --inimark-scrollbar-size: 8px;
-  --inimark-scrollbar-radius: 4px;
-  --inimark-scrollbar-track: transparent;
-  --inimark-scrollbar-thumb: color-mix(in srgb, var(--inimark-fg) 28%, transparent);
-  --inimark-scrollbar-thumb-hover: color-mix(in srgb, var(--inimark-fg) 45%, transparent);
+  --inimark-scrollbar-size: var(--scrollbar-size, 8px);
+  --inimark-scrollbar-radius: var(--radius-scrollbar, 4px);
+  --inimark-scrollbar-track: var(--scrollbar-track, transparent);
+  --inimark-scrollbar-thumb: var(--scrollbar-thumb, color-mix(in srgb, var(--inimark-fg) 28%, transparent));
+  --inimark-scrollbar-thumb-hover: var(--scrollbar-thumb-hover, color-mix(in srgb, var(--inimark-fg) 45%, transparent));
 }
 
 html.platform-macos {
@@ -59,12 +60,6 @@ html.platform-windows {
 }
 
 :root[data-appearance="dark"] {
-  --inimark-accent: #6b9fff;
   --inimark-accent-fg: #101214;
-  --inimark-content-bg: #16171a;
-  --inimark-glass-bg: color-mix(in srgb, #1c1f24 78%, transparent);
-  --inimark-glass-border: color-mix(in srgb, #ffffff 10%, transparent);
   --inimark-glass-shadow: 0 10px 32px color-mix(in srgb, #000 35%, transparent);
-  --inimark-scrollbar-thumb: color-mix(in srgb, #ffffff 24%, transparent);
-  --inimark-scrollbar-thumb-hover: color-mix(in srgb, #ffffff 42%, transparent);
 }

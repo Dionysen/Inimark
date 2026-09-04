@@ -7,13 +7,13 @@ import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import { createButton } from "../ui/button.ts";
 import {
   type AppSettings,
-  type AppearanceMode,
   type EditorWidth,
   editorWidthLabel,
   loadSettings,
   saveSettings,
 } from "./store.ts";
 import { renderShortcutsPanel } from "./shortcuts-panel.ts";
+import { renderThemePanel } from "./theme-panel.ts";
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
@@ -139,10 +139,13 @@ export function mountSettingsView(
   }
 
   let shortcutsCleanup: (() => void) | null = null;
+  let themeCleanup: (() => void) | null = null;
 
   function renderContent(): void {
     shortcutsCleanup?.();
     shortcutsCleanup = null;
+    themeCleanup?.();
+    themeCleanup = null;
     content.replaceChildren();
 
     const header = document.createElement("header");
@@ -211,29 +214,10 @@ export function mountSettingsView(
     }
 
     if (activeSection === "appearance") {
-      const appearanceSelect = document.createElement("select");
-      appearanceSelect.className = "inimark-select";
-      for (const option of [
-        { value: "system", label: "System default" },
-        { value: "light", label: "Light" },
-        { value: "dark", label: "Dark" },
-      ] as Array<{ value: AppearanceMode; label: string }>) {
-        const el = document.createElement("option");
-        el.value = option.value;
-        el.textContent = option.label;
-        appearanceSelect.append(el);
-      }
-      appearanceSelect.value = settings.appearance;
-      appearanceSelect.addEventListener("change", () => {
-        update({ appearance: appearanceSelect.value as AppearanceMode });
-      });
-      body.append(
-        createRow(
-          "appearance",
-          "Choose light, dark, or follow the operating system.",
-          appearanceSelect,
-        ),
-      );
+      const panelHost = document.createElement("div");
+      panelHost.className = "inimark-settings-theme-host";
+      body.append(panelHost);
+      themeCleanup = renderThemePanel(panelHost);
     }
 
     if (activeSection === "shortcuts") {
@@ -332,6 +316,7 @@ export function mountSettingsView(
     },
     destroy() {
       shortcutsCleanup?.();
+      themeCleanup?.();
       host.replaceChildren();
       host.className = "";
     },

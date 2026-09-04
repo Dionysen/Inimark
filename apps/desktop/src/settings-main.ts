@@ -1,7 +1,9 @@
 import "./styles/shell.css";
 import "./styles/settings.css";
+import "./styles/theme-settings.css";
 import { initPlatform } from "./platform/platform.ts";
 import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
+import { initThemeManager } from "./themes/manager.ts";
 import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
 import { mountSettingsView } from "./settings/view.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
@@ -17,36 +19,38 @@ if (!host) {
 
 host.className = "inimark-settings-shell";
 
-applySettings(loadSettings());
+void initThemeManager().then(() => {
+  applySettings(loadSettings());
 
-const titlebarHost = document.createElement("header");
-const titlebar = mountTitleBar(titlebarHost, {
-  title: "Settings",
-  controlMode: "close-only",
-});
+  const titlebarHost = document.createElement("header");
+  const titlebar = mountTitleBar(titlebarHost, {
+    title: "Settings",
+    controlMode: "close-only",
+  });
 
-const viewHost = document.createElement("div");
-viewHost.className = "inimark-settings-view-host";
+  const viewHost = document.createElement("div");
+  viewHost.className = "inimark-settings-view-host";
 
-host.append(titlebarHost, viewHost);
+  host.append(titlebarHost, viewHost);
 
-const view = mountSettingsView(viewHost, {
-  onChange: (settings) => {
-    applySettings(settings);
-  },
-});
+  const view = mountSettingsView(viewHost, {
+    onChange: (settings) => {
+      applySettings(settings);
+    },
+  });
 
-window.addEventListener("storage", (event) => {
-  if (event.key === SETTINGS_STORAGE_KEY) {
-    applySettings(loadSettings());
-  }
-  if (event.key === LIBRARIES_STORAGE_KEY) {
-    view.refresh();
-  }
-});
+  window.addEventListener("storage", (event) => {
+    if (event.key === SETTINGS_STORAGE_KEY) {
+      applySettings(loadSettings());
+    }
+    if (event.key === LIBRARIES_STORAGE_KEY) {
+      view.refresh();
+    }
+  });
 
-window.addEventListener("beforeunload", () => {
-  teardownScrollbars();
-  titlebar.destroy();
-  view.destroy();
+  window.addEventListener("beforeunload", () => {
+    teardownScrollbars();
+    titlebar.destroy();
+    view.destroy();
+  });
 });

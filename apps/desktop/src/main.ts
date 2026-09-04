@@ -1,5 +1,6 @@
 import { initPlatform } from "./platform/platform.ts";
 import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
+import { initThemeManager } from "./themes/manager.ts";
 import { mountApp } from "./app.ts";
 
 initPlatform();
@@ -10,12 +11,11 @@ if (!root) {
   throw new Error("Missing #app mount point");
 }
 
-document.documentElement.dataset.appearance = "light";
-document.documentElement.style.colorScheme = "light";
+void initThemeManager().then(() => {
+  const app = mountApp(root);
 
-const app = mountApp(root);
-
-window.addEventListener("beforeunload", () => {
-  teardownScrollbars();
-  app.destroy();
+  window.addEventListener("beforeunload", () => {
+    teardownScrollbars();
+    app.destroy();
+  });
 });
