@@ -1,8 +1,19 @@
+import {
+  FONT_PRESETS,
+  type FontPresetId,
+  isValidFontSetting,
+  normalizeFontValue,
+  resolveFontValue,
+} from "./system-fonts.ts";
+
 export type EditorWidth = "narrow" | "medium" | "wide" | "full";
 export type AppearanceMode = "light" | "dark" | "system";
 export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
 export type ImageFilenameFormat = "original" | "timestamp" | "both";
+
+export type { FontPresetId };
+export { FONT_PRESETS };
 
 export interface MarkdownFormatSettings {
   formatOnSave: boolean;
@@ -39,31 +50,6 @@ export interface AppSettings {
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
-
-export const FONT_PRESETS = {
-  system: {
-    label: "System UI",
-    css: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  },
-  serif: {
-    label: "Serif",
-    css: 'Georgia, "Times New Roman", "Songti SC", serif',
-  },
-  rounded: {
-    label: "Rounded Sans",
-    css: '"Avenir Next", "Segoe UI", "PingFang SC", sans-serif',
-  },
-  mono: {
-    label: "Monospace",
-    css: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-  },
-  code: {
-    label: "Code",
-    css: '"Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace',
-  },
-} as const;
-
-export type FontPresetId = keyof typeof FONT_PRESETS;
 
 export const DEFAULT_MARKDOWN_FORMAT: MarkdownFormatSettings = {
   formatOnSave: false,
@@ -130,13 +116,6 @@ const DENSITY_VARS: Record<
   },
 };
 
-function resolveFontCss(presetId: string, fallback: FontPresetId): string {
-  if (presetId in FONT_PRESETS) {
-    return FONT_PRESETS[presetId as FontPresetId].css;
-  }
-  return FONT_PRESETS[fallback].css;
-}
-
 export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -161,9 +140,9 @@ export function applySettings(settings: AppSettings): void {
     "--inimark-editor-max-width",
     EDITOR_WIDTHS[settings.editorWidth],
   );
-  root.style.setProperty("--editor-font", resolveFontCss(settings.editorFont, "system"));
-  root.style.setProperty("--font-mono", resolveFontCss(settings.codeFont, "code"));
-  root.style.setProperty("--font-ui", resolveFontCss(settings.uiFont, "system"));
+  root.style.setProperty("--editor-font", resolveFontValue(settings.editorFont, "system"));
+  root.style.setProperty("--font-mono", resolveFontValue(settings.codeFont, "code"));
+  root.style.setProperty("--font-ui", resolveFontValue(settings.uiFont, "system"));
   root.style.setProperty("--editor-line-height", String(settings.lineHeight));
   root.style.setProperty("--editor-paragraph-spacing", `${settings.paragraphSpacing}em`);
   root.style.setProperty("--code-line-height", String(settings.codeLineHeight));
@@ -234,9 +213,15 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     appearance: isAppearance(parsed.appearance)
       ? parsed.appearance
       : DEFAULT_SETTINGS.appearance,
-    editorFont: isFontPreset(parsed.editorFont) ? parsed.editorFont : DEFAULT_SETTINGS.editorFont,
-    codeFont: isFontPreset(parsed.codeFont) ? parsed.codeFont : DEFAULT_SETTINGS.codeFont,
-    uiFont: isFontPreset(parsed.uiFont) ? parsed.uiFont : DEFAULT_SETTINGS.uiFont,
+    editorFont: isValidFontSetting(parsed.editorFont)
+      ? normalizeFontValue(parsed.editorFont, "system")
+      : DEFAULT_SETTINGS.editorFont,
+    codeFont: isValidFontSetting(parsed.codeFont)
+      ? normalizeFontValue(parsed.codeFont, "code")
+      : DEFAULT_SETTINGS.codeFont,
+    uiFont: isValidFontSetting(parsed.uiFont)
+      ? normalizeFontValue(parsed.uiFont, "system")
+      : DEFAULT_SETTINGS.uiFont,
     lineHeight: clampFloat(parsed.lineHeight ?? DEFAULT_SETTINGS.lineHeight, 1.2, 2.8),
     paragraphSpacing: clampFloat(
       parsed.paragraphSpacing ?? DEFAULT_SETTINGS.paragraphSpacing,
@@ -296,10 +281,6 @@ function isAppearance(value: unknown): value is AppearanceMode {
 
 function isMenuDensity(value: unknown): value is MenuDensity {
   return value === "compact" || value === "normal" || value === "comfortable";
-}
-
-function isFontPreset(value: unknown): value is FontPresetId {
-  return typeof value === "string" && value in FONT_PRESETS;
 }
 
 function isImageStorageMode(value: unknown): value is ImageStorageMode {

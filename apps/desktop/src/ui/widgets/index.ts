@@ -19,6 +19,12 @@ export {
   type SelectOption,
   type SelectOptions,
 } from "./select.ts";
+export {
+  createFontPicker,
+  type FontPickerController,
+  type FontPickerMode,
+  type FontPickerOptions,
+} from "./font-picker.ts";
 export { createMenu, type MenuController, type MenuItemOptions } from "./menu.ts";
 export { createToggle, type ToggleController, type ToggleOptions } from "./toggle.ts";
 export {

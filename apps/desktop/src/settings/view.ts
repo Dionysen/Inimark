@@ -13,6 +13,7 @@ import {
 import { mountTitleBar } from "../ui/titlebar.ts";
 import {
   createButton,
+  createFontPicker,
   createNavItem,
   createNavList,
   createSearchField,
@@ -29,7 +30,6 @@ import {
   type ImageStorageMode,
   type MenuDensity,
   editorWidthLabel,
-  fontPresetOptions,
   loadSettings,
   menuDensityLabel,
   saveSettings,
@@ -112,9 +112,9 @@ const SETTINGS_NAV_WIDTH_DEFAULT = 220;
 const SETTINGS_NAV_WIDTH_MIN = 160;
 const SETTINGS_NAV_WIDTH_MAX = 420;
 
-const EDITOR_FONT_IDS: FontPresetId[] = ["system", "serif", "rounded", "mono"];
-const CODE_FONT_IDS: FontPresetId[] = ["code", "mono", "system"];
-const UI_FONT_IDS: FontPresetId[] = ["system", "rounded", "serif"];
+const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
+const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
+const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
 
 function sectionMatches(id: SettingsSection, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -325,10 +325,11 @@ export function mountSettingsView(
 
     body.append(createSectionTitle("Typography"));
 
-    const editorFont = createSelect({
+    const editorFont = createFontPicker({
+      mode: "editor",
       value: settings.editorFont,
-      options: fontPresetOptions(EDITOR_FONT_IDS),
-      minWidth: 150,
+      presets: EDITOR_FONT_PRESETS,
+      minWidth: 180,
       onChange(value) {
         update({ editorFont: value });
       },
@@ -337,10 +338,11 @@ export function mountSettingsView(
       createRow("Editor font", "Font family for the writing surface.", editorFont.el),
     );
 
-    const codeFont = createSelect({
+    const codeFont = createFontPicker({
+      mode: "code",
       value: settings.codeFont,
-      options: fontPresetOptions(CODE_FONT_IDS),
-      minWidth: 150,
+      presets: CODE_FONT_PRESETS,
+      minWidth: 180,
       onChange(value) {
         update({ codeFont: value });
       },
@@ -528,10 +530,11 @@ export function mountSettingsView(
   function renderAppearanceChrome(body: HTMLElement): void {
     body.append(createSectionTitle("Interface"));
 
-    const uiFont = createSelect({
+    const uiFont = createFontPicker({
+      mode: "ui",
       value: settings.uiFont,
-      options: fontPresetOptions(UI_FONT_IDS),
-      minWidth: 150,
+      presets: UI_FONT_PRESETS,
+      minWidth: 180,
       onChange(value) {
         update({ uiFont: value });
       },
