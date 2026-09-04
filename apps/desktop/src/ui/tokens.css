@@ -28,9 +28,20 @@
   --inimark-sidebar-width: 15rem;
   --inimark-toolbar-height: 2.75rem;
   --inimark-statusbar-height: 1.75rem;
+  --inimark-sidebar-dock-height: 3.25rem;
+
+  --inimark-editor-font-size: 16px;
+  --inimark-editor-max-width: 48rem;
+
+  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 70%, transparent);
+  --inimark-glass-border: color-mix(in srgb, var(--inimark-border) 75%, transparent);
+  --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, CanvasText 10%, transparent);
 }
 
 :root[data-appearance="dark"] {
   --inimark-accent: #6b9fff;
   --inimark-accent-fg: #101214;
+  --inimark-glass-bg: color-mix(in srgb, #1c1f24 78%, transparent);
+  --inimark-glass-border: color-mix(in srgb, #ffffff 10%, transparent);
+  --inimark-glass-shadow: 0 10px 32px color-mix(in srgb, #000 35%, transparent);
 }

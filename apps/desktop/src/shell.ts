@@ -39,7 +39,7 @@ export function mountShell(host: HTMLElement): ShellController {
   });
   const btnSave = createButton({ label: "Save", onClick: () => void handlers.save() });
   const btnSaveAs = createButton({ label: "Save As", onClick: () => void handlers.saveAs() });
-  const btnTheme = createButton({ label: "Theme", onClick: () => handlers.theme() });
+  const btnTheme = createButton({ label: "Settings", onClick: () => handlers.theme() });
 
   actions.append(btnNew, btnOpen, btnOpenFolder, btnSave, btnSaveAs, btnTheme);
   toolbar.append(title, actions);

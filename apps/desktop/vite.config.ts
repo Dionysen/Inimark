@@ -45,6 +45,12 @@ export default defineConfig({
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"),
+        settings: resolve(__dirname, "settings.html"),
+      },
+    },
   },
   resolve: {
     alias: editorAliases,

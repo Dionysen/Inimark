@@ -12,10 +12,21 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Inimark",
         "width": 1100,
         "height": 760,
         "resizable": true
+      },
+      {
+        "label": "settings",
+        "title": "Inimark Settings",
+        "url": "settings.html",
+        "width": 920,
+        "height": 640,
+        "resizable": true,
+        "center": true,
+        "visible": false
       }
     ],
     "security": {

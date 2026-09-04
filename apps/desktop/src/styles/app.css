@@ -56,6 +56,7 @@ body {
   min-height: 0;
   border-right: 1px solid var(--inimark-border);
   background: var(--inimark-surface);
+  position: relative;
 }
 
 .inimark-sidebar-header {
@@ -87,7 +88,7 @@ body {
 .inimark-tree {
   flex: 1;
   overflow: auto;
-  padding: var(--inimark-space-2) 0;
+  padding: var(--inimark-space-2) 0 calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
 }
 
 .inimark-tree-item {
@@ -140,8 +141,13 @@ body {
 }
 
 .inimark-editor-host .typora-web-wrap {
-  max-width: 48rem;
+  max-width: var(--inimark-editor-max-width);
   margin: 0 auto;
+}
+
+.inimark-editor-host .ProseMirror,
+.inimark-editor-host .typora-web-source-editor .cm-content {
+  font-size: var(--inimark-editor-font-size);
 }
 
 .inimark-statusbar {
@@ -199,4 +205,127 @@ body {
 
 .inimark-btn--primary:hover:not(:disabled) {
   filter: brightness(1.05);
+}
+
+/* Frosted glass surface */
+.inimark-glass {
+  background: var(--inimark-glass-bg);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid var(--inimark-glass-border);
+  box-shadow: var(--inimark-glass-shadow);
+}
+
+.inimark-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.inimark-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 0;
+  border-radius: var(--inimark-radius-sm);
+  background: transparent;
+  color: var(--inimark-fg);
+  cursor: pointer;
+}
+
+.inimark-icon-btn:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-icon-btn:focus-visible {
+  outline: 2px solid var(--inimark-focus-ring);
+  outline-offset: 1px;
+}
+
+/* Sidebar dock + library bar */
+.inimark-sidebar-dock {
+  position: absolute;
+  left: var(--inimark-space-2);
+  right: var(--inimark-space-2);
+  bottom: var(--inimark-space-2);
+  z-index: 2;
+}
+
+.inimark-library-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-1);
+  min-height: 2.5rem;
+  padding: 0.2rem 0.35rem 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.inimark-library-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.35rem 0.45rem;
+  border-radius: 999px;
+}
+
+.inimark-library-bar-main:hover {
+  background: color-mix(in srgb, var(--inimark-hover) 65%, transparent);
+}
+
+.inimark-library-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-library-bar-settings {
+  flex-shrink: 0;
+}
+
+.inimark-library-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 0.45rem);
+  padding: var(--inimark-space-2);
+  border-radius: var(--inimark-radius-md);
+}
+
+.inimark-library-menu-path {
+  margin: 0 0 var(--inimark-space-2);
+  padding: 0 var(--inimark-space-1);
+  font-size: 0.75rem;
+  color: var(--inimark-muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-library-menu-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--inimark-radius-sm);
+  cursor: pointer;
+}
+
+.inimark-library-menu-item:hover {
+  background: var(--inimark-hover);
 }

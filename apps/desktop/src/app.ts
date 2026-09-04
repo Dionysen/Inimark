@@ -10,6 +10,8 @@ import {
   refreshWorkspaceTree,
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
+import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
+import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
 
 export interface AppController {
@@ -18,6 +20,16 @@ export interface AppController {
 }
 
 export function mountApp(host: HTMLElement): AppController {
+  const settings = loadSettings();
+  applySettings(settings);
+
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === SETTINGS_STORAGE_KEY) {
+      applySettings(loadSettings());
+    }
+  };
+  window.addEventListener("storage", onStorage);
+
   const shell = mountShell(host);
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
@@ -70,7 +82,26 @@ export function mountApp(host: HTMLElement): AppController {
     shell.setStatus(`Library: ${workspace.rootName}`);
   }
 
+  async function openSettings(): Promise<void> {
+    try {
+      await openSettingsWindow();
+    } catch (error) {
+      console.error("Failed to open settings window", error);
+      shell.setStatus(
+        error instanceof Error ? error.message : "Could not open settings window",
+      );
+    }
+  }
+
   shell.sidebar.onFileSelect((path) => void openWorkspaceFile(path));
+  shell.sidebar.onOpenFolder(() => void openFolder());
+  shell.sidebar.onOpenSettings(() => void openSettings());
+  shell.sidebar.onCloseLibrary(() => {
+    workspace = null;
+    activeFilePath = null;
+    shell.sidebar.setWorkspace(null);
+    shell.setStatus("Library closed");
+  });
 
   shell.onNew(async () => {
     if (!(await confirmDiscard())) return;
@@ -132,10 +163,7 @@ export function mountApp(host: HTMLElement): AppController {
   });
 
   shell.onToggleAppearance(() => {
-    const root = document.documentElement;
-    const next = root.dataset.appearance === "dark" ? "light" : "dark";
-    root.dataset.appearance = next;
-    root.style.colorScheme = next;
+    void openSettings();
   });
 
   const fileName = editor.getCurrentFileName();
@@ -144,6 +172,7 @@ export function mountApp(host: HTMLElement): AppController {
   return {
     editor,
     destroy() {
+      window.removeEventListener("storage", onStorage);
       editor.destroy();
       shell.destroy();
     },
