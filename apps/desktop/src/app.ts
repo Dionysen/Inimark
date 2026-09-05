@@ -364,6 +364,23 @@ export function mountApp(host: HTMLElement): AppController {
   shell.sidebar.onOpenSettings(() => void openSettings());
   shell.sidebar.onSwitchLibrary((libraryId) => void switchLibrary(libraryId));
   shell.sidebar.onExpandedDirsChange(() => persistLibrarySession());
+  shell.sidebar.onFileRenamed((from, to) => {
+    if (!workspace) return;
+    if (activeFilePath === from || activeFilePath?.startsWith(`${from}/`)) {
+      activeFilePath = to;
+      shell.setFileName(to.split(/[/\\]/).pop() ?? to);
+      shell.sidebar.setActiveFile(to);
+      persistLibrarySession();
+    }
+  });
+  shell.sidebar.onFileDeleted((path) => {
+    if (
+      activeFilePath === path ||
+      activeFilePath?.startsWith(`${path}/`)
+    ) {
+      resetToUntitled();
+    }
+  });
   shell.sidebar.onCloseLibrary(() => {
     persistLibrarySession();
     workspace = null;

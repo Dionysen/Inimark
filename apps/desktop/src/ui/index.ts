@@ -21,6 +21,7 @@ export {
   type SelectOption,
   type SelectOptions,
   createMenu,
+  menuIcons,
   type MenuController,
   type MenuItemOptions,
   createToggle,

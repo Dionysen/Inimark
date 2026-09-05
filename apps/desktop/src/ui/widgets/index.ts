@@ -38,7 +38,7 @@ export {
   type FontPickerMode,
   type FontPickerOptions,
 } from "./font-picker.ts";
-export { createMenu, type MenuController, type MenuItemOptions } from "./menu.ts";
+export { createMenu, menuIcons, type MenuController, type MenuItemOptions } from "./menu.ts";
 export { createToggle, type ToggleController, type ToggleOptions } from "./toggle.ts";
 export {
   createTreeHost,

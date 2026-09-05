@@ -340,6 +340,91 @@ export async function createWorkspaceDirectory(
   }
 }
 
+export async function renameWorkspaceEntry(
+  workspace: Workspace,
+  fromRelative: string,
+  toRelative: string,
+): Promise<{ status: "renamed"; path: string } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Renaming is only supported in the desktop app." };
+  }
+  try {
+    const { rename, exists } = await import("@tauri-apps/plugin-fs");
+    const fromPath = joinWorkspacePath(workspace.rootPath, fromRelative);
+    const toPath = joinWorkspacePath(workspace.rootPath, toRelative);
+    if (await exists(toPath)) {
+      return { status: "error", message: `Already exists: ${toRelative}` };
+    }
+    await rename(fromPath, toPath);
+    return { status: "renamed", path: toRelative };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function deleteWorkspaceEntry(
+  workspace: Workspace,
+  relativePath: string,
+): Promise<{ status: "deleted" } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Deleting is only supported in the desktop app." };
+  }
+  try {
+    const { remove } = await import("@tauri-apps/plugin-fs");
+    const fullPath = joinWorkspacePath(workspace.rootPath, relativePath);
+    await remove(fullPath, { recursive: true });
+    return { status: "deleted" };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function revealWorkspaceEntry(
+  workspace: Workspace,
+  relativePath: string,
+): Promise<{ status: "ok" } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Reveal is only supported in the desktop app." };
+  }
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const fullPath = joinWorkspacePath(workspace.rootPath, relativePath);
+    await invoke("reveal_in_file_manager", { path: fullPath });
+    return { status: "ok" };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export async function openWorkspaceEntryWithDefaultApp(
+  workspace: Workspace,
+  relativePath: string,
+): Promise<{ status: "ok" } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Open is only supported in the desktop app." };
+  }
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    const fullPath = joinWorkspacePath(workspace.rootPath, relativePath);
+    await invoke("open_with_default_app", { path: fullPath });
+    return { status: "ok" };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export async function removeLibraryAccess(libraryId: string): Promise<void> {
   if (!isTauri()) {
     await deleteDirectoryHandle(libraryId);

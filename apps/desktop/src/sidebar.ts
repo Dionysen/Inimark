@@ -12,6 +12,7 @@ import {
   filesTabIcon,
   libraryIcon,
   locateFileIcon,
+  menuIcons,
   newFileIcon,
   newFolderIcon,
   searchTabIcon,
@@ -20,13 +21,20 @@ import {
   sortIcon,
 } from "./ui/widgets/index.ts";
 import type { LibraryRecord } from "./libraries/store.ts";
+import { detectPlatform } from "./platform/platform.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
+import { joinWorkspacePath } from "./platform/env.ts";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
+  deleteWorkspaceEntry,
+  openWorkspaceEntryWithDefaultApp,
   refreshWorkspaceTree,
+  renameWorkspaceEntry,
+  revealWorkspaceEntry,
 } from "./platform/workspace.ts";
+import { promptConfirm } from "./ui/confirm-dialog.ts";
 import {
   highlightMatch,
   searchVaultIncremental,
@@ -87,6 +95,8 @@ export interface SidebarController {
   onCloseLibrary(handler: () => void): void;
   onSwitchLibrary(handler: (libraryId: string) => void | Promise<void>): void;
   onExpandedDirsChange(handler: (dirs: string[]) => void): void;
+  onFileRenamed(handler: (from: string, to: string) => void): void;
+  onFileDeleted(handler: (path: string) => void): void;
   destroy(): void;
 }
 
@@ -133,6 +143,24 @@ function uniqueChildName(
 
 function timeValue(node: WorkspaceTreeNode, field: "mtimeMs" | "birthtimeMs"): number {
   return node[field] ?? 0;
+}
+
+function parentRelativePath(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  const idx = normalized.lastIndexOf("/");
+  return idx >= 0 ? normalized.slice(0, idx) : "";
+}
+
+function joinRelativePath(parent: string, name: string): string {
+  const clean = name.replace(/^[/\\]+/, "").replace(/\\/g, "/");
+  return parent ? `${parent.replace(/\\/g, "/")}/${clean}` : clean;
+}
+
+function revealInLabel(): string {
+  const platform = detectPlatform();
+  if (platform === "macos") return "Show in Finder";
+  if (platform === "windows") return "Show in Explorer";
+  return "Show in Files";
 }
 
 function sortTreeNodes(
@@ -341,6 +369,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   sortMenu.setPath("");
   host.append(sortMenu.el);
 
+  const contextMenu = createMenu();
+  contextMenu.el.classList.add("inimark-context-menu");
+  contextMenu.setPath("");
+  host.append(contextMenu.el);
+
   host.append(topbar, body, dock);
 
   let activePath: string | null = null;
@@ -364,6 +397,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     switchLibrary: (_libraryId: string): void | Promise<void> => {},
     expandedDirsChange: (_dirs: string[]): void => {},
     toggleSidebar: (): void => {},
+    fileRenamed: (_from: string, _to: string): void => {},
+    fileDeleted: (_path: string): void => {},
   };
 
   function notifyExpandedChange(): void {
@@ -380,8 +415,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     sortBtn.setAttribute("aria-expanded", "false");
   }
 
+  function closeContextMenu(): void {
+    contextMenu.setOpen(false);
+  }
+
   function toggleMenu(): void {
     closeSortMenu();
+    closeContextMenu();
     if (menu.isOpen()) {
       closeMenu();
       return;
@@ -420,6 +460,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function toggleSortMenu(): void {
     closeMenu();
+    closeContextMenu();
     if (sortMenu.isOpen()) {
       closeSortMenu();
       return;
@@ -445,6 +486,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       for (const library of savedLibraries) {
         menu.addItem({
           label: library.rootName,
+          icon: menuIcons.library,
           meta: library.rootPath,
           title: library.rootPath,
           selected: library.id === activeLibraryId,
@@ -459,6 +501,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     menu.addDivider();
     menu.addItem({
       label: "Add library…",
+      icon: menuIcons.folderPlus,
       onClick() {
         closeMenu();
         void handlers.openFolder();
@@ -466,6 +509,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
     menu.addItem({
       label: "Close library",
+      icon: menuIcons.close,
       onClick() {
         closeMenu();
         handlers.closeLibrary();
@@ -492,6 +536,20 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     ) {
       closeSortMenu();
     }
+    if (contextMenu.isOpen() && !(target && contextMenu.el.contains(target))) {
+      closeContextMenu();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && contextMenu.isOpen()) {
+      closeContextMenu();
+    }
+  });
+
+  treeHost.addEventListener("contextmenu", (event) => {
+    // Suppress native menu on empty tree chrome.
+    if (event.target === treeHost) event.preventDefault();
   });
 
   function setActivePanel(panel: SidebarPanelId): void {
@@ -581,6 +639,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
             notifyExpandedChange();
             rerender();
           },
+          onContextMenu(event) {
+            openTreeContextMenu(event, node);
+          },
         });
         branch.append(row);
         if (isOpen && node.children && node.children.length > 0) {
@@ -600,6 +661,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         active: node.path === activePath,
         onClick() {
           void handlers.fileSelect(node.path);
+        },
+        onContextMenu(event) {
+          openTreeContextMenu(event, node);
         },
       });
       branch.append(row);
@@ -699,6 +763,231 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     expanded.add(folderName);
     notifyExpandedChange();
     await refreshTreeFromDisk();
+  }
+
+  function remapExpandedPaths(from: string, to: string): void {
+    const next = new Set<string>();
+    for (const path of expanded) {
+      if (path === from) next.add(to);
+      else if (path.startsWith(`${from}/`)) next.add(`${to}${path.slice(from.length)}`);
+      else next.add(path);
+    }
+    expanded.clear();
+    for (const path of next) expanded.add(path);
+  }
+
+  function positionContextMenu(clientX: number, clientY: number): void {
+    const menuWidth = Math.max(180, contextMenu.el.offsetWidth || 180);
+    const menuHeight = Math.max(160, contextMenu.el.offsetHeight || 160);
+    const left = Math.min(Math.max(8, clientX), window.innerWidth - menuWidth - 8);
+    const top = Math.min(Math.max(8, clientY), window.innerHeight - menuHeight - 8);
+    contextMenu.el.style.left = `${left}px`;
+    contextMenu.el.style.top = `${top}px`;
+  }
+
+  function openTreeContextMenu(event: MouseEvent, node: WorkspaceTreeNode): void {
+    if (!currentWorkspace) return;
+    closeMenu();
+    closeSortMenu();
+
+    contextMenu.clear();
+    contextMenu.setPath("");
+    contextMenu.addItem({
+      label: "Rename",
+      icon: menuIcons.rename,
+      onClick() {
+        closeContextMenu();
+        startInlineRename(node);
+      },
+    });
+    contextMenu.addItem({
+      label: "Copy Path",
+      icon: menuIcons.copy,
+      onClick() {
+        closeContextMenu();
+        void copyNodePath(node);
+      },
+    });
+    contextMenu.addDivider();
+    contextMenu.addItem({
+      label: "Delete",
+      icon: menuIcons.trash,
+      danger: true,
+      onClick() {
+        closeContextMenu();
+        void deleteNode(node);
+      },
+    });
+    contextMenu.addDivider();
+    contextMenu.addItem({
+      label: revealInLabel(),
+      icon: menuIcons.reveal,
+      onClick() {
+        closeContextMenu();
+        void revealNode(node);
+      },
+    });
+    contextMenu.addItem({
+      label: "Open with Default App",
+      icon: menuIcons.external,
+      onClick() {
+        closeContextMenu();
+        void openNodeWithDefaultApp(node);
+      },
+    });
+
+    contextMenu.setOpen(true);
+    requestAnimationFrame(() => positionContextMenu(event.clientX, event.clientY));
+  }
+
+  async function copyNodePath(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const fullPath = joinWorkspacePath(currentWorkspace.rootPath, node.path);
+    try {
+      await navigator.clipboard.writeText(fullPath);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function revealNode(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const result = await revealWorkspaceEntry(currentWorkspace, node.path);
+    if (result.status === "error") console.error(result.message);
+  }
+
+  async function openNodeWithDefaultApp(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const result = await openWorkspaceEntryWithDefaultApp(currentWorkspace, node.path);
+    if (result.status === "error") console.error(result.message);
+  }
+
+  async function deleteNode(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const kindLabel = node.kind === "directory" ? "folder" : "file";
+    const confirmed = await promptConfirm({
+      title: `Delete ${kindLabel}?`,
+      message: `Delete “${node.name}”? This cannot be undone.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    const result = await deleteWorkspaceEntry(currentWorkspace, node.path);
+    if (result.status === "error") {
+      console.error(result.message);
+      return;
+    }
+
+    if (node.kind === "directory") {
+      for (const path of [...expanded]) {
+        if (path === node.path || path.startsWith(`${node.path}/`)) {
+          expanded.delete(path);
+        }
+      }
+      notifyExpandedChange();
+    }
+
+    const deletedActive =
+      activePath === node.path ||
+      (node.kind === "directory" && Boolean(activePath?.startsWith(`${node.path}/`)));
+    await refreshTreeFromDisk();
+    if (deletedActive) {
+      handlers.fileDeleted(node.path);
+    }
+  }
+
+  function startInlineRename(node: WorkspaceTreeNode): void {
+    const row = treeHost.querySelector<HTMLButtonElement>(
+      `[data-path="${CSS.escape(node.path)}"]`,
+    );
+    const label = row?.querySelector<HTMLElement>(".inimark-tree-label");
+    if (!row || !label) return;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "inimark-tree-rename";
+    input.value = node.name;
+    input.setAttribute("aria-label", `Rename ${node.name}`);
+    label.replaceWith(input);
+    input.focus();
+    const dot = node.kind === "file" ? node.name.lastIndexOf(".") : -1;
+    if (dot > 0) input.setSelectionRange(0, dot);
+    else input.select();
+
+    let finished = false;
+
+    async function commit(): Promise<void> {
+      if (finished) return;
+      finished = true;
+      const nextName = input.value.trim();
+      if (!nextName || nextName === node.name) {
+        rerender();
+        return;
+      }
+      if (/[/\\]/.test(nextName)) {
+        console.error("Name cannot contain path separators");
+        rerender();
+        return;
+      }
+      await renameNode(node, nextName);
+    }
+
+    function cancel(): void {
+      if (finished) return;
+      finished = true;
+      rerender();
+    }
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void commit();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancel();
+      }
+    });
+    input.addEventListener("blur", () => {
+      void commit();
+    });
+  }
+
+  async function renameNode(node: WorkspaceTreeNode, nextName: string): Promise<void> {
+    if (!currentWorkspace) return;
+    const parent = parentRelativePath(node.path);
+    const toPath = joinRelativePath(parent, nextName);
+    if (toPath === node.path) {
+      rerender();
+      return;
+    }
+
+    const result = await renameWorkspaceEntry(currentWorkspace, node.path, toPath);
+    if (result.status === "error") {
+      console.error(result.message);
+      rerender();
+      return;
+    }
+
+    if (node.kind === "directory") {
+      remapExpandedPaths(node.path, toPath);
+      notifyExpandedChange();
+    }
+
+    const wasActive =
+      activePath === node.path ||
+      (node.kind === "directory" && Boolean(activePath?.startsWith(`${node.path}/`)));
+    await refreshTreeFromDisk();
+
+    if (wasActive) {
+      if (activePath === node.path) {
+        handlers.fileRenamed(node.path, toPath);
+      } else if (activePath) {
+        const mapped = `${toPath}${activePath.slice(node.path.length)}`;
+        handlers.fileRenamed(activePath, mapped);
+      }
+    }
   }
 
   function rerender(): void {
@@ -902,6 +1191,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   }
 
   function applyWorkspace(workspace: Workspace | null): void {
+    closeContextMenu();
     if (!workspace) {
       currentTree = [];
       currentWorkspace = null;
@@ -976,6 +1266,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     onExpandedDirsChange(handler) {
       handlers.expandedDirsChange = handler;
     },
+    onFileRenamed(handler) {
+      handlers.fileRenamed = handler;
+    },
+    onFileDeleted(handler) {
+      handlers.fileDeleted = handler;
+    },
     destroy() {
       tabVisibilityObserver.disconnect();
       document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
@@ -984,6 +1280,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       searchToolbar.destroy();
       bookmarksToolbar.destroy();
       searchField.destroy();
+      contextMenu.destroy();
       sortMenu.destroy();
       menu.destroy();
       host.replaceChildren();

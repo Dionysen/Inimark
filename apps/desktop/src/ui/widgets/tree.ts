@@ -8,6 +8,7 @@ export interface TreeItemOptions {
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
+  onContextMenu?: (event: MouseEvent) => void;
 }
 
 export function createTreeHost(ariaLabel = "Files"): HTMLElement {
@@ -64,5 +65,12 @@ export function createTreeItem(options: TreeItemOptions): HTMLButtonElement {
   }
 
   if (options.onClick) row.addEventListener("click", options.onClick);
+  if (options.onContextMenu) {
+    row.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      options.onContextMenu?.(event);
+    });
+  }
   return row;
 }

@@ -9,6 +9,7 @@ use tauri::{Manager, RunEvent, WindowEvent};
 use tauri::TitleBarStyle;
 
 use commands::font_commands::list_system_fonts;
+use commands::shell_commands::{open_with_default_app, reveal_in_file_manager};
 
 const WINDOW_LABELS: &[&str] = &["main", "settings"];
 
@@ -43,7 +44,11 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![list_system_fonts])
+        .invoke_handler(tauri::generate_handler![
+            list_system_fonts,
+            reveal_in_file_manager,
+            open_with_default_app
+        ])
         .setup(|app| {
             for label in WINDOW_LABELS {
                 if let Some(window) = app.get_webview_window(label) {

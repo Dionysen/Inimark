@@ -557,9 +557,9 @@
 
 .inimark-menu-item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
   width: 100%;
   padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
   border: 0;
@@ -574,10 +574,7 @@
 }
 
 .inimark-menu-item--checkable {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
 }
 
 .inimark-menu-item:hover,
@@ -587,6 +584,40 @@
 
 .inimark-menu-item.is-selected {
   background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
+}
+
+.inimark-menu-item.is-danger {
+  color: #e5484d;
+}
+
+.inimark-menu-item.is-danger:hover,
+.inimark-menu-item.is-danger.is-active {
+  background: color-mix(in srgb, #e5484d 14%, transparent);
+}
+
+.inimark-menu-item__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.inimark-menu-item__icon .inimark-icon,
+.inimark-menu-item__icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.inimark-menu-item__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .inimark-menu-item__name {
@@ -608,6 +639,7 @@
   width: 0.875rem;
   height: 0.875rem;
   flex-shrink: 0;
+  margin-left: auto;
   color: var(--inimark-fg);
   opacity: 0;
 }
@@ -677,8 +709,31 @@
   min-width: 11.5rem;
 }
 
-.inimark-sort-menu .inimark-menu__path {
+.inimark-sort-menu .inimark-menu__path,
+.inimark-context-menu .inimark-menu__path {
   display: none;
+}
+
+.inimark-context-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 11.5rem;
+}
+
+.inimark-tree-rename {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid var(--inimark-accent);
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  background: var(--inimark-input-bg, var(--inimark-content-bg));
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: inherit;
+  line-height: 1.2;
+  outline: none;
 }
 
 .inimark-tree-branch {
