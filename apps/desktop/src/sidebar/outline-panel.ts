@@ -1,5 +1,8 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
-import { createHeadingLevelBadge } from "../ui/heading-level-badge.ts";
+import {
+  createHeadingLevelBadge,
+  headingLevelBadgeHtml,
+} from "../ui/heading-level-badge.ts";
 import {
   collapseAllIcon,
   createMenu,
@@ -196,7 +199,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     for (let level = 1; level <= 6; level++) {
       expandMenu.addItem({
         label: t("outline.headingN", { level }),
-        meta: `H${level}`,
+        badge: headingLevelBadgeHtml(level),
         checked: expandToLevel === level,
         onClick() {
           applyExpandToLevel(level);

@@ -2,6 +2,8 @@ export interface MenuItemOptions {
   label: string;
   /** Inline SVG / HTML shown to the left of the label. */
   icon?: string;
+  /** Inline HTML badge shown after the label on the same row (e.g. H1–H6). */
+  badge?: string;
   meta?: string;
   title?: string;
   selected?: boolean;
@@ -95,10 +97,23 @@ export function createMenu(): MenuController {
       const content = document.createElement("span");
       content.className = "inimark-menu-item__content";
 
+      const nameRow = document.createElement("span");
+      nameRow.className = "inimark-menu-item__name-row";
+
       const name = document.createElement("span");
       name.className = "inimark-menu-item__name";
       name.textContent = options.label;
-      content.append(name);
+      nameRow.append(name);
+
+      if (options.badge) {
+        const badge = document.createElement("span");
+        badge.className = "inimark-menu-item__badge";
+        badge.setAttribute("aria-hidden", "true");
+        badge.innerHTML = options.badge;
+        nameRow.append(badge);
+      }
+
+      content.append(nameRow);
 
       if (options.meta) {
         const meta = document.createElement("span");
