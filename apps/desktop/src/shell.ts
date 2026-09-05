@@ -190,11 +190,14 @@ export function mountShell(
   sidebar.onToggleSidebar(toggleSidebar);
   rightSidebar.onToggleSidebar(toggleRightSidebar);
 
+  const editorPane = document.createElement("div");
+  editorPane.className = "inimark-editor-pane";
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";
-  graph.setEditorHost(editorHost);
+  editorPane.append(editorHost);
+  graph.setEditorHost(editorPane);
 
-  mainColumn.append(titlebarHost, editorHost);
+  mainColumn.append(titlebarHost, editorPane);
   host.append(sidebarHost, mainColumn, rightSidebarHost);
   applySidebarWidth();
   applyRightSidebarWidth();

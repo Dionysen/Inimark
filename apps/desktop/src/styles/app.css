@@ -279,6 +279,8 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 .inimark-graph-panel--editor {
   height: 100%;
   min-height: 0;
+  /* Overlay is not a sidebar flex child — drop sidebar flex sizing. */
+  flex: none;
 }
 
 .inimark-graph-body {
@@ -298,6 +300,12 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   min-height: 80px;
   position: relative;
   overflow: hidden;
+}
+
+.inimark-graph-panel:not(.inimark-graph-panel--editor) .inimark-graph-canvas-wrap {
+  margin: var(--inimark-space-1) var(--inimark-space-3) var(--inimark-space-2);
+  border-radius: var(--inimark-radius-md);
+  background: var(--inimark-content-bg);
 }
 
 .inimark-graph-canvas {
@@ -564,8 +572,16 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
 }
 
-.inimark-editor-host {
+.inimark-editor-pane {
   position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--inimark-content-bg);
+}
+
+.inimark-editor-host {
+  height: 100%;
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;
