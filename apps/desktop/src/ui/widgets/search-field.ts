@@ -21,15 +21,22 @@ export function createSearchField(options: SearchFieldOptions = {}): SearchField
   root.className = "inimark-search";
 
   const field = document.createElement("label");
-  field.className = "inimark-control inimark-field";
+  field.className = "inimark-control inimark-field inimark-search__field";
+
+  const iconWrap = document.createElement("span");
+  iconWrap.className = "inimark-search__icon-wrap";
+  iconWrap.setAttribute("aria-hidden", "true");
+  iconWrap.innerHTML = SEARCH_ICON;
 
   const input = document.createElement("input");
-  input.type = "search";
+  // text — avoid WebKit native clear that fights the custom clear button
+  input.type = "text";
   input.className = "inimark-field__input";
   input.placeholder = options.placeholder ?? "Search…";
   input.setAttribute("aria-label", options.placeholder ?? "Search");
   input.autocomplete = "off";
   input.spellcheck = false;
+  input.enterKeyHint = "search";
   if (options.value) input.value = options.value;
 
   const clearBtn = document.createElement("button");
@@ -40,23 +47,23 @@ export function createSearchField(options: SearchFieldOptions = {}): SearchField
   clearBtn.hidden = !input.value;
 
   function syncClear(): void {
-    clearBtn.hidden = input.value.trim().length === 0;
+    clearBtn.hidden = input.value.length === 0;
   }
 
   input.addEventListener("input", () => {
     syncClear();
     options.onInput?.(input.value);
   });
-  clearBtn.addEventListener("click", () => {
+  clearBtn.addEventListener("click", (event) => {
+    event.preventDefault();
     input.value = "";
     syncClear();
     options.onInput?.("");
     input.focus();
   });
 
-  field.append(input);
-  root.insertAdjacentHTML("afterbegin", SEARCH_ICON);
-  root.append(field, clearBtn);
+  field.append(iconWrap, input, clearBtn);
+  root.append(field);
 
   return {
     el: root,

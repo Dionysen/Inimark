@@ -4,6 +4,9 @@ export {
   libraryIcon,
   settingsIcon,
   sidebarToggleIcon,
+  filesTabIcon,
+  searchTabIcon,
+  bookmarksTabIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
 export { createTextField, type TextFieldController, type TextFieldOptions } from "./text-field.ts";

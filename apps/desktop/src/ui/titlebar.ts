@@ -160,6 +160,8 @@ export function mountTitleBar(
 
   function updateSidebarToggle(): void {
     if (!sidebarToggleBtn) return;
+    // Obsidian-style: titlebar toggle only when sidebar is collapsed.
+    sidebarToggleBtn.hidden = sidebarOpen;
     sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
     sidebarToggleBtn.title = sidebarOpen ? "Collapse sidebar" : "Expand sidebar";
     sidebarToggleBtn.setAttribute(
@@ -167,6 +169,8 @@ export function mountTitleBar(
       sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
     );
   }
+
+  updateSidebarToggle();
 
   return {
     setTitle(title) {

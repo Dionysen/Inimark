@@ -11,6 +11,7 @@ import { focusModePlugin } from "./modes.ts";
 import { collectKeymaps, collectPlugins } from "./features/index.ts";
 import { markdownInputRules, spaceBreaksStoredMarks } from "./input-rules.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
+import { searchRevealPlugin } from "./search-reveal.ts";
 import { schema } from "./schema.ts";
 import { commonShortcutKeymap } from "./shortcuts.ts";
 
@@ -59,6 +60,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     // extra decorations merge into PM's decoration pipeline naturally).
     ...collectPlugins(schema),
     syntaxHintsPlugin(),
+    searchRevealPlugin(),
     openLinkOnModClickPlugin(),
   ];
   if (cursorWidget) plugins.push(cursorRenderPlugin());

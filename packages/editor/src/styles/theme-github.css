@@ -189,3 +189,16 @@
   border-radius: 2px;
 }
 .ProseMirror del { color: inherit; }
+
+.ProseMirror .tw-search-hit {
+  background: #e6c07b;
+  color: #1a1a1a;
+  border-radius: 2px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.ProseMirror .tw-search-hit--active {
+  background: #f0a202;
+  outline: 1px solid color-mix(in srgb, #f0a202 55%, #000);
+}

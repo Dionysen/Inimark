@@ -159,35 +159,36 @@
 /* ── Search field ───────────────────────────────────────────────── */
 
 .inimark-search {
-  position: relative;
   width: 100%;
+  min-width: 0;
 }
 
-.inimark-search .inimark-field {
+.inimark-search__field {
   width: 100%;
-  padding-left: calc(var(--inimark-control-padding-x) + 1.1rem);
-  padding-right: calc(var(--inimark-control-padding-x) + 1.1rem);
+  gap: 0.4rem;
+  padding-left: 0.55rem;
+  padding-right: 0.3rem;
 }
 
-.inimark-search__icon {
-  position: absolute;
-  left: 0.55rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0.9rem;
-  height: 0.9rem;
+.inimark-search__icon-wrap {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
   color: var(--inimark-muted-fg);
   opacity: 0.7;
   pointer-events: none;
 }
 
+.inimark-search__icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  display: block;
+}
+
 .inimark-search__clear {
-  position: absolute;
-  right: 0.3rem;
-  top: 50%;
-  transform: translateY(-50%);
   display: grid;
   place-items: center;
+  flex-shrink: 0;
   width: 1.35rem;
   height: 1.35rem;
   border: 0;
@@ -204,6 +205,10 @@
 .inimark-search__clear:hover {
   color: var(--inimark-fg);
   background: var(--inimark-hover);
+}
+
+.inimark-search__clear[hidden] {
+  display: none !important;
 }
 
 /* ── Slider ─────────────────────────────────────────────────────── */

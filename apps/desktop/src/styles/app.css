@@ -44,11 +44,251 @@
 }
 
 .inimark-sidebar-topbar {
-  height: 0;
+  height: var(--inimark-titlebar-height);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-1);
+  padding: 0 var(--inimark-space-2);
   background: transparent;
   -webkit-app-region: drag;
   overflow: hidden;
+}
+
+.inimark-sidebar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-sidebar-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.45rem;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-sidebar-tab:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-sidebar-tab:active {
+  transform: scale(0.93);
+}
+
+.inimark-sidebar-tab.is-active {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-sidebar-tab .inimark-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.inimark-sidebar-collapse-btn {
+  flex-shrink: 0;
+}
+
+.inimark-sidebar-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.inimark-sidebar-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  --inimark-search-inset: var(--inimark-space-3);
+}
+
+.inimark-sidebar-panel[hidden] {
+  display: none !important;
+}
+
+/* Don't use width:100% + margin — that overflows the right edge. */
+.inimark-sidebar-panel .inimark-search {
+  flex-shrink: 0;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: var(--inimark-space-2) var(--inimark-search-inset) var(--inimark-space-1);
+  min-width: 0;
+}
+
+.inimark-sidebar-panel .inimark-search__field {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Softer focus in the tight sidebar — Obsidian-like border, no thick ring */
+.inimark-sidebar-panel .inimark-search .inimark-field:focus-within {
+  box-shadow: none;
+  border-color: var(--inimark-accent);
+}
+
+.inimark-sidebar-search-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
+  flex-shrink: 0;
+  padding: 2px var(--inimark-search-inset) 6px;
+  font-size: 0.75rem;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-sidebar-search-meta[hidden] {
+  display: none !important;
+}
+
+.inimark-sidebar-search-results {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-left: var(--inimark-search-inset);
+  padding-right: var(--inimark-search-inset);
+  box-sizing: border-box;
+}
+
+.inimark-sidebar-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 2px 0 calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
+  box-sizing: border-box;
+}
+
+/* Header sits outside the card — only snippets form the block (Obsidian). */
+.inimark-sidebar-search-group {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  overflow: visible;
+  min-width: 0;
+}
+
+.inimark-sidebar-search-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--inimark-fg);
+  padding: 4px 2px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.inimark-sidebar-search-file:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-sidebar-search-group.is-active > .inimark-sidebar-search-file {
+  color: var(--inimark-fg);
+}
+
+.inimark-sidebar-search-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-sidebar-search-badge {
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: right;
+  color: var(--inimark-muted-fg);
+  background: transparent;
+}
+
+/* The actual visual "block": bordered card under the filename */
+.inimark-sidebar-search-body {
+  display: flex;
+  flex-direction: column;
+  margin: 4px 0 0;
+  border: 1px solid color-mix(in srgb, var(--inimark-border) 90%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--inimark-content-bg) 70%, var(--inimark-bg));
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.inimark-sidebar-search-snippet {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--inimark-border) 65%, transparent);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.inimark-sidebar-search-snippet:first-child {
+  border-top: 0;
+}
+
+.inimark-sidebar-search-snippet:hover {
+  background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
+  color: var(--inimark-fg);
+}
+
+.inimark-sidebar-search-snippet-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.inimark-sidebar-search-file-name mark,
+.inimark-sidebar-search-snippet-text mark {
+  background: #e6c07b;
+  color: #1a1a1a;
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: 600;
 }
 
 .inimark-sidebar-empty {

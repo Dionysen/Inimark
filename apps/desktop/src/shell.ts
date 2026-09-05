@@ -69,6 +69,7 @@ export function mountShell(
     host.classList.toggle("is-sidebar-closed", !sidebarOpen);
     sidebarHost.classList.toggle("is-collapsed", !sidebarOpen);
     titlebar.setSidebarOpen(sidebarOpen);
+    sidebar.setSidebarOpen(sidebarOpen);
   }
 
   function toggleSidebar(): void {
@@ -86,6 +87,7 @@ export function mountShell(
       onToggle: toggleSidebar,
     },
   });
+  sidebar.onToggleSidebar(toggleSidebar);
 
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";

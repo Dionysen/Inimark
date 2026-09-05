@@ -7,6 +7,7 @@
 
 export { createEditor } from "./editor-api.ts";
 export type { Editor, EditorOptions } from "./editor-api.ts";
+export type { SearchRevealOptions } from "./search-reveal.ts";
 export {
   buildMarkdownTreeFromDirectory,
   pickMarkdownDirectory,

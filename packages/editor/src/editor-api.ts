@@ -32,6 +32,11 @@ import {
 import { isFocusMode as readFocusMode, setFocusMode as dispatchFocusMode } from "./modes.ts";
 import { parse } from "./parser.ts";
 import { schema } from "./schema.ts";
+import {
+  clearSearchRevealInView,
+  revealSearchMatchInView,
+  type SearchRevealOptions,
+} from "./search-reveal.ts";
 import { serialize } from "./serializer.ts";
 
 export interface EditorOptions {
@@ -68,6 +73,13 @@ export interface Editor {
   saveMarkdownFile(): Promise<FileResult>;
   saveMarkdownFileAs(): Promise<FileResult>;
   getCurrentFileName(): string | null;
+  /**
+   * Highlight vault-search matches and scroll to the best hit for
+   * `query` / optional `line` + `snippet`. No-op when query is empty.
+   */
+  revealSearchMatch(options: SearchRevealOptions): boolean;
+  /** Clear vault-search highlight decorations. */
+  clearSearchHighlight(): void;
   /** Focus whichever surface is active. */
   focus(): void;
   /** Tear down the editor and remove its DOM. */
@@ -458,6 +470,19 @@ export function createEditor(
     },
     getCurrentFileName(): string | null {
       return currentFileName;
+    },
+    revealSearchMatch(options) {
+      if (inSource) exitSource();
+      // Two frames: one for setMarkdown/rebuild layout, one for reliable coords.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          revealSearchMatchInView(view, options, findScrollContainer());
+        });
+      });
+      return true;
+    },
+    clearSearchHighlight() {
+      clearSearchRevealInView(view);
     },
     focus(): void {
       if (inSource) sourceView?.view.focus();

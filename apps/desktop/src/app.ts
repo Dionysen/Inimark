@@ -173,25 +173,46 @@ export function mountApp(host: HTMLElement): AppController {
 
   async function openWorkspaceFile(
     path: string,
-    options?: { skipConfirm?: boolean },
+    options?: {
+      skipConfirm?: boolean;
+      line?: number;
+      query?: string;
+      snippet?: string;
+    },
   ): Promise<void> {
     if (!workspace) return;
     if (!options?.skipConfirm && !(await confirmDiscardChanges())) return;
 
-    const result = await readWorkspaceFile(workspace, path);
-    if (result.status !== "opened") {
-      if (result.status === "error") {
-        console.error(result.message);
+    const sameFile = activeFilePath === path;
+    if (!sameFile) {
+      const result = await readWorkspaceFile(workspace, path);
+      if (result.status !== "opened") {
+        if (result.status === "error") {
+          console.error(result.message);
+        }
+        return;
       }
-      return;
+
+      editor.setMarkdown(result.text);
+      activeFilePath = path;
+      shell.setFileName(result.name);
+      shell.sidebar.setActiveFile(path);
+      shell.setDirty(false);
+      persistLibrarySession();
+    } else {
+      shell.sidebar.setActiveFile(path);
     }
 
-    editor.setMarkdown(result.text);
-    activeFilePath = path;
-    shell.setFileName(result.name);
-    shell.sidebar.setActiveFile(path);
-    shell.setDirty(false);
-    persistLibrarySession();
+    const query = options?.query?.trim();
+    if (query) {
+      editor.revealSearchMatch({
+        query,
+        line: options?.line,
+        snippet: options?.snippet,
+      });
+    } else {
+      editor.clearSearchHighlight();
+    }
   }
 
   async function activateWorkspace(
@@ -338,7 +359,7 @@ export function mountApp(host: HTMLElement): AppController {
     await loadLibraryById(lastId, { restoreSession: true });
   }
 
-  shell.sidebar.onFileSelect((path) => void openWorkspaceFile(path));
+  shell.sidebar.onFileSelect((path, options) => void openWorkspaceFile(path, options));
   shell.sidebar.onOpenFolder(() => void openFolder());
   shell.sidebar.onOpenSettings(() => void openSettings());
   shell.sidebar.onSwitchLibrary((libraryId) => void switchLibrary(libraryId));
