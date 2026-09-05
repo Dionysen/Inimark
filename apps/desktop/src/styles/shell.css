@@ -131,6 +131,10 @@ body.is-column-resizing * {
     background 0.15s ease;
 }
 
+.inimark-sidebar-toggle-btn[hidden] {
+  display: none !important;
+}
+
 .inimark-sidebar-toggle-btn:hover {
   color: var(--inimark-fg);
   background: var(--inimark-hover);
