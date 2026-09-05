@@ -1,6 +1,6 @@
 [package]
 name = "inimark-desktop"
-version = "0.1.4"
+version = "0.1.5"
 description = "Inimark — native Markdown editor"
 authors = ["Dionysen"]
 edition = "2021"

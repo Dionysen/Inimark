@@ -1,6 +1,6 @@
 {
   "name": "@inimark/editor",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Typora-style WYSIWYG Markdown editor (forked from typora-web)",
   "type": "module",
