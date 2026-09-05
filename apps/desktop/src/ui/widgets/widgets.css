@@ -389,8 +389,6 @@
   border: 1px solid var(--inimark-glass-border, var(--inimark-border));
   border-radius: var(--inimark-radius-control);
   background: var(--inimark-glass-bg, var(--inimark-surface));
-  backdrop-filter: blur(18px) saturate(1.25);
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
   box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 20%, transparent));
   opacity: 0;
   transform: translateY(-4px);
@@ -398,6 +396,11 @@
   transition:
     opacity 140ms ease,
     transform 140ms ease;
+}
+
+html[data-glass="true"] .inimark-select-panel {
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
 }
 
 .inimark-select-panel.is-open {
@@ -506,10 +509,6 @@
   border: 1px solid var(--inimark-glass-border, var(--inimark-border));
   border-radius: 12px;
   background: var(--inimark-glass-bg, var(--inimark-surface));
-  backdrop-filter: blur(var(--inimark-glass-blur, 24px))
-    saturate(var(--inimark-glass-saturate, 180%));
-  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 24px))
-    saturate(var(--inimark-glass-saturate, 180%));
   box-shadow: var(--inimark-glass-shadow);
   opacity: 0;
   transform: translateY(4px);

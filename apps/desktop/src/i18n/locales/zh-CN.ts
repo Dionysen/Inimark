@@ -202,6 +202,11 @@ export const zhCN: Dictionary = {
       autoHideLibraryBar: "自动隐藏文库栏",
       autoHideLibraryBarDesc: "仅在鼠标悬停侧栏时显示浮动文库栏。",
     },
+    theme: {
+      glassEffect: "毛玻璃效果",
+      glassEffectDesc:
+        "菜单与浮动面板使用半透明模糊。关闭后使用实色三级背景。",
+    },
     width: {
       narrow: "较窄",
       medium: "中等",

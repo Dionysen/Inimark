@@ -194,7 +194,7 @@ export const en: Dictionary = {
       collapseBlank: "Collapse blank lines",
       collapseBlankDesc: "Reduce runs of 3+ blank lines to a single blank line.",
     },
-    appearance: {
+      appearance: {
       uiFont: "UI font",
       uiFontDesc: "Font for chrome, sidebar, and menus.",
       menuDensity: "Menu density",
@@ -202,6 +202,11 @@ export const en: Dictionary = {
       autoHideLibraryBar: "Auto-hide library bar",
       autoHideLibraryBarDesc:
         "Show the floating library chrome only while hovering the sidebar.",
+    },
+    theme: {
+      glassEffect: "Frosted glass",
+      glassEffectDesc:
+        "Translucent blur on menus and floating chrome. Off uses solid tertiary backgrounds.",
     },
     width: {
       narrow: "Narrow",

@@ -49,6 +49,15 @@ describe("settings store", () => {
     expect(document.documentElement.style.getPropertyValue("--inimark-editor-max-width")).toBe(
       "60rem",
     );
+    expect(document.documentElement.dataset.glass).toBe("false");
+  });
+
+  test("glass effect defaults off and toggles data-glass", () => {
+    expect(DEFAULT_SETTINGS.glassEffect).toBe(false);
+    applySettings({ ...DEFAULT_SETTINGS, glassEffect: true });
+    expect(document.documentElement.dataset.glass).toBe("true");
+    applySettings({ ...DEFAULT_SETTINGS, glassEffect: false });
+    expect(document.documentElement.dataset.glass).toBe("false");
   });
 });
 

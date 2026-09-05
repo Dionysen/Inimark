@@ -55,16 +55,12 @@
   --inimark-editor-font-size: var(--editor-font-size, 16px);
   --inimark-editor-max-width: 48rem;
 
-  /* Panels / menus — denser frost for readability */
-  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 42%, transparent);
-  --inimark-glass-border: color-mix(in srgb, #fff 22%, transparent);
-  --inimark-glass-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),
-    inset 0 -1px 0 color-mix(in srgb, #000 8%, transparent),
-    0 0 0 1px color-mix(in srgb, #000 6%, transparent),
-    0 8px 28px color-mix(in srgb, #000 18%, transparent);
-  --inimark-glass-blur: 18px;
-  --inimark-glass-saturate: 180%;
+  /* Panels / menus — solid by default; frosted when html[data-glass="true"] */
+  --inimark-glass-bg: var(--inimark-surface-raised);
+  --inimark-glass-border: var(--inimark-border);
+  --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
+  --inimark-glass-blur: 0px;
+  --inimark-glass-saturate: 100%;
 
   /* Dock chrome — tuned from @dpawlikowski/liquid-glass (subtle overlay) */
   --inimark-lg-blur: 10px;
@@ -99,6 +95,21 @@ html.platform-windows {
 
 :root[data-appearance="dark"] {
   --inimark-accent-fg: #101214;
+}
+
+html[data-glass="true"] {
+  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 42%, transparent);
+  --inimark-glass-border: color-mix(in srgb, #fff 22%, transparent);
+  --inimark-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 6%, transparent),
+    0 8px 28px color-mix(in srgb, #000 18%, transparent);
+  --inimark-glass-blur: 18px;
+  --inimark-glass-saturate: 180%;
+}
+
+html[data-glass="true"][data-appearance="dark"] {
   --inimark-glass-border: color-mix(in srgb, #fff 16%, transparent);
   --inimark-glass-shadow:
     inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),

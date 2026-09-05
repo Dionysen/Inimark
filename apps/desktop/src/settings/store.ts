@@ -55,6 +55,8 @@ export interface AppSettings {
   markdownFormat: MarkdownFormatSettings;
   menuDensity: MenuDensity;
   autoHideLibraryBar: boolean;
+  /** Frosted glass for menus / floating chrome. Off = solid tertiary surfaces. */
+  glassEffect: boolean;
   image: ImageSettings;
 }
 
@@ -92,6 +94,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
   menuDensity: "normal",
   autoHideLibraryBar: false,
+  glassEffect: false,
   image: { ...DEFAULT_IMAGE_SETTINGS },
 };
 
@@ -166,6 +169,7 @@ export function applySettings(settings: AppSettings): void {
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
   root.dataset.menuDensity = settings.menuDensity;
+  root.dataset.glass = settings.glassEffect ? "true" : "false";
 
   const resolved: LocaleId =
     settings.locale === "system" ? detectSystemLocale() : settings.locale;
@@ -263,6 +267,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     autoHideLibraryBar: Boolean(
       parsed.autoHideLibraryBar ?? DEFAULT_SETTINGS.autoHideLibraryBar,
     ),
+    glassEffect: Boolean(parsed.glassEffect ?? DEFAULT_SETTINGS.glassEffect),
     image: {
       storageMode: isImageStorageMode(image.storageMode)
         ? image.storageMode

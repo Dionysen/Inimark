@@ -901,7 +901,9 @@ export function mountSettingsView(
       const panelHost = document.createElement("div");
       panelHost.className = "inimark-settings-theme-host";
       body.append(panelHost);
-      themeCleanup = renderThemePanel(panelHost);
+      themeCleanup = renderThemePanel(panelHost, {
+        onAppSettingsChange: (partial) => update(partial),
+      });
     }
 
     if (activeSection === "shortcuts") {

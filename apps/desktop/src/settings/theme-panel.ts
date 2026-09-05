@@ -1,3 +1,5 @@
+import { t } from "../i18n/index.ts";
+import { createToggle } from "../ui/widgets/index.ts";
 import { getThemeManager } from "../themes/manager.ts";
 import type { ThemePair } from "../themes/appearance.ts";
 import { BUILTIN_THEMES } from "../themes/builtin.ts";
@@ -26,6 +28,11 @@ import {
   type ThemeManifest,
   type ThemeVariable,
 } from "../themes/custom-theme-manager.ts";
+import { loadSettings, type AppSettings } from "./store.ts";
+
+export interface ThemePanelOptions {
+  onAppSettingsChange?: (partial: Partial<AppSettings>) => void;
+}
 
 export function getThemeSlotSelection(
   id: string,
@@ -154,8 +161,12 @@ function computeEditPreview(vars: ThemeVariable[]): EditPreview {
   };
 }
 
-export function renderThemePanel(host: HTMLElement): () => void {
+export function renderThemePanel(
+  host: HTMLElement,
+  options?: ThemePanelOptions,
+): () => void {
   const themeManager = getThemeManager();
+  const onAppSettingsChange = options?.onAppSettingsChange;
 
   let themeKindTab: "app" | "code" = "app";
   let importing = false;
@@ -913,6 +924,29 @@ export function renderThemePanel(host: HTMLElement): () => void {
     const resolvedLabel = resolvedMode === "dark" ? "Dark" : "Light";
     modeStatus.textContent = `Currently ${resolvedLabel} — App: ${resolveAppDisplayName(theme, customThemes)}, Code: ${resolveCodeDisplayName(codeTheme, customCodeThemes)}`;
 
+    const glassRow = document.createElement("div");
+    glassRow.className = "inimark-settings-row";
+    glassRow.style.margin = "4px 0 16px";
+    const glassMeta = document.createElement("div");
+    glassMeta.className = "inimark-settings-row-meta";
+    const glassTitle = document.createElement("div");
+    glassTitle.className = "inimark-settings-row-title";
+    glassTitle.textContent = t("settings.theme.glassEffect");
+    const glassDesc = document.createElement("p");
+    glassDesc.className = "inimark-settings-row-desc";
+    glassDesc.textContent = t("settings.theme.glassEffectDesc");
+    glassMeta.append(glassTitle, glassDesc);
+    const glassCtrl = document.createElement("div");
+    glassCtrl.className = "inimark-settings-row-control";
+    const glassToggle = createToggle({
+      checked: loadSettings().glassEffect,
+      onChange(checked) {
+        onAppSettingsChange?.({ glassEffect: checked });
+      },
+    });
+    glassCtrl.append(glassToggle.el);
+    glassRow.append(glassMeta, glassCtrl);
+
     const kindTabs = document.createElement("div");
     kindTabs.className = "theme-kind-tabs";
     kindTabs.setAttribute("role", "tablist");
@@ -940,7 +974,7 @@ export function renderThemePanel(host: HTMLElement): () => void {
     slotHint.style.cssText = "margin-top: 8px; margin-bottom: 12px";
     slotHint.textContent = `Themes you pick apply to the ${resolvedLabel.toLowerCase()} appearance slot.`;
 
-    root.append(modeTitle, modeHint, modeToggle, modeStatus, kindTabs, slotHint);
+    root.append(modeTitle, modeHint, modeToggle, modeStatus, glassRow, kindTabs, slotHint);
 
     if (themeKindTab === "app") {
       const grid = document.createElement("div");
