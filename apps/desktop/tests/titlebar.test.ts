@@ -82,6 +82,11 @@ describe("titlebar", () => {
     const buttons = host.querySelectorAll(".inimark-titlebar-btn");
     expect(buttons.length).toBe(1);
     expect(buttons[0]?.classList.contains("inimark-titlebar-btn--close")).toBe(true);
+    expect(
+      host.querySelector(".inimark-titlebar-controls")?.classList.contains(
+        "inimark-titlebar-controls--close-only",
+      ),
+    ).toBe(true);
 
     titlebar.destroy();
   });
@@ -97,6 +102,11 @@ describe("titlebar", () => {
     });
 
     expect(host.querySelectorAll(".inimark-titlebar-btn").length).toBe(3);
+    expect(
+      host.querySelector(".inimark-titlebar-controls")?.classList.contains(
+        "inimark-titlebar-controls--close-only",
+      ),
+    ).toBe(false);
     titlebar.destroy();
   });
 
@@ -111,6 +121,54 @@ describe("titlebar", () => {
     });
 
     expect(host.querySelector(".inimark-titlebar-controls")).toBeNull();
+    titlebar.destroy();
+  });
+
+  test("keeps right-sidebar toggle visible when open on Windows", () => {
+    document.documentElement.classList.remove("platform-macos", "platform-linux");
+    document.documentElement.classList.add("platform-windows");
+
+    const host = document.createElement("header");
+    const titlebar = mountTitleBar(host, {
+      showWindowControls: false,
+      rightSidebarToggle: {
+        open: true,
+        onToggle: () => {},
+      },
+    });
+
+    const toggle = host.querySelector<HTMLButtonElement>(
+      ".inimark-right-sidebar-titlebar-toggle",
+    );
+    expect(toggle?.hidden).toBe(false);
+
+    titlebar.setRightSidebarOpen(false);
+    expect(toggle?.hidden).toBe(false);
+
+    titlebar.destroy();
+  });
+
+  test("hides right-sidebar titlebar toggle when open on non-Windows", () => {
+    document.documentElement.classList.remove("platform-windows", "platform-macos");
+    document.documentElement.classList.add("platform-linux");
+
+    const host = document.createElement("header");
+    const titlebar = mountTitleBar(host, {
+      showWindowControls: false,
+      rightSidebarToggle: {
+        open: true,
+        onToggle: () => {},
+      },
+    });
+
+    const toggle = host.querySelector<HTMLButtonElement>(
+      ".inimark-right-sidebar-titlebar-toggle",
+    );
+    expect(toggle?.hidden).toBe(true);
+
+    titlebar.setRightSidebarOpen(false);
+    expect(toggle?.hidden).toBe(false);
+
     titlebar.destroy();
   });
 });

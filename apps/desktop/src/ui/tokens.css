@@ -95,6 +95,8 @@ html.platform-macos.is-fullscreen {
 
 html.platform-windows {
   --inimark-caption-width: 46px;
+  /* Full min/max/close cluster — used to reserve top-right chrome space */
+  --inimark-caption-cluster-width: calc(3 * var(--inimark-caption-width));
 }
 
 :root[data-appearance="dark"] {

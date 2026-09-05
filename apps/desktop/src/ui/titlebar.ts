@@ -113,6 +113,9 @@ export function mountTitleBar(
   if (showControls) {
     const controls = document.createElement("div");
     controls.className = "inimark-titlebar-controls inimark-titlebar-controls--native";
+    if (controlMode === "close-only") {
+      controls.classList.add("inimark-titlebar-controls--close-only");
+    }
 
     if (controlMode === "full") {
       const btnMinimize = createIconButton({
@@ -199,7 +202,12 @@ export function mountTitleBar(
 
   function updateRightSidebarToggle(): void {
     if (!rightSidebarToggleBtn) return;
-    rightSidebarToggleBtn.hidden = rightSidebarOpen;
+    // Windows: keep the titlebar toggle always visible (fixed left of captions).
+    // Other platforms: Obsidian-style — only when the right sidebar is collapsed.
+    const pinToggle =
+      typeof document !== "undefined" &&
+      document.documentElement.classList.contains("platform-windows");
+    rightSidebarToggleBtn.hidden = pinToggle ? false : rightSidebarOpen;
     rightSidebarToggleBtn.innerHTML = rightSidebarToggleIcon(rightSidebarOpen);
     const label = rightSidebarOpen
       ? t("common.collapseRightSidebar")

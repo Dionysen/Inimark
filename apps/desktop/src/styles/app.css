@@ -71,6 +71,15 @@ html.platform-macos .inimark-right-sidebar-topbar {
   padding-left: var(--inimark-space-2);
 }
 
+/* Windows: right-sidebar toggle is fixed left of captions — reserve chrome
+   width in the open topbar so tabs don't sit under the toggle / captions. */
+html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-right-sidebar-topbar {
+  padding-right: calc(
+    var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) +
+      var(--inimark-space-2)
+  );
+}
+
 .inimark-right-sidebar-topbar .inimark-sidebar-tabs {
   flex: 0 1 auto;
   justify-content: flex-start;
@@ -80,6 +89,11 @@ html.platform-macos .inimark-right-sidebar-topbar {
   margin-left: auto;
   margin-right: 0;
   flex-shrink: 0;
+}
+
+/* Windows: one toggle instance (titlebar) — hide the duplicate in the sidebar. */
+html.platform-windows .inimark-right-sidebar-collapse-btn {
+  display: none !important;
 }
 
 .inimark-titlebar-trailing {
@@ -93,6 +107,15 @@ html.platform-macos .inimark-right-sidebar-topbar {
   /* Match right-sidebar topbar padding when the panel is open. */
   margin-left: 0;
   margin-right: var(--inimark-space-2);
+}
+
+/* Windows: pin toggle to the same spot whether the right sidebar is open or closed. */
+html.platform-windows .inimark-right-sidebar-titlebar-toggle {
+  position: fixed;
+  top: calc((var(--inimark-titlebar-height) - var(--inimark-chrome-btn-size)) / 2);
+  right: calc(var(--inimark-caption-cluster-width) + var(--inimark-space-2));
+  z-index: 30;
+  margin: 0;
 }
 
 .inimark-sidebar-empty-hint {

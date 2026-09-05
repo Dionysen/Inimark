@@ -265,9 +265,23 @@ html.platform-macos .inimark-sidebar-topbar {
   -webkit-app-region: drag;
 }
 
-/* Windows: Win11-style caption buttons */
+/* Windows: Win11-style caption buttons — pinned to absolute window top-right
+   so the right sidebar cannot push them left (macOS / Linux unchanged). */
 html.platform-windows .inimark-titlebar-controls--native {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 30;
   height: var(--inimark-titlebar-height);
+}
+
+html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-only) {
+  --inimark-caption-cluster-width: var(--inimark-caption-width);
+}
+
+/* Settings (and other non-shell) titlebars: keep trailing clear of fixed captions */
+html.platform-windows .inimark-settings-main-wrap > .inimark-titlebar .inimark-titlebar-trailing {
+  padding-right: var(--inimark-caption-cluster-width);
 }
 
 .inimark-settings-main-wrap > .inimark-titlebar {
