@@ -45,6 +45,27 @@ export interface ImageSettings {
   fixedDirectoryPath: string;
 }
 
+/** Relationship graph appearance + force layout (0–100 sliders). */
+export interface GraphSettings {
+  showArrows: boolean;
+  /** Label opacity 0–100. */
+  textOpacity: number;
+  /** Node radius scale 0–100 (50 ≈ default). */
+  nodeSize: number;
+  /** Edge stroke scale 0–100 (50 ≈ default). */
+  linkThickness: number;
+  /** Keep the force simulation running. */
+  animate: boolean;
+  /** Pull toward center 0–100 (50 ≈ default). */
+  centerForce: number;
+  /** Node–node repulsion 0–100 (50 ≈ default). */
+  repulsion: number;
+  /** Spring strength between linked nodes 0–100 (50 ≈ default). */
+  linkForce: number;
+  /** Preferred link length 0–100 (50 ≈ default). */
+  linkDistance: number;
+}
+
 export interface AppSettings {
   /** UI language. `system` follows OS locale. */
   locale: AppLocale;
@@ -70,6 +91,7 @@ export interface AppSettings {
   /** Frosted glass for menus. Floating library chrome is always frosted. */
   glassEffect: boolean;
   image: ImageSettings;
+  graph: GraphSettings;
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
@@ -87,6 +109,19 @@ export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
   filenameFormat: "both",
   autoCreateAssetsDir: true,
   fixedDirectoryPath: "",
+};
+
+export const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
+  showArrows: false,
+  textOpacity: 100,
+  nodeSize: 50,
+  linkThickness: 50,
+  animate: true,
+  /** Obsidian-like: moderate center, strong repel, weak link, longer distance. */
+  centerForce: 45,
+  repulsion: 75,
+  linkForce: 20,
+  linkDistance: 70,
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -110,6 +145,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   rightSidebarTabs: [...DEFAULT_RIGHT_SIDEBAR_TABS],
   glassEffect: false,
   image: { ...DEFAULT_IMAGE_SETTINGS },
+  graph: { ...DEFAULT_GRAPH_SETTINGS },
 };
 
 const EDITOR_WIDTHS: Record<EditorWidth, string> = {
@@ -236,6 +272,10 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ...DEFAULT_IMAGE_SETTINGS,
     ...(parsed.image ?? {}),
   };
+  const graph = {
+    ...DEFAULT_GRAPH_SETTINGS,
+    ...(parsed.graph ?? {}),
+  };
   const tabLayout = normalizeSidebarTabLayout(
     parsed.leftSidebarTabs,
     parsed.rightSidebarTabs,
@@ -299,7 +339,56 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       fixedDirectoryPath:
         typeof image.fixedDirectoryPath === "string" ? image.fixedDirectoryPath : "",
     },
+    graph: normalizeGraphSettings(graph),
   };
+}
+
+function normalizeGraphSettings(graph: Partial<GraphSettings>): GraphSettings {
+  return {
+    showArrows: Boolean(graph.showArrows ?? DEFAULT_GRAPH_SETTINGS.showArrows),
+    textOpacity: clamp(graph.textOpacity ?? DEFAULT_GRAPH_SETTINGS.textOpacity, 0, 100),
+    nodeSize: clamp(graph.nodeSize ?? DEFAULT_GRAPH_SETTINGS.nodeSize, 0, 100),
+    linkThickness: clamp(
+      graph.linkThickness ?? DEFAULT_GRAPH_SETTINGS.linkThickness,
+      0,
+      100,
+    ),
+    animate: Boolean(graph.animate ?? DEFAULT_GRAPH_SETTINGS.animate),
+    centerForce: clamp(graph.centerForce ?? DEFAULT_GRAPH_SETTINGS.centerForce, 0, 100),
+    repulsion: clamp(graph.repulsion ?? DEFAULT_GRAPH_SETTINGS.repulsion, 0, 100),
+    linkForce: clamp(graph.linkForce ?? DEFAULT_GRAPH_SETTINGS.linkForce, 0, 100),
+    linkDistance: clamp(
+      graph.linkDistance ?? DEFAULT_GRAPH_SETTINGS.linkDistance,
+      0,
+      100,
+    ),
+  };
+}
+
+/** Map a 0–100 slider to a force/draw multiplier (50 → 1). */
+export function graphSettingFactor(value: number): number {
+  return Math.max(0.05, value / 50);
+}
+
+type GraphSettingsListener = (graph: GraphSettings) => void;
+const graphSettingsListeners = new Set<GraphSettingsListener>();
+
+/** Same-window subscribers (editor float ↔ sidebar graph). Cross-window uses `storage`. */
+export function subscribeGraphSettings(listener: GraphSettingsListener): () => void {
+  graphSettingsListeners.add(listener);
+  return () => {
+    graphSettingsListeners.delete(listener);
+  };
+}
+
+export function patchGraphSettings(partial: Partial<GraphSettings>): GraphSettings {
+  const settings = loadSettings();
+  const graph = normalizeGraphSettings({ ...settings.graph, ...partial });
+  saveSettings({ ...settings, graph });
+  for (const listener of graphSettingsListeners) {
+    listener(graph);
+  }
+  return graph;
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -26,6 +26,7 @@ export {
   settingsThemeIcon,
   settingsShortcutsIcon,
   settingsImageIcon,
+  settingsGraphIcon,
   settingsAboutIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";

@@ -2,11 +2,22 @@ import { onLocaleChange, t } from "../i18n/index.ts";
 import { linkIndex } from "../wikilink/index.ts";
 import { fileNameFromPath } from "../platform/env.ts";
 import {
+  createIconButton,
   createPanelToolbar,
   graphLocalModeIcon,
   graphOpenEditorIcon,
   graphVaultModeIcon,
+  settingsIcon,
 } from "../ui/widgets/index.ts";
+import {
+  DEFAULT_GRAPH_SETTINGS,
+  graphSettingFactor,
+  loadSettings,
+  patchGraphSettings,
+  subscribeGraphSettings,
+  type GraphSettings,
+} from "../settings/store.ts";
+import { mountGraphControls } from "../settings/graph-controls.ts";
 
 export type GraphMode = "local" | "vault";
 
@@ -19,6 +30,7 @@ export interface GraphPanelController {
   setActiveFile(path: string | null): void;
   setMode(mode: GraphMode): void;
   setEditorHost(host: HTMLElement | null): void;
+  applyGraphSettings(settings?: GraphSettings): void;
   refresh(): void;
   onOpenFile(handler: (path: string) => void): void;
   destroy(): void;
@@ -39,6 +51,7 @@ type GraphNode = {
   y: number;
   vx: number;
   vy: number;
+  degree: number;
   center?: boolean;
 };
 
@@ -47,6 +60,17 @@ type GraphEdge = { source: string; target: string };
 function noteLabel(pathOrName: string): string {
   const base = pathOrName.split(/[/\\]/).pop() || pathOrName;
   return base.replace(/\.(md|markdown|mdown|canvas)$/i, "");
+}
+
+function attachDegrees(nodes: GraphNode[], edges: GraphEdge[]): void {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  for (const node of nodes) node.degree = 0;
+  for (const edge of edges) {
+    const a = byId.get(edge.source);
+    const b = byId.get(edge.target);
+    if (a) a.degree += 1;
+    if (b) b.degree += 1;
+  }
 }
 
 function buildLocalGraph(activePath: string | null): {
@@ -69,6 +93,7 @@ function buildLocalGraph(activePath: string | null): {
         y: 0,
         vx: 0,
         vy: 0,
+        degree: 0,
         center,
       });
     } else if (center) {
@@ -91,7 +116,9 @@ function buildLocalGraph(activePath: string | null): {
     edges.push({ source: source.replace(/\\/g, "/"), target: centerId });
   }
 
-  return { nodes: [...nodeMap.values()], edges };
+  const nodes = [...nodeMap.values()];
+  attachDegrees(nodes, edges);
+  return { nodes, edges };
 }
 
 function buildVaultGraph(): { nodes: GraphNode[]; edges: GraphEdge[] } {
@@ -107,6 +134,7 @@ function buildVaultGraph(): { nodes: GraphNode[]; edges: GraphEdge[] } {
       y: 0,
       vx: 0,
       vy: 0,
+      degree: 0,
     });
   }
   const edges: GraphEdge[] = [];
@@ -124,7 +152,9 @@ function buildVaultGraph(): { nodes: GraphNode[]; edges: GraphEdge[] } {
       edges.push({ source, target: tid });
     }
   }
-  return { nodes: [...nodeMap.values()], edges };
+  const nodes = [...nodeMap.values()];
+  attachDegrees(nodes, edges);
+  return { nodes, edges };
 }
 
 export function mountGraphPanel(
@@ -160,6 +190,20 @@ export function mountGraphPanel(
   let panX = 0;
   let panY = 0;
   let alpha = 1; // cooling for force sim
+  let graphSettings: GraphSettings = { ...loadSettings().graph };
+  let syncFloatChrome: (() => void) | null = null;
+
+  function applyGraphSettingsLocal(next: GraphSettings): void {
+    const wasAnimating = graphSettings.animate;
+    graphSettings = { ...next };
+    if (graphSettings.animate) {
+      alpha = Math.max(alpha, wasAnimating ? 0.25 : 1);
+    } else {
+      // Cool toward rest; keep a bit of energy so layout can finish settling.
+      alpha = Math.max(alpha, 0.15);
+    }
+    draw();
+  }
 
   const toolbar =
     variant === "sidebar"
@@ -225,6 +269,64 @@ export function mountGraphPanel(
     canvasWrap.style.flex = "1 1 auto";
     body.append(canvasWrap);
     host.append(body);
+
+    const float = document.createElement("div");
+    float.className = "inimark-graph-float";
+    let floatControls: ReturnType<typeof mountGraphControls> | null = null;
+    const floatToggle = createIconButton({
+      label: t("settings.graph.floatToggle"),
+      title: t("settings.graph.floatToggle"),
+      html: settingsIcon(),
+      onClick() {
+        float.classList.toggle("is-open");
+        floatToggle.classList.toggle("is-active", float.classList.contains("is-open"));
+      },
+    });
+    floatToggle.classList.add("inimark-graph-float-toggle");
+
+    const floatPanel = document.createElement("div");
+    floatPanel.className = "inimark-graph-float-panel";
+    const floatHeader = document.createElement("div");
+    floatHeader.className = "inimark-graph-float-header";
+    const floatTitle = document.createElement("div");
+    floatTitle.className = "inimark-graph-float-title";
+    floatTitle.textContent = t("settings.graph.floatTitle");
+    const resetDefaultsBtn = createIconButton({
+      label: t("settings.graph.resetDefaults"),
+      title: t("settings.graph.resetDefaults"),
+      html: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 3-6.7"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 4v5h5"/></svg>`,
+      onClick() {
+        const next = patchGraphSettings({ ...DEFAULT_GRAPH_SETTINGS });
+        applyGraphSettingsLocal(next);
+        floatControls?.refresh(next);
+      },
+    });
+    resetDefaultsBtn.classList.add("inimark-graph-float-reset");
+    floatHeader.append(floatTitle, resetDefaultsBtn);
+    const floatBody = document.createElement("div");
+    floatBody.className = "inimark-graph-float-body";
+    floatControls = mountGraphControls({
+      compact: true,
+      settings: graphSettings,
+      onChange(partial) {
+        const next = patchGraphSettings(partial);
+        applyGraphSettingsLocal(next);
+        floatControls?.refresh(next);
+      },
+    });
+    floatBody.append(floatControls.el);
+    floatPanel.append(floatHeader, floatBody);
+    float.append(floatToggle, floatPanel);
+    host.append(float);
+
+    syncFloatChrome = () => {
+      floatToggle.title = t("settings.graph.floatToggle");
+      floatToggle.setAttribute("aria-label", t("settings.graph.floatToggle"));
+      floatTitle.textContent = t("settings.graph.floatTitle");
+      resetDefaultsBtn.title = t("settings.graph.resetDefaults");
+      resetDefaultsBtn.setAttribute("aria-label", t("settings.graph.resetDefaults"));
+      floatControls?.refresh(graphSettings);
+    };
   } else {
     body.append(canvasWrap, splitHandle, lists);
     host.append(toolbar!.el, body);
@@ -353,6 +455,7 @@ export function mountGraphPanel(
 
   function refreshChrome(): void {
     syncModeButton();
+    syncFloatChrome?.();
     if (variant !== "sidebar" || !toolbar) return;
     outTitle.textContent = t("graph.outlinks");
     backTitle.textContent = t("graph.backlinks");
@@ -421,13 +524,13 @@ export function mountGraphPanel(
 
   function seedLayout(): void {
     const n = Math.max(nodes.length, 1);
-    const radius = Math.max(80, 28 * Math.sqrt(n));
+    // Wider spiral so initial spacing matches longer Obsidian-like link distances.
+    const radius = Math.max(120, 42 * Math.sqrt(n));
     nodes.forEach((node, i) => {
       if (node.center) {
         node.x = 0;
         node.y = 0;
       } else {
-        // Golden-angle spiral — spreads isolates instead of stacking on a ring
         const angle = i * 2.399963;
         const r = radius * Math.sqrt((i + 1) / n);
         node.x = Math.cos(angle) * r;
@@ -439,7 +542,7 @@ export function mountGraphPanel(
     alpha = 1;
   }
 
-  function fitCamera(width: number, height: number, pad = 36): void {
+  function fitCamera(width: number, height: number, pad = 48): void {
     if (nodes.length === 0 || width <= 0 || height <= 0) {
       scale = 1;
       panX = width / 2;
@@ -467,77 +570,125 @@ export function mountGraphPanel(
     panY = height / 2 - cy * scale;
   }
 
-  function stepForces(): void {
-    if (alpha < 0.02 || nodes.length === 0) {
-      alpha *= 0.99;
-      return;
-    }
+  /**
+   * Obsidian-like forces (same model as d3-force / Obsidian graph):
+   * - many-body repulsion (Coulomb, no hard low-distance cap)
+   * - link springs with degree bias
+   * - collision to keep nodes from stacking
+   * - mild center force (same for all nodes)
+   */
+  function stepForces(settling = false): void {
+    if (nodes.length === 0) return;
+
+    const alphaTarget = settling ? 0 : graphSettings.animate ? 0.05 : 0;
+    if (!settling && !graphSettings.animate && alpha < 0.001) return;
 
     const n = nodes.length;
     const byId = new Map(nodes.map((node) => [node.id, node]));
-    // Scale forces with graph size so large vaults don't explode.
-    const charge = 420 / Math.sqrt(n);
-    const linkDist = 56 + 8 * Math.sqrt(Math.max(edges.length, 1));
-    const gravity = 0.015 + 0.02 / Math.sqrt(n);
 
-    // Charge (repulsion) — soft, capped
+    // Map 0–100 sliders into Obsidian-ish ranges.
+    const centerStrength = (graphSettings.centerForce / 100) * 0.55;
+    const charge = -(60 + graphSettings.repulsion * 7); // 75 → ~-585
+    const linkStrength = (graphSettings.linkForce / 100) * 0.65; // 20 → 0.13
+    const linkDistance = 70 + graphSettings.linkDistance * 3.4; // 70 → ~308
+    const nodeSizeFactor = graphSettingFactor(graphSettings.nodeSize);
+    const collideBase = 14 * nodeSizeFactor;
+    const distanceMax = 520;
+    const distanceMax2 = distanceMax * distanceMax;
+
+    // Many-body repulsion (d3 forceManyBody style) — uncapped near field.
     for (let i = 0; i < n; i++) {
       for (let j = i + 1; j < n; j++) {
         const a = nodes[i]!;
         const b = nodes[j]!;
-        let dx = a.x - b.x;
-        let dy = a.y - b.y;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
         let distSq = dx * dx + dy * dy;
-        if (distSq < 1) {
-          dx = (Math.random() - 0.5) * 0.1;
-          dy = (Math.random() - 0.5) * 0.1;
+        if (distSq >= distanceMax2) continue;
+        if (distSq < 0.01) {
+          dx = (Math.random() - 0.5) * 0.5;
+          dy = (Math.random() - 0.5) * 0.5;
           distSq = dx * dx + dy * dy;
         }
-        const dist = Math.sqrt(distSq);
-        const force = Math.min(8, (charge * alpha) / distSq);
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        a.vx += fx;
-        a.vy += fy;
-        b.vx -= fx;
-        b.vy -= fy;
+        // strength * alpha / dist²  (charge is negative → repulsion)
+        const w = (charge * alpha) / distSq;
+        dx *= w;
+        dy *= w;
+        a.vx += dx;
+        a.vy += dy;
+        b.vx -= dx;
+        b.vy -= dy;
       }
     }
 
-    // Springs
-    for (const edge of edges) {
-      const a = byId.get(edge.source);
-      const b = byId.get(edge.target);
-      if (!a || !b) continue;
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      const force = ((dist - linkDist) / dist) * 0.06 * alpha;
-      const fx = dx * force;
-      const fy = dy * force;
-      a.vx += fx;
-      a.vy += fy;
-      b.vx -= fx;
-      b.vy -= fy;
+    // Link springs with degree bias (d3 forceLink)
+    if (linkStrength > 0.001) {
+      for (const edge of edges) {
+        const a = byId.get(edge.source);
+        const b = byId.get(edge.target);
+        if (!a || !b) continue;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 1e-6;
+        const degreeSum = Math.max(1, a.degree + b.degree);
+        const bias = a.degree / degreeSum;
+        const strength = linkStrength * alpha;
+        const k = ((dist - linkDistance) / dist) * strength;
+        dx *= k;
+        dy *= k;
+        a.vx += dx * (1 - bias);
+        a.vy += dy * (1 - bias);
+        b.vx -= dx * bias;
+        b.vy -= dy * bias;
+      }
     }
 
-    // Gravity toward origin (world center) — no hard walls
+    // Collision — hard minimum separation (like d3 forceCollide)
+    const maxDeg = Math.max(1, ...nodes.map((node) => node.degree));
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = nodes[i]!;
+        const b = nodes[j]!;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.hypot(dx, dy);
+        const ra = collideBase * (0.7 + (a.degree / maxDeg) * 0.6);
+        const rb = collideBase * (0.7 + (b.degree / maxDeg) * 0.6);
+        const minDist = ra + rb;
+        if (dist >= minDist) continue;
+        if (dist < 1e-6) {
+          dx = (Math.random() - 0.5) * 0.2;
+          dy = (Math.random() - 0.5) * 0.2;
+          dist = Math.hypot(dx, dy) || 1e-6;
+        }
+        const push = ((minDist - dist) / dist) * 0.5 * alpha;
+        dx *= push;
+        dy *= push;
+        a.vx -= dx;
+        a.vy -= dy;
+        b.vx += dx;
+        b.vy += dy;
+      }
+    }
+
+    // Center force — same strength for every node (Obsidian centripetal)
     for (const node of nodes) {
-      if (dragId === node.id) continue;
-      if (node.center) {
-        node.vx += -node.x * 0.08 * alpha;
-        node.vy += -node.y * 0.08 * alpha;
-      } else {
-        node.vx += -node.x * gravity * alpha;
-        node.vy += -node.y * gravity * alpha;
+      if (dragId === node.id) {
+        node.vx = 0;
+        node.vy = 0;
+        continue;
       }
-      node.vx *= 0.78;
-      node.vy *= 0.78;
+      node.vx += -node.x * centerStrength * alpha;
+      node.vy += -node.y * centerStrength * alpha;
+      // d3 velocityDecay default 0.6
+      node.vx *= 0.6;
+      node.vy *= 0.6;
       node.x += node.vx;
       node.y += node.vy;
     }
 
-    alpha *= 0.985;
+    // d3-style alpha cooling toward target
+    alpha += (alphaTarget - alpha) * (settling ? 0.05 : 0.0228);
   }
 
   function draw(): void {
@@ -559,11 +710,14 @@ export function mountGraphPanel(
     const muted = styles.getPropertyValue("--inimark-muted-fg").trim() || "#9ca3af";
     const accent = styles.getPropertyValue("--inimark-accent").trim() || "#3b82f6";
     const border = styles.getPropertyValue("--inimark-border").trim() || "#374151";
+    const nodeScale = graphSettingFactor(graphSettings.nodeSize);
+    const linkScale = graphSettingFactor(graphSettings.linkThickness);
+    const textAlpha = Math.max(0, Math.min(1, graphSettings.textOpacity / 100));
 
     const byId = new Map(nodes.map((node) => [node.id, node]));
     ctx.strokeStyle = border;
     ctx.globalAlpha = 0.55;
-    ctx.lineWidth = Math.max(1, 1 / scale);
+    ctx.lineWidth = Math.max(0.75, (1 / scale) * linkScale);
     for (const edge of edges) {
       const a = byId.get(edge.source);
       const b = byId.get(edge.target);
@@ -574,25 +728,52 @@ export function mountGraphPanel(
       ctx.moveTo(sa.x, sa.y);
       ctx.lineTo(sb.x, sb.y);
       ctx.stroke();
+      if (graphSettings.showArrows) {
+        const angle = Math.atan2(sb.y - sa.y, sb.x - sa.x);
+        const head = Math.max(5, 7 * Math.min(1.4, Math.max(0.7, scale)) * linkScale);
+        const mx = (sa.x + sb.x) / 2;
+        const my = (sa.y + sb.y) / 2;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(
+          mx - head * Math.cos(angle - Math.PI / 7),
+          my - head * Math.sin(angle - Math.PI / 7),
+        );
+        ctx.lineTo(
+          mx - head * Math.cos(angle + Math.PI / 7),
+          my - head * Math.sin(angle + Math.PI / 7),
+        );
+        ctx.closePath();
+        ctx.fillStyle = border;
+        ctx.globalAlpha = 0.7;
+        ctx.fill();
+        ctx.globalAlpha = 0.55;
+      }
     }
     ctx.globalAlpha = 1;
 
     const fontSize = Math.max(9, Math.min(12, 11 * Math.sqrt(scale)));
+    const maxDeg = Math.max(1, ...nodes.map((node) => node.degree));
+    const scaleClamp = Math.min(1.4, Math.max(0.7, scale));
     for (const node of nodes) {
       const s = worldToScreen(node.x, node.y);
       if (s.x < -40 || s.y < -40 || s.x > width + 40 || s.y > height + 40) {
         continue;
       }
-      const r = (node.center ? 7 : 5) * Math.min(1.4, Math.max(0.7, scale));
+      // Obsidian-like: radius grows with degree
+      const degreeBoost = 3.5 + (node.degree / maxDeg) * 5.5;
+      const r = degreeBoost * scaleClamp * nodeScale;
       ctx.beginPath();
       ctx.fillStyle = node.center ? accent : muted;
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
       ctx.fill();
-      if (scale >= 0.45) {
+      if (scale >= 0.45 && textAlpha > 0.02) {
+        ctx.globalAlpha = textAlpha;
         ctx.fillStyle = fg;
         ctx.font = `${fontSize}px var(--font-ui, system-ui)`;
         ctx.textAlign = "center";
-        ctx.fillText(node.label.slice(0, 20), s.x, s.y + r + fontSize + 2);
+        ctx.fillText(node.label.slice(0, 24), s.x, s.y + r + fontSize + 2);
+        ctx.globalAlpha = 1;
       }
     }
   }
@@ -611,10 +792,11 @@ export function mountGraphPanel(
     nodes = data.nodes;
     edges = data.edges;
     seedLayout();
-    // Warm up a few ticks so fitCamera sees a reasonable bbox
-    for (let i = 0; i < 40; i++) stepForces();
+    // Warm up long enough for repulsion/collision to space nodes evenly.
+    for (let i = 0; i < 160; i++) stepForces(true);
     const rect = canvasWrap.getBoundingClientRect();
     fitCamera(Math.max(rect.width, 200), Math.max(rect.height, 160));
+    if (graphSettings.animate) alpha = Math.max(alpha, 0.2);
     updateLists();
     refreshChrome();
     draw();
@@ -726,6 +908,10 @@ export function mountGraphPanel(
     refreshChrome();
     updateLists();
   });
+  const unsubGraphSettings = subscribeGraphSettings((next) => {
+    applyGraphSettingsLocal(next);
+    syncFloatChrome?.();
+  });
   const ro = new ResizeObserver(() => {
     draw();
   });
@@ -733,6 +919,7 @@ export function mountGraphPanel(
 
   refreshChrome();
   rebuild();
+  if (!graphSettings.animate) alpha = 0.2;
   raf = requestAnimationFrame(tick);
 
   return {
@@ -754,6 +941,11 @@ export function mountGraphPanel(
       closeEditorGraph();
       editorHost = hostEl;
     },
+    applyGraphSettings(next) {
+      applyGraphSettingsLocal(next ?? loadSettings().graph);
+      syncFloatChrome?.();
+      editorGraph?.applyGraphSettings(next);
+    },
     refresh() {
       rebuild();
       editorGraph?.refresh();
@@ -767,6 +959,7 @@ export function mountGraphPanel(
       closeEditorGraph();
       unsubIndex();
       unsubLocale();
+      unsubGraphSettings();
       ro.disconnect();
       toolbar?.destroy();
       host.replaceChildren();

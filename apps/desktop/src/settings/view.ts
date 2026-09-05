@@ -28,6 +28,7 @@ import {
   settingsAppearanceIcon,
   settingsEditorIcon,
   settingsImageIcon,
+  settingsGraphIcon,
   settingsShortcutsIcon,
   settingsThemeIcon,
 } from "../ui/widgets/index.ts";
@@ -42,8 +43,10 @@ import {
   editorWidthLabel,
   loadSettings,
   menuDensityLabel,
+  patchGraphSettings,
   saveSettings,
 } from "./store.ts";
+import { mountGraphControls } from "./graph-controls.ts";
 import { renderShortcutsPanel } from "./shortcuts-panel.ts";
 import { renderThemePanel } from "./theme-panel.ts";
 import { createSidebarTabsControl } from "./sidebar-tabs-control.ts";
@@ -68,6 +71,7 @@ type SettingsSection =
   | "shortcuts"
   | "libraries"
   | "image"
+  | "graph"
   | "about";
 
 const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
@@ -98,6 +102,17 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
   shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
   libraries: ["folder", "vault", "workspace", "files"],
   image: ["image", "assets", "paste", "filename", "upload"],
+  graph: [
+    "graph",
+    "force",
+    "repulsion",
+    "node",
+    "link",
+    "arrow",
+    "图谱",
+    "排斥",
+    "向心力",
+  ],
   about: ["version", "license", "info", "github", "update", "upgrade"],
 };
 
@@ -108,6 +123,7 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
   shortcuts: settingsShortcutsIcon,
   libraries: libraryIcon,
   image: settingsImageIcon,
+  graph: settingsGraphIcon,
   about: settingsAboutIcon,
 };
 
@@ -228,6 +244,7 @@ export function mountSettingsView(
     "shortcuts",
     "libraries",
     "image",
+    "graph",
     "about",
   ];
 
@@ -325,6 +342,7 @@ export function mountSettingsView(
 
   let shortcutsCleanup: (() => void) | null = null;
   let themeCleanup: (() => void) | null = null;
+  let graphControlsCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
     body.append(createSectionTitle(t("settings.group.experience")));
@@ -924,6 +942,8 @@ export function mountSettingsView(
     shortcutsCleanup = null;
     themeCleanup?.();
     themeCleanup = null;
+    graphControlsCleanup?.();
+    graphControlsCleanup = null;
     content.replaceChildren();
 
     const body = document.createElement("div");
@@ -1018,6 +1038,20 @@ export function mountSettingsView(
       renderImage(body);
     }
 
+    if (activeSection === "graph") {
+      const controls = mountGraphControls({
+        settings: settings.graph,
+        onChange(partial) {
+          const graph = patchGraphSettings(partial);
+          settings = { ...settings, graph };
+          onChangeHandler(settings);
+          controls.refresh(graph);
+        },
+      });
+      body.append(controls.el);
+      graphControlsCleanup = () => controls.destroy();
+    }
+
     if (activeSection === "about") {
       renderAbout(body);
     }
@@ -1053,6 +1087,7 @@ export function mountSettingsView(
       search.destroy();
       shortcutsCleanup?.();
       themeCleanup?.();
+      graphControlsCleanup?.();
       host.replaceChildren();
       host.className = "";
     },

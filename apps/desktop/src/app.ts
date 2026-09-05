@@ -567,6 +567,7 @@ export function mountApp(host: HTMLElement): AppController {
       applySettings(settings);
       editor.setTypewriterMode(settings.typewriterMode);
       shell.applySidebarTabLayout(settings);
+      shell.graph.applyGraphSettings(settings.graph);
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       refreshLibraryList();

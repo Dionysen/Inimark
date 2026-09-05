@@ -283,6 +283,108 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   flex: none;
 }
 
+.inimark-graph-float {
+  position: absolute;
+  top: var(--inimark-space-3);
+  right: var(--inimark-space-3);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--inimark-space-2);
+  max-width: min(280px, calc(100% - 1.5rem));
+  max-height: calc(100% - 1.5rem);
+  pointer-events: none;
+}
+
+.inimark-graph-float > * {
+  pointer-events: auto;
+}
+
+.inimark-graph-float-toggle {
+  width: var(--inimark-chrome-btn-size, 28px);
+  height: var(--inimark-chrome-btn-size, 28px);
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, var(--inimark-bg) 88%, transparent);
+  border: 1px solid var(--inimark-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.inimark-graph-float-panel {
+  display: none;
+  width: min(260px, 100%);
+  max-height: min(70vh, 520px);
+  overflow: auto;
+  padding: var(--inimark-space-3);
+  border-radius: var(--inimark-radius-md);
+  background: color-mix(in srgb, var(--inimark-bg) 94%, transparent);
+  border: 1px solid var(--inimark-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+.inimark-graph-float.is-open .inimark-graph-float-panel {
+  display: block;
+}
+
+.inimark-graph-float-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
+  margin-bottom: var(--inimark-space-2);
+}
+
+.inimark-graph-float-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--inimark-fg);
+  min-width: 0;
+}
+
+.inimark-graph-float-reset {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-float-reset:hover:not(:disabled) {
+  color: var(--inimark-fg);
+}
+
+.inimark-graph-float-controls .inimark-settings-section-title {
+  margin: var(--inimark-space-2) 0 var(--inimark-space-1);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-float-controls .inimark-settings-section-title:first-child {
+  margin-top: 0;
+}
+
+.inimark-graph-float-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--inimark-space-2);
+}
+
+.inimark-graph-float-row-title {
+  font-size: 12px;
+  color: var(--inimark-fg);
+}
+
+.inimark-graph-float-row-control {
+  width: 100%;
+}
+
+.inimark-graph-float-row-control .inimark-slider {
+  width: 100%;
+}
+
 .inimark-graph-body {
   flex: 1;
   min-height: 0;
