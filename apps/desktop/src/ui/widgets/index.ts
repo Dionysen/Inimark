@@ -7,6 +7,8 @@ export {
   filesTabIcon,
   searchTabIcon,
   bookmarksTabIcon,
+  outlineTabIcon,
+  rightSidebarToggleIcon,
   newFileIcon,
   newFolderIcon,
   sortIcon,

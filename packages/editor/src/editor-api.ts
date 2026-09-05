@@ -78,6 +78,8 @@ export interface Editor {
    * `query` / optional `line` + `snippet`. No-op when query is empty.
    */
   revealSearchMatch(options: SearchRevealOptions): boolean;
+  /** Jump to a heading by text (and optional 1-based source line hint). */
+  scrollToHeading(text: string, line?: number): boolean;
   /** Clear vault-search highlight decorations. */
   clearSearchHighlight(): void;
   /** Focus whichever surface is active. */
@@ -479,6 +481,46 @@ export function createEditor(
           revealSearchMatchInView(view, options, findScrollContainer());
         });
       });
+      return true;
+    },
+    scrollToHeading(text, line) {
+      if (inSource) exitSource();
+      const needle = text.trim();
+      if (!needle) return false;
+
+      const lineAt = (pos: number): number => {
+        const safe = Math.max(0, Math.min(pos, view.state.doc.content.size));
+        const before = view.state.doc.textBetween(0, safe, "\n", "\n");
+        return before ? before.split("\n").length : 1;
+      };
+
+      let bestPos: number | null = null;
+      let bestScore = Number.POSITIVE_INFINITY;
+      view.state.doc.descendants((node, pos) => {
+        if (node.type.name !== "heading") return;
+        const content = node.textContent.trim();
+        let score = Number.POSITIVE_INFINITY;
+        if (content === needle) score = 0;
+        else if (content.includes(needle) || needle.includes(content)) score = 1;
+        if (line != null && Number.isFinite(score)) {
+          score += Math.abs(lineAt(pos) - line) * 0.01;
+        }
+        if (score < bestScore) {
+          bestScore = score;
+          bestPos = pos;
+        }
+      });
+
+      if (bestPos == null || bestScore >= 2) {
+        return this.revealSearchMatch({ query: needle, line });
+      }
+
+      const tr = view.state.tr;
+      tr.setSelection(TextSelection.near(tr.doc.resolve(bestPos + 1)));
+      view.dispatch(tr);
+      const dom = view.nodeDOM(bestPos) as HTMLElement | null;
+      dom?.scrollIntoView({ block: "start", behavior: "smooth" });
+      view.focus();
       return true;
     },
     clearSearchHighlight() {

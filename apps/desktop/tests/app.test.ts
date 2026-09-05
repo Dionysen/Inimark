@@ -26,6 +26,8 @@ describe("desktop app shell", () => {
     const shell = mountShell(host);
     expect(host.querySelector(".inimark-titlebar")).not.toBeNull();
     expect(host.querySelector(".inimark-sidebar")).not.toBeNull();
+    expect(host.querySelector(".inimark-right-sidebar")).not.toBeNull();
+    expect(host.querySelector(".inimark-outline-panel")).not.toBeNull();
     expect(host.querySelector(".inimark-tree")).not.toBeNull();
     expect(host.querySelector(".inimark-library-bar")).not.toBeNull();
     expect(host.querySelector(".inimark-sidebar-toggle-btn")).not.toBeNull();

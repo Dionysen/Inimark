@@ -4,8 +4,10 @@ export {
   libraryIcon,
   settingsIcon,
   sidebarToggleIcon,
+  rightSidebarToggleIcon,
   filesTabIcon,
   searchTabIcon,
   bookmarksTabIcon,
+  outlineTabIcon,
   type IconButtonOptions,
 } from "./widgets/icon-button.ts";

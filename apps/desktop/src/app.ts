@@ -54,12 +54,27 @@ export function mountApp(host: HTMLElement): AppController {
 
   const editor = createEditor(shell.editorHost, {
     initialContent: "# Welcome\n\nStart writing…",
-    onChange: () => {
+    onChange: (md) => {
       shell.setDirty(true);
       scheduleAutoSave();
+      scheduleOutlineSync(md);
     },
   });
   editor.setTypewriterMode(settings.typewriterMode);
+
+  let outlineTimer: ReturnType<typeof setTimeout> | null = null;
+  function scheduleOutlineSync(md?: string): void {
+    if (outlineTimer != null) clearTimeout(outlineTimer);
+    outlineTimer = setTimeout(() => {
+      outlineTimer = null;
+      shell.rightSidebar.setContent(md ?? editor.getMarkdown());
+    }, 120);
+  }
+  scheduleOutlineSync(editor.getMarkdown());
+
+  shell.rightSidebar.onSelectHeading((_level, text, line) => {
+    editor.scrollToHeading(text, line);
+  });
 
   cleanups.push(
     mountEditorFontZoom({
@@ -114,7 +129,10 @@ export function mountApp(host: HTMLElement): AppController {
       if (result.status === "saved") {
         if (settings.markdownFormat.formatOnSave) {
           const current = editor.getMarkdown();
-          if (current !== markdown) editor.setMarkdown(markdown);
+          if (current !== markdown) {
+            editor.setMarkdown(markdown);
+            scheduleOutlineSync(markdown);
+          }
         }
         shell.setFileName(result.name);
         shell.setDirty(false);
@@ -158,6 +176,7 @@ export function mountApp(host: HTMLElement): AppController {
     shell.sidebar.setActiveFile(null);
     shell.setDirty(false);
     persistLibrarySession();
+    scheduleOutlineSync("");
   }
 
   async function confirmDiscardChanges(): Promise<boolean> {
@@ -199,6 +218,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.sidebar.setActiveFile(path);
       shell.setDirty(false);
       persistLibrarySession();
+      scheduleOutlineSync(result.text);
     } else {
       shell.sidebar.setActiveFile(path);
     }
@@ -298,6 +318,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.sidebar.setActiveFile(null);
       shell.setDirty(false);
       persistLibrarySession();
+      scheduleOutlineSync(editor.getMarkdown());
     }
   }
 

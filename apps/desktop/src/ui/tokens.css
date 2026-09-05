@@ -39,6 +39,7 @@
   --inimark-input-bg: var(--bg-input, var(--inimark-content-bg));
 
   --inimark-sidebar-width: 240px;
+  --inimark-right-sidebar-width: 240px;
   --inimark-settings-nav-width: 220px;
   --inimark-window-radius: 12px;
   --inimark-mac-traffic-lights-width: 0px;

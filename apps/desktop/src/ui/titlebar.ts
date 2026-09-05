@@ -6,7 +6,11 @@ import {
   supportsWindowChrome,
   toggleMaximizeWindow,
 } from "../platform/window-chrome.ts";
-import { createIconButton, sidebarToggleIcon } from "./icon-button.ts";
+import {
+  createIconButton,
+  rightSidebarToggleIcon,
+  sidebarToggleIcon,
+} from "./icon-button.ts";
 import {
   windowCloseIcon,
   windowMaximizeIcon,
@@ -19,6 +23,7 @@ export type WindowControlMode = "full" | "close-only";
 export interface TitleBarController {
   setTitle(title: string): void;
   setSidebarOpen(open: boolean): void;
+  setRightSidebarOpen(open: boolean): void;
   destroy(): void;
 }
 
@@ -33,6 +38,7 @@ export interface TitleBarOptions {
   showWindowControls?: boolean;
   controlMode?: WindowControlMode;
   sidebarToggle?: SidebarToggleOptions;
+  rightSidebarToggle?: SidebarToggleOptions;
   onClose?: () => void | Promise<void>;
 }
 
@@ -51,6 +57,7 @@ export function mountTitleBar(
     (options.showWindowControls ?? supportsWindowChrome());
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
+  let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
 
   host.className = "inimark-titlebar";
   host.setAttribute("data-tauri-drag-region", "deep");
@@ -83,6 +90,20 @@ export function mountTitleBar(
   markNoDrag(trailing);
 
   center.append(titleEl);
+
+  let rightSidebarToggleBtn: HTMLButtonElement | null = null;
+  if (options.rightSidebarToggle) {
+    rightSidebarToggleBtn = createIconButton({
+      label: rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
+      title: rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
+      onClick: options.rightSidebarToggle.onToggle,
+    });
+    rightSidebarToggleBtn.className =
+      "inimark-sidebar-toggle-btn inimark-right-sidebar-titlebar-toggle";
+    rightSidebarToggleBtn.innerHTML = rightSidebarToggleIcon(rightSidebarOpen);
+    markNoDrag(rightSidebarToggleBtn);
+    trailing.append(rightSidebarToggleBtn);
+  }
 
   if (showControls) {
     const controls = document.createElement("div");
@@ -170,7 +191,21 @@ export function mountTitleBar(
     );
   }
 
+  function updateRightSidebarToggle(): void {
+    if (!rightSidebarToggleBtn) return;
+    rightSidebarToggleBtn.hidden = rightSidebarOpen;
+    rightSidebarToggleBtn.innerHTML = rightSidebarToggleIcon(rightSidebarOpen);
+    rightSidebarToggleBtn.title = rightSidebarOpen
+      ? "Collapse right sidebar"
+      : "Expand right sidebar";
+    rightSidebarToggleBtn.setAttribute(
+      "aria-label",
+      rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
+    );
+  }
+
   updateSidebarToggle();
+  updateRightSidebarToggle();
 
   return {
     setTitle(title) {
@@ -179,6 +214,10 @@ export function mountTitleBar(
     setSidebarOpen(open) {
       sidebarOpen = open;
       updateSidebarToggle();
+    },
+    setRightSidebarOpen(open) {
+      rightSidebarOpen = open;
+      updateRightSidebarToggle();
     },
     destroy() {
       unlistenMaximize?.();

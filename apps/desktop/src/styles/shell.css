@@ -75,8 +75,7 @@ html.platform-windows body {
   left: -4px;
 }
 
-.inimark-sidebar.is-collapsed .inimark-resize-handle,
-.inimark-shell.is-sidebar-closed .inimark-resize-handle {
+.inimark-sidebar.is-collapsed > .inimark-resize-handle {
   display: none;
 }
 
@@ -179,7 +178,7 @@ html.platform-macos .inimark-shell.is-sidebar-closed .inimark-titlebar-leading {
 
 .inimark-titlebar-trailing {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   -webkit-app-region: no-drag;
 }
 

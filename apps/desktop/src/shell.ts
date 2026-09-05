@@ -1,5 +1,9 @@
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
 import {
+  mountRightSidebar,
+  type RightSidebarController,
+} from "./right-sidebar.ts";
+import {
   attachColumnResize,
   loadPersistedWidth,
   persistWidth,
@@ -13,20 +17,39 @@ const SIDEBAR_WIDTH_DEFAULT = 240;
 const SIDEBAR_WIDTH_MIN = 180;
 const SIDEBAR_WIDTH_MAX = 480;
 
+const RIGHT_SIDEBAR_OPEN_KEY = "inimark-right-sidebar-open";
+const RIGHT_SIDEBAR_WIDTH_KEY = "inimark-right-sidebar-width";
+const RIGHT_SIDEBAR_WIDTH_DEFAULT = 240;
+const RIGHT_SIDEBAR_WIDTH_MIN = 180;
+const RIGHT_SIDEBAR_WIDTH_MAX = 420;
+
 export interface ShellController {
   editorHost: HTMLElement;
   mainColumn: HTMLElement;
   sidebar: SidebarController;
+  rightSidebar: RightSidebarController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
   toggleSidebar(): void;
+  toggleRightSidebar(): void;
   destroy(): void;
 }
 
 function loadSidebarOpen(): boolean {
   try {
     const saved = localStorage.getItem(SIDEBAR_OPEN_KEY);
+    if (saved === "0") return false;
+    if (saved === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return true;
+}
+
+function loadRightSidebarOpen(): boolean {
+  try {
+    const saved = localStorage.getItem(RIGHT_SIDEBAR_OPEN_KEY);
     if (saved === "0") return false;
     if (saved === "1") return true;
   } catch {
@@ -52,6 +75,9 @@ export function mountShell(
   const mainColumn = document.createElement("div");
   mainColumn.className = "inimark-main";
 
+  const rightSidebarHost = document.createElement("aside");
+  const rightSidebar = mountRightSidebar(rightSidebarHost);
+
   let sidebarOpen = loadSidebarOpen();
   let sidebarWidth = loadPersistedWidth(
     SIDEBAR_WIDTH_KEY,
@@ -59,10 +85,21 @@ export function mountShell(
     SIDEBAR_WIDTH_MIN,
     SIDEBAR_WIDTH_MAX,
   );
+  let rightSidebarOpen = loadRightSidebarOpen();
+  let rightSidebarWidth = loadPersistedWidth(
+    RIGHT_SIDEBAR_WIDTH_KEY,
+    RIGHT_SIDEBAR_WIDTH_DEFAULT,
+    RIGHT_SIDEBAR_WIDTH_MIN,
+    RIGHT_SIDEBAR_WIDTH_MAX,
+  );
   let titlebar: TitleBarController;
 
   function applySidebarWidth(): void {
     host.style.setProperty("--inimark-sidebar-width", `${sidebarWidth}px`);
+  }
+
+  function applyRightSidebarWidth(): void {
+    host.style.setProperty("--inimark-right-sidebar-width", `${rightSidebarWidth}px`);
   }
 
   function applySidebarState(): void {
@@ -72,10 +109,23 @@ export function mountShell(
     sidebar.setSidebarOpen(sidebarOpen);
   }
 
+  function applyRightSidebarState(): void {
+    host.classList.toggle("is-right-sidebar-closed", !rightSidebarOpen);
+    rightSidebarHost.classList.toggle("is-collapsed", !rightSidebarOpen);
+    titlebar.setRightSidebarOpen(rightSidebarOpen);
+    rightSidebar.setSidebarOpen(rightSidebarOpen);
+  }
+
   function toggleSidebar(): void {
     sidebarOpen = !sidebarOpen;
     localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
     applySidebarState();
+  }
+
+  function toggleRightSidebar(): void {
+    rightSidebarOpen = !rightSidebarOpen;
+    localStorage.setItem(RIGHT_SIDEBAR_OPEN_KEY, rightSidebarOpen ? "1" : "0");
+    applyRightSidebarState();
   }
 
   const titlebarHost = document.createElement("header");
@@ -86,16 +136,23 @@ export function mountShell(
       open: sidebarOpen,
       onToggle: toggleSidebar,
     },
+    rightSidebarToggle: {
+      open: rightSidebarOpen,
+      onToggle: toggleRightSidebar,
+    },
   });
   sidebar.onToggleSidebar(toggleSidebar);
+  rightSidebar.onToggleSidebar(toggleRightSidebar);
 
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";
 
   mainColumn.append(titlebarHost, editorHost);
-  host.append(sidebarHost, mainColumn);
+  host.append(sidebarHost, mainColumn, rightSidebarHost);
   applySidebarWidth();
+  applyRightSidebarWidth();
   applySidebarState();
+  applyRightSidebarState();
 
   const resize: ColumnResizeController = attachColumnResize(sidebarHost, {
     side: "left",
@@ -106,6 +163,18 @@ export function mountShell(
       sidebarWidth = width;
       applySidebarWidth();
       persistWidth(SIDEBAR_WIDTH_KEY, width);
+    },
+  });
+
+  const rightResize: ColumnResizeController = attachColumnResize(rightSidebarHost, {
+    side: "right",
+    minWidth: RIGHT_SIDEBAR_WIDTH_MIN,
+    maxWidth: RIGHT_SIDEBAR_WIDTH_MAX,
+    getWidth: () => rightSidebarWidth,
+    onWidthChange(width) {
+      rightSidebarWidth = width;
+      applyRightSidebarWidth();
+      persistWidth(RIGHT_SIDEBAR_WIDTH_KEY, width);
     },
   });
 
@@ -121,6 +190,7 @@ export function mountShell(
     editorHost,
     mainColumn,
     sidebar,
+    rightSidebar,
     setFileName(name) {
       fileName = name;
       renderTitle();
@@ -133,10 +203,13 @@ export function mountShell(
       return dirty;
     },
     toggleSidebar,
+    toggleRightSidebar,
     destroy() {
       resize.destroy();
+      rightResize.destroy();
       titlebar.destroy();
       sidebar.destroy();
+      rightSidebar.destroy();
       host.replaceChildren();
     },
   };
