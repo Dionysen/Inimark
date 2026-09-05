@@ -47,6 +47,8 @@
   --inimark-caption-close-hover: #e81123;
   /* 36px — aligns with macOS traffic-light inset (x=14, y=11) */
   --inimark-titlebar-height: 36px;
+  /* Compact chrome buttons in sidebar topbar / titlebar */
+  --inimark-chrome-btn-size: 26px;
   --inimark-sidebar-dock-height: 3.25rem;
 
   --inimark-editor-font-size: var(--editor-font-size, 16px);
@@ -83,6 +85,11 @@
 
 html.platform-macos {
   --inimark-mac-traffic-lights-width: 72px;
+}
+
+/* Native fullscreen hides traffic lights — align chrome to the left edge. */
+html.platform-macos.is-fullscreen {
+  --inimark-mac-traffic-lights-width: 0px;
 }
 
 html.platform-windows {

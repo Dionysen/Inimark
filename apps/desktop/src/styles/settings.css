@@ -40,7 +40,7 @@
 }
 
 html.platform-macos .inimark-settings-nav-topbar {
-  padding-left: var(--inimark-mac-traffic-lights-width);
+  padding-left: calc(var(--inimark-mac-traffic-lights-width) + var(--inimark-space-2));
 }
 
 .inimark-settings-nav-body {

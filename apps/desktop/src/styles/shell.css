@@ -116,13 +116,15 @@ body.is-column-resizing * {
 }
 
 .inimark-sidebar-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
+  width: var(--inimark-chrome-btn-size);
+  height: var(--inimark-chrome-btn-size);
+  min-width: var(--inimark-chrome-btn-size);
   border: 0;
-  border-radius: 0.7rem;
-  padding: 0.45rem;
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  padding: 0;
   background: transparent;
   color: var(--inimark-muted-fg);
   cursor: pointer;
@@ -141,12 +143,12 @@ body.is-column-resizing * {
 }
 
 .inimark-sidebar-toggle-btn:active {
-  transform: scale(0.93);
+  transform: scale(0.96);
 }
 
 .inimark-icon--sidebar-toggle {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 html.platform-macos .inimark-shell.is-sidebar-closed .inimark-titlebar-leading {
@@ -239,7 +241,8 @@ html.platform-macos .inimark-titlebar-leading {
 html.platform-macos .inimark-sidebar-topbar {
   height: var(--inimark-titlebar-height);
   overflow: visible;
-  padding-left: var(--inimark-mac-traffic-lights-width);
+  /* Traffic-light cluster + breathing room before chrome buttons */
+  padding-left: calc(var(--inimark-mac-traffic-lights-width) + var(--inimark-space-2));
   -webkit-app-region: drag;
 }
 

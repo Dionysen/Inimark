@@ -15,6 +15,7 @@ import {
 } from "./ui/widgets/index.ts";
 import type { LibraryRecord } from "./libraries/store.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
+import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
 import {
   highlightMatch,
   searchVaultIncremental,
@@ -320,6 +321,46 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     btn.addEventListener("click", () => setActivePanel(id));
   }
 
+  /** Hide trailing tabs that would collide with the collapse control. */
+  function updateTabVisibility(): void {
+    const order = Object.keys(PANEL_META) as SidebarPanelId[];
+    for (const id of order) {
+      tabButtons.get(id)!.hidden = false;
+    }
+
+    const topbarRect = topbar.getBoundingClientRect();
+    if (topbarRect.width <= 0) return;
+
+    const styles = getComputedStyle(topbar);
+    const padL = parseFloat(styles.paddingLeft) || 0;
+    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+    const available = Math.max(
+      0,
+      collapseBtn.getBoundingClientRect().left - gap - (topbarRect.left + padL),
+    );
+    const tabGap = 2;
+
+    let used = 0;
+    for (let i = 0; i < order.length; i++) {
+      const btn = tabButtons.get(order[i])!;
+      const need = (used > 0 ? tabGap : 0) + btn.getBoundingClientRect().width;
+      if (used + need <= available + 0.5) {
+        used += need;
+        continue;
+      }
+      for (let j = i; j < order.length; j++) {
+        tabButtons.get(order[j])!.hidden = true;
+      }
+      break;
+    }
+  }
+
+  const tabVisibilityObserver = new ResizeObserver(() => {
+    updateTabVisibility();
+  });
+  tabVisibilityObserver.observe(topbar);
+  document.addEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
+
   function renderTree(nodes: WorkspaceTreeNode[], depth = 0): DocumentFragment {
     const frag = document.createDocumentFragment();
     for (const node of nodes) {
@@ -592,6 +633,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   }
 
   setActivePanel(activePanel);
+  queueMicrotask(() => updateTabVisibility());
 
   return {
     setWorkspace: applyWorkspace,
@@ -638,6 +680,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       handlers.expandedDirsChange = handler;
     },
     destroy() {
+      tabVisibilityObserver.disconnect();
+      document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
       cancelSearch();
       searchField.destroy();
       menu.destroy();

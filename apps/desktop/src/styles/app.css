@@ -59,18 +59,22 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
   -webkit-app-region: no-drag;
 }
 
 .inimark-sidebar-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
   flex-shrink: 0;
+  width: var(--inimark-chrome-btn-size);
+  height: var(--inimark-chrome-btn-size);
+  min-width: var(--inimark-chrome-btn-size);
   border: 0;
-  border-radius: 0.7rem;
-  padding: 0.45rem;
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  padding: 0;
   background: transparent;
   color: var(--inimark-muted-fg);
   cursor: pointer;
@@ -86,7 +90,7 @@
 }
 
 .inimark-sidebar-tab:active {
-  transform: scale(0.93);
+  transform: scale(0.96);
 }
 
 .inimark-sidebar-tab.is-active {
@@ -95,13 +99,19 @@
 }
 
 .inimark-sidebar-tab .inimark-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.inimark-sidebar-tab[hidden] {
+  display: none !important;
 }
 
 .inimark-sidebar-collapse-btn {
   margin-left: auto;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .inimark-sidebar-body {
