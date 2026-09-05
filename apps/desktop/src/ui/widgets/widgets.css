@@ -573,6 +573,13 @@
   transition: background var(--inimark-control-transition);
 }
 
+.inimark-menu-item--checkable {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .inimark-menu-item:hover,
 .inimark-menu-item.is-active {
   background: var(--inimark-hover);
@@ -584,6 +591,7 @@
 
 .inimark-menu-item__name {
   font-weight: 500;
+  min-width: 0;
 }
 
 .inimark-menu-item__meta {
@@ -592,6 +600,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+.inimark-menu-item__check {
+  display: inline-grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  color: var(--inimark-fg);
+  opacity: 0;
+}
+
+.inimark-menu-item.is-checked .inimark-menu-item__check {
+  opacity: 1;
+}
+
+.inimark-menu-item__check svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .inimark-menu__empty {
@@ -611,6 +638,47 @@
   flex-direction: column;
   gap: var(--tree-row-gap);
   padding: var(--inimark-space-2);
+}
+
+/* ── Panel toolbar (per sidebar tab) ─────────────────────────────── */
+
+.inimark-panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  flex-shrink: 0;
+  min-height: calc(var(--inimark-chrome-btn-size) + var(--inimark-space-2));
+  padding: var(--inimark-space-1) var(--inimark-space-2);
+  border-bottom: 1px solid var(--inimark-border);
+  -webkit-app-region: no-drag;
+}
+
+.inimark-panel-toolbar[hidden] {
+  display: none !important;
+}
+
+.inimark-panel-toolbar .inimark-icon-btn {
+  width: var(--inimark-chrome-btn-size);
+  height: var(--inimark-chrome-btn-size);
+  min-width: var(--inimark-chrome-btn-size);
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+}
+
+.inimark-panel-toolbar .inimark-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.inimark-sort-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 11.5rem;
+}
+
+.inimark-sort-menu .inimark-menu__path {
+  display: none;
 }
 
 .inimark-tree-branch {

@@ -1,7 +1,9 @@
 import {
   bookmarksTabIcon,
+  collapseAllIcon,
   createIconButton,
   createMenu,
+  createPanelToolbar,
   createSearchField,
   createTreeBranch,
   createTreeChildren,
@@ -9,13 +11,22 @@ import {
   createTreeItem,
   filesTabIcon,
   libraryIcon,
+  locateFileIcon,
+  newFileIcon,
+  newFolderIcon,
   searchTabIcon,
   settingsIcon,
   sidebarToggleIcon,
+  sortIcon,
 } from "./ui/widgets/index.ts";
 import type { LibraryRecord } from "./libraries/store.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
+import {
+  createWorkspaceDirectory,
+  createWorkspaceFile,
+  refreshWorkspaceTree,
+} from "./platform/workspace.ts";
 import {
   highlightMatch,
   searchVaultIncremental,
@@ -24,7 +35,28 @@ import {
 
 export type SidebarPanelId = "files" | "search" | "bookmarks";
 
+type FilesSortMode =
+  | "name-asc"
+  | "name-desc"
+  | "mtime-desc"
+  | "mtime-asc"
+  | "birthtime-desc"
+  | "birthtime-asc";
+
 const SIDEBAR_PANEL_KEY = "inimark-sidebar-panel";
+const FILES_SORT_KEY = "inimark-files-sort";
+
+const FILES_SORT_OPTIONS: Array<{
+  mode: FilesSortMode;
+  label: string;
+}> = [
+  { mode: "name-asc", label: "文件名 (A-Z)" },
+  { mode: "name-desc", label: "文件名 (Z-A)" },
+  { mode: "mtime-desc", label: "编辑时间 (从新到旧)" },
+  { mode: "mtime-asc", label: "编辑时间 (从旧到新)" },
+  { mode: "birthtime-desc", label: "创建时间 (从新到旧)" },
+  { mode: "birthtime-asc", label: "创建时间 (从旧到新)" },
+];
 
 const PANEL_META: Record<
   SidebarPanelId,
@@ -68,9 +100,64 @@ function loadActivePanel(): SidebarPanelId {
   return "files";
 }
 
+function loadFilesSortMode(): FilesSortMode {
+  try {
+    const saved = localStorage.getItem(FILES_SORT_KEY);
+    if (FILES_SORT_OPTIONS.some((opt) => opt.mode === saved)) {
+      return saved as FilesSortMode;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "name-asc";
+}
+
 function markNoDrag(el: HTMLElement): void {
   el.setAttribute("data-tauri-drag-region", "false");
   el.style.setProperty("-webkit-app-region", "no-drag");
+}
+
+function uniqueChildName(
+  existing: Set<string>,
+  base: string,
+  ext = "",
+): string {
+  const full = `${base}${ext}`;
+  if (!existing.has(full.toLowerCase())) return full;
+  for (let i = 1; i < 1000; i++) {
+    const candidate = `${base} ${i}${ext}`;
+    if (!existing.has(candidate.toLowerCase())) return candidate;
+  }
+  return `${base} ${Date.now()}${ext}`;
+}
+
+function timeValue(node: WorkspaceTreeNode, field: "mtimeMs" | "birthtimeMs"): number {
+  return node[field] ?? 0;
+}
+
+function sortTreeNodes(
+  nodes: WorkspaceTreeNode[],
+  mode: FilesSortMode,
+): WorkspaceTreeNode[] {
+  const copy = nodes.map((node) =>
+    node.kind === "directory" && node.children
+      ? { ...node, children: sortTreeNodes(node.children, mode) }
+      : node,
+  );
+  copy.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === "directory" ? -1 : 1;
+    if (mode === "name-asc" || mode === "name-desc") {
+      const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      return mode === "name-asc" ? cmp : -cmp;
+    }
+    if (mode === "mtime-asc" || mode === "mtime-desc") {
+      const cmp = timeValue(a, "mtimeMs") - timeValue(b, "mtimeMs");
+      return mode === "mtime-asc" ? cmp : -cmp;
+    }
+    const cmp = timeValue(a, "birthtimeMs") - timeValue(b, "birthtimeMs");
+    return mode === "birthtime-asc" ? cmp : -cmp;
+  });
+  return copy;
 }
 
 export function mountSidebar(host: HTMLElement): SidebarController {
@@ -120,13 +207,66 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   filesPanel.dataset.panel = "files";
   filesPanel.setAttribute("role", "tabpanel");
   const treeHost = createTreeHost("Markdown files");
-  filesPanel.append(treeHost);
+
+  let filesSortMode = loadFilesSortMode();
+
+  const filesToolbar = createPanelToolbar([
+    {
+      label: "New file",
+      title: "New file",
+      icon: newFileIcon,
+      onClick() {
+        void createNewFile();
+      },
+    },
+    {
+      label: "New folder",
+      title: "New folder",
+      icon: newFolderIcon,
+      onClick() {
+        void createNewFolder();
+      },
+    },
+    {
+      label: "Sort",
+      title: "Sort",
+      icon: sortIcon,
+      onClick(event) {
+        event.stopPropagation();
+        toggleSortMenu();
+      },
+    },
+    {
+      label: "Locate file",
+      title: "Locate current file",
+      icon: locateFileIcon,
+      onClick() {
+        locateActiveFile();
+      },
+    },
+    {
+      label: "Collapse all",
+      title: "Collapse all folders",
+      icon: collapseAllIcon,
+      onClick() {
+        collapseAllFolders();
+      },
+    },
+  ]);
+  const sortBtn = filesToolbar.buttons[2]!;
+  sortBtn.setAttribute("aria-haspopup", "menu");
+  sortBtn.setAttribute("aria-expanded", "false");
+  filesPanel.append(filesToolbar.el, treeHost);
 
   const searchPanel = document.createElement("div");
   searchPanel.className = "inimark-sidebar-panel";
   searchPanel.dataset.panel = "search";
   searchPanel.setAttribute("role", "tabpanel");
   searchPanel.hidden = true;
+
+  // Reserved toolbar slot — hidden until search actions exist.
+  const searchToolbar = createPanelToolbar([]);
+  searchToolbar.setHidden(true);
 
   const searchField = createSearchField({
     placeholder: "Search…",
@@ -140,17 +280,21 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   searchMeta.hidden = true;
   const searchResults = document.createElement("div");
   searchResults.className = "inimark-sidebar-search-results inimark-scroll-target";
-  searchPanel.append(searchField.el, searchMeta, searchResults);
+  searchPanel.append(searchToolbar.el, searchField.el, searchMeta, searchResults);
 
   const bookmarksPanel = document.createElement("div");
   bookmarksPanel.className = "inimark-sidebar-panel";
   bookmarksPanel.dataset.panel = "bookmarks";
   bookmarksPanel.setAttribute("role", "tabpanel");
   bookmarksPanel.hidden = true;
+
+  const bookmarksToolbar = createPanelToolbar([]);
+  bookmarksToolbar.setHidden(true);
+
   const bookmarksEmpty = document.createElement("p");
   bookmarksEmpty.className = "inimark-sidebar-empty";
   bookmarksEmpty.textContent = "No bookmarks yet";
-  bookmarksPanel.append(bookmarksEmpty);
+  bookmarksPanel.append(bookmarksToolbar.el, bookmarksEmpty);
 
   body.append(filesPanel, searchPanel, bookmarksPanel);
 
@@ -192,6 +336,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   const menu = createMenu();
   dock.append(menu.el);
 
+  const sortMenu = createMenu();
+  sortMenu.el.classList.add("inimark-sort-menu");
+  sortMenu.setPath("");
+  host.append(sortMenu.el);
+
   host.append(topbar, body, dock);
 
   let activePath: string | null = null;
@@ -226,7 +375,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     libraryBar.setAttribute("aria-expanded", "false");
   }
 
+  function closeSortMenu(): void {
+    sortMenu.setOpen(false);
+    sortBtn.setAttribute("aria-expanded", "false");
+  }
+
   function toggleMenu(): void {
+    closeSortMenu();
     if (menu.isOpen()) {
       closeMenu();
       return;
@@ -234,6 +389,46 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     renderLibraryList();
     menu.setOpen(true);
     libraryBar.setAttribute("aria-expanded", "true");
+  }
+
+  function positionSortMenu(): void {
+    const rect = sortBtn.getBoundingClientRect();
+    const menuWidth = Math.max(184, sortMenu.el.offsetWidth || 184);
+    const left = Math.min(
+      Math.max(8, rect.left),
+      window.innerWidth - menuWidth - 8,
+    );
+    sortMenu.el.style.top = `${rect.bottom + 4}px`;
+    sortMenu.el.style.left = `${left}px`;
+  }
+
+  function renderSortMenu(): void {
+    sortMenu.clear();
+    sortMenu.setPath("");
+    FILES_SORT_OPTIONS.forEach((option, index) => {
+      if (index === 2 || index === 4) sortMenu.addDivider();
+      sortMenu.addItem({
+        label: option.label,
+        checked: filesSortMode === option.mode,
+        onClick() {
+          setFilesSortMode(option.mode);
+          closeSortMenu();
+        },
+      });
+    });
+  }
+
+  function toggleSortMenu(): void {
+    closeMenu();
+    if (sortMenu.isOpen()) {
+      closeSortMenu();
+      return;
+    }
+    renderSortMenu();
+    sortMenu.setOpen(true);
+    sortBtn.setAttribute("aria-expanded", "true");
+    // Measure after open so width is available for clamping.
+    requestAnimationFrame(() => positionSortMenu());
   }
 
   function renderLibraryList(): void {
@@ -287,10 +482,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   collapseBtn.addEventListener("click", () => handlers.toggleSidebar());
 
   document.addEventListener("click", (event) => {
-    if (!menu.isOpen()) return;
     const target = event.target as Node | null;
-    if (target && dock.contains(target)) return;
-    closeMenu();
+    if (menu.isOpen() && !(target && dock.contains(target))) {
+      closeMenu();
+    }
+    if (
+      sortMenu.isOpen() &&
+      !(target && (sortMenu.el.contains(target) || sortBtn.contains(target)))
+    ) {
+      closeSortMenu();
+    }
   });
 
   function setActivePanel(panel: SidebarPanelId): void {
@@ -409,13 +610,106 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   let currentTree: WorkspaceTreeNode[] = [];
 
+  function updateFilesToolbarState(): void {
+    const hasWorkspace = Boolean(currentWorkspace);
+    filesToolbar.setDisabled(!hasWorkspace);
+    // Keep sort available so users can change preference without a library.
+    sortBtn.disabled = false;
+    const current = FILES_SORT_OPTIONS.find((opt) => opt.mode === filesSortMode);
+    sortBtn.title = current?.label ?? "Sort";
+  }
+
+  function setFilesSortMode(mode: FilesSortMode): void {
+    if (filesSortMode === mode) return;
+    filesSortMode = mode;
+    try {
+      localStorage.setItem(FILES_SORT_KEY, filesSortMode);
+    } catch {
+      /* ignore */
+    }
+    updateFilesToolbarState();
+    rerender();
+  }
+
+  function collapseAllFolders(): void {
+    if (expanded.size === 0) return;
+    expanded.clear();
+    notifyExpandedChange();
+    rerender();
+  }
+
+  function locateActiveFile(): void {
+    if (!activePath) return;
+    const path = activePath;
+    const parts = path.split(/[/\\]/).filter(Boolean);
+    let acc = "";
+    for (let i = 0; i < parts.length - 1; i++) {
+      acc = acc ? `${acc}/${parts[i]}` : parts[i]!;
+      expanded.add(acc);
+    }
+    notifyExpandedChange();
+    rerender();
+    queueMicrotask(() => {
+      const row = treeHost.querySelector<HTMLElement>(
+        `[data-path="${CSS.escape(path)}"]`,
+      );
+      row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }
+
+  async function refreshTreeFromDisk(): Promise<boolean> {
+    if (!currentWorkspace) return false;
+    try {
+      currentWorkspace.tree = await refreshWorkspaceTree(currentWorkspace);
+      currentTree = currentWorkspace.tree;
+      rerender();
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  async function createNewFile(): Promise<void> {
+    if (!currentWorkspace) return;
+    const rootNames = new Set(
+      currentTree.map((n) => n.name.toLowerCase()),
+    );
+    const fileName = uniqueChildName(rootNames, "Untitled", ".md");
+    const result = await createWorkspaceFile(currentWorkspace, fileName, "");
+    if (result.status === "error") {
+      console.error(result.message);
+      return;
+    }
+    await refreshTreeFromDisk();
+    void handlers.fileSelect(fileName);
+  }
+
+  async function createNewFolder(): Promise<void> {
+    if (!currentWorkspace) return;
+    const rootNames = new Set(
+      currentTree.map((n) => n.name.toLowerCase()),
+    );
+    const folderName = uniqueChildName(rootNames, "New Folder");
+    const result = await createWorkspaceDirectory(currentWorkspace, folderName);
+    if (result.status === "error") {
+      console.error(result.message);
+      return;
+    }
+    expanded.add(folderName);
+    notifyExpandedChange();
+    await refreshTreeFromDisk();
+  }
+
   function rerender(): void {
     treeHost.replaceChildren();
     if (currentTree.length === 0) {
-      renderEmptyHint("No markdown files in this folder");
+      renderEmptyHint(
+        currentWorkspace ? "No markdown files in this folder" : "No folder selected",
+      );
       return;
     }
-    treeHost.append(renderTree(currentTree));
+    treeHost.append(renderTree(sortTreeNodes(currentTree, filesSortMode)));
   }
 
   function cancelSearch(): void {
@@ -620,6 +914,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       clearSearchUi();
       renderEmptyHint("No folder selected");
       renderLibraryList();
+      updateFilesToolbarState();
       return;
     }
 
@@ -629,10 +924,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     libraryLabel.textContent = workspace.rootName;
     rerender();
     renderLibraryList();
+    updateFilesToolbarState();
     if (activePanel === "search") scheduleSearch();
   }
 
   setActivePanel(activePanel);
+  updateFilesToolbarState();
   queueMicrotask(() => updateTabVisibility());
 
   return {
@@ -683,7 +980,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       tabVisibilityObserver.disconnect();
       document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
       cancelSearch();
+      filesToolbar.destroy();
+      searchToolbar.destroy();
+      bookmarksToolbar.destroy();
       searchField.destroy();
+      sortMenu.destroy();
       menu.destroy();
       host.replaceChildren();
     },

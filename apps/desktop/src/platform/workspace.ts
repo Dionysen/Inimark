@@ -201,36 +201,60 @@ async function openWorkspaceByPathTauri(rootPath: string): Promise<WorkspacePick
 }
 
 async function buildTauriTree(rootPath: string): Promise<WorkspaceTreeNode[]> {
-  const { readDir } = await import("@tauri-apps/plugin-fs");
-  return readTauriDirectory(readDir, rootPath, rootPath);
+  const { readDir, stat } = await import("@tauri-apps/plugin-fs");
+  return readTauriDirectory(readDir, stat, rootPath, rootPath);
 }
 
 async function readTauriDirectory(
   readDir: (path: string) => Promise<Array<{ name: string; isDirectory: boolean }>>,
+  stat: (path: string) => Promise<{ mtime: Date | null; birthtime: Date | null }>,
   rootPath: string,
   currentPath: string,
 ): Promise<WorkspaceTreeNode[]> {
   const entries = await readDir(currentPath);
-  const nodes: WorkspaceTreeNode[] = [];
+  const filtered = entries.filter((entry) => !entry.name.startsWith("."));
 
-  for (const entry of entries) {
-    if (entry.name.startsWith(".")) continue;
-    const fullPath = joinPath(currentPath, entry.name);
-    const relativePath = toRelativePath(rootPath, fullPath);
-    if (entry.isDirectory) {
-      const children = await readTauriDirectory(readDir, rootPath, fullPath);
-      if (children.length > 0) {
-        nodes.push({
-          name: entry.name,
-          path: relativePath,
-          kind: "directory",
-          children,
-        });
-      }
-    } else if (/\.(md|markdown|mdown)$/i.test(entry.name)) {
-      nodes.push({ name: entry.name, path: relativePath, kind: "file" });
-    }
-  }
+  const nodes = (
+    await Promise.all(
+      filtered.map(async (entry): Promise<WorkspaceTreeNode | null> => {
+        const fullPath = joinPath(currentPath, entry.name);
+        const relativePath = toRelativePath(rootPath, fullPath);
+        let mtimeMs: number | undefined;
+        let birthtimeMs: number | undefined;
+        try {
+          const info = await stat(fullPath);
+          mtimeMs = info.mtime?.getTime();
+          birthtimeMs = info.birthtime?.getTime();
+        } catch {
+          /* ignore missing metadata */
+        }
+
+        if (entry.isDirectory) {
+          const children = await readTauriDirectory(readDir, stat, rootPath, fullPath);
+          return {
+            name: entry.name,
+            path: relativePath,
+            kind: "directory",
+            children,
+            mtimeMs,
+            birthtimeMs,
+          };
+        }
+
+        if (/\.(md|markdown|mdown)$/i.test(entry.name)) {
+          return {
+            name: entry.name,
+            path: relativePath,
+            kind: "file",
+            mtimeMs,
+            birthtimeMs,
+          };
+        }
+
+        return null;
+      }),
+    )
+  ).filter((node): node is WorkspaceTreeNode => node != null);
 
   nodes.sort((a, b) => {
     if (a.kind !== b.kind) return a.kind === "directory" ? -1 : 1;
@@ -275,6 +299,39 @@ async function writeWorkspaceFileTauri(
       path: relativePath,
       name: fileNameFromPath(relativePath),
     };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/** Create a new markdown file (Tauri). Browser returns an error for now. */
+export async function createWorkspaceFile(
+  workspace: Workspace,
+  relativePath: string,
+  text = "",
+): Promise<WorkspaceFileResult> {
+  if (!isTauri()) {
+    return { status: "error", message: "Creating files is only supported in the desktop app." };
+  }
+  return writeWorkspaceFileTauri(workspace, relativePath, text);
+}
+
+/** Create a new directory (Tauri). Browser returns an error for now. */
+export async function createWorkspaceDirectory(
+  workspace: Workspace,
+  relativePath: string,
+): Promise<{ status: "created"; path: string } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Creating folders is only supported in the desktop app." };
+  }
+  try {
+    const { mkdir } = await import("@tauri-apps/plugin-fs");
+    const fullPath = joinWorkspacePath(workspace.rootPath, relativePath);
+    await mkdir(fullPath, { recursive: true });
+    return { status: "created", path: relativePath };
   } catch (error) {
     return {
       status: "error",

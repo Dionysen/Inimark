@@ -3,6 +3,10 @@ export type WorkspaceTreeNode = {
   path: string;
   kind: "file" | "directory";
   children?: WorkspaceTreeNode[];
+  /** Last modified time (ms since epoch), when available. */
+  mtimeMs?: number;
+  /** Creation time (ms since epoch), when available. */
+  birthtimeMs?: number;
   /** Browser File System Access API handle (not available in Tauri mode). */
   handle?: FileSystemFileHandle;
 };

@@ -7,8 +7,18 @@ export {
   filesTabIcon,
   searchTabIcon,
   bookmarksTabIcon,
+  newFileIcon,
+  newFolderIcon,
+  sortIcon,
+  locateFileIcon,
+  collapseAllIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
+export {
+  createPanelToolbar,
+  type PanelToolbarController,
+  type PanelToolbarItem,
+} from "./panel-toolbar.ts";
 export { createTextField, type TextFieldController, type TextFieldOptions } from "./text-field.ts";
 export {
   createSearchField,
