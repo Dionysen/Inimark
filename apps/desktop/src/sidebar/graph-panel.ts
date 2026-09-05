@@ -73,6 +73,30 @@ function attachDegrees(nodes: GraphNode[], edges: GraphEdge[]): void {
   }
 }
 
+const GRAPH_SCALE_MIN = 0.12;
+/** Max zoom — labels reach full settings opacity at this scale. */
+const GRAPH_SCALE_MAX = 15;
+
+/**
+ * Label alpha from the text-fade slider (0–100, center 50 = “0”).
+ * - ≤50: always fully opaque at any zoom
+ * - >50: more transparent when zoomed out; zooming in returns to opaque
+ */
+function graphLabelAlpha(textOpacity: number, scale: number): number {
+  const fade = Math.max(0, Math.min(1, (textOpacity - 50) / 50));
+  if (fade < 0.001) return 1;
+
+  const span = GRAPH_SCALE_MAX - GRAPH_SCALE_MIN;
+  const normalized = Math.max(
+    0,
+    Math.min(1, (scale - GRAPH_SCALE_MIN) / span),
+  );
+  // Stronger fade → stays transparent longer until you zoom further in.
+  const zoomFade = Math.pow(normalized, 0.55 + fade * 1.6);
+  // fade=0 → 1; fade=1 → zoomFade (0 at min zoom, 1 at max zoom)
+  return (1 - fade) + fade * zoomFade;
+}
+
 function buildLocalGraph(activePath: string | null): {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -170,7 +194,7 @@ export function mountGraphPanel(
     ? options.activeFile.replace(/\\/g, "/")
     : null;
   let mode: GraphMode = options.initialMode ?? "local";
-  let openHandler: (path: string) => void = () => {};
+  let openHandler: (path: string) => void = () => { };
   let editorHost: HTMLElement | null = null;
   let editorOverlay: HTMLElement | null = null;
   let editorGraph: GraphPanelController | null = null;
@@ -208,24 +232,24 @@ export function mountGraphPanel(
   const toolbar =
     variant === "sidebar"
       ? createPanelToolbar([
-          {
-            label: t("graph.toggleMode"),
-            title: mode === "local" ? t("graph.modeLocal") : t("graph.modeVault"),
-            icon: () =>
-              mode === "local" ? graphLocalModeIcon() : graphVaultModeIcon(),
-            onClick() {
-              setModeInternal(mode === "local" ? "vault" : "local");
-            },
+        {
+          label: t("graph.toggleMode"),
+          title: mode === "local" ? t("graph.modeLocal") : t("graph.modeVault"),
+          icon: () =>
+            mode === "local" ? graphLocalModeIcon() : graphVaultModeIcon(),
+          onClick() {
+            setModeInternal(mode === "local" ? "vault" : "local");
           },
-          {
-            label: t("graph.openInEditor"),
-            title: t("graph.openInEditor"),
-            icon: graphOpenEditorIcon,
-            onClick() {
-              openEditorGraph();
-            },
+        },
+        {
+          label: t("graph.openInEditor"),
+          title: t("graph.openInEditor"),
+          icon: graphOpenEditorIcon,
+          onClick() {
+            openEditorGraph();
           },
-        ])
+        },
+      ])
       : null;
   const modeBtn = toolbar?.buttons[0] ?? null;
 
@@ -706,17 +730,23 @@ export function mountGraphPanel(
     ctx.clearRect(0, 0, width, height);
 
     const styles = getComputedStyle(host);
-    const fg = styles.getPropertyValue("--inimark-fg").trim() || "#e5e7eb";
-    const muted = styles.getPropertyValue("--inimark-muted-fg").trim() || "#9ca3af";
-    const accent = styles.getPropertyValue("--inimark-accent").trim() || "#3b82f6";
-    const border = styles.getPropertyValue("--inimark-border").trim() || "#374151";
+    const nodeColor =
+      styles.getPropertyValue("--inimark-graph-node").trim() || "#b4b4b4";
+    const nodeActive =
+      styles.getPropertyValue("--inimark-graph-node-active").trim() || "#d0d0d0";
+    const labelColor =
+      styles.getPropertyValue("--inimark-graph-label").trim() || "#dcdcdc";
+    const linkColor =
+      styles.getPropertyValue("--inimark-graph-link").trim() || "#3c3c3c";
     const nodeScale = graphSettingFactor(graphSettings.nodeSize);
     const linkScale = graphSettingFactor(graphSettings.linkThickness);
-    const textAlpha = Math.max(0, Math.min(1, graphSettings.textOpacity / 100));
+    // Obsidian-like: setting is base visibility, then fade with zoom-out.
+    // Zoom in → lower transparency (more opaque); zoom out → higher transparency.
+    const textAlpha = graphLabelAlpha(graphSettings.textOpacity, scale);
 
     const byId = new Map(nodes.map((node) => [node.id, node]));
-    ctx.strokeStyle = border;
-    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = linkColor;
+    ctx.globalAlpha = 0.85;
     ctx.lineWidth = Math.max(0.75, (1 / scale) * linkScale);
     for (const edge of edges) {
       const a = byId.get(edge.source);
@@ -744,10 +774,10 @@ export function mountGraphPanel(
           my - head * Math.sin(angle + Math.PI / 7),
         );
         ctx.closePath();
-        ctx.fillStyle = border;
-        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = linkColor;
+        ctx.globalAlpha = 0.9;
         ctx.fill();
-        ctx.globalAlpha = 0.55;
+        ctx.globalAlpha = 0.85;
       }
     }
     ctx.globalAlpha = 1;
@@ -764,13 +794,13 @@ export function mountGraphPanel(
       const degreeBoost = 3.5 + (node.degree / maxDeg) * 5.5;
       const r = degreeBoost * scaleClamp * nodeScale;
       ctx.beginPath();
-      ctx.fillStyle = node.center ? accent : muted;
+      ctx.fillStyle = node.center ? nodeActive : nodeColor;
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
       ctx.fill();
-      if (scale >= 0.45 && textAlpha > 0.02) {
+      if (textAlpha > 0.02) {
         ctx.globalAlpha = textAlpha;
-        ctx.fillStyle = fg;
-        ctx.font = `${fontSize}px var(--font-ui, system-ui)`;
+        ctx.fillStyle = labelColor;
+        ctx.font = `${fontSize}px var(--font-ui, system-ui, sans-serif)`;
         ctx.textAlign = "center";
         ctx.fillText(node.label.slice(0, 24), s.x, s.y + r + fontSize + 2);
         ctx.globalAlpha = 1;
@@ -829,7 +859,7 @@ export function mountGraphPanel(
       const sy = event.clientY - rect.top;
       const before = screenToWorld(sx, sy);
       const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
-      scale = Math.max(0.12, Math.min(4, scale * factor));
+      scale = Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, scale * factor));
       // Keep cursor world point stable
       panX = sx - before.x * scale;
       panY = sy - before.y * scale;

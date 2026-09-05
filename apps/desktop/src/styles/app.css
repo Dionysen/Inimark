@@ -312,10 +312,12 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 
 .inimark-graph-float-panel {
   display: none;
+  flex-direction: column;
   width: min(260px, 100%);
   max-height: min(70vh, 520px);
-  overflow: auto;
+  overflow: hidden;
   padding: var(--inimark-space-3);
+  padding-bottom: var(--inimark-space-2);
   border-radius: var(--inimark-radius-md);
   background: color-mix(in srgb, var(--inimark-bg) 94%, transparent);
   border: 1px solid var(--inimark-border);
@@ -323,7 +325,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 .inimark-graph-float.is-open .inimark-graph-float-panel {
-  display: block;
+  display: flex;
 }
 
 .inimark-graph-float-header {
@@ -331,7 +333,15 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   align-items: center;
   justify-content: space-between;
   gap: var(--inimark-space-2);
+  flex-shrink: 0;
   margin-bottom: var(--inimark-space-2);
+}
+
+.inimark-graph-float-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-bottom: var(--inimark-space-1);
 }
 
 .inimark-graph-float-title {

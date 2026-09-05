@@ -48,7 +48,7 @@ export interface ImageSettings {
 /** Relationship graph appearance + force layout (0–100 sliders). */
 export interface GraphSettings {
   showArrows: boolean;
-  /** Label opacity 0–100. */
+  /** Label fade: 50 = center/0 (always opaque); >50 fades when zoomed out. */
   textOpacity: number;
   /** Node radius scale 0–100 (50 ≈ default). */
   nodeSize: number;
@@ -113,7 +113,7 @@ export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
 
 export const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   showArrows: false,
-  textOpacity: 100,
+  textOpacity: 50,
   nodeSize: 50,
   linkThickness: 50,
   animate: true,

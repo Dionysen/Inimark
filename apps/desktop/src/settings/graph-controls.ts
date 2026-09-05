@@ -29,6 +29,8 @@ type Field =
       descKey?: string;
       min: number;
       max: number;
+      /** Display transform for the value label (stored value unchanged). */
+      formatValue?: (value: number) => string;
     };
 
 const APPEARANCE_FIELDS: Field[] = [
@@ -45,6 +47,7 @@ const APPEARANCE_FIELDS: Field[] = [
     descKey: "settings.graph.textOpacityDesc",
     min: 0,
     max: 100,
+    formatValue: (value) => String(value - 50),
   },
   {
     kind: "slider",
@@ -198,7 +201,7 @@ export function mountGraphControls(
         max: field.max,
         step: 1,
         value: Number(settings[field.key]),
-        formatValue: (value) => String(value),
+        formatValue: field.formatValue ?? ((value) => String(value)),
         showValue: !compact,
         onChange(value) {
           options.onChange({ [field.key]: value } as Partial<GraphSettings>);

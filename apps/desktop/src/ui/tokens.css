@@ -83,6 +83,19 @@
   --inimark-scrollbar-track: var(--scrollbar-track, transparent);
   --inimark-scrollbar-thumb: var(--scrollbar-thumb, color-mix(in srgb, var(--inimark-fg) 28%, transparent));
   --inimark-scrollbar-thumb-hover: var(--scrollbar-thumb-hover, color-mix(in srgb, var(--inimark-fg) 45%, transparent));
+
+  /* Graph view — Obsidian-like neutrals (dark defaults) */
+  --inimark-graph-node: #b4b4b4;
+  --inimark-graph-node-active: #d0d0d0;
+  --inimark-graph-label: #dcdcdc;
+  --inimark-graph-link: #3c3c3c;
+}
+
+:root[data-appearance="light"] {
+  --inimark-graph-node: #6e6e6e;
+  --inimark-graph-node-active: #4a4a4a;
+  --inimark-graph-label: #333333;
+  --inimark-graph-link: #c4c4c4;
 }
 
 html.platform-macos {

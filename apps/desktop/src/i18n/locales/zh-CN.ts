@@ -316,7 +316,8 @@ export const zhCN: Dictionary = {
       showArrows: "箭头",
       showArrowsDesc: "在连线上显示方向箭头。",
       textOpacity: "文本透明度",
-      textOpacityDesc: "节点标签的可见程度。",
+      textOpacityDesc:
+        "滑块居中（0）时标签始终不透明；向右缩小视图会变淡，放大后逐渐恢复不透明。",
       nodeSize: "节点大小",
       nodeSizeDesc: "图谱节点的半径。",
       linkThickness: "连线粗细",

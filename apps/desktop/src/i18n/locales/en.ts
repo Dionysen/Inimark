@@ -321,8 +321,9 @@ export const en: Dictionary = {
     graph: {
       showArrows: "Arrows",
       showArrowsDesc: "Show direction arrows on links.",
-      textOpacity: "Text opacity",
-      textOpacityDesc: "Visibility of node labels.",
+      textOpacity: "Text fade",
+      textOpacityDesc:
+        "Center (0) keeps labels fully opaque. Move right to fade when zoomed out; zooming in restores opacity.",
       nodeSize: "Node size",
       nodeSizeDesc: "Radius of graph nodes.",
       linkThickness: "Link thickness",
