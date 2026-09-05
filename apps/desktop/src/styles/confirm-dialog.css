@@ -37,8 +37,7 @@
   gap: var(--inimark-space-2);
 }
 
-.inimark-confirm-dialog-btn--discard:hover:not(:disabled) {
-  background: color-mix(in srgb, #e81123 12%, var(--inimark-bg));
-  border-color: color-mix(in srgb, #e81123 35%, var(--inimark-border));
-  color: #c50f1f;
+.inimark-confirm-dialog-btn {
+  min-width: 4.75rem;
+  padding-inline: 1rem;
 }

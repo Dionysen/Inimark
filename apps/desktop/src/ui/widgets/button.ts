@@ -1,4 +1,4 @@
-export type ButtonVariant = "default" | "ghost" | "primary";
+export type ButtonVariant = "default" | "ghost" | "primary" | "danger";
 
 export interface ButtonOptions {
   label: string;

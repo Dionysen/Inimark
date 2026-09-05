@@ -170,6 +170,20 @@ function joinRelativePath(parent: string, name: string): string {
   return parent ? `${parent.replace(/\\/g, "/")}/${clean}` : clean;
 }
 
+function findTreeNode(
+  nodes: WorkspaceTreeNode[],
+  path: string,
+): WorkspaceTreeNode | null {
+  for (const node of nodes) {
+    if (node.path === path) return node;
+    if (node.children?.length) {
+      const found = findTreeNode(node.children, path);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 function revealInLabel(): string {
   const platform = detectPlatform();
   if (platform === "macos") return t("common.showInFinder");
@@ -759,7 +773,18 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       return;
     }
     await refreshTreeFromDisk();
-    void handlers.fileSelect(fileName);
+    const node = findTreeNode(currentTree, fileName);
+    if (!node) {
+      void handlers.fileSelect(fileName);
+      return;
+    }
+    // Rename before opening — selecting the file focuses the editor and
+    // would blur/destroy the inline rename input.
+    startInlineRename(node, {
+      onDone(path) {
+        void handlers.fileSelect(path);
+      },
+    });
   }
 
   async function createNewFolder(): Promise<void> {
@@ -776,6 +801,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     expanded.add(folderName);
     notifyExpandedChange();
     await refreshTreeFromDisk();
+    const node = findTreeNode(currentTree, folderName);
+    if (node) startInlineRename(node);
   }
 
   function remapExpandedPaths(from: string, to: string): void {
@@ -913,12 +940,18 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     }
   }
 
-  function startInlineRename(node: WorkspaceTreeNode): void {
+  function startInlineRename(
+    node: WorkspaceTreeNode,
+    options?: { onDone?: (path: string) => void },
+  ): void {
     const row = treeHost.querySelector<HTMLButtonElement>(
       `[data-path="${CSS.escape(node.path)}"]`,
     );
     const label = row?.querySelector<HTMLElement>(".inimark-tree-label");
-    if (!row || !label) return;
+    if (!row || !label) {
+      options?.onDone?.(node.path);
+      return;
+    }
 
     const input = document.createElement("input");
     input.type = "text";
@@ -933,26 +966,34 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     let finished = false;
 
+    function settle(path: string): void {
+      options?.onDone?.(path);
+    }
+
     async function commit(): Promise<void> {
       if (finished) return;
       finished = true;
       const nextName = input.value.trim();
       if (!nextName || nextName === node.name) {
         rerender();
+        settle(node.path);
         return;
       }
       if (/[/\\]/.test(nextName)) {
         console.error("Name cannot contain path separators");
         rerender();
+        settle(node.path);
         return;
       }
-      await renameNode(node, nextName);
+      const finalPath = await renameNode(node, nextName);
+      settle(finalPath);
     }
 
     function cancel(): void {
       if (finished) return;
       finished = true;
       rerender();
+      settle(node.path);
     }
 
     input.addEventListener("keydown", (event) => {
@@ -969,20 +1010,20 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
   }
 
-  async function renameNode(node: WorkspaceTreeNode, nextName: string): Promise<void> {
-    if (!currentWorkspace) return;
+  async function renameNode(node: WorkspaceTreeNode, nextName: string): Promise<string> {
+    if (!currentWorkspace) return node.path;
     const parent = parentRelativePath(node.path);
     const toPath = joinRelativePath(parent, nextName);
     if (toPath === node.path) {
       rerender();
-      return;
+      return node.path;
     }
 
     const result = await renameWorkspaceEntry(currentWorkspace, node.path, toPath);
     if (result.status === "error") {
       console.error(result.message);
       rerender();
-      return;
+      return node.path;
     }
 
     if (node.kind === "directory") {
@@ -1003,6 +1044,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         handlers.fileRenamed(activePath, mapped);
       }
     }
+    return toPath;
   }
 
   function rerender(): void {

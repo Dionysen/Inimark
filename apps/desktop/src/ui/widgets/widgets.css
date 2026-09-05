@@ -87,11 +87,21 @@
   height: var(--inimark-control-height);
   padding: 0 var(--inimark-control-padding-x);
   border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
   background: var(--inimark-surface);
   color: var(--inimark-fg);
+  font-family: inherit;
+  font-size: var(--inimark-control-font-size);
+  line-height: 1.3;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition),
+    color var(--inimark-control-transition),
+    box-shadow var(--inimark-control-transition),
+    transform var(--inimark-control-transition);
 }
 
 .inimark-btn:hover:not(:disabled) {
@@ -101,6 +111,15 @@
 
 .inimark-btn:active:not(:disabled) {
   transform: scale(0.98);
+}
+
+.inimark-btn:focus {
+  outline: none;
+}
+
+.inimark-btn:focus-visible {
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
 }
 
 .inimark-btn--ghost {
@@ -124,6 +143,17 @@
 .inimark-btn--primary:hover:not(:disabled) {
   background: var(--accent-hover, var(--inimark-accent));
   border-color: var(--accent-hover, var(--inimark-accent));
+}
+
+.inimark-btn--danger {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.inimark-btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 /* ── Icon button ────────────────────────────────────────────────── */

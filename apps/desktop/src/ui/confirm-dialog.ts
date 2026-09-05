@@ -34,9 +34,9 @@ export function promptUnsavedChanges(
         <h2 class="inimark-confirm-dialog-title" id="inimark-confirm-title"></h2>
         <p class="inimark-confirm-dialog-message"></p>
         <div class="inimark-confirm-dialog-actions">
-          <button type="button" class="inimark-btn inimark-confirm-dialog-btn" data-choice="cancel"></button>
-          <button type="button" class="inimark-btn inimark-confirm-dialog-btn inimark-confirm-dialog-btn--discard" data-choice="discard"></button>
-          <button type="button" class="inimark-btn inimark-confirm-dialog-btn inimark-confirm-dialog-btn--primary" data-choice="save"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-confirm-dialog-btn" data-choice="cancel"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-btn--danger inimark-confirm-dialog-btn" data-choice="discard"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-btn--primary inimark-confirm-dialog-btn" data-choice="save"></button>
         </div>
       </div>
     `;
@@ -130,8 +130,8 @@ export function promptConfirm(options: ConfirmPromptOptions = {}): Promise<boole
         <h2 class="inimark-confirm-dialog-title" id="inimark-confirm-title"></h2>
         <p class="inimark-confirm-dialog-message"></p>
         <div class="inimark-confirm-dialog-actions">
-          <button type="button" class="inimark-btn inimark-confirm-dialog-btn" data-choice="cancel"></button>
-          <button type="button" class="inimark-btn inimark-confirm-dialog-btn inimark-confirm-dialog-btn--primary" data-choice="confirm"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-confirm-dialog-btn" data-choice="cancel"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-btn--primary inimark-confirm-dialog-btn" data-choice="confirm"></button>
         </div>
       </div>
     `;
@@ -143,8 +143,8 @@ export function promptConfirm(options: ConfirmPromptOptions = {}): Promise<boole
     cancelBtn.textContent = cancelLabel;
     confirmBtn.textContent = confirmLabel;
     if (danger) {
-      confirmBtn.classList.add("inimark-confirm-dialog-btn--discard");
-      confirmBtn.classList.remove("inimark-confirm-dialog-btn--primary");
+      confirmBtn.classList.add("inimark-btn--danger");
+      confirmBtn.classList.remove("inimark-btn--primary");
     }
 
     const panel = overlay.querySelector(".inimark-confirm-dialog-panel")!;
