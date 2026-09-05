@@ -5,12 +5,19 @@ import {
   normalizeFontValue,
   resolveFontValue,
 } from "./system-fonts.ts";
+import {
+  detectSystemLocale,
+  setLocale,
+  t,
+  type LocaleId,
+} from "../i18n/index.ts";
 
 export type EditorWidth = "narrow" | "medium" | "wide" | "full";
 export type AppearanceMode = "light" | "dark" | "system";
 export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
 export type ImageFilenameFormat = "original" | "timestamp" | "both";
+export type AppLocale = "en" | "zh-CN" | "system";
 
 export type { FontPresetId };
 export { FONT_PRESETS };
@@ -31,6 +38,8 @@ export interface ImageSettings {
 }
 
 export interface AppSettings {
+  /** UI language. `system` follows OS locale. */
+  locale: AppLocale;
   fontSize: number;
   codeFontSize: number;
   editorWidth: EditorWidth;
@@ -67,6 +76,7 @@ export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  locale: "system",
   fontSize: 16,
   codeFontSize: 14,
   editorWidth: "medium",
@@ -156,6 +166,10 @@ export function applySettings(settings: AppSettings): void {
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
   root.dataset.menuDensity = settings.menuDensity;
+
+  const resolved: LocaleId =
+    settings.locale === "system" ? detectSystemLocale() : settings.locale;
+  setLocale(resolved);
 }
 
 export function resolveAppearance(mode: AppearanceMode): "light" | "dark" {
@@ -168,24 +182,24 @@ export function resolveAppearance(mode: AppearanceMode): "light" | "dark" {
 export function editorWidthLabel(width: EditorWidth): string {
   switch (width) {
     case "narrow":
-      return "Narrow (36rem)";
+      return t("settings.width.narrow");
     case "medium":
-      return "Medium (48rem)";
+      return t("settings.width.medium");
     case "wide":
-      return "Wide (60rem)";
+      return t("settings.width.wide");
     case "full":
-      return "Full width";
+      return t("settings.width.full");
   }
 }
 
 export function menuDensityLabel(density: MenuDensity): string {
   switch (density) {
     case "compact":
-      return "Compact";
+      return t("settings.density.compact");
     case "normal":
-      return "Normal";
+      return t("settings.density.normal");
     case "comfortable":
-      return "Comfortable";
+      return t("settings.density.comfortable");
   }
 }
 
@@ -205,6 +219,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ...(parsed.image ?? {}),
   };
   return {
+    locale: isAppLocale(parsed.locale) ? parsed.locale : DEFAULT_SETTINGS.locale,
     fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, 10, 24),
     codeFontSize: clamp(parsed.codeFontSize ?? DEFAULT_SETTINGS.codeFontSize, 10, 24),
     editorWidth: isEditorWidth(parsed.editorWidth)
@@ -277,6 +292,10 @@ function isEditorWidth(value: unknown): value is EditorWidth {
 
 function isAppearance(value: unknown): value is AppearanceMode {
   return value === "light" || value === "dark" || value === "system";
+}
+
+function isAppLocale(value: unknown): value is AppLocale {
+  return value === "en" || value === "zh-CN" || value === "system";
 }
 
 function isMenuDensity(value: unknown): value is MenuDensity {

@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "../i18n/index.ts";
 import { usesNativeWindowControls } from "../platform/platform.ts";
 import {
   closeWindow,
@@ -68,8 +69,8 @@ export function mountTitleBar(
   let sidebarToggleBtn: HTMLButtonElement | null = null;
   if (options.sidebarToggle) {
     sidebarToggleBtn = createIconButton({
-      label: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
-      title: sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
+      label: sidebarOpen ? t("common.collapseSidebar") : t("common.expandSidebar"),
+      title: sidebarOpen ? t("common.collapseSidebar") : t("common.expandSidebar"),
       onClick: options.sidebarToggle.onToggle,
     });
     sidebarToggleBtn.className = "inimark-sidebar-toggle-btn";
@@ -94,8 +95,12 @@ export function mountTitleBar(
   let rightSidebarToggleBtn: HTMLButtonElement | null = null;
   if (options.rightSidebarToggle) {
     rightSidebarToggleBtn = createIconButton({
-      label: rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
-      title: rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
+      label: rightSidebarOpen
+        ? t("common.collapseRightSidebar")
+        : t("common.expandRightSidebar"),
+      title: rightSidebarOpen
+        ? t("common.collapseRightSidebar")
+        : t("common.expandRightSidebar"),
       onClick: options.rightSidebarToggle.onToggle,
     });
     rightSidebarToggleBtn.className =
@@ -111,8 +116,8 @@ export function mountTitleBar(
 
     if (controlMode === "full") {
       const btnMinimize = createIconButton({
-        label: "Minimize",
-        title: "Minimize",
+        label: t("common.minimize"),
+        title: t("common.minimize"),
       });
       btnMinimize.className = "inimark-titlebar-btn";
       btnMinimize.innerHTML = windowMinimizeIcon();
@@ -120,8 +125,8 @@ export function mountTitleBar(
       btnMinimize.addEventListener("click", () => void minimizeWindow());
 
       const btnMaximize = createIconButton({
-        label: "Maximize",
-        title: "Maximize",
+        label: t("common.maximize"),
+        title: t("common.maximize"),
       });
       btnMaximize.className = "inimark-titlebar-btn";
       btnMaximize.innerHTML = windowMaximizeIcon();
@@ -129,8 +134,11 @@ export function mountTitleBar(
 
       function setMaximized(maximized: boolean): void {
         btnMaximize.innerHTML = maximized ? windowRestoreIcon() : windowMaximizeIcon();
-        btnMaximize.title = maximized ? "Restore" : "Maximize";
-        btnMaximize.setAttribute("aria-label", maximized ? "Restore" : "Maximize");
+        btnMaximize.title = maximized ? t("common.restore") : t("common.maximize");
+        btnMaximize.setAttribute(
+          "aria-label",
+          maximized ? t("common.restore") : t("common.maximize"),
+        );
       }
 
       btnMaximize.addEventListener("click", () => {
@@ -138,8 +146,8 @@ export function mountTitleBar(
       });
 
       const btnClose = createIconButton({
-        label: "Close",
-        title: "Close",
+        label: t("common.close"),
+        title: t("common.close"),
       });
       btnClose.className = "inimark-titlebar-btn inimark-titlebar-btn--close";
       btnClose.innerHTML = windowCloseIcon();
@@ -155,8 +163,8 @@ export function mountTitleBar(
       });
     } else {
       const btnClose = createIconButton({
-        label: "Close",
-        title: "Close",
+        label: t("common.close"),
+        title: t("common.close"),
       });
       btnClose.className = "inimark-titlebar-btn inimark-titlebar-btn--close";
       btnClose.innerHTML = windowCloseIcon();
@@ -184,28 +192,28 @@ export function mountTitleBar(
     // Obsidian-style: titlebar toggle only when sidebar is collapsed.
     sidebarToggleBtn.hidden = sidebarOpen;
     sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
-    sidebarToggleBtn.title = sidebarOpen ? "Collapse sidebar" : "Expand sidebar";
-    sidebarToggleBtn.setAttribute(
-      "aria-label",
-      sidebarOpen ? "Collapse sidebar" : "Expand sidebar",
-    );
+    const label = sidebarOpen ? t("common.collapseSidebar") : t("common.expandSidebar");
+    sidebarToggleBtn.title = label;
+    sidebarToggleBtn.setAttribute("aria-label", label);
   }
 
   function updateRightSidebarToggle(): void {
     if (!rightSidebarToggleBtn) return;
     rightSidebarToggleBtn.hidden = rightSidebarOpen;
     rightSidebarToggleBtn.innerHTML = rightSidebarToggleIcon(rightSidebarOpen);
-    rightSidebarToggleBtn.title = rightSidebarOpen
-      ? "Collapse right sidebar"
-      : "Expand right sidebar";
-    rightSidebarToggleBtn.setAttribute(
-      "aria-label",
-      rightSidebarOpen ? "Collapse right sidebar" : "Expand right sidebar",
-    );
+    const label = rightSidebarOpen
+      ? t("common.collapseRightSidebar")
+      : t("common.expandRightSidebar");
+    rightSidebarToggleBtn.title = label;
+    rightSidebarToggleBtn.setAttribute("aria-label", label);
   }
 
   updateSidebarToggle();
   updateRightSidebarToggle();
+  const unsubscribeLocale = onLocaleChange(() => {
+    updateSidebarToggle();
+    updateRightSidebarToggle();
+  });
 
   return {
     setTitle(title) {
@@ -220,6 +228,7 @@ export function mountTitleBar(
       updateRightSidebarToggle();
     },
     destroy() {
+      unsubscribeLocale();
       unlistenMaximize?.();
       host.replaceChildren();
       host.className = "";

@@ -1,4 +1,5 @@
 import "../styles/confirm-dialog.css";
+import { t } from "../i18n/index.ts";
 
 export type UnsavedChoice = "save" | "discard" | "cancel";
 
@@ -19,12 +20,11 @@ export function promptUnsavedChanges(
     return Promise.resolve("cancel");
   }
 
-  const title = options.title ?? "Save changes?";
-  const message =
-    options.message ?? "Your changes will be lost if you don't save them.";
-  const saveLabel = options.saveLabel ?? "Save";
-  const discardLabel = options.discardLabel ?? "Don't Save";
-  const cancelLabel = options.cancelLabel ?? "Cancel";
+  const title = options.title ?? t("dialogs.unsavedTitle");
+  const message = options.message ?? t("dialogs.unsavedMessage");
+  const saveLabel = options.saveLabel ?? t("dialogs.unsavedSave");
+  const discardLabel = options.discardLabel ?? t("dialogs.unsavedDiscard");
+  const cancelLabel = options.cancelLabel ?? t("dialogs.unsavedCancel");
 
   return new Promise((resolve) => {
     const overlay = document.createElement("div");

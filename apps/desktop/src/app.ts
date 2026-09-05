@@ -3,6 +3,7 @@ import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
 import "./styles/app.css";
+import { t } from "./i18n/index.ts";
 import {
   getLastLibraryId,
   getLibraryById,
@@ -54,7 +55,7 @@ export function mountApp(host: HTMLElement): AppController {
   const cleanups: Array<() => void> = [];
 
   const editor = createEditor(shell.editorHost, {
-    initialContent: "# Welcome\n\nStart writing…",
+    initialContent: t("editor.welcome"),
     onChange: (md) => {
       shell.setDirty(true);
       scheduleAutoSave();
@@ -186,8 +187,8 @@ export function mountApp(host: HTMLElement): AppController {
   async function confirmDiscardChanges(): Promise<boolean> {
     if (!shell.isDirty()) return true;
     const choice = await promptUnsavedChanges({
-      title: "Save changes?",
-      message: "Your changes will be lost if you don't save them.",
+      title: t("dialogs.unsavedTitle"),
+      message: t("dialogs.unsavedMessage"),
     });
     if (choice === "cancel") return false;
     if (choice === "save") return saveCurrentFile();
@@ -334,8 +335,8 @@ export function mountApp(host: HTMLElement): AppController {
   async function closeCurrent(): Promise<void> {
     if (shell.isDirty()) {
       const choice = await promptUnsavedChanges({
-        title: "Save changes?",
-        message: "Save changes before closing this file?",
+        title: t("dialogs.unsavedTitle"),
+        message: t("dialogs.unsavedMessageClose"),
       });
       if (choice === "cancel") return;
       if (choice === "save") {
@@ -356,8 +357,8 @@ export function mountApp(host: HTMLElement): AppController {
     if (closeInProgress) return;
     if (shell.isDirty()) {
       const choice = await promptUnsavedChanges({
-        title: "Save changes?",
-        message: "Your changes will be lost if you don't save them.",
+        title: t("dialogs.unsavedTitle"),
+        message: t("dialogs.unsavedMessage"),
       });
       if (choice === "cancel") return;
       if (choice === "save") {

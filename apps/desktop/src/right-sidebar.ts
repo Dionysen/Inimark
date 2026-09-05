@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "./i18n/index.ts";
 import {
   createIconButton,
   outlineTabIcon,
@@ -13,9 +14,16 @@ export type RightSidebarPanelId = "outline";
 
 const RIGHT_PANEL_KEY = "inimark-right-sidebar-panel";
 
-const PANEL_META: Record<RightSidebarPanelId, { label: string; icon: () => string }> = {
-  outline: { label: "Outline", icon: outlineTabIcon },
+const PANEL_ICONS: Record<RightSidebarPanelId, () => string> = {
+  outline: outlineTabIcon,
 };
+
+function panelLabel(id: RightSidebarPanelId): string {
+  switch (id) {
+    case "outline":
+      return t("outline.tab");
+  }
+}
 
 export interface RightSidebarController {
   setContent(markdown: string): void;
@@ -47,9 +55,11 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   topbar.className = "inimark-sidebar-topbar inimark-right-sidebar-topbar";
   topbar.setAttribute("data-tauri-drag-region", "");
 
+  let sidebarOpen = true;
+
   const collapseBtn = createIconButton({
-    label: "Collapse right sidebar",
-    title: "Collapse right sidebar",
+    label: t("common.collapseRightSidebar"),
+    title: t("common.collapseRightSidebar"),
   });
   collapseBtn.className =
     "inimark-sidebar-toggle-btn inimark-right-sidebar-collapse-btn";
@@ -62,16 +72,16 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   markNoDrag(tabs);
 
   const tabButtons = new Map<RightSidebarPanelId, HTMLButtonElement>();
-  for (const id of Object.keys(PANEL_META) as RightSidebarPanelId[]) {
-    const meta = PANEL_META[id];
+  for (const id of Object.keys(PANEL_ICONS) as RightSidebarPanelId[]) {
+    const label = panelLabel(id);
     const btn = createIconButton({
-      label: meta.label,
-      title: meta.label,
+      label,
+      title: label,
     });
     btn.className = "inimark-sidebar-tab";
     btn.setAttribute("role", "tab");
     btn.dataset.panel = id;
-    btn.innerHTML = meta.icon();
+    btn.innerHTML = PANEL_ICONS[id]();
     markNoDrag(btn);
     tabButtons.set(id, btn);
     tabs.append(btn);
@@ -99,6 +109,24 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
 
   collapseBtn.addEventListener("click", () => handlers.toggleSidebar());
 
+  function syncCollapseButton(): void {
+    const label = sidebarOpen
+      ? t("common.collapseRightSidebar")
+      : t("common.expandRightSidebar");
+    collapseBtn.innerHTML = rightSidebarToggleIcon(sidebarOpen);
+    collapseBtn.title = label;
+    collapseBtn.setAttribute("aria-label", label);
+  }
+
+  function refreshChrome(): void {
+    for (const [id, btn] of tabButtons) {
+      const label = panelLabel(id);
+      btn.title = label;
+      btn.setAttribute("aria-label", label);
+    }
+    syncCollapseButton();
+  }
+
   function setActivePanel(panel: RightSidebarPanelId): void {
     activePanel = panel;
     try {
@@ -119,18 +147,15 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   }
 
   setActivePanel(activePanel);
+  const unsubscribeLocale = onLocaleChange(() => refreshChrome());
 
   return {
     setContent(markdown) {
       outline.setContent(markdown);
     },
     setSidebarOpen(open) {
-      collapseBtn.innerHTML = rightSidebarToggleIcon(open);
-      collapseBtn.title = open ? "Collapse right sidebar" : "Expand right sidebar";
-      collapseBtn.setAttribute(
-        "aria-label",
-        open ? "Collapse right sidebar" : "Expand right sidebar",
-      );
+      sidebarOpen = open;
+      syncCollapseButton();
     },
     onToggleSidebar(handler) {
       handlers.toggleSidebar = handler;
@@ -139,6 +164,7 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
       outline.onSelectHeading(handler);
     },
     destroy() {
+      unsubscribeLocale();
       outline.destroy();
       host.replaceChildren();
     },

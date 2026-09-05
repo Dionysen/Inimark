@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "../i18n/index.ts";
 import {
   collapseAllIcon,
   createMenu,
@@ -75,8 +76,8 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
 
   const toolbar = createPanelToolbar([
     {
-      label: "Toggle heading levels",
-      title: showLevels ? "Hide heading levels" : "Show heading levels",
+      label: t("outline.toggleLevels"),
+      title: showLevels ? t("outline.hideLevels") : t("outline.showLevels"),
       icon: () => levelsToggleIcon(showLevels),
       onClick() {
         showLevels = !showLevels;
@@ -90,8 +91,8 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       },
     },
     {
-      label: "Collapse all",
-      title: "Collapse all",
+      label: t("outline.collapseAll"),
+      title: t("outline.collapseAll"),
       icon: collapseAllIcon,
       onClick() {
         closeExpandMenu();
@@ -100,8 +101,8 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       },
     },
     {
-      label: "Expand to level",
-      title: "Expand to heading level",
+      label: t("outline.expandToLevel"),
+      title: t("outline.expandToLevel"),
       icon: expandToLevelIcon,
       onClick(event) {
         event.stopPropagation();
@@ -116,7 +117,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   expandToBtn.setAttribute("aria-haspopup", "menu");
   expandToBtn.setAttribute("aria-expanded", "false");
 
-  const treeHost = createTreeHost("Document outline");
+  const treeHost = createTreeHost(t("outline.treeAria"));
   treeHost.classList.add("inimark-outline-tree");
   host.append(toolbar.el, treeHost, expandMenu.el);
 
@@ -131,17 +132,15 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   }
 
   function syncLevelsButton(): void {
-    levelsBtn.title = showLevels ? "Hide heading levels" : "Show heading levels";
-    levelsBtn.setAttribute(
-      "aria-label",
-      showLevels ? "Hide heading levels" : "Show heading levels",
-    );
+    const label = showLevels ? t("outline.hideLevels") : t("outline.showLevels");
+    levelsBtn.title = label;
+    levelsBtn.setAttribute("aria-label", label);
     levelsBtn.innerHTML = levelsToggleIcon(showLevels);
   }
 
   function syncExpandCollapseButton(): void {
     const expanded = hasAnyExpanded();
-    const label = expanded ? "Collapse all" : "Expand all";
+    const label = expanded ? t("outline.collapseAll") : t("outline.expandAll");
     expandCollapseBtn.title = label;
     expandCollapseBtn.setAttribute("aria-label", label);
     expandCollapseBtn.innerHTML = expanded ? collapseAllIcon() : expandAllIcon();
@@ -192,10 +191,10 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   function renderExpandMenu(): void {
     expandMenu.clear();
     expandMenu.setPath("");
-    expandMenu.addHeading("Expand to");
+    expandMenu.addHeading(t("outline.expandTo"));
     for (let level = 1; level <= 6; level++) {
       expandMenu.addItem({
-        label: `Heading ${level}`,
+        label: t("outline.headingN", { level }),
         meta: `H${level}`,
         checked: expandToLevel === level,
         onClick() {
@@ -306,14 +305,15 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
 
   function rerender(): void {
     treeHost.replaceChildren();
+    treeHost.setAttribute("aria-label", t("outline.treeAria"));
     const items = parseOutline(markdown);
     if (items.length === 0) {
       const empty = document.createElement("p");
       empty.className = "inimark-sidebar-empty";
-      empty.textContent = "No headings yet";
+      empty.textContent = t("outline.empty");
       const hint = document.createElement("p");
       hint.className = "inimark-sidebar-empty-hint";
-      hint.textContent = "Add # headings to see the outline";
+      hint.textContent = t("outline.emptyHint");
       treeHost.append(empty, hint);
       syncExpandCollapseButton();
       return;
@@ -326,7 +326,16 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     syncExpandCollapseButton();
   }
 
+  function refreshChrome(): void {
+    syncLevelsButton();
+    expandToBtn.title = t("outline.expandToLevel");
+    expandToBtn.setAttribute("aria-label", t("outline.expandToLevel"));
+    if (expandMenu.isOpen()) renderExpandMenu();
+    rerender();
+  }
+
   rerender();
+  const unsubscribeLocale = onLocaleChange(() => refreshChrome());
 
   return {
     el: host,
@@ -342,6 +351,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       onSelect = handler;
     },
     destroy() {
+      unsubscribeLocale();
       document.removeEventListener("click", onDocumentClick);
       document.removeEventListener("keydown", onDocumentKeydown);
       closeExpandMenu();

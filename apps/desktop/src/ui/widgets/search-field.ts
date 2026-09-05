@@ -1,3 +1,5 @@
+import { t } from "../../i18n/index.ts";
+
 const SEARCH_ICON = `<svg class="inimark-search__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
 const CLEAR_ICON = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
@@ -32,8 +34,8 @@ export function createSearchField(options: SearchFieldOptions = {}): SearchField
   // text — avoid WebKit native clear that fights the custom clear button
   input.type = "text";
   input.className = "inimark-field__input";
-  input.placeholder = options.placeholder ?? "Search…";
-  input.setAttribute("aria-label", options.placeholder ?? "Search");
+  input.placeholder = options.placeholder ?? t("common.search");
+  input.setAttribute("aria-label", options.placeholder ?? t("common.search"));
   input.autocomplete = "off";
   input.spellcheck = false;
   input.enterKeyHint = "search";
@@ -42,7 +44,7 @@ export function createSearchField(options: SearchFieldOptions = {}): SearchField
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
   clearBtn.className = "inimark-search__clear";
-  clearBtn.title = "Clear search";
+  clearBtn.title = t("common.clearSearch");
   clearBtn.innerHTML = CLEAR_ICON;
   clearBtn.hidden = !input.value;
 

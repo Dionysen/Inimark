@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "../i18n/index.ts";
 import {
   listLibraries,
   removeLibrary,
@@ -23,6 +24,7 @@ import {
   createTextField,
 } from "../ui/widgets/index.ts";
 import {
+  type AppLocale,
   type AppSettings,
   type EditorWidth,
   type FontPresetId,
@@ -56,56 +58,46 @@ type SettingsSection =
   | "image"
   | "about";
 
-const SECTION_META: Record<
-  SettingsSection,
-  { title: string; subtitle: string; searchTerms: string[] }
-> = {
-  editor: {
-    title: "Editor",
-    subtitle: "Typography, layout, and save behavior",
-    searchTerms: [
-      "font",
-      "size",
-      "width",
-      "layout",
-      "typography",
-      "autosave",
-      "format",
-      "typewriter",
-      "line height",
-    ],
-  },
-  appearance: {
-    title: "Appearance",
-    subtitle: "Interface chrome and density",
-    searchTerms: ["density", "ui font", "library bar", "interface", "chrome", "menu"],
-  },
-  theme: {
-    title: "Theme",
-    subtitle: "App and code themes",
-    searchTerms: ["theme", "color", "dark", "light", "style", "syntax", "highlight"],
-  },
-  shortcuts: {
-    title: "Shortcuts",
-    subtitle: "Keyboard shortcuts for common actions",
-    searchTerms: ["keyboard", "hotkey", "keymap", "binding"],
-  },
-  libraries: {
-    title: "Libraries",
-    subtitle: "Manage saved folder libraries",
-    searchTerms: ["folder", "vault", "workspace", "files"],
-  },
-  image: {
-    title: "Images",
-    subtitle: "Paste and drop image storage",
-    searchTerms: ["image", "assets", "paste", "filename", "upload"],
-  },
-  about: {
-    title: "About",
-    subtitle: "Version and updates",
-    searchTerms: ["version", "license", "info", "github", "update", "upgrade"],
-  },
+const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
+  editor: [
+    "font",
+    "size",
+    "width",
+    "layout",
+    "typography",
+    "autosave",
+    "format",
+    "typewriter",
+    "line height",
+  ],
+  appearance: [
+    "density",
+    "ui font",
+    "library bar",
+    "interface",
+    "chrome",
+    "menu",
+    "language",
+    "locale",
+  ],
+  theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight"],
+  shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
+  libraries: ["folder", "vault", "workspace", "files"],
+  image: ["image", "assets", "paste", "filename", "upload"],
+  about: ["version", "license", "info", "github", "update", "upgrade"],
 };
+
+function sectionMeta(id: SettingsSection): {
+  title: string;
+  subtitle: string;
+  searchTerms: string[];
+} {
+  return {
+    title: t(`settings.nav.${id}`),
+    subtitle: t(`settings.subtitle.${id}`),
+    searchTerms: SECTION_SEARCH_TERMS[id],
+  };
+}
 
 const SETTINGS_NAV_WIDTH_KEY = "inimark-settings-nav-width";
 const SETTINGS_NAV_WIDTH_DEFAULT = 220;
@@ -119,7 +111,7 @@ const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
 function sectionMatches(id: SettingsSection, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  const meta = SECTION_META[id];
+  const meta = sectionMeta(id);
   if (meta.title.toLowerCase().includes(q)) return true;
   if (meta.subtitle.toLowerCase().includes(q)) return true;
   return meta.searchTerms.some((term) => term.includes(q) || q.includes(term));
@@ -189,7 +181,7 @@ export function mountSettingsView(
   navBody.className = "inimark-settings-nav-body";
 
   const search = createSearchField({
-    placeholder: "Search settings…",
+    placeholder: t("settings.searchPlaceholder"),
     onInput(value) {
       searchQuery = value;
       renderNav();
@@ -201,31 +193,33 @@ export function mountSettingsView(
   const navEmpty = document.createElement("div");
   navEmpty.className = "inimark-settings-nav-empty";
   navEmpty.hidden = true;
-  navEmpty.innerHTML = `<span>No matching settings</span>`;
+  const navEmptyLabel = document.createElement("span");
+  navEmptyLabel.textContent = t("settings.noMatch");
+  navEmpty.append(navEmptyLabel);
 
-  const sections: Array<{ id: SettingsSection; label: string }> = [
-    { id: "editor", label: "Editor" },
-    { id: "appearance", label: "Appearance" },
-    { id: "theme", label: "Theme" },
-    { id: "shortcuts", label: "Shortcuts" },
-    { id: "libraries", label: "Libraries" },
-    { id: "image", label: "Images" },
-    { id: "about", label: "About" },
+  const sectionIds: SettingsSection[] = [
+    "editor",
+    "appearance",
+    "theme",
+    "shortcuts",
+    "libraries",
+    "image",
+    "about",
   ];
 
   const navButtons = new Map<SettingsSection, HTMLButtonElement>();
 
-  for (const section of sections) {
+  for (const id of sectionIds) {
     const btn = createNavItem({
-      id: section.id,
-      label: section.label,
+      id,
+      label: sectionMeta(id).title,
       onClick() {
-        activeSection = section.id;
+        activeSection = id;
         renderNav();
         renderContent();
       },
     });
-    navButtons.set(section.id, btn);
+    navButtons.set(id, btn);
     navList.append(btn);
   }
 
@@ -276,11 +270,13 @@ export function mountSettingsView(
       const match = sectionMatches(id, searchQuery);
       btn.hidden = !match;
       btn.classList.toggle("is-active", id === activeSection);
+      btn.textContent = sectionMeta(id).title;
       if (match) visible += 1;
     }
     const querying = searchQuery.trim().length > 0;
     navList.hidden = querying && visible === 0;
     navEmpty.hidden = !(querying && visible === 0);
+    navEmptyLabel.textContent = t("settings.noMatch");
   }
 
   function update(partial: Partial<AppSettings>): void {
@@ -306,24 +302,24 @@ export function mountSettingsView(
   let themeCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
-    body.append(createSectionTitle("Experience"));
+    body.append(createSectionTitle(t("settings.group.experience")));
 
     const typewriter = createToggle({
       checked: settings.typewriterMode,
-      title: "Typewriter mode",
+      title: t("settings.editor.typewriter"),
       onChange(checked) {
         update({ typewriterMode: checked });
       },
     });
     body.append(
       createRow(
-        "Typewriter mode",
-        "Keep the caret line vertically centered while writing.",
+        t("settings.editor.typewriter"),
+        t("settings.editor.typewriterDesc"),
         typewriter.el,
       ),
     );
 
-    body.append(createSectionTitle("Typography"));
+    body.append(createSectionTitle(t("settings.group.typography")));
 
     const editorFont = createFontPicker({
       mode: "editor",
@@ -335,7 +331,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Editor font", "Font family for the writing surface.", editorFont.el),
+      createRow(
+        t("settings.editor.editorFont"),
+        t("settings.editor.editorFontDesc"),
+        editorFont.el,
+      ),
     );
 
     const codeFont = createFontPicker({
@@ -348,7 +348,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Code font", "Monospace font for fenced and inline code.", codeFont.el),
+      createRow(
+        t("settings.editor.codeFont"),
+        t("settings.editor.codeFontDesc"),
+        codeFont.el,
+      ),
     );
 
     const fontSize = createSlider({
@@ -362,7 +366,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Font size", "Base font size for editor content.", fontSize.el),
+      createRow(
+        t("settings.editor.fontSize"),
+        t("settings.editor.fontSizeDesc"),
+        fontSize.el,
+      ),
     );
 
     const codeFontSize = createSlider({
@@ -376,7 +384,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Code font size", "Font size inside code blocks.", codeFontSize.el),
+      createRow(
+        t("settings.editor.codeFontSize"),
+        t("settings.editor.codeFontSizeDesc"),
+        codeFontSize.el,
+      ),
     );
 
     const lineHeight = createSlider({
@@ -390,7 +402,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Line height", "Leading for body paragraphs.", lineHeight.el),
+      createRow(
+        t("settings.editor.lineHeight"),
+        t("settings.editor.lineHeightDesc"),
+        lineHeight.el,
+      ),
     );
 
     const paragraphSpacing = createSlider({
@@ -405,8 +421,8 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "Paragraph spacing",
-        "Vertical gap after paragraphs (em).",
+        t("settings.editor.paragraphSpacing"),
+        t("settings.editor.paragraphSpacingDesc"),
         paragraphSpacing.el,
       ),
     );
@@ -422,7 +438,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Code line height", "Leading inside code blocks.", codeLineHeight.el),
+      createRow(
+        t("settings.editor.codeLineHeight"),
+        t("settings.editor.codeLineHeightDesc"),
+        codeLineHeight.el,
+      ),
     );
 
     const widthSelect = createSelect({
@@ -437,42 +457,46 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Editor width", "Maximum width of the writing column.", widthSelect.el),
+      createRow(
+        t("settings.editor.editorWidth"),
+        t("settings.editor.editorWidthDesc"),
+        widthSelect.el,
+      ),
     );
 
-    body.append(createSectionTitle("Save"));
+    body.append(createSectionTitle(t("settings.group.save")));
 
     const autoSave = createToggle({
       checked: settings.autoSave,
-      title: "Auto save",
+      title: t("settings.editor.autoSave"),
       onChange(checked) {
         update({ autoSave: checked });
       },
     });
     body.append(
       createRow(
-        "Auto save",
-        "Save the open library file shortly after edits.",
+        t("settings.editor.autoSave"),
+        t("settings.editor.autoSaveDesc"),
         autoSave.el,
       ),
     );
 
     const formatOnSave = createToggle({
       checked: settings.markdownFormat.formatOnSave,
-      title: "Format on save",
+      title: t("settings.editor.formatOnSave"),
       onChange(checked) {
         patchFormat({ formatOnSave: checked });
       },
     });
     body.append(
       createRow(
-        "Format on save",
-        "Apply Markdown hygiene options when saving.",
+        t("settings.editor.formatOnSave"),
+        t("settings.editor.formatOnSaveDesc"),
         formatOnSave.el,
       ),
     );
 
-    body.append(createSectionTitle("Markdown format"));
+    body.append(createSectionTitle(t("settings.group.markdownFormat")));
 
     const cjk = createToggle({
       checked: settings.markdownFormat.cjkSpacing,
@@ -482,8 +506,8 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "CJK ↔ Latin spacing",
-        "Insert spaces between CJK and Latin/number characters.",
+        t("settings.editor.cjkSpacing"),
+        t("settings.editor.cjkSpacingDesc"),
         cjk.el,
       ),
     );
@@ -496,8 +520,8 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "Trim trailing whitespace",
-        "Remove end-of-line spaces (keeps Markdown hard breaks).",
+        t("settings.editor.trimTrailing"),
+        t("settings.editor.trimTrailingDesc"),
         trim.el,
       ),
     );
@@ -509,7 +533,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Final newline", "Ensure the file ends with a single newline.", newline.el),
+      createRow(
+        t("settings.editor.finalNewline"),
+        t("settings.editor.finalNewlineDesc"),
+        newline.el,
+      ),
     );
 
     const blanks = createToggle({
@@ -520,15 +548,35 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "Collapse blank lines",
-        "Reduce runs of 3+ blank lines to a single blank line.",
+        t("settings.editor.collapseBlank"),
+        t("settings.editor.collapseBlankDesc"),
         blanks.el,
       ),
     );
   }
 
   function renderAppearanceChrome(body: HTMLElement): void {
-    body.append(createSectionTitle("Interface"));
+    body.append(createSectionTitle(t("settings.group.interface")));
+
+    const localeSelect = createSelect({
+      value: settings.locale,
+      options: [
+        { value: "system", label: t("settings.language.system") },
+        { value: "en", label: t("settings.language.en") },
+        { value: "zh-CN", label: t("settings.language.zhCN") },
+      ],
+      minWidth: 150,
+      onChange(value) {
+        update({ locale: value as AppLocale });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.language.title"),
+        t("settings.language.desc"),
+        localeSelect.el,
+      ),
+    );
 
     const uiFont = createFontPicker({
       mode: "ui",
@@ -540,7 +588,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("UI font", "Font for chrome, sidebar, and menus.", uiFont.el),
+      createRow(
+        t("settings.appearance.uiFont"),
+        t("settings.appearance.uiFontDesc"),
+        uiFont.el,
+      ),
     );
 
     const density = createSelect({
@@ -555,7 +607,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Menu density", "Padding and control size for lists and menus.", density.el),
+      createRow(
+        t("settings.appearance.menuDensity"),
+        t("settings.appearance.menuDensityDesc"),
+        density.el,
+      ),
     );
 
     const autoHide = createToggle({
@@ -566,8 +622,8 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "Auto-hide library bar",
-        "Show the floating library chrome only while hovering the sidebar.",
+        t("settings.appearance.autoHideLibraryBar"),
+        t("settings.appearance.autoHideLibraryBarDesc"),
         autoHide.el,
       ),
     );
@@ -577,8 +633,8 @@ export function mountSettingsView(
     const mode = createSelect({
       value: settings.image.storageMode,
       options: [
-        { value: "library-assets", label: "Library assets folder" },
-        { value: "fixed-directory", label: "Fixed local directory" },
+        { value: "library-assets", label: t("settings.image.libraryAssets") },
+        { value: "fixed-directory", label: t("settings.image.fixedDirectory") },
       ],
       minWidth: 180,
       onChange(value) {
@@ -587,8 +643,8 @@ export function mountSettingsView(
     });
     body.append(
       createRow(
-        "Storage mode",
-        "Where pasted and dropped images are stored.",
+        t("settings.image.storageMode"),
+        t("settings.image.storageModeDesc"),
         mode.el,
       ),
     );
@@ -596,9 +652,9 @@ export function mountSettingsView(
     const filename = createSelect({
       value: settings.image.filenameFormat,
       options: [
-        { value: "original", label: "Original name" },
-        { value: "timestamp", label: "Timestamp" },
-        { value: "both", label: "Original + timestamp" },
+        { value: "original", label: t("settings.image.original") },
+        { value: "timestamp", label: t("settings.image.timestamp") },
+        { value: "both", label: t("settings.image.both") },
       ],
       minWidth: 180,
       onChange(value) {
@@ -606,7 +662,11 @@ export function mountSettingsView(
       },
     });
     body.append(
-      createRow("Filename format", "How new image files are named.", filename.el),
+      createRow(
+        t("settings.image.filenameFormat"),
+        t("settings.image.filenameFormatDesc"),
+        filename.el,
+      ),
     );
 
     if (settings.image.storageMode === "library-assets") {
@@ -618,8 +678,8 @@ export function mountSettingsView(
       });
       body.append(
         createRow(
-          "Auto-create assets folder",
-          "Create an assets directory under the library when needed.",
+          t("settings.image.autoCreate"),
+          t("settings.image.autoCreateDesc"),
           autoCreate.el,
         ),
       );
@@ -628,12 +688,12 @@ export function mountSettingsView(
     if (settings.image.storageMode === "fixed-directory") {
       const pathField = createTextField({
         value: settings.image.fixedDirectoryPath,
-        placeholder: "No folder selected",
+        placeholder: t("settings.image.noFolder"),
       });
       pathField.input.readOnly = true;
 
       const pickBtn = createButton({
-        label: "Choose…",
+        label: t("common.choose"),
         onClick: () => {
           void (async () => {
             if (!isTauri()) return;
@@ -651,8 +711,8 @@ export function mountSettingsView(
       group.append(pathField.el, pickBtn);
       body.append(
         createRow(
-          "Storage path",
-          "Absolute folder used for all saved images.",
+          t("settings.image.storagePath"),
+          t("settings.image.storagePathDesc"),
           group,
         ),
       );
@@ -685,16 +745,15 @@ export function mountSettingsView(
 
     const version = document.createElement("p");
     version.className = "inimark-about-version";
-    version.textContent = aboutVersion === "…" ? "Version …" : `Version ${aboutVersion}`;
+    version.textContent = t("settings.about.version", { version: aboutVersion });
 
     const desc = document.createElement("p");
     desc.className = "inimark-about-desc";
-    desc.textContent =
-      "A minimal, fast Markdown editor built with Tauri and a Typora-style editing core.";
+    desc.textContent = t("settings.about.desc");
 
     const license = document.createElement("p");
     license.className = "inimark-about-license";
-    license.textContent = "MIT License · Editor core includes typora-web (MIT)";
+    license.textContent = t("settings.about.license");
 
     const updateRow = document.createElement("div");
     updateRow.className = "inimark-about-update";
@@ -715,30 +774,31 @@ export function mountSettingsView(
     };
 
     const checkBtn = createButton({
-      label: "Check for updates",
+      label: t("settings.about.checkUpdates"),
       variant: "ghost",
       onClick: () => {
         void (async () => {
           if (!isTauri() || checking || installing) return;
           checking = true;
           pendingVersion = null;
-          setStatus("Checking…");
+          setStatus(t("settings.about.checking"));
           checkBtn.disabled = true;
           installBtn.hidden = true;
           try {
             const { checkForUpdate } = await import("../updater.ts");
             const info = await checkForUpdate();
             if (!info) {
-              setStatus("You're up to date.");
+              setStatus(t("settings.about.upToDate"));
             } else {
               pendingVersion = info.version;
-              setStatus(`Update available: v${info.version}`);
+              setStatus(t("settings.about.available", { version: info.version }));
               installBtn.hidden = false;
-              installBtn.textContent = `Update to v${info.version}`;
+              installBtn.textContent = t("settings.about.available", {
+                version: info.version,
+              });
             }
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            setStatus(`Could not check for updates: ${message}`);
+          } catch {
+            setStatus(t("settings.about.failed"));
           } finally {
             checking = false;
             checkBtn.disabled = false;
@@ -748,7 +808,7 @@ export function mountSettingsView(
     });
 
     const installBtn = createButton({
-      label: "Install update",
+      label: t("settings.about.checkUpdates"),
       variant: "primary",
       onClick: () => {
         void (async () => {
@@ -756,7 +816,7 @@ export function mountSettingsView(
           installing = true;
           checkBtn.disabled = true;
           installBtn.disabled = true;
-          setStatus(`Downloading v${pendingVersion}…`);
+          setStatus(t("settings.about.downloading"));
           try {
             const {
               downloadAndInstall,
@@ -767,15 +827,14 @@ export function mountSettingsView(
               const pct = formatProgressPercent(downloaded, contentLength);
               setStatus(
                 pct
-                  ? `Downloading v${pendingVersion}… ${pct}`
-                  : `Downloading v${pendingVersion}…`,
+                  ? `${t("settings.about.downloading")} ${pct}`
+                  : t("settings.about.downloading"),
               );
             });
-            setStatus("Update installed. Restarting…");
+            setStatus(t("settings.about.installed"));
             await relaunchApp();
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            setStatus(`Update failed: ${message}`);
+          } catch {
+            setStatus(t("settings.about.failed"));
             installing = false;
             checkBtn.disabled = false;
             installBtn.disabled = false;
@@ -786,7 +845,7 @@ export function mountSettingsView(
     installBtn.hidden = true;
 
     if (!isTauri()) {
-      setStatus("Updates are available in the desktop app.");
+      setStatus(t("settings.about.desktopOnly"));
       checkBtn.disabled = true;
     }
 
@@ -797,14 +856,14 @@ export function mountSettingsView(
     links.className = "inimark-about-links";
 
     const github = createButton({
-      label: "GitHub",
+      label: t("settings.about.github"),
       variant: "ghost",
       onClick: () => {
         window.open("https://github.com/Dionysen/Inimark2", "_blank", "noopener,noreferrer");
       },
     });
     const issues = createButton({
-      label: "Issues",
+      label: t("settings.about.issues"),
       variant: "ghost",
       onClick: () => {
         window.open(
@@ -856,7 +915,7 @@ export function mountSettingsView(
       const toolbar = document.createElement("div");
       toolbar.className = "inimark-settings-libraries-toolbar";
       const addBtn = createButton({
-        label: "Add library…",
+        label: t("settings.libraries.add"),
         variant: "primary",
         onClick: () => {
           void (async () => {
@@ -874,7 +933,7 @@ export function mountSettingsView(
       if (libraries.length === 0) {
         const empty = document.createElement("p");
         empty.className = "inimark-settings-libraries-empty";
-        empty.textContent = "No libraries saved yet. Add a folder to get started.";
+        empty.textContent = t("settings.libraries.empty");
         body.append(empty);
       } else {
         const list = document.createElement("div");
@@ -895,7 +954,7 @@ export function mountSettingsView(
           meta.append(nameEl, path);
 
           const removeBtn = createButton({
-            label: "Remove",
+            label: t("common.remove"),
             variant: "ghost",
             onClick: () => {
               void (async () => {
@@ -927,16 +986,26 @@ export function mountSettingsView(
   renderNav();
   renderContent();
 
+  const unsubscribeLocale = onLocaleChange(() => {
+    search.input.placeholder = t("settings.searchPlaceholder");
+    search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
+    renderNav();
+    renderContent();
+  });
+
   return {
     onChange(handler) {
       onChangeHandler = handler;
     },
     refresh() {
       settings = loadSettings();
+      search.input.placeholder = t("settings.searchPlaceholder");
+      search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
       renderNav();
       renderContent();
     },
     destroy() {
+      unsubscribeLocale();
       resize.destroy();
       titlebar.destroy();
       search.destroy();

@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "./i18n/index.ts";
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
 import {
   mountRightSidebar,
@@ -182,9 +183,11 @@ export function mountShell(
   let fileName: string | null = null;
 
   function renderTitle() {
-    const base = fileName ?? "Untitled";
+    const base = fileName ?? t("common.untitled");
     titlebar.setTitle(dirty ? `${base} •` : base);
   }
+
+  const unsubscribeLocale = onLocaleChange(() => renderTitle());
 
   return {
     editorHost,
@@ -205,6 +208,7 @@ export function mountShell(
     toggleSidebar,
     toggleRightSidebar,
     destroy() {
+      unsubscribeLocale();
       resize.destroy();
       rightResize.destroy();
       titlebar.destroy();

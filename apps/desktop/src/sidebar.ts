@@ -1,3 +1,4 @@
+import { onLocaleChange, t } from "./i18n/index.ts";
 import {
   bookmarksTabIcon,
   collapseAllIcon,
@@ -56,24 +57,37 @@ const FILES_SORT_KEY = "inimark-files-sort";
 
 const FILES_SORT_OPTIONS: Array<{
   mode: FilesSortMode;
-  label: string;
+  labelKey: string;
 }> = [
-  { mode: "name-asc", label: "文件名 (A-Z)" },
-  { mode: "name-desc", label: "文件名 (Z-A)" },
-  { mode: "mtime-desc", label: "编辑时间 (从新到旧)" },
-  { mode: "mtime-asc", label: "编辑时间 (从旧到新)" },
-  { mode: "birthtime-desc", label: "创建时间 (从新到旧)" },
-  { mode: "birthtime-asc", label: "创建时间 (从旧到新)" },
+  { mode: "name-asc", labelKey: "sidebar.sort.nameAsc" },
+  { mode: "name-desc", labelKey: "sidebar.sort.nameDesc" },
+  { mode: "mtime-desc", labelKey: "sidebar.sort.mtimeDesc" },
+  { mode: "mtime-asc", labelKey: "sidebar.sort.mtimeAsc" },
+  { mode: "birthtime-desc", labelKey: "sidebar.sort.birthtimeDesc" },
+  { mode: "birthtime-asc", labelKey: "sidebar.sort.birthtimeAsc" },
 ];
 
-const PANEL_META: Record<
-  SidebarPanelId,
-  { label: string; icon: () => string }
-> = {
-  files: { label: "Files", icon: filesTabIcon },
-  search: { label: "Search", icon: searchTabIcon },
-  bookmarks: { label: "Bookmarks", icon: bookmarksTabIcon },
+const PANEL_ICONS: Record<SidebarPanelId, () => string> = {
+  files: filesTabIcon,
+  search: searchTabIcon,
+  bookmarks: bookmarksTabIcon,
 };
+
+function panelLabel(id: SidebarPanelId): string {
+  switch (id) {
+    case "files":
+      return t("sidebar.tabs.files");
+    case "search":
+      return t("sidebar.tabs.search");
+    case "bookmarks":
+      return t("sidebar.tabs.bookmarks");
+  }
+}
+
+function sortLabel(mode: FilesSortMode): string {
+  const option = FILES_SORT_OPTIONS.find((opt) => opt.mode === mode);
+  return option ? t(option.labelKey) : t("sidebar.toolbar.sort");
+}
 
 export type FileSelectOptions = {
   line?: number;
@@ -158,9 +172,9 @@ function joinRelativePath(parent: string, name: string): string {
 
 function revealInLabel(): string {
   const platform = detectPlatform();
-  if (platform === "macos") return "Show in Finder";
-  if (platform === "windows") return "Show in Explorer";
-  return "Show in Files";
+  if (platform === "macos") return t("common.showInFinder");
+  if (platform === "windows") return t("common.showInExplorer");
+  return t("common.showInFiles");
 }
 
 function sortTreeNodes(
@@ -202,24 +216,24 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   markNoDrag(tabs);
 
   const tabButtons = new Map<SidebarPanelId, HTMLButtonElement>();
-  for (const id of Object.keys(PANEL_META) as SidebarPanelId[]) {
-    const meta = PANEL_META[id];
+  for (const id of Object.keys(PANEL_ICONS) as SidebarPanelId[]) {
+    const label = panelLabel(id);
     const btn = createIconButton({
-      label: meta.label,
-      title: meta.label,
+      label,
+      title: label,
     });
     btn.className = "inimark-sidebar-tab";
     btn.setAttribute("role", "tab");
     btn.dataset.panel = id;
-    btn.innerHTML = meta.icon();
+    btn.innerHTML = PANEL_ICONS[id]();
     markNoDrag(btn);
     tabButtons.set(id, btn);
     tabs.append(btn);
   }
 
   const collapseBtn = createIconButton({
-    label: "Collapse sidebar",
-    title: "Collapse sidebar",
+    label: t("common.collapseSidebar"),
+    title: t("common.collapseSidebar"),
   });
   collapseBtn.className = "inimark-sidebar-toggle-btn inimark-sidebar-collapse-btn";
   collapseBtn.innerHTML = sidebarToggleIcon(true);
@@ -234,30 +248,30 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   filesPanel.className = "inimark-sidebar-panel";
   filesPanel.dataset.panel = "files";
   filesPanel.setAttribute("role", "tabpanel");
-  const treeHost = createTreeHost("Markdown files");
+  const treeHost = createTreeHost(t("sidebar.treeAria"));
 
   let filesSortMode = loadFilesSortMode();
 
   const filesToolbar = createPanelToolbar([
     {
-      label: "New file",
-      title: "New file",
+      label: t("sidebar.toolbar.newFile"),
+      title: t("sidebar.toolbar.newFile"),
       icon: newFileIcon,
       onClick() {
         void createNewFile();
       },
     },
     {
-      label: "New folder",
-      title: "New folder",
+      label: t("sidebar.toolbar.newFolder"),
+      title: t("sidebar.toolbar.newFolder"),
       icon: newFolderIcon,
       onClick() {
         void createNewFolder();
       },
     },
     {
-      label: "Sort",
-      title: "Sort",
+      label: t("sidebar.toolbar.sort"),
+      title: t("sidebar.toolbar.sort"),
       icon: sortIcon,
       onClick(event) {
         event.stopPropagation();
@@ -265,23 +279,27 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       },
     },
     {
-      label: "Locate file",
-      title: "Locate current file",
+      label: t("sidebar.toolbar.locateFile"),
+      title: t("sidebar.toolbar.locateFile"),
       icon: locateFileIcon,
       onClick() {
         locateActiveFile();
       },
     },
     {
-      label: "Collapse all",
-      title: "Collapse all folders",
+      label: t("sidebar.toolbar.collapseAll"),
+      title: t("sidebar.toolbar.collapseAll"),
       icon: collapseAllIcon,
       onClick() {
         collapseAllFolders();
       },
     },
   ]);
+  const newFileBtn = filesToolbar.buttons[0]!;
+  const newFolderBtn = filesToolbar.buttons[1]!;
   const sortBtn = filesToolbar.buttons[2]!;
+  const locateBtn = filesToolbar.buttons[3]!;
+  const collapseAllBtn = filesToolbar.buttons[4]!;
   sortBtn.setAttribute("aria-haspopup", "menu");
   sortBtn.setAttribute("aria-expanded", "false");
   filesPanel.append(filesToolbar.el, treeHost);
@@ -297,7 +315,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   searchToolbar.setHidden(true);
 
   const searchField = createSearchField({
-    placeholder: "Search…",
+    placeholder: t("sidebar.searchPlaceholder"),
     onInput(value) {
       searchQuery = value;
       scheduleSearch();
@@ -321,7 +339,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   const bookmarksEmpty = document.createElement("p");
   bookmarksEmpty.className = "inimark-sidebar-empty";
-  bookmarksEmpty.textContent = "No bookmarks yet";
+  bookmarksEmpty.textContent = t("sidebar.empty.noBookmarks");
   bookmarksPanel.append(bookmarksToolbar.el, bookmarksEmpty);
 
   body.append(filesPanel, searchPanel, bookmarksPanel);
@@ -334,7 +352,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     treeHost.append(hint);
   }
 
-  renderEmptyHint("No folder selected");
+  renderEmptyHint(t("sidebar.empty.noFolder"));
 
   const dock = document.createElement("div");
   dock.className = "inimark-sidebar-dock";
@@ -347,13 +365,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   libraryBar.className = "inimark-library-bar";
   libraryBar.setAttribute("aria-haspopup", "menu");
   libraryBar.setAttribute("aria-expanded", "false");
-  libraryBar.title = "Libraries";
-  libraryBar.innerHTML = `${libraryIcon()}<span class="inimark-library-bar-label">No library</span>`;
+  libraryBar.title = t("sidebar.libraries");
+  libraryBar.innerHTML = `${libraryIcon()}<span class="inimark-library-bar-label">${t("sidebar.noLibrary")}</span>`;
   const libraryLabel = libraryBar.querySelector(".inimark-library-bar-label")!;
 
   const settingsBtn = createIconButton({
-    label: "Settings",
-    title: "Open settings",
+    label: t("sidebar.openSettings"),
+    title: t("sidebar.openSettings"),
   });
   settingsBtn.classList.add("inimark-library-bar-settings");
   settingsBtn.innerHTML = settingsIcon();
@@ -448,7 +466,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     FILES_SORT_OPTIONS.forEach((option, index) => {
       if (index === 2 || index === 4) sortMenu.addDivider();
       sortMenu.addItem({
-        label: option.label,
+        label: t(option.labelKey),
         checked: filesSortMode === option.mode,
         onClick() {
           setFilesSortMode(option.mode);
@@ -475,14 +493,14 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function renderLibraryList(): void {
     menu.clear();
     menu.setPath(
-      workspacePath || "No folder selected",
+      workspacePath || t("sidebar.empty.noFolder"),
       workspacePath || undefined,
     );
 
     if (savedLibraries.length === 0) {
-      menu.setEmpty("No saved libraries");
+      menu.setEmpty(t("sidebar.library.noneSaved"));
     } else {
-      menu.addHeading("Libraries");
+      menu.addHeading(t("sidebar.library.heading"));
       for (const library of savedLibraries) {
         menu.addItem({
           label: library.rootName,
@@ -500,7 +518,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     menu.addDivider();
     menu.addItem({
-      label: "Add library…",
+      label: t("sidebar.library.add"),
       icon: menuIcons.folderPlus,
       onClick() {
         closeMenu();
@@ -508,7 +526,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       },
     });
     menu.addItem({
-      label: "Close library",
+      label: t("sidebar.library.close"),
       icon: menuIcons.close,
       onClick() {
         closeMenu();
@@ -582,7 +600,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   /** Hide trailing tabs that would collide with the collapse control. */
   function updateTabVisibility(): void {
-    const order = Object.keys(PANEL_META) as SidebarPanelId[];
+    const order = Object.keys(PANEL_ICONS) as SidebarPanelId[];
     for (const id of order) {
       tabButtons.get(id)!.hidden = false;
     }
@@ -679,8 +697,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     filesToolbar.setDisabled(!hasWorkspace);
     // Keep sort available so users can change preference without a library.
     sortBtn.disabled = false;
-    const current = FILES_SORT_OPTIONS.find((opt) => opt.mode === filesSortMode);
-    sortBtn.title = current?.label ?? "Sort";
+    sortBtn.title = sortLabel(filesSortMode);
   }
 
   function setFilesSortMode(mode: FilesSortMode): void {
@@ -739,7 +756,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     const rootNames = new Set(
       currentTree.map((n) => n.name.toLowerCase()),
     );
-    const fileName = uniqueChildName(rootNames, "Untitled", ".md");
+    const fileName = uniqueChildName(rootNames, t("common.untitled"), ".md");
     const result = await createWorkspaceFile(currentWorkspace, fileName, "");
     if (result.status === "error") {
       console.error(result.message);
@@ -754,7 +771,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     const rootNames = new Set(
       currentTree.map((n) => n.name.toLowerCase()),
     );
-    const folderName = uniqueChildName(rootNames, "New Folder");
+    const folderName = uniqueChildName(rootNames, t("common.newFolder"));
     const result = await createWorkspaceDirectory(currentWorkspace, folderName);
     if (result.status === "error") {
       console.error(result.message);
@@ -793,7 +810,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     contextMenu.clear();
     contextMenu.setPath("");
     contextMenu.addItem({
-      label: "Rename",
+      label: t("sidebar.ctx.rename"),
       icon: menuIcons.rename,
       onClick() {
         closeContextMenu();
@@ -801,7 +818,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       },
     });
     contextMenu.addItem({
-      label: "Copy Path",
+      label: t("sidebar.ctx.copyPath"),
       icon: menuIcons.copy,
       onClick() {
         closeContextMenu();
@@ -810,7 +827,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
     contextMenu.addDivider();
     contextMenu.addItem({
-      label: "Delete",
+      label: t("common.delete"),
       icon: menuIcons.trash,
       danger: true,
       onClick() {
@@ -828,7 +845,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       },
     });
     contextMenu.addItem({
-      label: "Open with Default App",
+      label: t("sidebar.ctx.openDefault"),
       icon: menuIcons.external,
       onClick() {
         closeContextMenu();
@@ -864,12 +881,14 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   async function deleteNode(node: WorkspaceTreeNode): Promise<void> {
     if (!currentWorkspace) return;
-    const kindLabel = node.kind === "directory" ? "folder" : "file";
     const confirmed = await promptConfirm({
-      title: `Delete ${kindLabel}?`,
-      message: `Delete “${node.name}”? This cannot be undone.`,
-      confirmLabel: "Delete",
-      cancelLabel: "Cancel",
+      title:
+        node.kind === "directory"
+          ? t("dialogs.deleteFolderTitle")
+          : t("dialogs.deleteFileTitle"),
+      message: t("dialogs.deleteMessage", { name: node.name }),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
       danger: true,
     });
     if (!confirmed) return;
@@ -909,7 +928,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     input.type = "text";
     input.className = "inimark-tree-rename";
     input.value = node.name;
-    input.setAttribute("aria-label", `Rename ${node.name}`);
+    input.setAttribute("aria-label", `${t("sidebar.ctx.rename")} ${node.name}`);
     label.replaceWith(input);
     input.focus();
     const dot = node.kind === "file" ? node.name.lastIndexOf(".") : -1;
@@ -994,7 +1013,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     treeHost.replaceChildren();
     if (currentTree.length === 0) {
       renderEmptyHint(
-        currentWorkspace ? "No markdown files in this folder" : "No folder selected",
+        currentWorkspace
+          ? t("sidebar.empty.noMarkdown")
+          : t("sidebar.empty.noFolder"),
       );
       return;
     }
@@ -1083,19 +1104,21 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     const countEl = document.createElement("span");
     countEl.className = "inimark-sidebar-search-count";
     if (searching && searchHits.length === 0) {
-      countEl.textContent = "Searching…";
+      countEl.textContent = t("sidebar.searching");
     } else if (searching) {
-      countEl.textContent = `${matchCount} results…`;
+      countEl.textContent = t("sidebar.resultsMore", { count: matchCount });
     } else {
       countEl.textContent =
-        matchCount === 1 ? "1 result" : `${matchCount} results`;
+        matchCount === 1
+          ? t("sidebar.resultsOne")
+          : t("sidebar.resultsMany", { count: matchCount });
     }
     searchMeta.append(countEl);
 
     if (!searching && searchHits.length === 0) {
       const hint = document.createElement("p");
       hint.className = "inimark-sidebar-empty";
-      hint.textContent = "No matches found";
+      hint.textContent = t("sidebar.empty.noMatches");
       searchResults.append(hint);
       return;
     }
@@ -1159,7 +1182,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           );
           const text = document.createElement("span");
           text.className = "inimark-sidebar-search-snippet-text";
-          text.textContent = "Filename match";
+          text.textContent = t("sidebar.filenameMatch");
           row.append(text);
           body.append(row);
         }
@@ -1200,11 +1223,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       activePath = null;
       activeLibraryId = null;
       workspacePath = "";
-      libraryLabel.textContent = "No library";
+      libraryLabel.textContent = t("sidebar.noLibrary");
       expanded.clear();
       cancelSearch();
       clearSearchUi();
-      renderEmptyHint("No folder selected");
+      renderEmptyHint(t("sidebar.empty.noFolder"));
       renderLibraryList();
       updateFilesToolbarState();
       return;
@@ -1223,6 +1246,51 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   setActivePanel(activePanel);
   updateFilesToolbarState();
   queueMicrotask(() => updateTabVisibility());
+
+  function refreshChrome(): void {
+    for (const [id, btn] of tabButtons) {
+      const label = panelLabel(id);
+      btn.title = label;
+      btn.setAttribute("aria-label", label);
+    }
+    collapseBtn.title = t("common.collapseSidebar");
+    collapseBtn.setAttribute("aria-label", t("common.collapseSidebar"));
+
+    newFileBtn.title = t("sidebar.toolbar.newFile");
+    newFileBtn.setAttribute("aria-label", t("sidebar.toolbar.newFile"));
+    newFolderBtn.title = t("sidebar.toolbar.newFolder");
+    newFolderBtn.setAttribute("aria-label", t("sidebar.toolbar.newFolder"));
+    locateBtn.title = t("sidebar.toolbar.locateFile");
+    locateBtn.setAttribute("aria-label", t("sidebar.toolbar.locateFile"));
+    collapseAllBtn.title = t("sidebar.toolbar.collapseAll");
+    collapseAllBtn.setAttribute("aria-label", t("sidebar.toolbar.collapseAll"));
+    updateFilesToolbarState();
+
+    searchField.input.placeholder = t("sidebar.searchPlaceholder");
+    searchField.input.setAttribute("aria-label", t("sidebar.searchPlaceholder"));
+    bookmarksEmpty.textContent = t("sidebar.empty.noBookmarks");
+    libraryBar.title = t("sidebar.libraries");
+    settingsBtn.title = t("sidebar.openSettings");
+    settingsBtn.setAttribute("aria-label", t("sidebar.openSettings"));
+    treeHost.setAttribute("aria-label", t("sidebar.treeAria"));
+
+    if (!currentWorkspace) {
+      libraryLabel.textContent = t("sidebar.noLibrary");
+      if (currentTree.length === 0) {
+        renderEmptyHint(t("sidebar.empty.noFolder"));
+      }
+    }
+    if (menu.isOpen()) renderLibraryList();
+    if (sortMenu.isOpen()) renderSortMenu();
+    if (activePanel === "search" && searchQuery.trim()) renderSearchResults();
+    else if (currentTree.length === 0 && currentWorkspace) {
+      renderEmptyHint(t("sidebar.empty.noMarkdown"));
+    } else if (currentTree.length > 0) {
+      rerender();
+    }
+  }
+
+  const unsubscribeLocale = onLocaleChange(() => refreshChrome());
 
   return {
     setWorkspace: applyWorkspace,
@@ -1246,6 +1314,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     setSidebarOpen(open) {
       collapseBtn.innerHTML = sidebarToggleIcon(open);
+      const label = open ? t("common.collapseSidebar") : t("common.expandSidebar");
+      collapseBtn.title = label;
+      collapseBtn.setAttribute("aria-label", label);
     },
     onToggleSidebar(handler) {
       handlers.toggleSidebar = handler;
@@ -1275,6 +1346,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       handlers.fileDeleted = handler;
     },
     destroy() {
+      unsubscribeLocale();
       tabVisibilityObserver.disconnect();
       document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
       cancelSearch();

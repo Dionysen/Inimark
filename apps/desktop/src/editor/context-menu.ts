@@ -1,4 +1,5 @@
 import type { Editor, EditorCommandName } from "@inimark/editor";
+import { t } from "../i18n/index.ts";
 import { detectPlatform } from "../platform/platform.ts";
 
 export interface EditorContextMenuController {
@@ -102,29 +103,54 @@ function buildIconRows(): IconAction[][] {
   const m = modKey();
   return [
     [
-      { name: "cut", label: "Cut", icon: ICONS.cut },
-      { name: "copy", label: "Copy", icon: ICONS.copy },
-      { name: "paste", label: "Paste", icon: ICONS.paste },
-      { name: "delete", label: "Delete", icon: ICONS.trash },
+      { name: "cut", label: t("editor.ctx.cut"), icon: ICONS.cut },
+      { name: "copy", label: t("editor.ctx.copy"), icon: ICONS.copy },
+      { name: "paste", label: t("editor.ctx.paste"), icon: ICONS.paste },
+      { name: "delete", label: t("editor.ctx.delete"), icon: ICONS.trash },
     ],
     [
-      { name: "bold", label: "Bold", shortcut: `${m}B`, icon: ICONS.bold },
-      { name: "italic", label: "Italic", shortcut: `${m}I`, icon: ICONS.italic },
-      { name: "strike", label: "Strikethrough", shortcut: "Alt+Shift+5", icon: ICONS.strikethrough },
-      { name: "inline-code", label: "Inline Code", shortcut: `${m}Shift+\``, icon: ICONS.code },
-      { name: "link", label: "Link", shortcut: `${m}K`, icon: ICONS.link },
+      { name: "bold", label: t("editor.ctx.bold"), shortcut: `${m}B`, icon: ICONS.bold },
+      { name: "italic", label: t("editor.ctx.italic"), shortcut: `${m}I`, icon: ICONS.italic },
+      {
+        name: "strike",
+        label: t("editor.ctx.strike"),
+        shortcut: "Alt+Shift+5",
+        icon: ICONS.strikethrough,
+      },
+      {
+        name: "inline-code",
+        label: t("editor.ctx.inlineCode"),
+        shortcut: `${m}Shift+\``,
+        icon: ICONS.code,
+      },
+      { name: "link", label: t("editor.ctx.link"), shortcut: `${m}K`, icon: ICONS.link },
     ],
     [
-      { name: "quote", label: "Quote", shortcut: `${m}Shift+Q`, icon: ICONS.quote },
-      { name: "list", label: "Bullet List", shortcut: `${m}Shift+8`, icon: ICONS.listUnordered },
+      {
+        name: "quote",
+        label: t("editor.ctx.quote"),
+        shortcut: `${m}Shift+Q`,
+        icon: ICONS.quote,
+      },
+      {
+        name: "list",
+        label: t("editor.ctx.bulletList"),
+        shortcut: `${m}Shift+8`,
+        icon: ICONS.listUnordered,
+      },
       {
         name: "ordered-list",
-        label: "Ordered List",
+        label: t("editor.ctx.orderedList"),
         shortcut: `${m}Shift+7`,
         icon: ICONS.listOrdered,
       },
-      { name: "check", label: "Task List", shortcut: `${m}Shift+X`, icon: ICONS.checkSquare },
-      { name: "highlight", label: "Highlight", icon: ICONS.highlight },
+      {
+        name: "check",
+        label: t("editor.ctx.taskList"),
+        shortcut: `${m}Shift+X`,
+        icon: ICONS.checkSquare,
+      },
+      { name: "highlight", label: t("editor.ctx.highlight"), icon: ICONS.highlight },
     ],
   ];
 }
@@ -134,32 +160,44 @@ function buildSubmenus(): SubmenuRow[] {
   return [
     {
       name: "heading",
-      label: "Heading",
+      label: t("editor.ctx.heading"),
       icon: ICONS.heading,
       items: [
-        { kind: "item", name: "heading-1", label: "Heading 1", shortcut: `${m}1` },
-        { kind: "item", name: "heading-2", label: "Heading 2", shortcut: `${m}2` },
-        { kind: "item", name: "heading-3", label: "Heading 3", shortcut: `${m}3` },
-        { kind: "item", name: "heading-4", label: "Heading 4", shortcut: `${m}4` },
-        { kind: "item", name: "heading-5", label: "Heading 5", shortcut: `${m}5` },
-        { kind: "item", name: "heading-6", label: "Heading 6", shortcut: `${m}6` },
+        { kind: "item", name: "heading-1", label: t("editor.ctx.heading1"), shortcut: `${m}1` },
+        { kind: "item", name: "heading-2", label: t("editor.ctx.heading2"), shortcut: `${m}2` },
+        { kind: "item", name: "heading-3", label: t("editor.ctx.heading3"), shortcut: `${m}3` },
+        { kind: "item", name: "heading-4", label: t("editor.ctx.heading4"), shortcut: `${m}4` },
+        { kind: "item", name: "heading-5", label: t("editor.ctx.heading5"), shortcut: `${m}5` },
+        { kind: "item", name: "heading-6", label: t("editor.ctx.heading6"), shortcut: `${m}6` },
         { kind: "divider" },
-        { kind: "item", name: "paragraph", label: "Paragraph", shortcut: `${m}0` },
+        { kind: "item", name: "paragraph", label: t("editor.ctx.paragraph"), shortcut: `${m}0` },
       ],
     },
     {
       name: "insert",
-      label: "Insert",
+      label: t("editor.ctx.insert"),
       icon: ICONS.plus,
       items: [
-        { kind: "item", name: "upload", label: "Image", icon: ICONS.image },
-        { kind: "item", name: "hr", label: "Horizontal Rule", icon: ICONS.minus },
-        { kind: "item", name: "more", label: "More Tag", icon: ICONS.minus },
-        { kind: "item", name: "table", label: "Table", icon: ICONS.table },
-        { kind: "item", name: "code", label: "Code Block", shortcut: `${m}Shift+K`, icon: ICONS.codeBlock },
-        { kind: "item", name: "math", label: "Math Block", shortcut: `${m}Shift+M`, icon: ICONS.math },
+        { kind: "item", name: "upload", label: t("editor.ctx.image"), icon: ICONS.image },
+        { kind: "item", name: "hr", label: t("editor.ctx.hr"), icon: ICONS.minus },
+        { kind: "item", name: "more", label: t("editor.ctx.moreTag"), icon: ICONS.minus },
+        { kind: "item", name: "table", label: t("editor.ctx.table"), icon: ICONS.table },
+        {
+          kind: "item",
+          name: "code",
+          label: t("editor.ctx.codeBlock"),
+          shortcut: `${m}Shift+K`,
+          icon: ICONS.codeBlock,
+        },
+        {
+          kind: "item",
+          name: "math",
+          label: t("editor.ctx.mathBlock"),
+          shortcut: `${m}Shift+M`,
+          icon: ICONS.math,
+        },
         { kind: "divider" },
-        { kind: "item", name: "wiki-link", label: "Wiki Link", icon: ICONS.wikiLink },
+        { kind: "item", name: "wiki-link", label: t("editor.ctx.wikiLink"), icon: ICONS.wikiLink },
       ],
     },
   ];
@@ -185,9 +223,6 @@ export function mountEditorContextMenu(
 
   let open = false;
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
-
-  const iconRows = buildIconRows();
-  const submenuRows = buildSubmenus();
 
   function clearCloseTimer(): void {
     if (closeTimer != null) {
@@ -283,6 +318,8 @@ export function mountEditorContextMenu(
   }
 
   function renderMenu(): void {
+    const iconRows = buildIconRows();
+    const submenuRows = buildSubmenus();
     menu.replaceChildren();
 
     for (const row of iconRows) {
@@ -338,7 +375,6 @@ export function mountEditorContextMenu(
     }
   }
 
-  renderMenu();
   submenu.addEventListener("mouseenter", () => clearCloseTimer());
   submenu.addEventListener("mouseleave", () => scheduleCloseSubmenu());
   function openAt(x: number, y: number): void {
@@ -346,6 +382,7 @@ export function mountEditorContextMenu(
       close();
       return;
     }
+    renderMenu();
     open = true;
     submenu.hidden = true;
     menu.hidden = false;
