@@ -357,15 +357,24 @@ export function mountEditorContextMenu(
   function onMouseDownCapture(event: MouseEvent): void {
     if (event.button !== 2) return;
     if (!host.contains(event.target as Node)) return;
-    // Prevent WebKit word-select; open menu (contextmenu may be suppressed).
+    // Capture-phase preventDefault stops WebKit from selecting the word under cursor.
     event.preventDefault();
+    event.stopPropagation();
     openAt(event.clientX, event.clientY);
   }
 
   function onContextMenuCapture(event: MouseEvent): void {
     if (!host.contains(event.target as Node)) return;
     event.preventDefault();
+    event.stopPropagation();
     openAt(event.clientX, event.clientY);
+  }
+
+  function onSelectStartCapture(event: Event): void {
+    // Belt-and-suspenders for WKWebView when right-click still emits selectstart.
+    if (!open) return;
+    if (!host.contains(event.target as Node)) return;
+    event.preventDefault();
   }
 
   function onDocumentMouseDown(event: MouseEvent): void {
@@ -383,6 +392,7 @@ export function mountEditorContextMenu(
 
   host.addEventListener("mousedown", onMouseDownCapture, true);
   host.addEventListener("contextmenu", onContextMenuCapture, true);
+  host.addEventListener("selectstart", onSelectStartCapture, true);
   document.addEventListener("mousedown", onDocumentMouseDown);
   document.addEventListener("keydown", onKeyDown);
 
@@ -390,6 +400,7 @@ export function mountEditorContextMenu(
     destroy() {
       host.removeEventListener("mousedown", onMouseDownCapture, true);
       host.removeEventListener("contextmenu", onContextMenuCapture, true);
+      host.removeEventListener("selectstart", onSelectStartCapture, true);
       document.removeEventListener("mousedown", onDocumentMouseDown);
       document.removeEventListener("keydown", onKeyDown);
       clearCloseTimer();

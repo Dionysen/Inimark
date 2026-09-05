@@ -215,10 +215,13 @@ export function createEditor(
         focus: () => { options.onFocus?.(); return false; },
         blur: () => { options.onBlur?.(); return false; },
         mousedown: (_view, event) => {
+          // Keep existing selection on right-click (WebKit otherwise picks a word).
+          if (event.button === 2) return true;
           if (event.button === 0) beginPointerSelecting();
           return false;
         },
         pointerdown: (_view, event) => {
+          if (event.button === 2) return true;
           if (event.isPrimary && event.button === 0) beginPointerSelecting();
           return false;
         },

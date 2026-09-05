@@ -5,6 +5,7 @@
   background: var(--inimark-bg);
   color: var(--inimark-fg);
   overflow: hidden;
+  font-size: var(--inimark-control-font-size, 13px);
 }
 
 .inimark-settings-layout {
@@ -64,7 +65,7 @@ html.platform-macos .inimark-settings-nav-topbar {
   gap: 0.5rem;
   padding: 1.5rem 0.75rem;
   color: var(--inimark-muted-fg);
-  font-size: 0.85rem;
+  font-size: var(--inimark-control-font-size, 13px);
   text-align: center;
 }
 
@@ -111,7 +112,7 @@ html.platform-macos .inimark-settings-nav-topbar {
 
 .inimark-settings-shortcuts-group {
   margin: var(--inimark-space-3) 0 var(--inimark-space-2);
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -128,7 +129,7 @@ html.platform-macos .inimark-settings-nav-topbar {
 }
 
 .inimark-settings-shortcut-label {
-  font-size: 0.92rem;
+  font-size: var(--inimark-control-font-size, 13px);
 }
 
 .inimark-settings-shortcut-keys {
@@ -145,7 +146,7 @@ html.platform-macos .inimark-settings-nav-topbar {
   background: var(--inimark-bg);
   color: var(--inimark-fg);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: var(--inimark-control-font-size, 13px);
   padding: 0.35rem 0.55rem;
   text-align: center;
   cursor: pointer;
@@ -167,14 +168,14 @@ html.platform-macos .inimark-settings-nav-topbar {
 
 .inimark-settings-row-title {
   font-family: var(--inimark-font-ui);
-  font-size: 0.92rem;
+  font-size: var(--inimark-control-font-size, 13px);
   font-weight: 500;
 }
 
 .inimark-settings-row-desc {
   margin: 0.25rem 0 0;
   color: var(--inimark-muted-fg);
-  font-size: 0.84rem;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -194,7 +195,7 @@ html.platform-macos .inimark-settings-nav-topbar {
 
 .inimark-about-name {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -203,7 +204,7 @@ html.platform-macos .inimark-settings-nav-topbar {
 .inimark-about-license {
   margin: 0.5rem 0 0;
   color: var(--inimark-muted-fg);
-  font-size: 0.9rem;
+  font-size: var(--inimark-control-font-size, 13px);
   line-height: 1.5;
 }
 
@@ -217,7 +218,7 @@ html.platform-macos .inimark-settings-nav-topbar {
 .inimark-settings-libraries-empty {
   margin: var(--inimark-space-3) 0 0;
   color: var(--inimark-muted-fg);
-  font-size: 0.9rem;
+  font-size: var(--inimark-control-font-size, 13px);
 }
 
 .inimark-settings-libraries-list {
@@ -238,20 +239,20 @@ html.platform-macos .inimark-settings-nav-topbar {
 
 .inimark-settings-library-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--inimark-control-font-size, 13px);
 }
 
 .inimark-settings-library-path {
   margin-top: 0.2rem;
   color: var(--inimark-muted-fg);
-  font-size: 0.8rem;
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .inimark-settings-section-title {
   margin: var(--inimark-space-4) 0 var(--inimark-space-2);
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -290,7 +291,7 @@ html.platform-macos .inimark-settings-nav-topbar {
   margin: 0;
   min-height: 1.4em;
   color: var(--inimark-muted-fg);
-  font-size: 0.9rem;
+  font-size: var(--inimark-control-font-size, 13px);
   line-height: 1.4;
 }
 
