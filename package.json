@@ -1,7 +1,7 @@
 {
   "name": "inimark",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.4",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
     "dev": "pnpm --filter @inimark/desktop dev",
@@ -10,6 +10,7 @@
     "test:editor": "pnpm --filter @inimark/editor test",
     "test:desktop": "pnpm --filter @inimark/desktop test",
     "typecheck": "pnpm -r typecheck",
-    "tauri": "pnpm --filter @inimark/desktop tauri"
+    "tauri": "pnpm --filter @inimark/desktop tauri",
+    "bump-version": "node scripts/bump-version.mjs"
   }
 }
