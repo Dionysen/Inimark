@@ -1,0 +1,196 @@
+.inimark-bookmark-dialog-panel {
+  width: min(22rem, 100%);
+}
+
+.inimark-bookmark-dialog-path {
+  font-family: var(--inimark-font-mono);
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.inimark-bookmark-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  margin-bottom: var(--inimark-space-3);
+}
+
+.inimark-bookmark-dialog-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-bookmark-dialog-select-host,
+.inimark-bookmark-dialog-select {
+  width: 100%;
+}
+
+.inimark-bookmark-dialog-select .inimark-select__trigger {
+  width: 100%;
+}
+
+.inimark-bookmark-dialog-new {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  margin-bottom: var(--inimark-space-4);
+}
+
+.inimark-bookmark-dialog-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  padding: 0 var(--inimark-control-padding-x);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  background: var(--inimark-control-bg, var(--inimark-surface));
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size);
+  box-sizing: border-box;
+}
+
+.inimark-bookmark-dialog-input:focus {
+  outline: none;
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+}
+
+.inimark-bookmark-dialog-new .inimark-btn {
+  flex-shrink: 0;
+}
+
+/* Bookmarks panel list */
+.inimark-bookmarks-host {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--inimark-space-1) var(--inimark-space-2)
+    calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
+}
+
+.inimark-bookmarks-group {
+  margin: 0 0 var(--inimark-space-2);
+}
+
+.inimark-bookmarks-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 2px);
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--inimark-radius-control);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-bookmarks-group-header:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-bookmarks-group-chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+}
+
+.inimark-bookmarks-group-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-bookmarks-group-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.inimark-bookmarks-group-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-bookmarks-group-count {
+  flex-shrink: 0;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.inimark-bookmarks-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 0 4px 8px;
+}
+
+.inimark-bookmarks-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 4px);
+  padding: 0 8px 0 6px;
+  border: 0;
+  border-radius: var(--inimark-radius-control);
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-bookmarks-item:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-bookmarks-item.is-active {
+  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
+}
+
+.inimark-bookmarks-item-kind {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0.65;
+}
+
+.inimark-bookmarks-item-kind svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.inimark-bookmarks-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-bookmarks-item-meta {
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: var(--inimark-muted-fg);
+}

@@ -41,6 +41,19 @@ import {
   searchVaultIncremental,
   type VaultSearchResult,
 } from "./sidebar/vault-search.ts";
+import { createBookmarksPanel } from "./sidebar/bookmarks-panel.ts";
+import { promptAddBookmark } from "./ui/bookmark-dialog.ts";
+import {
+  DEFAULT_BOOKMARK_GROUP_ID,
+  addBookmark,
+  deleteBookmarkGroup,
+  isBookmarked,
+  remapBookmarkPath,
+  removeBookmark,
+  removeBookmarksUnder,
+  type BookmarkItem,
+} from "./bookmarks/store.ts";
+import { libraryIdFromPath } from "./libraries/store.ts";
 
 export type SidebarPanelId = "files" | "search" | "bookmarks";
 
@@ -351,10 +364,18 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   const bookmarksToolbar = createPanelToolbar([]);
   bookmarksToolbar.setHidden(true);
 
-  const bookmarksEmpty = document.createElement("p");
-  bookmarksEmpty.className = "inimark-sidebar-empty";
-  bookmarksEmpty.textContent = t("sidebar.empty.noBookmarks");
-  bookmarksPanel.append(bookmarksToolbar.el, bookmarksEmpty);
+  const bookmarksList = createBookmarksPanel({
+    onOpenItem(item) {
+      openBookmarkItem(item);
+    },
+    onItemContextMenu(event, item) {
+      openBookmarkItemContextMenu(event, item);
+    },
+    onGroupContextMenu(event, groupId) {
+      openBookmarkGroupContextMenu(event, groupId);
+    },
+  });
+  bookmarksPanel.append(bookmarksToolbar.el, bookmarksList.el);
 
   body.append(filesPanel, searchPanel, bookmarksPanel);
 
@@ -411,7 +432,6 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   let activePath: string | null = null;
   let activeLibraryId: string | null = null;
   let savedLibraries: LibraryRecord[] = [];
-  let workspacePath = "";
   let currentWorkspace: Workspace | null = null;
   let activePanel: SidebarPanelId = loadActivePanel();
   let searchQuery = "";
@@ -601,6 +621,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (panel === "search") {
       queueMicrotask(() => searchField.focus());
       scheduleSearch();
+    }
+    if (panel === "bookmarks") {
+      refreshBookmarksPanel();
     }
   }
 
@@ -825,6 +848,127 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     contextMenu.el.style.top = `${top}px`;
   }
 
+  function currentLibraryId(): string | null {
+    if (activeLibraryId) return activeLibraryId;
+    if (currentWorkspace) return libraryIdFromPath(currentWorkspace.rootPath);
+    return null;
+  }
+
+  function refreshBookmarksPanel(): void {
+    bookmarksList.render(currentLibraryId(), activePath);
+  }
+
+  function openBookmarkItem(item: BookmarkItem): void {
+    void handlers.fileSelect(item.path);
+  }
+
+  async function addNodeBookmark(node: WorkspaceTreeNode): Promise<void> {
+    if (node.kind !== "file") return;
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    const result = await promptAddBookmark({
+      libraryId,
+      path: node.path,
+    });
+    if (!result.confirmed) return;
+    addBookmark(libraryId, {
+      path: node.path,
+      groupId: result.groupId || DEFAULT_BOOKMARK_GROUP_ID,
+    });
+    refreshBookmarksPanel();
+  }
+
+  function removeNodeBookmark(path: string): void {
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    removeBookmark(libraryId, path);
+    refreshBookmarksPanel();
+  }
+
+  function openBookmarkItemContextMenu(
+    event: MouseEvent,
+    item: BookmarkItem,
+  ): void {
+    closeMenu();
+    closeSortMenu();
+    contextMenu.clear();
+    contextMenu.setPath("");
+    contextMenu.addItem({
+      label: t("sidebar.bookmarks.open"),
+      icon: menuIcons.external,
+      onClick() {
+        closeContextMenu();
+        openBookmarkItem(item);
+      },
+    });
+    contextMenu.addItem({
+      label: t("sidebar.bookmarks.revealInFiles"),
+      icon: menuIcons.reveal,
+      onClick() {
+        closeContextMenu();
+        const parent = parentRelativePath(item.path);
+        if (parent) {
+          const parts = parent.split("/").filter(Boolean);
+          let acc = "";
+          for (const part of parts) {
+            acc = acc ? `${acc}/${part}` : part;
+            expanded.add(acc);
+          }
+          notifyExpandedChange();
+        }
+        setActivePanel("files");
+        rerender();
+        requestAnimationFrame(() => {
+          const row = treeHost.querySelector<HTMLElement>(
+            `[data-path="${CSS.escape(item.path)}"]`,
+          );
+          row?.scrollIntoView({ block: "center" });
+        });
+      },
+    });
+    contextMenu.addDivider();
+    contextMenu.addItem({
+      label: t("sidebar.bookmarks.remove"),
+      icon: menuIcons.trash,
+      danger: true,
+      onClick() {
+        closeContextMenu();
+        removeNodeBookmark(item.path);
+      },
+    });
+    contextMenu.setOpen(true);
+    requestAnimationFrame(() =>
+      positionContextMenu(event.clientX, event.clientY),
+    );
+  }
+
+  function openBookmarkGroupContextMenu(
+    event: MouseEvent,
+    groupId: string,
+  ): void {
+    if (groupId === DEFAULT_BOOKMARK_GROUP_ID) return;
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    closeMenu();
+    closeSortMenu();
+    contextMenu.clear();
+    contextMenu.setPath("");
+    contextMenu.addItem({
+      label: t("sidebar.bookmarks.deleteGroup"),
+      icon: menuIcons.trash,
+      danger: true,
+      onClick() {
+        closeContextMenu();
+        deleteBookmarkGroup(libraryId, groupId);
+        refreshBookmarksPanel();
+      },
+    });
+    contextMenu.setOpen(true);
+    requestAnimationFrame(() =>
+      positionContextMenu(event.clientX, event.clientY),
+    );
+  }
+
   function openTreeContextMenu(event: MouseEvent, node: WorkspaceTreeNode): void {
     if (!currentWorkspace) return;
     closeMenu();
@@ -848,6 +992,32 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         void copyNodePath(node);
       },
     });
+
+    const libraryId = currentLibraryId();
+    if (node.kind === "file") {
+      const bookmarked = libraryId ? isBookmarked(libraryId, node.path) : false;
+      contextMenu.addDivider();
+      if (bookmarked) {
+        contextMenu.addItem({
+          label: t("sidebar.ctx.removeBookmark"),
+          icon: menuIcons.bookmark,
+          onClick() {
+            closeContextMenu();
+            removeNodeBookmark(node.path);
+          },
+        });
+      } else {
+        contextMenu.addItem({
+          label: t("sidebar.ctx.addBookmark"),
+          icon: menuIcons.bookmark,
+          onClick() {
+            closeContextMenu();
+            void addNodeBookmark(node);
+          },
+        });
+      }
+    }
+
     contextMenu.addDivider();
     contextMenu.addItem({
       label: t("common.delete"),
@@ -934,7 +1104,15 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     const deletedActive =
       activePath === node.path ||
       (node.kind === "directory" && Boolean(activePath?.startsWith(`${node.path}/`)));
+
+    const libraryId = currentLibraryId();
+    if (libraryId) {
+      if (node.kind === "directory") removeBookmarksUnder(libraryId, node.path);
+      else removeBookmark(libraryId, node.path);
+    }
+
     await refreshTreeFromDisk();
+    refreshBookmarksPanel();
     if (deletedActive) {
       handlers.fileDeleted(node.path);
     }
@@ -1031,10 +1209,14 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       notifyExpandedChange();
     }
 
+    const libraryId = currentLibraryId();
+    if (libraryId) remapBookmarkPath(libraryId, node.path, toPath);
+
     const wasActive =
       activePath === node.path ||
       (node.kind === "directory" && Boolean(activePath?.startsWith(`${node.path}/`)));
     await refreshTreeFromDisk();
+    refreshBookmarksPanel();
 
     if (wasActive) {
       if (activePath === node.path) {
@@ -1260,23 +1442,23 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       currentWorkspace = null;
       activePath = null;
       activeLibraryId = null;
-      workspacePath = "";
       libraryLabel.textContent = t("sidebar.noLibrary");
       expanded.clear();
       cancelSearch();
       clearSearchUi();
       renderEmptyHint(t("sidebar.empty.noFolder"));
       renderLibraryList();
+      refreshBookmarksPanel();
       updateFilesToolbarState();
       return;
     }
 
     currentWorkspace = workspace;
     currentTree = workspace.tree;
-    workspacePath = workspace.rootPath;
     libraryLabel.textContent = workspace.rootName;
     rerender();
     renderLibraryList();
+    refreshBookmarksPanel();
     updateFilesToolbarState();
     if (activePanel === "search") scheduleSearch();
   }
@@ -1306,7 +1488,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     searchField.input.placeholder = t("sidebar.searchPlaceholder");
     searchField.input.setAttribute("aria-label", t("sidebar.searchPlaceholder"));
-    bookmarksEmpty.textContent = t("sidebar.empty.noBookmarks");
+    refreshBookmarksPanel();
     libraryBar.title = t("sidebar.libraries");
     settingsBtn.title = t("sidebar.openSettings");
     settingsBtn.setAttribute("aria-label", t("sidebar.openSettings"));
@@ -1336,11 +1518,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       activePath = path;
       rerender();
       if (activePanel === "search" && searchQuery.trim()) renderSearchResults();
+      if (activePanel === "bookmarks") refreshBookmarksPanel();
     },
     setSavedLibraries(libraries, activeId) {
       savedLibraries = libraries;
       activeLibraryId = activeId;
       renderLibraryList();
+      refreshBookmarksPanel();
     },
     setExpandedDirs(dirs) {
       expanded.clear();
@@ -1391,6 +1575,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       filesToolbar.destroy();
       searchToolbar.destroy();
       bookmarksToolbar.destroy();
+      bookmarksList.destroy();
       searchField.destroy();
       contextMenu.destroy();
       sortMenu.destroy();
