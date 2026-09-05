@@ -234,9 +234,9 @@ export function renderThemePanel(
     const slot = getThemeSlotSelection(id, pair);
     if (slot === "none") return null;
     const labels: Record<string, string> = {
-      both: "Light & Dark",
-      light: "Light",
-      dark: "Dark",
+      both: t("settings.theme.slotBoth"),
+      light: t("settings.theme.light"),
+      dark: t("settings.theme.dark"),
     };
     const span = document.createElement("span");
     span.className = `settings-theme-slot-label slot-${slot}`;
@@ -320,7 +320,7 @@ export function renderThemePanel(
 
     const title = document.createElement("div");
     title.className = "settings-code-theme-preview-title";
-    title.textContent = "Preview";
+    title.textContent = t("settings.theme.preview");
 
     const tabs = document.createElement("div");
     tabs.className = "settings-code-sample-tabs";
@@ -380,7 +380,7 @@ export function renderThemePanel(
     try {
       forking = true;
       render();
-      const name = `${label} (fork)`;
+      const name = t("settings.theme.forkName", { name: label });
       const manifest = await themeManager.createThemeFromBuiltin(builtinId, name);
       await handleStartEdit(manifest);
     } catch (err) {
@@ -395,7 +395,10 @@ export function renderThemePanel(
     try {
       forking = true;
       render();
-      const manifest = await themeManager.createThemeFromTemplate(kind, "New theme");
+      const manifest = await themeManager.createThemeFromTemplate(
+        kind,
+        t("settings.theme.newTheme"),
+      );
       await handleStartEdit(manifest);
     } catch (err) {
       console.error("Create theme failed", err);
@@ -431,7 +434,7 @@ export function renderThemePanel(
     try {
       forkingCode = true;
       render();
-      const name = `${label} (fork)`;
+      const name = t("settings.theme.forkName", { name: label });
       const manifest = await themeManager.createCodeThemeFromBuiltin(builtinId, name);
       await handleStartEditCodeTheme(manifest);
     } catch (err) {
@@ -476,19 +479,19 @@ export function renderThemePanel(
 
     const title = document.createElement("h3");
     title.className = "theme-editor-title";
-    title.textContent = `Edit theme: ${manifest.name}`;
+    title.textContent = t("settings.theme.editTheme", { name: manifest.name });
 
     const actions = document.createElement("div");
     actions.className = "theme-editor-actions";
     const saveBtn = document.createElement("button");
     saveBtn.type = "button";
     saveBtn.className = "settings-button";
-    saveBtn.textContent = "Save";
+    saveBtn.textContent = t("settings.theme.save");
     saveBtn.addEventListener("click", () => void handleSaveAppEdit(manifest));
     const cancelBtn = document.createElement("button");
     cancelBtn.type = "button";
     cancelBtn.className = "settings-button theme-editor-cancel";
-    cancelBtn.textContent = "Cancel";
+    cancelBtn.textContent = t("settings.theme.cancel");
     cancelBtn.addEventListener("click", () => void handleCancelAppEdit(manifest));
     actions.append(saveBtn, cancelBtn);
     header.append(title, actions);
@@ -520,13 +523,13 @@ export function renderThemePanel(
     const text1 = document.createElement("div");
     text1.className = "theme-editor-preview-text";
     text1.style.color = editPreview.text;
-    text1.textContent = "Preview body text with normal styling.";
+    text1.textContent = t("settings.theme.previewBody");
 
     const text2 = document.createElement("div");
     text2.className = "theme-editor-preview-text";
     text2.style.color = editPreview.strong;
     text2.style.fontWeight = "700";
-    text2.append("Strong emphasis ");
+    text2.append(t("settings.theme.strongEmphasis"));
     const inlineCode = document.createElement("code");
     inlineCode.className = "theme-editor-preview-inline-code";
     inlineCode.style.background = editPreview.codeBg;
@@ -542,7 +545,7 @@ export function renderThemePanel(
     const accentBar = document.createElement("div");
     accentBar.className = "theme-editor-preview-accent";
     accentBar.style.background = editPreview.accent;
-    accentBar.textContent = "Accent";
+    accentBar.textContent = t("settings.theme.accent");
 
     previewEditor.append(text1, text2, accentBar);
     preview.append(previewSidebar, previewEditor);
@@ -626,7 +629,11 @@ export function renderThemePanel(
       await themeManager.updateCodeThemeVariables(manifest.id, editCodeVariables);
     } catch (err) {
       console.error("Save code theme failed", err);
-      alert(`Save failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      alert(
+        t("settings.theme.saveFailed", {
+          error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
+        }),
+      );
       return;
     }
     editingCodeTheme = null;
@@ -662,19 +669,19 @@ export function renderThemePanel(
 
     const title = document.createElement("h3");
     title.className = "theme-editor-title";
-    title.textContent = `Edit code theme: ${manifest.name}`;
+    title.textContent = t("settings.theme.editCodeTheme", { name: manifest.name });
 
     const actions = document.createElement("div");
     actions.className = "theme-editor-actions";
     const saveBtn = document.createElement("button");
     saveBtn.type = "button";
     saveBtn.className = "settings-button";
-    saveBtn.textContent = "Save";
+    saveBtn.textContent = t("settings.theme.save");
     saveBtn.addEventListener("click", () => void handleSaveCodeEdit(manifest));
     const cancelBtn = document.createElement("button");
     cancelBtn.type = "button";
     cancelBtn.className = "settings-button theme-editor-cancel";
-    cancelBtn.textContent = "Cancel";
+    cancelBtn.textContent = t("settings.theme.cancel");
     cancelBtn.addEventListener("click", () => void handleCancelCodeEdit(manifest));
     actions.append(saveBtn, cancelBtn);
     header.append(title, actions);
@@ -741,7 +748,9 @@ export function renderThemePanel(
       const title = document.createElement("h3");
       title.className = "theme-name-dialog-title";
       title.textContent =
-        nameDialog.mode === "export-pack" ? "Name theme pack" : "Rename theme";
+        nameDialog.mode === "export-pack"
+          ? t("settings.theme.nameThemePack")
+          : t("settings.theme.renameTheme");
 
       const input = document.createElement("input");
       input.type = "text";
@@ -749,8 +758,8 @@ export function renderThemePanel(
       input.value = themeName;
       input.placeholder =
         nameDialog.mode === "export-pack"
-          ? "Pack name"
-          : "Theme name";
+          ? t("settings.theme.packName")
+          : t("settings.theme.themeName");
       input.addEventListener("input", () => {
         themeName = input.value;
       });
@@ -764,7 +773,7 @@ export function renderThemePanel(
       const cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
       cancelBtn.className = "settings-button theme-name-dialog-cancel";
-      cancelBtn.textContent = "Cancel";
+      cancelBtn.textContent = t("settings.theme.cancel");
       cancelBtn.addEventListener("click", () => {
         nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
         render();
@@ -776,10 +785,10 @@ export function renderThemePanel(
       confirmBtn.disabled = exporting;
       confirmBtn.textContent =
         exporting
-          ? "Exporting…"
+          ? t("settings.theme.exporting")
           : nameDialog.mode === "export-pack"
-            ? "Export pack"
-            : "Confirm";
+            ? t("settings.theme.exportPack")
+            : t("settings.theme.confirm");
       confirmBtn.addEventListener("click", () => void handleConfirmNameDialog());
 
       actions.append(cancelBtn, confirmBtn);
@@ -804,14 +813,13 @@ export function renderThemePanel(
       const title = document.createElement("h3");
       title.className = "theme-name-dialog-title";
       title.textContent =
-        deleteConfirm.kind === "code" ? "Delete code theme?" : "Delete theme?";
+        deleteConfirm.kind === "code"
+          ? t("settings.theme.deleteCodeTheme")
+          : t("settings.theme.deleteTheme");
 
       const msg = document.createElement("p");
       msg.style.cssText = "font-size: 14px; color: var(--text-secondary); margin: 0 0 16px";
-      msg.textContent =
-        deleteConfirm.kind === "code"
-          ? `Delete "${deleteConfirm.name}"? This cannot be undone.`
-          : `Delete "${deleteConfirm.name}"? This cannot be undone.`;
+      msg.textContent = t("settings.theme.deleteMessage", { name: deleteConfirm.name });
 
       const actions = document.createElement("div");
       actions.className = "theme-name-dialog-actions";
@@ -819,7 +827,7 @@ export function renderThemePanel(
       const cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
       cancelBtn.className = "settings-button theme-name-dialog-cancel";
-      cancelBtn.textContent = "Cancel";
+      cancelBtn.textContent = t("settings.theme.cancel");
       cancelBtn.addEventListener("click", () => {
         deleteConfirm = null;
         render();
@@ -828,7 +836,7 @@ export function renderThemePanel(
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "settings-button warning";
-      deleteBtn.textContent = "Delete";
+      deleteBtn.textContent = t("settings.theme.delete");
       deleteBtn.addEventListener("click", () => void handleConfirmDelete());
 
       actions.append(cancelBtn, deleteBtn);
@@ -855,7 +863,11 @@ export function renderThemePanel(
       }
     } catch (err) {
       console.error("Rename/export failed", err);
-      alert(`Operation failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      alert(
+        t("settings.theme.operationFailed", {
+          error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
+        }),
+      );
     } finally {
       exporting = false;
       render();
@@ -891,38 +903,42 @@ export function renderThemePanel(
 
     const modeTitle = document.createElement("h3");
     modeTitle.className = "settings-section-title";
-    modeTitle.textContent = "Appearance mode";
+    modeTitle.textContent = t("settings.theme.appearanceMode");
 
     const modeHint = document.createElement("p");
     modeHint.className = "settings-hint";
     modeHint.style.cssText = "margin-top: -8px; margin-bottom: 12px";
-    modeHint.textContent =
-      "Choose whether the app follows your system, or stays in light or dark mode.";
+    modeHint.textContent = t("settings.theme.appearanceModeDesc");
 
     const modeToggle = document.createElement("div");
     modeToggle.className = "appearance-mode-toggle";
     modeToggle.setAttribute("role", "radiogroup");
-    modeToggle.setAttribute("aria-label", "Appearance mode");
+    modeToggle.setAttribute("aria-label", t("settings.theme.appearanceMode"));
 
-    for (const [mode, label] of [
-      ["system", "System"],
-      ["light", "Light"],
-      ["dark", "Dark"],
+    for (const [mode, labelKey] of [
+      ["system", "settings.theme.system"],
+      ["light", "settings.theme.light"],
+      ["dark", "settings.theme.dark"],
     ] as const) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.setAttribute("role", "radio");
       btn.setAttribute("aria-checked", String(appearanceMode === mode));
       btn.className = `appearance-mode-btn${appearanceMode === mode ? " active" : ""}`;
-      btn.textContent = label;
+      btn.textContent = t(labelKey);
       btn.addEventListener("click", () => themeManager.setAppearanceMode(mode));
       modeToggle.append(btn);
     }
 
     const modeStatus = document.createElement("p");
     modeStatus.className = "settings-hint appearance-mode-status";
-    const resolvedLabel = resolvedMode === "dark" ? "Dark" : "Light";
-    modeStatus.textContent = `Currently ${resolvedLabel} — App: ${resolveAppDisplayName(theme, customThemes)}, Code: ${resolveCodeDisplayName(codeTheme, customCodeThemes)}`;
+    const resolvedLabel =
+      resolvedMode === "dark" ? t("settings.theme.dark") : t("settings.theme.light");
+    modeStatus.textContent = t("settings.theme.currently", {
+      mode: resolvedLabel,
+      app: resolveAppDisplayName(theme, customThemes),
+      code: resolveCodeDisplayName(codeTheme, customCodeThemes),
+    });
 
     const glassRow = document.createElement("div");
     glassRow.className = "inimark-settings-row";
@@ -950,18 +966,18 @@ export function renderThemePanel(
     const kindTabs = document.createElement("div");
     kindTabs.className = "theme-kind-tabs";
     kindTabs.setAttribute("role", "tablist");
-    kindTabs.setAttribute("aria-label", "Theme kind");
+    kindTabs.setAttribute("aria-label", t("settings.theme.themeKind"));
 
-    for (const [tab, label] of [
-      ["app", "App theme"],
-      ["code", "Code theme"],
+    for (const [tab, labelKey] of [
+      ["app", "settings.theme.appTheme"],
+      ["code", "settings.theme.codeTheme"],
     ] as const) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.setAttribute("aria-selected", String(themeKindTab === tab));
       btn.className = `theme-kind-tab${themeKindTab === tab ? " active" : ""}`;
-      btn.textContent = label;
+      btn.textContent = t(labelKey);
       btn.addEventListener("click", () => {
         themeKindTab = tab;
         render();
@@ -972,7 +988,7 @@ export function renderThemePanel(
     const slotHint = document.createElement("p");
     slotHint.className = "settings-hint";
     slotHint.style.cssText = "margin-top: 8px; margin-bottom: 12px";
-    slotHint.textContent = `Themes you pick apply to the ${resolvedLabel.toLowerCase()} appearance slot.`;
+    slotHint.textContent = t("settings.theme.slotHint", { mode: resolvedLabel });
 
     root.append(modeTitle, modeHint, modeToggle, modeStatus, glassRow, kindTabs, slotHint);
 
@@ -1002,7 +1018,7 @@ export function renderThemePanel(
         const forkBtn = document.createElement("button");
         forkBtn.type = "button";
         forkBtn.className = "custom-theme-edit-btn";
-        forkBtn.title = "Fork and edit";
+        forkBtn.title = t("settings.theme.forkAndEdit");
         forkBtn.disabled = forking;
         forkBtn.innerHTML = SVG_EDIT;
         forkBtn.addEventListener("click", (e) => {
@@ -1028,7 +1044,7 @@ export function renderThemePanel(
       const divider = document.createElement("div");
       divider.className = "settings-theme-divider";
       divider.setAttribute("role", "separator");
-      divider.textContent = "Custom themes";
+      divider.textContent = t("settings.theme.customThemes");
       grid.append(divider);
 
       for (const m of customThemes) {
@@ -1053,7 +1069,7 @@ export function renderThemePanel(
         const editBtn = document.createElement("button");
         editBtn.type = "button";
         editBtn.className = "custom-theme-edit-btn";
-        editBtn.title = "Edit";
+        editBtn.title = t("settings.theme.edit");
         editBtn.innerHTML = SVG_EDIT;
         editBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1063,7 +1079,7 @@ export function renderThemePanel(
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.className = "custom-theme-delete-btn";
-        delBtn.title = "Delete";
+        delBtn.title = t("settings.theme.delete");
         delBtn.innerHTML = SVG_DELETE;
         delBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1084,7 +1100,7 @@ export function renderThemePanel(
         const renameBtn = document.createElement("button");
         renameBtn.type = "button";
         renameBtn.className = "settings-theme-rename-btn";
-        renameBtn.title = "Rename";
+        renameBtn.title = t("settings.theme.rename");
         renameBtn.innerHTML = SVG_EDIT;
         renameBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1110,7 +1126,7 @@ export function renderThemePanel(
       newPreview.innerHTML = SVG_PLUS;
       const newName = document.createElement("span");
       newName.className = "settings-theme-name";
-      newName.textContent = "New theme";
+      newName.textContent = t("settings.theme.newTheme");
       newCard.append(newPreview, newName);
       grid.append(newCard);
 
@@ -1157,7 +1173,7 @@ export function renderThemePanel(
         const forkBtn = document.createElement("button");
         forkBtn.type = "button";
         forkBtn.className = "custom-theme-edit-btn";
-        forkBtn.title = "Fork and edit";
+        forkBtn.title = t("settings.theme.forkAndEdit");
         forkBtn.disabled = forkingCode;
         forkBtn.innerHTML = SVG_EDIT;
         forkBtn.addEventListener("click", (e) => {
@@ -1184,7 +1200,7 @@ export function renderThemePanel(
         const divider = document.createElement("div");
         divider.className = "settings-theme-divider";
         divider.setAttribute("role", "separator");
-        divider.textContent = "Custom themes";
+        divider.textContent = t("settings.theme.customThemes");
         grid.append(divider);
       }
 
@@ -1227,7 +1243,7 @@ export function renderThemePanel(
         const editBtn = document.createElement("button");
         editBtn.type = "button";
         editBtn.className = "custom-theme-edit-btn";
-        editBtn.title = "Edit";
+        editBtn.title = t("settings.theme.edit");
         editBtn.innerHTML = SVG_EDIT;
         editBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1237,7 +1253,7 @@ export function renderThemePanel(
         const delBtn = document.createElement("button");
         delBtn.type = "button";
         delBtn.className = "custom-theme-delete-btn";
-        delBtn.title = "Delete";
+        delBtn.title = t("settings.theme.delete");
         delBtn.innerHTML = SVG_DELETE;
         delBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1258,7 +1274,7 @@ export function renderThemePanel(
         const renameBtn = document.createElement("button");
         renameBtn.type = "button";
         renameBtn.className = "settings-theme-rename-btn";
-        renameBtn.title = "Rename";
+        renameBtn.title = t("settings.theme.rename");
         renameBtn.innerHTML = SVG_EDIT;
         renameBtn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1292,7 +1308,7 @@ export function renderThemePanel(
     exportBtn.type = "button";
     exportBtn.className = "theme-pack-btn";
     exportBtn.disabled = exporting;
-    exportBtn.innerHTML = `${SVG_EXPORT}<span>${exporting ? "Exporting…" : "Export theme pack"}</span>`;
+    exportBtn.innerHTML = `${SVG_EXPORT}<span>${exporting ? t("settings.theme.exporting") : t("settings.theme.exportThemePack")}</span>`;
     exportBtn.addEventListener("click", () => {
       const lightName =
         customThemes.find((m) => `custom-${m.id}` === preferredAppTheme.light)?.name
@@ -1306,15 +1322,14 @@ export function renderThemePanel(
     importBtn.type = "button";
     importBtn.className = "theme-pack-btn";
     importBtn.disabled = importing;
-    importBtn.innerHTML = `${SVG_IMPORT}<span>${importing ? "Importing…" : "Import theme pack"}</span>`;
+    importBtn.innerHTML = `${SVG_IMPORT}<span>${importing ? t("settings.theme.importing") : t("settings.theme.importThemePack")}</span>`;
     importBtn.addEventListener("click", () => void handleImportPack());
 
     packActions.append(exportBtn, importBtn);
 
     const packHint = document.createElement("p");
     packHint.className = "settings-hint theme-pack-hint";
-    packHint.textContent =
-      "Export or import a .inimark-theme pack with app and code themes for light and dark slots.";
+    packHint.textContent = t("settings.theme.packHint");
 
     packBar.append(packActions, packHint);
     root.append(packBar);
@@ -1331,7 +1346,11 @@ export function renderThemePanel(
       if (!result) return;
     } catch (err) {
       console.error("Import pack failed", err);
-      alert(`Import failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      alert(
+        t("settings.theme.importFailed", {
+          error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
+        }),
+      );
     } finally {
       importing = false;
       render();

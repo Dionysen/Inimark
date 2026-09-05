@@ -492,15 +492,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function renderLibraryList(): void {
     menu.clear();
-    menu.setPath(
-      workspacePath || t("sidebar.empty.noFolder"),
-      workspacePath || undefined,
-    );
+    menu.setPath("");
 
     if (savedLibraries.length === 0) {
       menu.setEmpty(t("sidebar.library.noneSaved"));
     } else {
-      menu.addHeading(t("sidebar.library.heading"));
       for (const library of savedLibraries) {
         menu.addItem({
           label: library.rootName,
