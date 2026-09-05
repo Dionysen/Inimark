@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-use std::{ffi::CStr, path::PathBuf};
+use std::path::PathBuf;
 
 use objc2::{
   runtime::{Bool, ProtocolObject},
-  DeclaredClass,
+  ClassType, DeclaredClass,
 };
-use objc2_app_kit::{NSDragOperation, NSDraggingInfo, NSFilenamesPboardType};
-use objc2_foundation::{NSArray, NSPoint, NSRect, NSString};
+use objc2_app_kit::{NSDragOperation, NSDraggingInfo};
+use objc2_foundation::{NSArray, NSPoint, NSRect, NSURL};
 
 use crate::DragDropEvent;
 
@@ -18,17 +18,20 @@ use super::WryWebView;
 pub(crate) unsafe fn collect_paths(drag_info: &ProtocolObject<dyn NSDraggingInfo>) -> Vec<PathBuf> {
   let pb = drag_info.draggingPasteboard();
   let mut drag_drop_paths = Vec::new();
-  let types = NSArray::arrayWithObject(NSFilenamesPboardType);
 
-  if pb.availableTypeFromArray(&types).is_some() {
-    let paths = pb.propertyListForType(NSFilenamesPboardType).unwrap();
-    let paths = paths.downcast::<NSArray>().unwrap();
-    for path in paths {
-      let path = path.downcast::<NSString>().unwrap();
-      let path = CStr::from_ptr(path.UTF8String()).to_string_lossy();
-      drag_drop_paths.push(PathBuf::from(path.into_owned()));
+  // Modern pasteboard API covers both legacy NSFilenamesPboardType sources and
+  // drag sources that only publish public.file-url items.
+  let class_array = NSArray::from_slice(&[NSURL::class()]);
+  if let Some(objects) = pb.readObjectsForClasses_options(&class_array, None) {
+    for obj in objects.iter() {
+      if let Ok(url) = obj.downcast::<NSURL>() {
+        if let Some(path) = url.path() {
+          drag_drop_paths.push(PathBuf::from(path.to_string()));
+        }
+      }
     }
   }
+
   drag_drop_paths
 }
 
@@ -37,7 +40,7 @@ pub(crate) fn dragging_entered(
   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
 ) -> NSDragOperation {
   let paths = unsafe { collect_paths(drag_info) };
-  let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+  let dl: NSPoint = drag_info.draggingLocation();
   let frame: NSRect = this.frame();
   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
 
@@ -54,7 +57,7 @@ pub(crate) fn dragging_updated(
   this: &WryWebView,
   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
 ) -> NSDragOperation {
-  let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+  let dl: NSPoint = drag_info.draggingLocation();
   let frame: NSRect = this.frame();
   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
 
@@ -82,7 +85,7 @@ pub(crate) fn perform_drag_operation(
   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
 ) -> Bool {
   let paths = unsafe { collect_paths(drag_info) };
-  let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+  let dl: NSPoint = drag_info.draggingLocation();
   let frame: NSRect = this.frame();
   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
 
