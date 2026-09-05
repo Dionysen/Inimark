@@ -11,6 +11,11 @@ export type { SearchRevealOptions } from "./search-reveal.ts";
 export type { EditorCommandName } from "./commands.ts";
 export { executeEditorCommand } from "./commands.ts";
 export {
+  setWikiLinkBridge,
+  getWikiLinkBridge,
+} from "./wiki-link-bridge.ts";
+export type { WikiLinkBridge, WikiNoteHit } from "./wiki-link-bridge.ts";
+export {
   buildMarkdownTreeFromDirectory,
   pickMarkdownDirectory,
   readMarkdownFileHandle,

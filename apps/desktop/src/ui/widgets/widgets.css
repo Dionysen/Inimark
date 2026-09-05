@@ -177,6 +177,12 @@
   background: var(--inimark-hover);
 }
 
+.inimark-icon-btn.is-active:not(:disabled) {
+  color: var(--inimark-fg);
+  border-color: color-mix(in srgb, var(--inimark-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--inimark-accent) 12%, transparent);
+}
+
 .inimark-icon-btn:active:not(:disabled) {
   transform: scale(0.96);
 }

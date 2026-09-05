@@ -21,7 +21,7 @@ describe("normalizeSidebarTabLayout", () => {
       ["search"],
     );
     expect(layout.left).toEqual(["outline", "files", "bookmarks"]);
-    expect(layout.right).toEqual(["search"]);
+    expect(layout.right).toEqual(["search", "graph"]);
     expect([...layout.left, ...layout.right].sort()).toEqual(
       [...ALL_SIDEBAR_TABS].sort(),
     );
@@ -33,7 +33,7 @@ describe("normalizeSidebarTabLayout", () => {
       ["outline", "search"],
     );
     expect(layout.left).toEqual(["files", "outline", "bookmarks"]);
-    expect(layout.right).toEqual(["search"]);
+    expect(layout.right).toEqual(["search", "graph"]);
     expect(new Set([...layout.left, ...layout.right]).size).toBe(
       ALL_SIDEBAR_TABS.length,
     );

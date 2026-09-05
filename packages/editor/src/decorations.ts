@@ -36,6 +36,46 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     if (attrs.len) el.setAttribute("data-len", attrs.len);
     return el;
   },
+  "wiki-link": (attrs) => {
+    const el = document.createElement("span");
+    el.className =
+      "wiki-link-widget" + (attrs.unresolved === "1" ? " is-unresolved" : "");
+    el.textContent = attrs.label ?? attrs.note ?? "";
+    if (attrs.note) el.setAttribute("data-note", attrs.note);
+    if (attrs.heading) el.setAttribute("data-heading", attrs.heading);
+    if (attrs.unresolved) el.setAttribute("data-unresolved", attrs.unresolved);
+    if (attrs.len) el.setAttribute("data-len", attrs.len);
+    el.title = attrs.note ?? "";
+    return el;
+  },
+  "wiki-embed-image": (attrs) => {
+    if (attrs.unresolved === "1" || !attrs.src) {
+      const el = document.createElement("span");
+      el.className = "wiki-embed-image is-unresolved";
+      el.textContent = attrs.alt || attrs.note || "image";
+      if (attrs.note) el.setAttribute("data-note", attrs.note);
+      el.setAttribute("data-unresolved", "1");
+      return el;
+    }
+    const img = document.createElement("img");
+    img.className = "wiki-embed-image";
+    img.src = attrs.src;
+    img.alt = attrs.alt ?? "";
+    if (attrs.note) img.setAttribute("data-note", attrs.note);
+    return img;
+  },
+  "wiki-embed-note": (attrs) => {
+    const el = document.createElement("div");
+    el.className =
+      "wiki-embed-note" + (attrs.unresolved === "1" ? " is-unresolved" : "");
+    el.setAttribute("data-note", attrs.note ?? "");
+    if (attrs.unresolved) el.setAttribute("data-unresolved", attrs.unresolved);
+    const title = document.createElement("div");
+    title.className = "wiki-embed-note-title";
+    title.textContent = attrs.label ?? attrs.note ?? "";
+    el.append(title);
+    return el;
+  },
   "image-render": (attrs) => {
     const img = document.createElement("img");
     img.className = "image-render";

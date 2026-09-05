@@ -52,6 +52,31 @@ export function outlineTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 6h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 12h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 18h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 6h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 12h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 18h.01"/></svg>`;
 }
 
+/** Relationship graph tab. */
+export function graphTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="18" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="18" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="17" cy="17" r="2.25" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 7.5 16 8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7.5 8.2 9.2 15.8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M16.2 9.1 15.5 14.8"/></svg>`;
+}
+
+/** Graph scope: local (ego) neighborhood. */
+export function graphLocalModeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/><circle cx="5" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9.4 10.2 6.6 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14.6 10.2 17.4 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M10 14.5 8 16.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14 14.5 16 16.7"/></svg>`;
+}
+
+/** Graph scope: whole vault. */
+export function graphVaultModeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="17" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M8.7 8.2 10.5 10.5"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M15.3 7.8 13.5 10.4"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M8.5 15.4 10.4 13.3"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M15.5 15.4 13.6 13.3"/></svg>`;
+}
+
+/** Open graph in the main editor area. */
+export function graphOpenEditorIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 9h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m10 14 2-2 2 2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 12v5"/></svg>`;
+}
+
+/** Close overlay / dismiss. */
+export function closeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 6 6 18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m6 6 12 12"/></svg>`;
+}
+
 /** Right sidebar toggle — open=true shows filled right pane. */
 export function rightSidebarToggleIcon(open: boolean): string {
   if (open) {

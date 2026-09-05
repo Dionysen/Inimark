@@ -1,4 +1,4 @@
-import { createEditor, type Editor } from "@inimark/editor";
+import { createEditor, setWikiLinkBridge, type Editor } from "@inimark/editor";
 import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
@@ -15,10 +15,11 @@ import {
   setLastLibraryId,
   upsertLibrary,
 } from "./libraries/store.ts";
-import { isTauri } from "./platform/env.ts";
+import { isTauri, joinWorkspacePath } from "./platform/env.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
+  createWorkspaceFile,
   defaultExpandedDirs,
   openWorkspaceByPath,
   pickWorkspace,
@@ -34,6 +35,10 @@ import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
+import {
+  buildLinkIndexForWorkspace,
+  linkIndex,
+} from "./wikilink/index.ts";
 
 export interface AppController {
   editor: Editor;
@@ -60,9 +65,97 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setDirty(true);
       scheduleAutoSave();
       scheduleOutlineSync(md);
+      if (workspace && activeFilePath) {
+        linkIndex.addFileLinks(activeFilePath, md);
+      }
     },
   });
   editor.setTypewriterMode(settings.typewriterMode);
+
+  let cachedImageUrl: ((path: string) => string | null) | null = null;
+  void (async () => {
+    if (!isTauri()) {
+      cachedImageUrl = (path) =>
+        workspace ? joinWorkspacePath(workspace.rootPath, path) : null;
+      return;
+    }
+    try {
+      const { convertFileSrc } = await import("@tauri-apps/api/core");
+      cachedImageUrl = (path) => {
+        if (!workspace) return null;
+        return convertFileSrc(joinWorkspacePath(workspace.rootPath, path));
+      };
+    } catch {
+      cachedImageUrl = (path) =>
+        workspace ? joinWorkspacePath(workspace.rootPath, path) : null;
+    }
+  })();
+
+  setWikiLinkBridge({
+    resolveNote: (noteName) => linkIndex.findFileByNoteName(noteName) ?? null,
+    resolveImage: (name) => linkIndex.findImageByBaseName(name) ?? null,
+    imageUrl: (relativePath) => cachedImageUrl?.(relativePath) ?? null,
+    searchNotes: (query) => linkIndex.searchNotes(query),
+    openNote: (noteName, heading) => {
+      void (async () => {
+        let path = linkIndex.findFileByNoteName(noteName);
+        if (!path) {
+          if (!workspace) return;
+          const rel = noteName.endsWith(".md") ? noteName : `${noteName}.md`;
+          const created = await createWorkspaceFile(
+            workspace,
+            rel,
+            `# ${noteName.split("/").pop()}\n`,
+          );
+          if (created.status === "error") {
+            console.error(created.message);
+            return;
+          }
+          workspace.tree = await refreshWorkspaceTree(workspace);
+          shell.sidebar.setWorkspace(workspace);
+          linkIndex.registerFile(rel);
+          linkIndex.addFileLinks(rel, `# ${noteName.split("/").pop()}\n`);
+          path = rel;
+        }
+        await openWorkspaceFile(path);
+        if (heading) {
+          editor.scrollToHeading(heading);
+        }
+      })();
+    },
+    createNote: (noteName) => {
+      void (async () => {
+        if (!workspace) return;
+        const rel = noteName.endsWith(".md") ? noteName : `${noteName}.md`;
+        const result = await createWorkspaceFile(
+          workspace,
+          rel,
+          `# ${noteName.split("/").pop()}\n`,
+        );
+        if (result.status === "error") {
+          console.error(result.message);
+          return;
+        }
+        workspace.tree = await refreshWorkspaceTree(workspace);
+        shell.sidebar.setWorkspace(workspace);
+        linkIndex.registerFile(rel);
+        linkIndex.addFileLinks(rel, `# ${noteName.split("/").pop()}\n`);
+      })();
+    },
+    previewNote: async (noteName) => {
+      if (!workspace) return null;
+      const path = linkIndex.findFileByNoteName(noteName);
+      if (!path) return null;
+      const opened = await readWorkspaceFile(workspace, path);
+      if (opened.status !== "opened") return null;
+      return opened.text.replace(/^---[\s\S]*?---\s*/, "").trim().slice(0, 400);
+    },
+  });
+  cleanups.push(() => setWikiLinkBridge(null));
+
+  shell.graph.onOpenFile((path) => {
+    void openWorkspaceFile(path);
+  });
 
   let outlineTimer: ReturnType<typeof setTimeout> | null = null;
   function scheduleOutlineSync(md?: string): void {
@@ -144,6 +237,9 @@ export function mountApp(host: HTMLElement): AppController {
         workspace.tree = await refreshWorkspaceTree(workspace);
         shell.sidebar.setWorkspace(workspace);
         shell.sidebar.setActiveFile(activeFilePath);
+        linkIndex.addFileLinks(activeFilePath, markdown);
+        linkIndex.persistCache(workspace.rootPath);
+        shell.graph.setActiveFile(activeFilePath);
         persistLibrarySession();
         return true;
       }
@@ -179,6 +275,7 @@ export function mountApp(host: HTMLElement): AppController {
     activeFilePath = null;
     shell.setFileName(null);
     shell.sidebar.setActiveFile(null);
+    shell.graph.setActiveFile(null);
     shell.setDirty(false);
     persistLibrarySession();
     scheduleOutlineSync("");
@@ -221,11 +318,13 @@ export function mountApp(host: HTMLElement): AppController {
       activeFilePath = path;
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(path);
+      shell.graph.setActiveFile(path);
       shell.setDirty(false);
       persistLibrarySession();
       scheduleOutlineSync(result.text);
     } else {
       shell.sidebar.setActiveFile(path);
+      shell.graph.setActiveFile(path);
     }
 
     const query = options?.query?.trim();
@@ -250,6 +349,7 @@ export function mountApp(host: HTMLElement): AppController {
     setLastLibraryId(activeLibraryId);
     refreshLibraryList();
     shell.sidebar.setWorkspace(workspace);
+    void buildLinkIndexForWorkspace(workspace);
 
     const session = getLibrarySession(activeLibraryId);
     const expandedDirs =
@@ -392,19 +492,50 @@ export function mountApp(host: HTMLElement): AppController {
   shell.sidebar.onExpandedDirsChange(() => persistLibrarySession());
   shell.sidebar.onFileRenamed((from, to) => {
     if (!workspace) return;
-    if (activeFilePath === from || activeFilePath?.startsWith(`${from}/`)) {
-      activeFilePath = to;
-      shell.setFileName(to.split(/[/\\]/).pop() ?? to);
-      shell.sidebar.setActiveFile(to);
-      persistLibrarySession();
-    }
+    void (async () => {
+      await linkIndex.rewriteWikiLinks(
+        from,
+        to,
+        async (path) => {
+          const opened = await readWorkspaceFile(workspace!, path);
+          return opened.status === "opened" ? opened.text : null;
+        },
+        async (path, content) => {
+          await writeWorkspaceFile(workspace!, path, content);
+        },
+      );
+      linkIndex.persistCache(workspace!.rootPath);
+      if (activeFilePath === from || activeFilePath?.startsWith(`${from}/`)) {
+        activeFilePath = activeFilePath === from
+          ? to
+          : activeFilePath.replace(from, to);
+        shell.setFileName(activeFilePath.split(/[/\\]/).pop() ?? activeFilePath);
+        shell.sidebar.setActiveFile(activeFilePath);
+        shell.graph.setActiveFile(activeFilePath);
+        // Reload if current file's wiki links may have changed
+        const opened = await readWorkspaceFile(workspace!, activeFilePath);
+        if (opened.status === "opened") {
+          editor.setMarkdown(opened.text);
+          shell.setDirty(false);
+          scheduleOutlineSync(opened.text);
+        }
+        persistLibrarySession();
+      } else {
+        shell.graph.refresh();
+      }
+    })();
   });
   shell.sidebar.onFileDeleted((path) => {
+    linkIndex.removeFile(path);
+    if (workspace) linkIndex.persistCache(workspace.rootPath);
     if (
       activeFilePath === path ||
       activeFilePath?.startsWith(`${path}/`)
     ) {
       resetToUntitled();
+      shell.graph.setActiveFile(null);
+    } else {
+      shell.graph.refresh();
     }
   });
   shell.sidebar.onCloseLibrary(() => {
@@ -413,9 +544,10 @@ export function mountApp(host: HTMLElement): AppController {
     activeFilePath = null;
     activeLibraryId = null;
     shell.sidebar.setWorkspace(null);
+    linkIndex.clear();
+    shell.graph.setActiveFile(null);
     refreshLibraryList();
   });
-
   cleanups.push(
     mountShortcutHandler({
       save: () => void saveCurrentFile(),

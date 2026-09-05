@@ -106,6 +106,17 @@ export const zhCN: Dictionary = {
     empty: "暂无标题",
     emptyHint: "添加 # 标题后即可显示大纲",
   },
+  graph: {
+    tab: "图谱",
+    modeLocal: "局部",
+    modeVault: "文库",
+    toggleMode: "切换局部 / 文库图谱",
+    openInEditor: "在编辑区显示图谱",
+    closeEditor: "关闭图谱",
+    outlinks: "出链",
+    backlinks: "入链",
+    emptyLinks: "暂无",
+  },
   editor: {
     welcome: "# 欢迎\n\n开始写作…",
     fontZoom: "{{size}}px",

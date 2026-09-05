@@ -12,6 +12,10 @@ import {
 } from "./ui/column-resize.ts";
 import { mountTitleBar, type TitleBarController } from "./ui/titlebar.ts";
 import { mountOutlinePanel } from "./sidebar/outline-panel.ts";
+import {
+  mountGraphPanel,
+  type GraphPanelController,
+} from "./sidebar/graph-panel.ts";
 import { loadSettings, type AppSettings } from "./settings/store.ts";
 import type { SidebarTabId } from "./sidebar/tab-layout.ts";
 
@@ -32,6 +36,7 @@ export interface ShellController {
   mainColumn: HTMLElement;
   sidebar: SidebarController;
   rightSidebar: RightSidebarController;
+  graph: GraphPanelController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
@@ -83,6 +88,12 @@ export function mountShell(
   outlinePanelHost.setAttribute("role", "tabpanel");
   const outline = mountOutlinePanel(outlinePanelHost);
 
+  const graphPanelHost = document.createElement("div");
+  graphPanelHost.className = "inimark-sidebar-panel";
+  graphPanelHost.dataset.panel = "graph";
+  graphPanelHost.setAttribute("role", "tabpanel");
+  const graph = mountGraphPanel(graphPanelHost);
+
   const mainColumn = document.createElement("div");
   mainColumn.className = "inimark-main";
 
@@ -96,6 +107,7 @@ export function mountShell(
     return {
       ...sidebar.getPanels(),
       outline: outlinePanelHost,
+      graph: graphPanelHost,
     };
   }
 
@@ -180,6 +192,7 @@ export function mountShell(
 
   const editorHost = document.createElement("main");
   editorHost.className = "inimark-editor-host";
+  graph.setEditorHost(editorHost);
 
   mainColumn.append(titlebarHost, editorHost);
   host.append(sidebarHost, mainColumn, rightSidebarHost);
@@ -227,6 +240,7 @@ export function mountShell(
     mainColumn,
     sidebar,
     rightSidebar,
+    graph,
     setFileName(name) {
       fileName = name;
       renderTitle();
@@ -248,6 +262,7 @@ export function mountShell(
       titlebar.destroy();
       sidebar.destroy();
       rightSidebar.destroy();
+      graph.destroy();
       host.replaceChildren();
     },
   };

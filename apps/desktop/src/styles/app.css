@@ -258,6 +258,134 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   display: none !important;
 }
 
+.inimark-graph-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.inimark-graph-editor-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--inimark-content-bg);
+  border: 0;
+  padding: 0;
+}
+
+.inimark-graph-panel--editor {
+  height: 100%;
+  min-height: 0;
+}
+
+.inimark-graph-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.inimark-graph-body.is-splitting {
+  user-select: none;
+  cursor: row-resize;
+}
+
+.inimark-graph-canvas-wrap {
+  flex: 0.5 1 0;
+  min-height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.inimark-graph-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.inimark-graph-split-handle {
+  flex-shrink: 0;
+  height: 5px;
+  margin: 0;
+  cursor: row-resize;
+  position: relative;
+  background: transparent;
+  border-top: 1px solid var(--inimark-border);
+  border-bottom: 1px solid transparent;
+  z-index: 2;
+}
+
+.inimark-graph-split-handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 3px;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--inimark-muted-fg) 45%, transparent);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.inimark-graph-split-handle:hover::after,
+.inimark-graph-split-handle.is-active::after {
+  opacity: 1;
+}
+
+.inimark-graph-split-handle.is-active {
+  border-top-color: var(--inimark-accent);
+}
+
+.inimark-graph-lists {
+  flex: 0.5 1 0;
+  min-height: 80px;
+  overflow: auto;
+  padding: var(--inimark-space-2) 0;
+}
+
+.inimark-graph-list-section {
+  padding: 0 var(--inimark-space-3) var(--inimark-space-2);
+}
+
+.inimark-graph-list-title {
+  margin: 0 0 0.35rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-list-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-list-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 12px;
+  padding: 0.3rem 0.35rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.inimark-graph-list-item:hover {
+  background: color-mix(in srgb, var(--inimark-accent) 12%, transparent);
+}
+
 /* Don't use width:100% + margin — that overflows the right edge. */
 .inimark-sidebar-panel .inimark-search {
   flex-shrink: 0;
@@ -437,6 +565,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 .inimark-editor-host {
+  position: relative;
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;

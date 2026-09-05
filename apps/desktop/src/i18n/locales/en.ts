@@ -106,6 +106,17 @@ export const en: Dictionary = {
     empty: "No headings yet",
     emptyHint: "Add # headings to see the outline",
   },
+  graph: {
+    tab: "Graph",
+    modeLocal: "Local",
+    modeVault: "Vault",
+    toggleMode: "Toggle local / vault graph",
+    openInEditor: "Show graph in editor",
+    closeEditor: "Close graph",
+    outlinks: "Outgoing",
+    backlinks: "Incoming",
+    emptyLinks: "None",
+  },
   editor: {
     welcome: "# Welcome\n\nStart writing…",
     fontZoom: "{{size}}px",

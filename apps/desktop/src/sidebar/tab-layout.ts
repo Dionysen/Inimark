@@ -2,6 +2,7 @@ import { t } from "../i18n/index.ts";
 import {
   bookmarksTabIcon,
   filesTabIcon,
+  graphTabIcon,
   outlineTabIcon,
   searchTabIcon,
 } from "../ui/widgets/index.ts";
@@ -11,6 +12,7 @@ export const ALL_SIDEBAR_TABS = [
   "search",
   "bookmarks",
   "outline",
+  "graph",
 ] as const;
 
 export type SidebarTabId = (typeof ALL_SIDEBAR_TABS)[number];
@@ -21,7 +23,7 @@ export const DEFAULT_LEFT_SIDEBAR_TABS: SidebarTabId[] = [
   "bookmarks",
 ];
 
-export const DEFAULT_RIGHT_SIDEBAR_TABS: SidebarTabId[] = ["outline"];
+export const DEFAULT_RIGHT_SIDEBAR_TABS: SidebarTabId[] = ["outline", "graph"];
 
 export interface SidebarTabLayout {
   left: SidebarTabId[];
@@ -44,6 +46,8 @@ export function sidebarTabIcon(id: SidebarTabId): string {
       return bookmarksTabIcon();
     case "outline":
       return outlineTabIcon();
+    case "graph":
+      return graphTabIcon();
   }
 }
 
@@ -57,6 +61,8 @@ export function sidebarTabLabel(id: SidebarTabId): string {
       return t("sidebar.tabs.bookmarks");
     case "outline":
       return t("outline.tab");
+    case "graph":
+      return t("graph.tab");
   }
 }
 
