@@ -19,6 +19,9 @@ body {
   color: var(--inimark-fg);
   font-family: var(--inimark-font-ui);
   -webkit-font-smoothing: antialiased;
+  /* Chrome UI is non-selectable; editor / inputs re-enable below. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 button,
@@ -33,6 +36,23 @@ textarea {
   background: var(--inimark-bg);
   border-radius: 0;
   overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Markdown editor — only surface where free-form text selection is allowed. */
+.inimark-editor-host,
+.inimark-editor-host * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Text fields in sidebars, settings, dialogs, rename, … */
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="image"]):not([type="hidden"]),
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Linux: transparent window + CSS corner clip */

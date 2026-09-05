@@ -1,10 +1,12 @@
 import { initPlatform } from "./platform/platform.ts";
+import { installChromeGuards } from "./platform/chrome-guards.ts";
 import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
 import { initFullscreenChrome } from "./platform/window-chrome.ts";
 import { initThemeManager } from "./themes/manager.ts";
 import { mountApp } from "./app.ts";
 
 initPlatform();
+const teardownChromeGuards = installChromeGuards();
 const teardownFullscreen = initFullscreenChrome();
 const teardownScrollbars = initAutoHideScrollbars();
 
@@ -17,6 +19,7 @@ void initThemeManager().then(() => {
   const app = mountApp(root);
 
   window.addEventListener("beforeunload", () => {
+    teardownChromeGuards();
     teardownFullscreen();
     teardownScrollbars();
     app.destroy();

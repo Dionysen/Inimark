@@ -2,6 +2,7 @@ import "./styles/shell.css";
 import "./styles/settings.css";
 import "./styles/theme-settings.css";
 import { initPlatform } from "./platform/platform.ts";
+import { installChromeGuards } from "./platform/chrome-guards.ts";
 import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
 import { initFullscreenChrome } from "./platform/window-chrome.ts";
 import { initThemeManager } from "./themes/manager.ts";
@@ -10,6 +11,7 @@ import { mountSettingsView } from "./settings/view.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
 
 initPlatform();
+const teardownChromeGuards = installChromeGuards();
 const teardownFullscreen = initFullscreenChrome();
 const teardownScrollbars = initAutoHideScrollbars();
 
@@ -39,6 +41,7 @@ void initThemeManager().then(() => {
   });
 
   window.addEventListener("beforeunload", () => {
+    teardownChromeGuards();
     teardownFullscreen();
     teardownScrollbars();
     view.destroy();
