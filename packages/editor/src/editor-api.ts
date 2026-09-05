@@ -38,6 +38,7 @@ import {
   type SearchRevealOptions,
 } from "./search-reveal.ts";
 import { serialize } from "./serializer.ts";
+import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 
 export interface EditorOptions {
   /** Initial markdown the editor opens with. Defaults to empty. */
@@ -82,6 +83,8 @@ export interface Editor {
   scrollToHeading(text: string, line?: number): boolean;
   /** Clear vault-search highlight decorations. */
   clearSearchHighlight(): void;
+  /** Run a named format/insert command (context menu, toolbar, …). */
+  executeCommand(name: EditorCommandName | string): boolean;
   /** Focus whichever surface is active. */
   focus(): void;
   /** Tear down the editor and remove its DOM. */
@@ -525,6 +528,10 @@ export function createEditor(
     },
     clearSearchHighlight() {
       clearSearchRevealInView(view);
+    },
+    executeCommand(name) {
+      if (inSource) exitSource();
+      return executeEditorCommand(view, name);
     },
     focus(): void {
       if (inSource) sourceView?.view.focus();

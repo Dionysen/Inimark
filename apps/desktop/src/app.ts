@@ -26,6 +26,7 @@ import {
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
+import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
 import { formatMarkdown } from "./settings/markdown-format.ts";
@@ -75,6 +76,9 @@ export function mountApp(host: HTMLElement): AppController {
   shell.rightSidebar.onSelectHeading((_level, text, line) => {
     editor.scrollToHeading(text, line);
   });
+
+  const editorContextMenu = mountEditorContextMenu(shell.editorHost, editor);
+  cleanups.push(() => editorContextMenu.destroy());
 
   cleanups.push(
     mountEditorFontZoom({
