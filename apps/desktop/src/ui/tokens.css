@@ -59,7 +59,8 @@
   --inimark-editor-font-size: var(--editor-font-size, 16px);
   --inimark-editor-max-width: 48rem;
 
-  /* Panels / menus — solid by default; frosted when html[data-glass="true"] */
+  /* Menus — solid by default; frosted when html[data-glass="true"].
+     Floating library chrome always uses liquid glass (see app.css). */
   --inimark-glass-bg: var(--inimark-surface-raised);
   --inimark-glass-border: var(--inimark-border);
   --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);

@@ -55,7 +55,7 @@ export interface AppSettings {
   markdownFormat: MarkdownFormatSettings;
   menuDensity: MenuDensity;
   autoHideLibraryBar: boolean;
-  /** Frosted glass for menus / floating chrome. Off = solid tertiary surfaces. */
+  /** Frosted glass for menus. Floating library chrome is always frosted. */
   glassEffect: boolean;
   image: ImageSettings;
 }

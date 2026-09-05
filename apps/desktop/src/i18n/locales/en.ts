@@ -206,7 +206,7 @@ export const en: Dictionary = {
     theme: {
       glassEffect: "Frosted glass",
       glassEffectDesc:
-        "Translucent blur on menus and floating chrome. Off uses solid tertiary backgrounds.",
+        "Translucent blur on menus. off uses solid menu backgrounds.",
     },
     width: {
       narrow: "Narrow",
