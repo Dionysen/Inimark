@@ -49,7 +49,10 @@ export function createTreeItem(options: TreeItemOptions): HTMLButtonElement {
     row.setAttribute("aria-expanded", options.expanded ? "true" : "false");
     const chevron = document.createElement("span");
     chevron.className = "inimark-tree-chevron";
-    chevron.textContent = options.expanded ? "▾" : "▸";
+    if (options.expanded) chevron.classList.add("is-expanded");
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML =
+      `<svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     const label = document.createElement("span");
     label.className = "inimark-tree-label";
     label.textContent = options.label;

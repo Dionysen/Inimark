@@ -683,7 +683,6 @@
   flex-shrink: 0;
   min-height: calc(var(--inimark-chrome-btn-size) + var(--inimark-space-2));
   padding: var(--inimark-space-1) var(--inimark-space-2);
-  border-bottom: 1px solid var(--inimark-border);
   -webkit-app-region: no-drag;
 }
 
@@ -780,7 +779,7 @@
   background: transparent;
   color: var(--inimark-fg);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 13px;
   text-align: left;
   padding-top: var(--inimark-tree-item-padding-y);
   padding-bottom: var(--inimark-tree-item-padding-y);
@@ -814,14 +813,27 @@
 }
 
 .inimark-tree-chevron {
-  width: 0.75rem;
+  display: inline-grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
   flex-shrink: 0;
-  text-align: center;
-  opacity: 0.7;
+  color: var(--inimark-muted-fg);
+  opacity: 0.85;
+  transition: transform 0.15s ease;
+}
+
+.inimark-tree-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-tree-chevron svg {
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 .inimark-tree-icon-spacer {
-  width: 0.75rem;
+  width: 0.875rem;
   flex-shrink: 0;
 }
 
@@ -846,7 +858,7 @@
   background: transparent;
   color: var(--inimark-muted-fg);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 13px;
   text-align: left;
   padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
   border-radius: var(--inimark-radius-control);
