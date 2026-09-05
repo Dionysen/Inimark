@@ -111,20 +111,20 @@ const DENSITY_VARS: Record<
 > = {
   compact: {
     controlHeight: "28px",
-    controlPaddingX: "8px",
-    menuItemPaddingY: "4px",
+    controlPaddingX: "6px",
+    menuItemPaddingY: "2px",
     treeItemPaddingY: "3px",
   },
   normal: {
     controlHeight: "32px",
-    controlPaddingX: "10px",
-    menuItemPaddingY: "6px",
+    controlPaddingX: "8px",
+    menuItemPaddingY: "4px",
     treeItemPaddingY: "5px",
   },
   comfortable: {
     controlHeight: "36px",
-    controlPaddingX: "12px",
-    menuItemPaddingY: "8px",
+    controlPaddingX: "10px",
+    menuItemPaddingY: "6px",
     treeItemPaddingY: "7px",
   },
 };

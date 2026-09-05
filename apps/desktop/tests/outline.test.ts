@@ -41,7 +41,7 @@ describe("outline panel", () => {
     panel.setContent("# One\n\n## Two");
 
     expect(host.querySelectorAll(".inimark-outline-item")).toHaveLength(2);
-    expect(host.querySelector(".inimark-outline-level")?.textContent).toBe("H1");
+    expect(host.querySelector(".inimark-heading-level-badge")?.textContent).toBe("H1");
 
     const toggle = host.querySelector(
       ".inimark-panel-toolbar button",
@@ -49,7 +49,7 @@ describe("outline panel", () => {
     expect(toggle).not.toBeNull();
     toggle!.click();
 
-    expect(host.querySelector(".inimark-outline-level")).toBeNull();
+    expect(host.querySelector(".inimark-heading-level-badge")).toBeNull();
 
     panel.destroy();
     host.remove();

@@ -1,6 +1,7 @@
 import type { Editor, EditorCommandName } from "@inimark/editor";
 import { t } from "../i18n/index.ts";
 import { detectPlatform } from "../platform/platform.ts";
+import { headingLevelBadgeHtml } from "../ui/heading-level-badge.ts";
 
 export interface EditorContextMenuController {
   destroy(): void;
@@ -163,14 +164,56 @@ function buildSubmenus(): SubmenuRow[] {
       label: t("editor.ctx.heading"),
       icon: ICONS.heading,
       items: [
-        { kind: "item", name: "heading-1", label: t("editor.ctx.heading1"), shortcut: `${m}1` },
-        { kind: "item", name: "heading-2", label: t("editor.ctx.heading2"), shortcut: `${m}2` },
-        { kind: "item", name: "heading-3", label: t("editor.ctx.heading3"), shortcut: `${m}3` },
-        { kind: "item", name: "heading-4", label: t("editor.ctx.heading4"), shortcut: `${m}4` },
-        { kind: "item", name: "heading-5", label: t("editor.ctx.heading5"), shortcut: `${m}5` },
-        { kind: "item", name: "heading-6", label: t("editor.ctx.heading6"), shortcut: `${m}6` },
+        {
+          kind: "item",
+          name: "heading-1",
+          label: t("editor.ctx.heading1"),
+          shortcut: `${m}1`,
+          icon: headingLevelBadgeHtml(1),
+        },
+        {
+          kind: "item",
+          name: "heading-2",
+          label: t("editor.ctx.heading2"),
+          shortcut: `${m}2`,
+          icon: headingLevelBadgeHtml(2),
+        },
+        {
+          kind: "item",
+          name: "heading-3",
+          label: t("editor.ctx.heading3"),
+          shortcut: `${m}3`,
+          icon: headingLevelBadgeHtml(3),
+        },
+        {
+          kind: "item",
+          name: "heading-4",
+          label: t("editor.ctx.heading4"),
+          shortcut: `${m}4`,
+          icon: headingLevelBadgeHtml(4),
+        },
+        {
+          kind: "item",
+          name: "heading-5",
+          label: t("editor.ctx.heading5"),
+          shortcut: `${m}5`,
+          icon: headingLevelBadgeHtml(5),
+        },
+        {
+          kind: "item",
+          name: "heading-6",
+          label: t("editor.ctx.heading6"),
+          shortcut: `${m}6`,
+          icon: headingLevelBadgeHtml(6),
+        },
         { kind: "divider" },
-        { kind: "item", name: "paragraph", label: t("editor.ctx.paragraph"), shortcut: `${m}0` },
+        {
+          kind: "item",
+          name: "paragraph",
+          label: t("editor.ctx.paragraph"),
+          shortcut: `${m}0`,
+          icon: headingLevelBadgeHtml(0),
+        },
       ],
     },
     {

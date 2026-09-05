@@ -32,9 +32,9 @@
   /* Unified control chrome (theme-editable) */
   --radius-control: 6px;
   --control-height: 32px;
-  --control-padding-x: 10px;
+  --control-padding-x: 8px;
   --control-font-size: 13px;
-  --menu-item-padding-y: 6px;
+  --menu-item-padding-y: 4px;
   --tree-item-padding-y: 5px;
   --tree-indent-hint-color: var(--border);
   --tree-indent-hint-width: 1px;

@@ -1,4 +1,5 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
+import { createHeadingLevelBadge } from "../ui/heading-level-badge.ts";
 import {
   collapseAllIcon,
   createMenu,
@@ -270,10 +271,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     }
 
     if (showLevels) {
-      const level = document.createElement("span");
-      level.className = "inimark-outline-level";
-      level.textContent = `H${node.item.level}`;
-      row.append(level);
+      row.append(createHeadingLevelBadge(node.item.level));
     }
 
     const label = document.createElement("span");

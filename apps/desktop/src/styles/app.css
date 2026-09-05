@@ -116,7 +116,7 @@ html.platform-macos .inimark-right-sidebar-topbar {
   padding-top: var(--inimark-space-1);
 }
 
-.inimark-outline-level {
+.inimark-heading-level-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -134,7 +134,7 @@ html.platform-macos .inimark-right-sidebar-topbar {
   line-height: 1;
 }
 
-.inimark-outline-item.is-active .inimark-outline-level {
+.inimark-outline-item.is-active .inimark-heading-level-badge {
   background: color-mix(in srgb, var(--inimark-accent) 18%, transparent);
   color: var(--inimark-fg);
 }
@@ -724,8 +724,8 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
   position: fixed;
   z-index: 60;
   min-width: 180px;
-  padding: 4px;
-  border-radius: 8px;
+  padding: var(--inimark-menu-padding);
+  border-radius: var(--inimark-radius-menu);
   font-size: 13px;
   color: var(--inimark-fg);
   box-shadow: var(--inimark-glass-shadow, 0 4px 16px rgba(0, 0, 0, 0.15));
@@ -753,7 +753,7 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
   width: 32px;
   height: 32px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--inimark-radius-menu-item);
   padding: 0;
   background: transparent;
   color: var(--inimark-fg);
@@ -814,9 +814,10 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
   align-items: center;
   width: 100%;
   gap: 0.5rem;
-  padding: var(--inimark-menu-item-padding-y, 6px) var(--inimark-control-padding-x, 10px);
+  min-height: calc(var(--inimark-menu-item-padding-y, 4px) * 2 + 1.25rem);
+  padding: var(--inimark-menu-item-padding-y, 4px) var(--inimark-control-padding-x, 8px);
   border: 0;
-  border-radius: calc(var(--inimark-radius-control) * 0.85);
+  border-radius: var(--inimark-radius-menu-item);
   background: transparent;
   color: var(--inimark-fg);
   font: inherit;
@@ -834,7 +835,7 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
 .inimark-editor-context-item-icon {
   display: inline-grid;
   place-items: center;
-  width: 1.25rem;
+  min-width: 1.25rem;
   height: 1.25rem;
   flex-shrink: 0;
   color: var(--inimark-muted-fg);
@@ -843,6 +844,11 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
 .inimark-editor-context-item-icon svg {
   width: 1rem;
   height: 1rem;
+}
+
+.inimark-editor-context-item-icon .inimark-heading-level-badge {
+  /* Match outline badge; allow H6 to size naturally inside the icon slot */
+  margin: 0;
 }
 
 .inimark-editor-context-item-label {
