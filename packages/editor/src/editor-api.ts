@@ -37,6 +37,7 @@ import {
   revealSearchMatchInView,
   type SearchRevealOptions,
 } from "./search-reveal.ts";
+import { flashHeadingAtPos } from "./heading-flash.ts";
 import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 
@@ -494,39 +495,90 @@ export function createEditor(
       const needle = text.trim();
       if (!needle) return false;
 
+      const normalizeHeadingText = (value: string): string =>
+        value
+          .trim()
+          .replace(/!\[[^\]]*]\([^)]*\)/g, "")
+          .replace(/\[([^\]]*)]\([^)]*\)/g, "$1")
+          .replace(/[*_~`]+/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+
       const lineAt = (pos: number): number => {
         const safe = Math.max(0, Math.min(pos, view.state.doc.content.size));
         const before = view.state.doc.textBetween(0, safe, "\n", "\n");
         return before ? before.split("\n").length : 1;
       };
 
-      let bestPos: number | null = null;
-      let bestScore = Number.POSITIVE_INFINITY;
-      view.state.doc.descendants((node, pos) => {
-        if (node.type.name !== "heading") return;
-        const content = node.textContent.trim();
-        let score = Number.POSITIVE_INFINITY;
-        if (content === needle) score = 0;
-        else if (content.includes(needle) || needle.includes(content)) score = 1;
-        if (line != null && Number.isFinite(score)) {
-          score += Math.abs(lineAt(pos) - line) * 0.01;
+      const findHeadingPos = (): number | null => {
+        const normNeedle = normalizeHeadingText(needle);
+        type Candidate = { pos: number; textScore: number; lineDist: number };
+        const candidates: Candidate[] = [];
+
+        view.state.doc.descendants((node, pos) => {
+          if (node.type.name !== "heading") return;
+          const normContent = normalizeHeadingText(node.textContent);
+          let textScore = 99;
+          if (normNeedle && normContent === normNeedle) textScore = 0;
+          else if (
+            normNeedle &&
+            (normContent.includes(normNeedle) || normNeedle.includes(normContent))
+          ) {
+            textScore = 1;
+          }
+          const lineDist =
+            line != null && Number.isFinite(line) ? Math.abs(lineAt(pos) - line) : 0;
+          // Keep text matches, or near-line headings when the outline line hint is close.
+          if (textScore < 99 || (line != null && lineDist <= 3)) {
+            candidates.push({ pos, textScore, lineDist });
+          }
+        });
+
+        if (candidates.length === 0) return null;
+        candidates.sort(
+          (a, b) => a.textScore - b.textScore || a.lineDist - b.lineDist,
+        );
+        return candidates[0]!.pos;
+      };
+
+      const jump = (): boolean => {
+        const bestPos = findHeadingPos();
+        if (bestPos == null) {
+          return revealSearchMatchInView(
+            view,
+            { query: needle, line },
+            findScrollContainer(),
+          );
         }
-        if (score < bestScore) {
-          bestScore = score;
-          bestPos = pos;
+
+        const tr = view.state.tr;
+        tr.setSelection(TextSelection.near(tr.doc.resolve(bestPos + 1)));
+        view.dispatch(tr);
+
+        const scrollHost = findScrollContainer();
+        try {
+          const coords = view.coordsAtPos(bestPos + 1);
+          const hostRect = scrollHost.getBoundingClientRect();
+          const target =
+            coords.top - hostRect.top + scrollHost.scrollTop - Math.min(48, hostRect.height * 0.12);
+          scrollHost.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+        } catch {
+          const dom = view.nodeDOM(bestPos) as HTMLElement | null;
+          dom?.scrollIntoView({ block: "start", behavior: "smooth" });
         }
+
+        flashHeadingAtPos(view, bestPos);
+        view.focus();
+        return true;
+      };
+
+      // Wait for source→IR layout (and any pending paint) before measuring.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          jump();
+        });
       });
-
-      if (bestPos == null || bestScore >= 2) {
-        return this.revealSearchMatch({ query: needle, line });
-      }
-
-      const tr = view.state.tr;
-      tr.setSelection(TextSelection.near(tr.doc.resolve(bestPos + 1)));
-      view.dispatch(tr);
-      const dom = view.nodeDOM(bestPos) as HTMLElement | null;
-      dom?.scrollIntoView({ block: "start", behavior: "smooth" });
-      view.focus();
       return true;
     },
     clearSearchHighlight() {

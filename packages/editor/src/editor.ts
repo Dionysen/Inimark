@@ -12,6 +12,7 @@ import { collectKeymaps, collectPlugins } from "./features/index.ts";
 import { markdownInputRules, spaceBreaksStoredMarks } from "./input-rules.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
 import { searchRevealPlugin } from "./search-reveal.ts";
+import { headingFlashPlugin } from "./heading-flash.ts";
 import { schema } from "./schema.ts";
 import { commonShortcutKeymap } from "./shortcuts.ts";
 
@@ -61,6 +62,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     ...collectPlugins(schema),
     syntaxHintsPlugin(),
     searchRevealPlugin(),
+    headingFlashPlugin(),
     openLinkOnModClickPlugin(),
   ];
   if (cursorWidget) plugins.push(cursorRenderPlugin());

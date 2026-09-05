@@ -202,3 +202,20 @@
   background: #f0a202;
   outline: 1px solid color-mix(in srgb, #f0a202 55%, #000);
 }
+
+.ProseMirror .tw-heading-flash {
+  border-radius: 4px;
+  animation: tw-heading-flash-fade 1s ease-out;
+  background: color-mix(in srgb, var(--accent, #0969da) 22%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #0969da) 35%, transparent);
+}
+
+@keyframes tw-heading-flash-fade {
+  0% {
+    background: color-mix(in srgb, var(--accent, #0969da) 34%, transparent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 2px transparent;
+  }
+}

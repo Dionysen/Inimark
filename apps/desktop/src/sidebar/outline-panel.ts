@@ -284,9 +284,12 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
 
     row.title = node.item.text;
     row.addEventListener("click", () => {
-      activeLine = node.item.line;
-      rerender();
+      // Navigate first — full tree rerender must not race the jump.
       onSelect(node.item.level, node.item.text, node.item.line);
+      if (activeLine !== node.item.line) {
+        activeLine = node.item.line;
+        rerender();
+      }
     });
 
     branch.append(row);
