@@ -283,13 +283,20 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     row.append(label);
 
     row.title = node.item.text;
-    row.addEventListener("click", () => {
-      // Navigate first — full tree rerender must not race the jump.
+    // Use mousedown: after a jump the editor has focus, and the next
+    // outline "click" is often eaten by focus transfer (needs 2 clicks).
+    row.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".inimark-tree-chevron")) return;
+      event.preventDefault();
       onSelect(node.item.level, node.item.text, node.item.line);
-      if (activeLine !== node.item.line) {
-        activeLine = node.item.line;
-        rerender();
+      if (activeLine === node.item.line) return;
+      activeLine = node.item.line;
+      for (const el of treeHost.querySelectorAll(".inimark-outline-item.is-active")) {
+        el.classList.remove("is-active");
       }
+      row.classList.add("is-active");
     });
 
     branch.append(row);

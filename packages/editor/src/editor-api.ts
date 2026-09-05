@@ -113,6 +113,8 @@ export function createEditor(
   let inSource = false;
   let typewriterMode = false;
   let typewriterRaf: number | null = null;
+  /** Skip typewriter recenter until this timestamp (outline jump pins heading to top). */
+  let suppressTypewriterUntil = 0;
   /** True while the primary button is held (drag-select); skip typewriter scroll until release. */
   let pointerSelecting = false;
   let currentFileHandle: FileSystemFileHandle | null = null;
@@ -156,9 +158,11 @@ export function createEditor(
 
   function scheduleScrollCursorToCenter(): void {
     if (!typewriterMode || inSource || pointerSelecting) return;
+    if (performance.now() < suppressTypewriterUntil) return;
     if (typewriterRaf != null) return;
     typewriterRaf = requestAnimationFrame(() => {
       typewriterRaf = null;
+      if (performance.now() < suppressTypewriterUntil) return;
       scrollCursorToCenterNow();
     });
   }
@@ -554,14 +558,19 @@ export function createEditor(
 
         const tr = view.state.tr;
         tr.setSelection(TextSelection.near(tr.doc.resolve(bestPos + 1)));
+        // Keep the heading at the top; don't let typewriter mode re-center.
+        suppressTypewriterUntil = performance.now() + 800;
+        if (typewriterRaf != null) {
+          cancelAnimationFrame(typewriterRaf);
+          typewriterRaf = null;
+        }
         view.dispatch(tr);
 
         const scrollHost = findScrollContainer();
         try {
           const coords = view.coordsAtPos(bestPos + 1);
           const hostRect = scrollHost.getBoundingClientRect();
-          const target =
-            coords.top - hostRect.top + scrollHost.scrollTop - Math.min(48, hostRect.height * 0.12);
+          const target = coords.top - hostRect.top + scrollHost.scrollTop;
           scrollHost.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
         } catch {
           const dom = view.nodeDOM(bestPos) as HTMLElement | null;
@@ -569,7 +578,8 @@ export function createEditor(
         }
 
         flashHeadingAtPos(view, bestPos);
-        view.focus();
+        // Defer focus so the outline mousedown/click sequence isn't stolen.
+        requestAnimationFrame(() => view.focus());
         return true;
       };
 
