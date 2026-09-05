@@ -33,6 +33,7 @@ export {
   type TreeItemOptions,
   createNavItem,
   createNavList,
+  setNavItemLabel,
   type NavItemOptions,
 } from "./widgets/index.ts";
 

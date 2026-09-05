@@ -16,6 +16,12 @@ export {
   collapseAllIcon,
   expandAllIcon,
   expandToLevelIcon,
+  settingsEditorIcon,
+  settingsAppearanceIcon,
+  settingsThemeIcon,
+  settingsShortcutsIcon,
+  settingsImageIcon,
+  settingsAboutIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
 export {
@@ -52,7 +58,7 @@ export {
   type TreeItemKind,
   type TreeItemOptions,
 } from "./tree.ts";
-export { createNavItem, createNavList, type NavItemOptions } from "./nav.ts";
+export { createNavItem, createNavList, setNavItemLabel, type NavItemOptions } from "./nav.ts";
 export {
   applyOverlayPosition,
   onOutsideClick,

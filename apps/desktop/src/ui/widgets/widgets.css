@@ -854,7 +854,9 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   width: 100%;
   border: 0;
   background: transparent;
@@ -869,6 +871,27 @@ html[data-glass="true"] .inimark-select-panel {
     background var(--inimark-control-transition),
     color var(--inimark-control-transition),
     box-shadow var(--inimark-control-transition);
+}
+
+.inimark-nav-item-icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: inherit;
+}
+
+.inimark-nav-item-icon .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.inimark-nav-item-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inimark-nav-item:hover {

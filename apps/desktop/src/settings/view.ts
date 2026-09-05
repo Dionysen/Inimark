@@ -22,6 +22,14 @@ import {
   createSlider,
   createToggle,
   createTextField,
+  libraryIcon,
+  setNavItemLabel,
+  settingsAboutIcon,
+  settingsAppearanceIcon,
+  settingsEditorIcon,
+  settingsImageIcon,
+  settingsShortcutsIcon,
+  settingsThemeIcon,
 } from "../ui/widgets/index.ts";
 import {
   type AppLocale,
@@ -85,6 +93,16 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
   libraries: ["folder", "vault", "workspace", "files"],
   image: ["image", "assets", "paste", "filename", "upload"],
   about: ["version", "license", "info", "github", "update", "upgrade"],
+};
+
+const SECTION_ICONS: Record<SettingsSection, () => string> = {
+  editor: settingsEditorIcon,
+  appearance: settingsAppearanceIcon,
+  theme: settingsThemeIcon,
+  shortcuts: settingsShortcutsIcon,
+  libraries: libraryIcon,
+  image: settingsImageIcon,
+  about: settingsAboutIcon,
 };
 
 function sectionMeta(id: SettingsSection): {
@@ -213,6 +231,7 @@ export function mountSettingsView(
     const btn = createNavItem({
       id,
       label: sectionMeta(id).title,
+      icon: SECTION_ICONS[id](),
       onClick() {
         activeSection = id;
         renderNav();
@@ -270,7 +289,7 @@ export function mountSettingsView(
       const match = sectionMatches(id, searchQuery);
       btn.hidden = !match;
       btn.classList.toggle("is-active", id === activeSection);
-      btn.textContent = sectionMeta(id).title;
+      setNavItemLabel(btn, sectionMeta(id).title);
       if (match) visible += 1;
     }
     const querying = searchQuery.trim().length > 0;

@@ -44,6 +44,11 @@ html.platform-macos .inimark-settings-nav-topbar {
   padding-left: calc(var(--inimark-mac-traffic-lights-width) + var(--inimark-space-2));
 }
 
+/* Windows: no traffic lights on the left — drop the empty spacer above search. */
+html.platform-windows .inimark-settings-nav-topbar {
+  display: none;
+}
+
 .inimark-settings-nav-body {
   flex: 1;
   min-height: 0;
