@@ -11,6 +11,10 @@
     "test:desktop": "pnpm --filter @inimark/desktop test",
     "typecheck": "pnpm -r typecheck",
     "tauri": "pnpm --filter @inimark/desktop tauri",
-    "bump-version": "node scripts/bump-version.mjs"
+    "bump-version": "node scripts/bump-version.mjs",
+    "replace-icon": "node scripts/replace-icon.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.4"
   }
 }
