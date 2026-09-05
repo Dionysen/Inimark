@@ -1,7 +1,6 @@
 import { onLocaleChange, t } from "./i18n/index.ts";
 import {
   createIconButton,
-  outlineTabIcon,
   rightSidebarToggleIcon,
 } from "./ui/widgets/index.ts";
 import {
@@ -9,38 +8,44 @@ import {
   type OutlinePanelController,
   type OutlineSelectHandler,
 } from "./sidebar/outline-panel.ts";
+import {
+  DEFAULT_RIGHT_SIDEBAR_TABS,
+  sidebarTabIcon,
+  sidebarTabLabel,
+  type SidebarTabId,
+} from "./sidebar/tab-layout.ts";
+import { loadSettings } from "./settings/store.ts";
+import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
 
-export type RightSidebarPanelId = "outline";
+export type RightSidebarPanelId = SidebarTabId;
 
 const RIGHT_PANEL_KEY = "inimark-right-sidebar-panel";
-
-const PANEL_ICONS: Record<RightSidebarPanelId, () => string> = {
-  outline: outlineTabIcon,
-};
-
-function panelLabel(id: RightSidebarPanelId): string {
-  switch (id) {
-    case "outline":
-      return t("outline.tab");
-  }
-}
 
 export interface RightSidebarController {
   setContent(markdown: string): void;
   setSidebarOpen(open: boolean): void;
+  setTabs(ids: SidebarTabId[], panels: Partial<Record<SidebarTabId, HTMLElement>>): void;
   onToggleSidebar(handler: () => void): void;
   onSelectHeading(handler: OutlineSelectHandler): void;
+  onActivateTab(handler: (id: SidebarTabId) => void): void;
   destroy(): void;
 }
 
-function loadActivePanel(): RightSidebarPanelId {
+export interface RightSidebarMountOptions {
+  outlinePanel?: HTMLElement;
+  outline?: OutlinePanelController;
+}
+
+function loadActivePanel(available: SidebarTabId[]): SidebarTabId {
   try {
     const saved = localStorage.getItem(RIGHT_PANEL_KEY);
-    if (saved === "outline") return saved;
+    if (saved && available.includes(saved as SidebarTabId)) {
+      return saved as SidebarTabId;
+    }
   } catch {
     /* ignore */
   }
-  return "outline";
+  return available[0] ?? "outline";
 }
 
 function markNoDrag(el: HTMLElement): void {
@@ -48,7 +53,10 @@ function markNoDrag(el: HTMLElement): void {
   el.style.setProperty("-webkit-app-region", "no-drag");
 }
 
-export function mountRightSidebar(host: HTMLElement): RightSidebarController {
+export function mountRightSidebar(
+  host: HTMLElement,
+  options: RightSidebarMountOptions = {},
+): RightSidebarController {
   host.className = "inimark-sidebar inimark-right-sidebar";
 
   const topbar = document.createElement("div");
@@ -56,6 +64,7 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   topbar.setAttribute("data-tauri-drag-region", "");
 
   let sidebarOpen = true;
+  let activateHandler: (id: SidebarTabId) => void = () => {};
 
   const collapseBtn = createIconButton({
     label: t("common.collapseRightSidebar"),
@@ -71,21 +80,36 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   tabs.setAttribute("role", "tablist");
   markNoDrag(tabs);
 
-  const tabButtons = new Map<RightSidebarPanelId, HTMLButtonElement>();
-  for (const id of Object.keys(PANEL_ICONS) as RightSidebarPanelId[]) {
-    const label = panelLabel(id);
-    const btn = createIconButton({
-      label,
-      title: label,
-    });
-    btn.className = "inimark-sidebar-tab";
-    btn.setAttribute("role", "tab");
-    btn.dataset.panel = id;
-    btn.innerHTML = PANEL_ICONS[id]();
-    markNoDrag(btn);
-    tabButtons.set(id, btn);
-    tabs.append(btn);
+  let tabIds: SidebarTabId[] = (() => {
+    const settings = loadSettings();
+    return settings.rightSidebarTabs.length > 0
+      ? [...settings.rightSidebarTabs]
+      : [...DEFAULT_RIGHT_SIDEBAR_TABS];
+  })();
+  const tabButtons = new Map<SidebarTabId, HTMLButtonElement>();
+  let panelElements: Partial<Record<SidebarTabId, HTMLElement>> = {};
+
+  function rebuildTabButtons(): void {
+    tabs.replaceChildren();
+    tabButtons.clear();
+    for (const id of tabIds) {
+      const label = sidebarTabLabel(id);
+      const btn = createIconButton({
+        label,
+        title: label,
+      });
+      btn.className = "inimark-sidebar-tab";
+      btn.setAttribute("role", "tab");
+      btn.dataset.panel = id;
+      btn.innerHTML = sidebarTabIcon(id);
+      markNoDrag(btn);
+      btn.addEventListener("click", () => setActivePanel(id));
+      tabButtons.set(id, btn);
+      tabs.append(btn);
+    }
   }
+
+  rebuildTabButtons();
 
   // Toggle sits on the far right when the right sidebar is open.
   topbar.append(tabs, collapseBtn);
@@ -93,16 +117,23 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   const body = document.createElement("div");
   body.className = "inimark-sidebar-body";
 
-  const outlinePanelHost = document.createElement("div");
-  outlinePanelHost.className = "inimark-sidebar-panel";
-  outlinePanelHost.dataset.panel = "outline";
-  outlinePanelHost.setAttribute("role", "tabpanel");
-  const outline: OutlinePanelController = mountOutlinePanel(outlinePanelHost);
+  let outlinePanelHost = options.outlinePanel;
+  let outline: OutlinePanelController;
+  if (options.outline && outlinePanelHost) {
+    outline = options.outline;
+  } else {
+    outlinePanelHost = document.createElement("div");
+    outlinePanelHost.className = "inimark-sidebar-panel";
+    outlinePanelHost.dataset.panel = "outline";
+    outlinePanelHost.setAttribute("role", "tabpanel");
+    outline = mountOutlinePanel(outlinePanelHost);
+  }
 
+  panelElements = { outline: outlinePanelHost };
   body.append(outlinePanelHost);
   host.append(topbar, body);
 
-  let activePanel: RightSidebarPanelId = loadActivePanel();
+  let activePanel: RightSidebarPanelId = loadActivePanel(tabIds);
   const handlers = {
     toggleSidebar: (): void => {},
   };
@@ -120,7 +151,7 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
 
   function refreshChrome(): void {
     for (const [id, btn] of tabButtons) {
-      const label = panelLabel(id);
+      const label = sidebarTabLabel(id);
       btn.title = label;
       btn.setAttribute("aria-label", label);
     }
@@ -128,6 +159,8 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
   }
 
   function setActivePanel(panel: RightSidebarPanelId): void {
+    if (tabIds.length === 0) return;
+    if (!tabIds.includes(panel)) panel = tabIds[0]!;
     activePanel = panel;
     try {
       localStorage.setItem(RIGHT_PANEL_KEY, panel);
@@ -139,14 +172,78 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
       btn.classList.toggle("is-active", selected);
       btn.setAttribute("aria-selected", selected ? "true" : "false");
     }
-    outlinePanelHost.hidden = panel !== "outline";
+    for (const id of tabIds) {
+      const el = panelElements[id];
+      if (el) el.hidden = id !== panel;
+    }
+    activateHandler(panel);
   }
 
-  for (const [id, btn] of tabButtons) {
-    btn.addEventListener("click", () => setActivePanel(id));
+  function updateTabVisibility(): void {
+    const order = tabIds;
+    for (const id of order) {
+      const btn = tabButtons.get(id);
+      if (btn) btn.hidden = false;
+    }
+
+    const topbarRect = topbar.getBoundingClientRect();
+    if (topbarRect.width <= 0) return;
+
+    const styles = getComputedStyle(topbar);
+    const padR = parseFloat(styles.paddingRight) || 0;
+    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+    const collapseLeft = collapseBtn.getBoundingClientRect().left;
+    const available = Math.max(
+      0,
+      collapseLeft - gap - (topbarRect.left + (parseFloat(styles.paddingLeft) || 0)),
+    );
+    void padR;
+    const tabGap = 2;
+
+    let used = 0;
+    for (let i = 0; i < order.length; i++) {
+      const btn = tabButtons.get(order[i]!)!;
+      const need = (used > 0 ? tabGap : 0) + btn.getBoundingClientRect().width;
+      if (used + need <= available + 0.5) {
+        used += need;
+        continue;
+      }
+      for (let j = i; j < order.length; j++) {
+        tabButtons.get(order[j]!)!.hidden = true;
+      }
+      break;
+    }
+  }
+
+  function applyTabs(
+    ids: SidebarTabId[],
+    panels: Partial<Record<SidebarTabId, HTMLElement>>,
+  ): void {
+    tabIds = [...ids];
+    panelElements = { ...panels };
+    rebuildTabButtons();
+    body.replaceChildren();
+    for (const id of tabIds) {
+      const el = panelElements[id];
+      if (el) body.append(el);
+    }
+    if (tabIds.length === 0) {
+      queueMicrotask(() => updateTabVisibility());
+      return;
+    }
+    if (!tabIds.includes(activePanel)) {
+      activePanel = loadActivePanel(tabIds);
+    }
+    setActivePanel(activePanel);
+    queueMicrotask(() => updateTabVisibility());
   }
 
   setActivePanel(activePanel);
+  const tabVisibilityObserver = new ResizeObserver(() => updateTabVisibility());
+  tabVisibilityObserver.observe(topbar);
+  document.addEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
+  queueMicrotask(() => updateTabVisibility());
+
   const unsubscribeLocale = onLocaleChange(() => refreshChrome());
 
   return {
@@ -157,14 +254,22 @@ export function mountRightSidebar(host: HTMLElement): RightSidebarController {
       sidebarOpen = open;
       syncCollapseButton();
     },
+    setTabs(ids, panels) {
+      applyTabs(ids, panels);
+    },
     onToggleSidebar(handler) {
       handlers.toggleSidebar = handler;
     },
     onSelectHeading(handler) {
       outline.onSelectHeading(handler);
     },
+    onActivateTab(handler) {
+      activateHandler = handler;
+    },
     destroy() {
       unsubscribeLocale();
+      tabVisibilityObserver.disconnect();
+      document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
       outline.destroy();
       host.replaceChildren();
     },

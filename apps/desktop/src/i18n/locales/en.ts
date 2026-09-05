@@ -217,6 +217,12 @@ export const en: Dictionary = {
       autoHideLibraryBar: "Auto-hide library bar",
       autoHideLibraryBarDesc:
         "Show the floating library chrome only while hovering the sidebar.",
+      sidebarTabs: "Sidebar tabs",
+      sidebarTabsDesc:
+        "Drag icons to reorder tabs or move them between the left and right sidebars.",
+      sidebarTabsLeft: "Left",
+      sidebarTabsRight: "Right",
+      sidebarTabsEmpty: "Drop here",
     },
     theme: {
       glassEffect: "Frosted glass",

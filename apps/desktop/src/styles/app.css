@@ -135,6 +135,10 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   overflow: hidden;
 }
 
+.inimark-outline-panel[hidden] {
+  display: none !important;
+}
+
 .inimark-outline-tree.inimark-tree {
   padding-top: var(--inimark-space-1);
 }

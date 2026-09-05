@@ -303,3 +303,113 @@ html.platform-windows .inimark-settings-nav-topbar {
 .inimark-about-update .inimark-about-links {
   margin-top: var(--inimark-space-2);
 }
+
+/* ── Sidebar tab layout (appearance) ─────────────────────────────── */
+
+.inimark-settings-sidebar-tabs {
+  padding: var(--inimark-space-3) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-sidebar-tabs .inimark-settings-row-desc {
+  margin-bottom: var(--inimark-space-3);
+}
+
+.inimark-settings-sidebar-tabs-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--inimark-space-3);
+}
+
+.inimark-settings-sidebar-tabs-zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  min-width: 0;
+  padding: var(--inimark-space-2);
+  border: 1px dashed var(--inimark-border);
+  border-radius: var(--inimark-radius-sm, 6px);
+  background: color-mix(in srgb, var(--inimark-muted-fg) 4%, transparent);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.inimark-settings-sidebar-tabs-zone.is-drop-target {
+  border-color: var(--inimark-accent);
+  background: color-mix(in srgb, var(--inimark-accent) 8%, transparent);
+}
+
+.inimark-settings-sidebar-tabs-zone-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-sidebar-tabs-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+}
+
+.inimark-settings-sidebar-tabs-empty {
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  padding: 0.35rem 0.25rem;
+}
+
+.inimark-settings-sidebar-tabs-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm, 6px);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  cursor: grab;
+}
+
+.inimark-settings-sidebar-tabs-chip:hover {
+  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+}
+
+.inimark-settings-sidebar-tabs-chip:active,
+.inimark-settings-sidebar-tabs-chip.is-dragging {
+  cursor: grabbing;
+  opacity: 0.35;
+}
+
+.inimark-settings-sidebar-tabs-chip.is-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  opacity: 0.95;
+  pointer-events: none;
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 28%, transparent);
+  cursor: grabbing;
+}
+
+.inimark-settings-sidebar-tabs-chip .inimark-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.inimark-settings-sidebar-tabs-ghost {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--inimark-accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .inimark-settings-sidebar-tabs-zones {
+    grid-template-columns: 1fr;
+  }
+}
+

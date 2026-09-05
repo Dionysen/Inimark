@@ -64,7 +64,7 @@ function collectParentNodes(nodes: OutlineNode[], out: OutlineNode[] = []): Outl
 }
 
 export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
-  host.className = "inimark-outline-panel";
+  host.classList.add("inimark-sidebar-panel", "inimark-outline-panel");
   host.replaceChildren();
 
   let showLevels = loadShowLevels();

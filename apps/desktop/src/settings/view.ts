@@ -46,6 +46,10 @@ import {
 } from "./store.ts";
 import { renderShortcutsPanel } from "./shortcuts-panel.ts";
 import { renderThemePanel } from "./theme-panel.ts";
+import { createSidebarTabsControl } from "./sidebar-tabs-control.ts";
+import {
+  normalizeSidebarTabLayout,
+} from "../sidebar/tab-layout.ts";
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
@@ -87,6 +91,8 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "menu",
     "language",
     "locale",
+    "sidebar",
+    "tabs",
   ],
   theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight"],
   shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
@@ -646,6 +652,21 @@ export function mountSettingsView(
         autoHide.el,
       ),
     );
+
+    const tabLayout = normalizeSidebarTabLayout(
+      settings.leftSidebarTabs,
+      settings.rightSidebarTabs,
+    );
+    const tabsControl = createSidebarTabsControl({
+      layout: tabLayout,
+      onChange(layout) {
+        update({
+          leftSidebarTabs: layout.left,
+          rightSidebarTabs: layout.right,
+        });
+      },
+    });
+    body.append(tabsControl.el);
   }
 
   function renderImage(body: HTMLElement): void {

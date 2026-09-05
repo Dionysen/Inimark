@@ -11,6 +11,9 @@ import {
   type ColumnResizeController,
 } from "./ui/column-resize.ts";
 import { mountTitleBar, type TitleBarController } from "./ui/titlebar.ts";
+import { mountOutlinePanel } from "./sidebar/outline-panel.ts";
+import { loadSettings, type AppSettings } from "./settings/store.ts";
+import type { SidebarTabId } from "./sidebar/tab-layout.ts";
 
 const SIDEBAR_OPEN_KEY = "inimark-sidebar-open";
 const SIDEBAR_WIDTH_KEY = "inimark-sidebar-width";
@@ -34,6 +37,7 @@ export interface ShellController {
   isDirty(): boolean;
   toggleSidebar(): void;
   toggleRightSidebar(): void;
+  applySidebarTabLayout(settings?: AppSettings): void;
   destroy(): void;
 }
 
@@ -73,11 +77,40 @@ export function mountShell(
   const sidebarHost = document.createElement("aside");
   const sidebar = mountSidebar(sidebarHost);
 
+  const outlinePanelHost = document.createElement("div");
+  outlinePanelHost.className = "inimark-sidebar-panel";
+  outlinePanelHost.dataset.panel = "outline";
+  outlinePanelHost.setAttribute("role", "tabpanel");
+  const outline = mountOutlinePanel(outlinePanelHost);
+
   const mainColumn = document.createElement("div");
   mainColumn.className = "inimark-main";
 
   const rightSidebarHost = document.createElement("aside");
-  const rightSidebar = mountRightSidebar(rightSidebarHost);
+  const rightSidebar = mountRightSidebar(rightSidebarHost, {
+    outlinePanel: outlinePanelHost,
+    outline,
+  });
+
+  function collectPanels(): Partial<Record<SidebarTabId, HTMLElement>> {
+    return {
+      ...sidebar.getPanels(),
+      outline: outlinePanelHost,
+    };
+  }
+
+  function applySidebarTabLayout(settings?: AppSettings): void {
+    const next = settings ?? loadSettings();
+    const panels = collectPanels();
+    sidebar.setTabs(next.leftSidebarTabs, panels);
+    rightSidebar.setTabs(next.rightSidebarTabs, panels);
+  }
+
+  rightSidebar.onActivateTab((id) => {
+    sidebar.notifyPanelShown(id);
+  });
+
+  applySidebarTabLayout();
 
   let sidebarOpen = loadSidebarOpen();
   let sidebarWidth = loadPersistedWidth(
@@ -207,6 +240,7 @@ export function mountShell(
     },
     toggleSidebar,
     toggleRightSidebar,
+    applySidebarTabLayout,
     destroy() {
       unsubscribeLocale();
       resize.destroy();

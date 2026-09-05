@@ -11,6 +11,14 @@ import {
   t,
   type LocaleId,
 } from "../i18n/index.ts";
+import {
+  DEFAULT_LEFT_SIDEBAR_TABS,
+  DEFAULT_RIGHT_SIDEBAR_TABS,
+  normalizeSidebarTabLayout,
+  type SidebarTabId,
+} from "../sidebar/tab-layout.ts";
+
+export type { SidebarTabId };
 
 export type EditorWidth = "narrow" | "medium" | "wide" | "full";
 export type AppearanceMode = "light" | "dark" | "system";
@@ -55,6 +63,10 @@ export interface AppSettings {
   markdownFormat: MarkdownFormatSettings;
   menuDensity: MenuDensity;
   autoHideLibraryBar: boolean;
+  /** Ordered tabs shown in the left sidebar. */
+  leftSidebarTabs: SidebarTabId[];
+  /** Ordered tabs shown in the right sidebar. */
+  rightSidebarTabs: SidebarTabId[];
   /** Frosted glass for menus. Floating library chrome is always frosted. */
   glassEffect: boolean;
   image: ImageSettings;
@@ -94,6 +106,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
   menuDensity: "normal",
   autoHideLibraryBar: false,
+  leftSidebarTabs: [...DEFAULT_LEFT_SIDEBAR_TABS],
+  rightSidebarTabs: [...DEFAULT_RIGHT_SIDEBAR_TABS],
   glassEffect: false,
   image: { ...DEFAULT_IMAGE_SETTINGS },
 };
@@ -222,6 +236,10 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ...DEFAULT_IMAGE_SETTINGS,
     ...(parsed.image ?? {}),
   };
+  const tabLayout = normalizeSidebarTabLayout(
+    parsed.leftSidebarTabs,
+    parsed.rightSidebarTabs,
+  );
   return {
     locale: isAppLocale(parsed.locale) ? parsed.locale : DEFAULT_SETTINGS.locale,
     fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, 10, 24),
@@ -267,6 +285,8 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     autoHideLibraryBar: Boolean(
       parsed.autoHideLibraryBar ?? DEFAULT_SETTINGS.autoHideLibraryBar,
     ),
+    leftSidebarTabs: tabLayout.left,
+    rightSidebarTabs: tabLayout.right,
     glassEffect: Boolean(parsed.glassEffect ?? DEFAULT_SETTINGS.glassEffect),
     image: {
       storageMode: isImageStorageMode(image.storageMode)

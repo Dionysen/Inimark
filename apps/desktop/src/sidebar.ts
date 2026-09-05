@@ -1,6 +1,5 @@
 import { onLocaleChange, t } from "./i18n/index.ts";
 import {
-  bookmarksTabIcon,
   collapseAllIcon,
   createIconButton,
   createMenu,
@@ -10,13 +9,11 @@ import {
   createTreeChildren,
   createTreeHost,
   createTreeItem,
-  filesTabIcon,
   libraryIcon,
   locateFileIcon,
   menuIcons,
   newFileIcon,
   newFolderIcon,
-  searchTabIcon,
   settingsIcon,
   sidebarToggleIcon,
   sortIcon,
@@ -54,8 +51,15 @@ import {
   type BookmarkItem,
 } from "./bookmarks/store.ts";
 import { libraryIdFromPath } from "./libraries/store.ts";
+import {
+  DEFAULT_LEFT_SIDEBAR_TABS,
+  sidebarTabIcon,
+  sidebarTabLabel,
+  type SidebarTabId,
+} from "./sidebar/tab-layout.ts";
+import { loadSettings } from "./settings/store.ts";
 
-export type SidebarPanelId = "files" | "search" | "bookmarks";
+export type SidebarPanelId = SidebarTabId;
 
 type FilesSortMode =
   | "name-asc"
@@ -80,23 +84,6 @@ const FILES_SORT_OPTIONS: Array<{
   { mode: "birthtime-asc", labelKey: "sidebar.sort.birthtimeAsc" },
 ];
 
-const PANEL_ICONS: Record<SidebarPanelId, () => string> = {
-  files: filesTabIcon,
-  search: searchTabIcon,
-  bookmarks: bookmarksTabIcon,
-};
-
-function panelLabel(id: SidebarPanelId): string {
-  switch (id) {
-    case "files":
-      return t("sidebar.tabs.files");
-    case "search":
-      return t("sidebar.tabs.search");
-    case "bookmarks":
-      return t("sidebar.tabs.bookmarks");
-  }
-}
-
 function sortLabel(mode: FilesSortMode): string {
   const option = FILES_SORT_OPTIONS.find((opt) => opt.mode === mode);
   return option ? t(option.labelKey) : t("sidebar.toolbar.sort");
@@ -115,6 +102,9 @@ export interface SidebarController {
   setExpandedDirs(dirs: string[]): void;
   getExpandedDirs(): string[];
   setSidebarOpen(open: boolean): void;
+  getPanels(): Partial<Record<SidebarTabId, HTMLElement>>;
+  setTabs(ids: SidebarTabId[], panels: Partial<Record<SidebarTabId, HTMLElement>>): void;
+  notifyPanelShown(id: SidebarTabId): void;
   onToggleSidebar(handler: () => void): void;
   onFileSelect(handler: (path: string, options?: FileSelectOptions) => void | Promise<void>): void;
   onOpenFolder(handler: () => void | Promise<void>): void;
@@ -127,14 +117,16 @@ export interface SidebarController {
   destroy(): void;
 }
 
-function loadActivePanel(): SidebarPanelId {
+function loadActivePanel(available: SidebarTabId[]): SidebarTabId {
   try {
     const saved = localStorage.getItem(SIDEBAR_PANEL_KEY);
-    if (saved === "files" || saved === "search" || saved === "bookmarks") return saved;
+    if (saved && available.includes(saved as SidebarTabId)) {
+      return saved as SidebarTabId;
+    }
   } catch {
     /* ignore */
   }
-  return "files";
+  return available[0] ?? "files";
 }
 
 function loadFilesSortMode(): FilesSortMode {
@@ -242,21 +234,36 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   tabs.setAttribute("role", "tablist");
   markNoDrag(tabs);
 
-  const tabButtons = new Map<SidebarPanelId, HTMLButtonElement>();
-  for (const id of Object.keys(PANEL_ICONS) as SidebarPanelId[]) {
-    const label = panelLabel(id);
-    const btn = createIconButton({
-      label,
-      title: label,
-    });
-    btn.className = "inimark-sidebar-tab";
-    btn.setAttribute("role", "tab");
-    btn.dataset.panel = id;
-    btn.innerHTML = PANEL_ICONS[id]();
-    markNoDrag(btn);
-    tabButtons.set(id, btn);
-    tabs.append(btn);
+  let tabIds: SidebarTabId[] = (() => {
+    const settings = loadSettings();
+    return settings.leftSidebarTabs.length > 0
+      ? [...settings.leftSidebarTabs]
+      : [...DEFAULT_LEFT_SIDEBAR_TABS];
+  })();
+  const tabButtons = new Map<SidebarTabId, HTMLButtonElement>();
+  let panelElements: Partial<Record<SidebarTabId, HTMLElement>> = {};
+
+  function rebuildTabButtons(): void {
+    tabs.replaceChildren();
+    tabButtons.clear();
+    for (const id of tabIds) {
+      const label = sidebarTabLabel(id);
+      const btn = createIconButton({
+        label,
+        title: label,
+      });
+      btn.className = "inimark-sidebar-tab";
+      btn.setAttribute("role", "tab");
+      btn.dataset.panel = id;
+      btn.innerHTML = sidebarTabIcon(id);
+      markNoDrag(btn);
+      btn.addEventListener("click", () => setActivePanel(id));
+      tabButtons.set(id, btn);
+      tabs.append(btn);
+    }
   }
+
+  rebuildTabButtons();
 
   const collapseBtn = createIconButton({
     label: t("common.collapseSidebar"),
@@ -378,6 +385,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   bookmarksPanel.append(bookmarksToolbar.el, bookmarksList.el);
 
   body.append(filesPanel, searchPanel, bookmarksPanel);
+  panelElements = {
+    files: filesPanel,
+    search: searchPanel,
+    bookmarks: bookmarksPanel,
+  };
 
   function renderEmptyHint(text: string): void {
     treeHost.replaceChildren();
@@ -433,7 +445,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   let activeLibraryId: string | null = null;
   let savedLibraries: LibraryRecord[] = [];
   let currentWorkspace: Workspace | null = null;
-  let activePanel: SidebarPanelId = loadActivePanel();
+  let activePanel: SidebarPanelId = loadActivePanel(tabIds);
   let searchQuery = "";
   let searchHits: VaultSearchResult[] = [];
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -600,7 +612,19 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (event.target === treeHost) event.preventDefault();
   });
 
+  function handlePanelShown(panel: SidebarTabId): void {
+    if (panel === "search") {
+      queueMicrotask(() => searchField.focus());
+      scheduleSearch();
+    }
+    if (panel === "bookmarks") {
+      refreshBookmarksPanel();
+    }
+  }
+
   function setActivePanel(panel: SidebarPanelId): void {
+    if (tabIds.length === 0) return;
+    if (!tabIds.includes(panel)) panel = tabIds[0]!;
     activePanel = panel;
     try {
       localStorage.setItem(SIDEBAR_PANEL_KEY, panel);
@@ -614,28 +638,20 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       btn.setAttribute("aria-selected", selected ? "true" : "false");
     }
 
-    filesPanel.hidden = panel !== "files";
-    searchPanel.hidden = panel !== "search";
-    bookmarksPanel.hidden = panel !== "bookmarks";
-
-    if (panel === "search") {
-      queueMicrotask(() => searchField.focus());
-      scheduleSearch();
+    for (const id of tabIds) {
+      const el = panelElements[id];
+      if (el) el.hidden = id !== panel;
     }
-    if (panel === "bookmarks") {
-      refreshBookmarksPanel();
-    }
-  }
 
-  for (const [id, btn] of tabButtons) {
-    btn.addEventListener("click", () => setActivePanel(id));
+    handlePanelShown(panel);
   }
 
   /** Hide trailing tabs that would collide with the collapse control. */
   function updateTabVisibility(): void {
-    const order = Object.keys(PANEL_ICONS) as SidebarPanelId[];
+    const order = tabIds;
     for (const id of order) {
-      tabButtons.get(id)!.hidden = false;
+      const btn = tabButtons.get(id);
+      if (btn) btn.hidden = false;
     }
 
     const topbarRect = topbar.getBoundingClientRect();
@@ -652,17 +668,41 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     let used = 0;
     for (let i = 0; i < order.length; i++) {
-      const btn = tabButtons.get(order[i])!;
+      const btn = tabButtons.get(order[i]!)!;
       const need = (used > 0 ? tabGap : 0) + btn.getBoundingClientRect().width;
       if (used + need <= available + 0.5) {
         used += need;
         continue;
       }
       for (let j = i; j < order.length; j++) {
-        tabButtons.get(order[j])!.hidden = true;
+        tabButtons.get(order[j]!)!.hidden = true;
       }
       break;
     }
+  }
+
+  function applyTabs(
+    ids: SidebarTabId[],
+    panels: Partial<Record<SidebarTabId, HTMLElement>>,
+  ): void {
+    tabIds = [...ids];
+    panelElements = { ...panels };
+    rebuildTabButtons();
+    body.replaceChildren();
+    for (const id of tabIds) {
+      const el = panelElements[id];
+      if (el) body.append(el);
+    }
+    if (tabIds.length === 0) {
+      activePanel = "files";
+      queueMicrotask(() => updateTabVisibility());
+      return;
+    }
+    if (!tabIds.includes(activePanel)) {
+      activePanel = loadActivePanel(tabIds);
+    }
+    setActivePanel(activePanel);
+    queueMicrotask(() => updateTabVisibility());
   }
 
   const tabVisibilityObserver = new ResizeObserver(() => {
@@ -916,7 +956,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           }
           notifyExpandedChange();
         }
-        setActivePanel("files");
+        if (tabIds.includes("files")) setActivePanel("files");
         rerender();
         requestAnimationFrame(() => {
           const row = treeHost.querySelector<HTMLElement>(
@@ -1469,7 +1509,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function refreshChrome(): void {
     for (const [id, btn] of tabButtons) {
-      const label = panelLabel(id);
+      const label = sidebarTabLabel(id);
       btn.title = label;
       btn.setAttribute("aria-label", label);
     }
@@ -1539,6 +1579,19 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       const label = open ? t("common.collapseSidebar") : t("common.expandSidebar");
       collapseBtn.title = label;
       collapseBtn.setAttribute("aria-label", label);
+    },
+    getPanels() {
+      return {
+        files: filesPanel,
+        search: searchPanel,
+        bookmarks: bookmarksPanel,
+      };
+    },
+    setTabs(ids, panels) {
+      applyTabs(ids, panels);
+    },
+    notifyPanelShown(id) {
+      handlePanelShown(id);
     },
     onToggleSidebar(handler) {
       handlers.toggleSidebar = handler;

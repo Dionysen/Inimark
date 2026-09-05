@@ -434,6 +434,7 @@ export function mountApp(host: HTMLElement): AppController {
       settings = loadSettings();
       applySettings(settings);
       editor.setTypewriterMode(settings.typewriterMode);
+      shell.applySidebarTabLayout(settings);
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       refreshLibraryList();
