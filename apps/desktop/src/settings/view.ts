@@ -102,8 +102,8 @@ const SECTION_META: Record<
   },
   about: {
     title: "About",
-    subtitle: "Application information",
-    searchTerms: ["version", "license", "info", "github"],
+    subtitle: "Version and updates",
+    searchTerms: ["version", "license", "info", "github", "update", "upgrade"],
   },
 };
 
@@ -696,6 +696,103 @@ export function mountSettingsView(
     license.className = "inimark-about-license";
     license.textContent = "MIT License · Editor core includes typora-web (MIT)";
 
+    const updateRow = document.createElement("div");
+    updateRow.className = "inimark-about-update";
+
+    const updateStatus = document.createElement("p");
+    updateStatus.className = "inimark-about-update-status";
+    updateStatus.textContent = "";
+
+    const updateActions = document.createElement("div");
+    updateActions.className = "inimark-about-links";
+
+    let checking = false;
+    let installing = false;
+    let pendingVersion: string | null = null;
+
+    const setStatus = (text: string) => {
+      updateStatus.textContent = text;
+    };
+
+    const checkBtn = createButton({
+      label: "Check for updates",
+      variant: "ghost",
+      onClick: () => {
+        void (async () => {
+          if (!isTauri() || checking || installing) return;
+          checking = true;
+          pendingVersion = null;
+          setStatus("Checking…");
+          checkBtn.disabled = true;
+          installBtn.hidden = true;
+          try {
+            const { checkForUpdate } = await import("../updater.ts");
+            const info = await checkForUpdate();
+            if (!info) {
+              setStatus("You're up to date.");
+            } else {
+              pendingVersion = info.version;
+              setStatus(`Update available: v${info.version}`);
+              installBtn.hidden = false;
+              installBtn.textContent = `Update to v${info.version}`;
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            setStatus(`Could not check for updates: ${message}`);
+          } finally {
+            checking = false;
+            checkBtn.disabled = false;
+          }
+        })();
+      },
+    });
+
+    const installBtn = createButton({
+      label: "Install update",
+      variant: "primary",
+      onClick: () => {
+        void (async () => {
+          if (!isTauri() || installing || !pendingVersion) return;
+          installing = true;
+          checkBtn.disabled = true;
+          installBtn.disabled = true;
+          setStatus(`Downloading v${pendingVersion}…`);
+          try {
+            const {
+              downloadAndInstall,
+              formatProgressPercent,
+              relaunchApp,
+            } = await import("../updater.ts");
+            await downloadAndInstall((downloaded, contentLength) => {
+              const pct = formatProgressPercent(downloaded, contentLength);
+              setStatus(
+                pct
+                  ? `Downloading v${pendingVersion}… ${pct}`
+                  : `Downloading v${pendingVersion}…`,
+              );
+            });
+            setStatus("Update installed. Restarting…");
+            await relaunchApp();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            setStatus(`Update failed: ${message}`);
+            installing = false;
+            checkBtn.disabled = false;
+            installBtn.disabled = false;
+          }
+        })();
+      },
+    });
+    installBtn.hidden = true;
+
+    if (!isTauri()) {
+      setStatus("Updates are available in the desktop app.");
+      checkBtn.disabled = true;
+    }
+
+    updateActions.append(checkBtn, installBtn);
+    updateRow.append(updateStatus, updateActions);
+
     const links = document.createElement("div");
     links.className = "inimark-about-links";
 
@@ -703,7 +800,7 @@ export function mountSettingsView(
       label: "GitHub",
       variant: "ghost",
       onClick: () => {
-        window.open("https://github.com/Dionysen/Inimark", "_blank", "noopener,noreferrer");
+        window.open("https://github.com/Dionysen/Inimark2", "_blank", "noopener,noreferrer");
       },
     });
     const issues = createButton({
@@ -711,7 +808,7 @@ export function mountSettingsView(
       variant: "ghost",
       onClick: () => {
         window.open(
-          "https://github.com/Dionysen/Inimark/issues",
+          "https://github.com/Dionysen/Inimark2/issues",
           "_blank",
           "noopener,noreferrer",
         );
@@ -719,7 +816,7 @@ export function mountSettingsView(
     });
     links.append(github, issues);
 
-    about.append(name, version, desc, license, links);
+    about.append(name, version, desc, license, updateRow, links);
     body.append(about);
   }
 

@@ -279,3 +279,21 @@ html.platform-macos .inimark-settings-nav-topbar {
   gap: var(--inimark-space-2);
   margin-top: var(--inimark-space-3);
 }
+
+.inimark-about-update {
+  margin-top: var(--inimark-space-3);
+  padding-top: var(--inimark-space-3);
+  border-top: 1px solid var(--inimark-border);
+}
+
+.inimark-about-update-status {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--inimark-muted-fg);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.inimark-about-update .inimark-about-links {
+  margin-top: var(--inimark-space-2);
+}

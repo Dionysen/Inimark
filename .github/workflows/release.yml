@@ -1,0 +1,106 @@
+name: Release
+
+# Builds Inimark for macOS / Windows / Linux, signs updater artifacts,
+# and uploads installers + latest.json to a draft GitHub Release.
+#
+# Required repository secrets:
+#   TAURI_SIGNING_PRIVATE_KEY          — contents of .tauri-keys/inimark.key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD — optional (empty if key has no password)
+#
+# Trigger:
+#   - Push a version tag: git tag v0.1.0 && git push origin v0.1.0
+#   - Or Actions → Release → Run workflow
+#
+# After the draft looks good, publish the Release so in-app updater can see it
+# via releases/latest/download/latest.json.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: ubuntu-22.04-arm
+            args: ""
+          - platform: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04' || matrix.platform == 'ubuntu-22.04-arm'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libgtk-3-dev \
+            xdg-utils
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./apps/desktop/src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and upload release assets
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop/src-tauri
+          tagName: v__VERSION__
+          releaseName: Inimark v__VERSION__
+          releaseBody: |
+            See the assets below to download and install this version.
+
+            | Platform | Asset |
+            | --- | --- |
+            | macOS (Apple Silicon) | `.dmg` / `.app.tar.gz` |
+            | macOS (Intel) | `.dmg` / `.app.tar.gz` |
+            | Windows | `.msi` / `.exe` (NSIS) |
+            | Linux | `.AppImage` / `.deb` |
+
+            In-app updates use `latest.json` from this release.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

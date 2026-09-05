@@ -20,6 +20,8 @@
     "core:webview:allow-create-webview-window",
     "dialog:default",
     "fs:default",
+    "updater:default",
+    "process:default",
     {
       "identifier": "fs:allow-read-dir",
       "allow": [{ "path": "**" }]

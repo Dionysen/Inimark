@@ -9,6 +9,7 @@ target/
 
 # Tauri
 apps/desktop/src-tauri/gen/
+.tauri-keys/
 
 # Upstream clone (local reference only)
 _upstream-typora-web/
