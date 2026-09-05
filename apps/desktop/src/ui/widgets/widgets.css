@@ -702,13 +702,15 @@
   height: 0.875rem;
 }
 
-.inimark-sort-menu {
+.inimark-sort-menu,
+.inimark-outline-expand-menu {
   position: fixed;
   z-index: 40;
   min-width: 11.5rem;
 }
 
 .inimark-sort-menu .inimark-menu__path,
+.inimark-outline-expand-menu .inimark-menu__path,
 .inimark-context-menu .inimark-menu__path {
   display: none;
 }

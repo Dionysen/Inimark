@@ -54,4 +54,36 @@ describe("outline panel", () => {
     panel.destroy();
     host.remove();
   });
+
+  test("collapse all and expand to heading level", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    const panel = mountOutlinePanel(host);
+    panel.setContent("# One\n\n## Two\n\n### Three\n\n## Four");
+
+    expect(host.querySelectorAll(".inimark-outline-item")).toHaveLength(4);
+
+    const buttons = host.querySelectorAll(".inimark-panel-toolbar button");
+    const collapseBtn = buttons[1] as HTMLButtonElement;
+    const expandToBtn = buttons[2] as HTMLButtonElement;
+
+    collapseBtn.click();
+    expect(host.querySelectorAll(".inimark-outline-item")).toHaveLength(1);
+
+    expandToBtn.click();
+    const menuItem = Array.from(
+      host.querySelectorAll(".inimark-outline-expand-menu .inimark-menu-item"),
+    ).find((el) => el.textContent?.includes("Heading 2")) as HTMLButtonElement | undefined;
+    expect(menuItem).toBeTruthy();
+    menuItem!.click();
+
+    const labels = Array.from(host.querySelectorAll(".inimark-tree-label")).map(
+      (el) => el.textContent,
+    );
+    expect(labels).toEqual(["One", "Two", "Four"]);
+
+    panel.destroy();
+    host.remove();
+  });
 });

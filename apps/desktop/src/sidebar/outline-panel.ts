@@ -1,8 +1,12 @@
 import {
+  collapseAllIcon,
+  createMenu,
   createPanelToolbar,
   createTreeBranch,
   createTreeChildren,
   createTreeHost,
+  expandAllIcon,
+  expandToLevelIcon,
 } from "../ui/widgets/index.ts";
 import { buildOutlineTree, parseOutline, type OutlineNode } from "./outline.ts";
 
@@ -44,6 +48,16 @@ function chevronSvg(): string {
   return `<svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
+function collectParentNodes(nodes: OutlineNode[], out: OutlineNode[] = []): OutlineNode[] {
+  for (const node of nodes) {
+    if (node.children.length > 0) {
+      out.push(node);
+      collectParentNodes(node.children, out);
+    }
+  }
+  return out;
+}
+
 export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   host.className = "inimark-outline-panel";
   host.replaceChildren();
@@ -51,8 +65,13 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   let showLevels = loadShowLevels();
   let markdown = "";
   let activeLine: number | null = null;
+  let expandToLevel: number | null = null;
   const collapsed = new Set<number>();
   let onSelect: OutlineSelectHandler = () => {};
+
+  const expandMenu = createMenu();
+  expandMenu.el.classList.add("inimark-outline-expand-menu");
+  expandMenu.setPath("");
 
   const toolbar = createPanelToolbar([
     {
@@ -66,21 +85,154 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
         } catch {
           /* ignore */
         }
-        const btn = toolbar.buttons[0]!;
-        btn.title = showLevels ? "Hide heading levels" : "Show heading levels";
-        btn.setAttribute(
-          "aria-label",
-          showLevels ? "Hide heading levels" : "Show heading levels",
-        );
-        btn.innerHTML = levelsToggleIcon(showLevels);
+        syncLevelsButton();
         rerender();
+      },
+    },
+    {
+      label: "Collapse all",
+      title: "Collapse all",
+      icon: collapseAllIcon,
+      onClick() {
+        closeExpandMenu();
+        if (hasAnyExpanded()) collapseAll();
+        else expandAll();
+      },
+    },
+    {
+      label: "Expand to level",
+      title: "Expand to heading level",
+      icon: expandToLevelIcon,
+      onClick(event) {
+        event.stopPropagation();
+        toggleExpandMenu();
       },
     },
   ]);
 
+  const levelsBtn = toolbar.buttons[0]!;
+  const expandCollapseBtn = toolbar.buttons[1]!;
+  const expandToBtn = toolbar.buttons[2]!;
+  expandToBtn.setAttribute("aria-haspopup", "menu");
+  expandToBtn.setAttribute("aria-expanded", "false");
+
   const treeHost = createTreeHost("Document outline");
   treeHost.classList.add("inimark-outline-tree");
-  host.append(toolbar.el, treeHost);
+  host.append(toolbar.el, treeHost, expandMenu.el);
+
+  function currentTree(): OutlineNode[] {
+    return buildOutlineTree(parseOutline(markdown));
+  }
+
+  function hasAnyExpanded(): boolean {
+    const parents = collectParentNodes(currentTree());
+    if (parents.length === 0) return false;
+    return parents.some((node) => !collapsed.has(node.item.line));
+  }
+
+  function syncLevelsButton(): void {
+    levelsBtn.title = showLevels ? "Hide heading levels" : "Show heading levels";
+    levelsBtn.setAttribute(
+      "aria-label",
+      showLevels ? "Hide heading levels" : "Show heading levels",
+    );
+    levelsBtn.innerHTML = levelsToggleIcon(showLevels);
+  }
+
+  function syncExpandCollapseButton(): void {
+    const expanded = hasAnyExpanded();
+    const label = expanded ? "Collapse all" : "Expand all";
+    expandCollapseBtn.title = label;
+    expandCollapseBtn.setAttribute("aria-label", label);
+    expandCollapseBtn.innerHTML = expanded ? collapseAllIcon() : expandAllIcon();
+    expandCollapseBtn.disabled = collectParentNodes(currentTree()).length === 0;
+  }
+
+  function collapseAll(): void {
+    expandToLevel = null;
+    collapsed.clear();
+    for (const node of collectParentNodes(currentTree())) {
+      collapsed.add(node.item.line);
+    }
+    rerender();
+  }
+
+  function expandAll(): void {
+    expandToLevel = null;
+    collapsed.clear();
+    rerender();
+  }
+
+  function applyExpandToLevel(level: number): void {
+    expandToLevel = level;
+    collapsed.clear();
+    for (const node of collectParentNodes(currentTree())) {
+      if (node.item.level >= level) collapsed.add(node.item.line);
+    }
+    rerender();
+  }
+
+  function closeExpandMenu(): void {
+    expandMenu.setOpen(false);
+    expandToBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function positionExpandMenu(): void {
+    const rect = expandToBtn.getBoundingClientRect();
+    const menuWidth = Math.max(160, expandMenu.el.offsetWidth || 160);
+    const left = Math.min(
+      Math.max(8, rect.left + rect.width / 2 - menuWidth / 2),
+      window.innerWidth - menuWidth - 8,
+    );
+    expandMenu.el.style.top = `${rect.bottom + 4}px`;
+    expandMenu.el.style.left = `${left}px`;
+    expandMenu.el.style.width = `${menuWidth}px`;
+  }
+
+  function renderExpandMenu(): void {
+    expandMenu.clear();
+    expandMenu.setPath("");
+    expandMenu.addHeading("Expand to");
+    for (let level = 1; level <= 6; level++) {
+      expandMenu.addItem({
+        label: `Heading ${level}`,
+        meta: `H${level}`,
+        checked: expandToLevel === level,
+        onClick() {
+          applyExpandToLevel(level);
+          closeExpandMenu();
+        },
+      });
+    }
+  }
+
+  function toggleExpandMenu(): void {
+    if (expandMenu.isOpen()) {
+      closeExpandMenu();
+      return;
+    }
+    renderExpandMenu();
+    expandMenu.setOpen(true);
+    expandToBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionExpandMenu());
+  }
+
+  function onDocumentClick(event: MouseEvent): void {
+    const target = event.target as Node | null;
+    if (
+      expandMenu.isOpen() &&
+      !(target && (expandMenu.el.contains(target) || expandToBtn.contains(target)))
+    ) {
+      closeExpandMenu();
+    }
+  }
+
+  function onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape" && expandMenu.isOpen()) closeExpandMenu();
+  }
+
+  document.addEventListener("click", onDocumentClick);
+  document.addEventListener("keydown", onDocumentKeydown);
 
   function renderNode(node: OutlineNode, depth: number): DocumentFragment {
     const frag = document.createDocumentFragment();
@@ -105,6 +257,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       chevron.innerHTML = chevronSvg();
       chevron.addEventListener("click", (event) => {
         event.stopPropagation();
+        expandToLevel = null;
         if (collapsed.has(node.item.line)) collapsed.delete(node.item.line);
         else collapsed.add(node.item.line);
         rerender();
@@ -162,6 +315,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       hint.className = "inimark-sidebar-empty-hint";
       hint.textContent = "Add # headings to see the outline";
       treeHost.append(empty, hint);
+      syncExpandCollapseButton();
       return;
     }
 
@@ -169,6 +323,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     const frag = document.createDocumentFragment();
     for (const node of tree) frag.append(renderNode(node, 0));
     treeHost.append(frag);
+    syncExpandCollapseButton();
   }
 
   rerender();
@@ -187,6 +342,10 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
       onSelect = handler;
     },
     destroy() {
+      document.removeEventListener("click", onDocumentClick);
+      document.removeEventListener("keydown", onDocumentKeydown);
+      closeExpandMenu();
+      expandMenu.destroy();
       toolbar.destroy();
       host.replaceChildren();
     },

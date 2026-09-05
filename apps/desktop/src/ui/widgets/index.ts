@@ -14,6 +14,8 @@ export {
   sortIcon,
   locateFileIcon,
   collapseAllIcon,
+  expandAllIcon,
+  expandToLevelIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
 export {
