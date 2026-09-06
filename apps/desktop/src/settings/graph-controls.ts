@@ -110,11 +110,32 @@ const FORCE_FIELDS: Field[] = [
   },
 ];
 
-function createSectionTitle(title: string): HTMLElement {
-  const el = document.createElement("h3");
-  el.className = "inimark-settings-section-title";
-  el.textContent = title;
-  return el;
+const COLLAPSED_KEY = "inimark-graph-controls-collapsed";
+
+const CHEVRON = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg>`;
+
+type GroupId = "appearance" | "forces";
+
+function loadCollapsed(): Set<GroupId> {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(
+      parsed.filter((id): id is GroupId => id === "appearance" || id === "forces"),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsed(ids: Set<GroupId>): void {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...ids]));
+  } catch {
+    /* ignore */
+  }
 }
 
 function createRow(
@@ -158,6 +179,7 @@ export function mountGraphControls(
 ): GraphControlsController {
   const compact = options.compact ?? false;
   let settings = { ...options.settings };
+  const collapsed = loadCollapsed();
 
   const el = document.createElement("div");
   el.className = compact
@@ -169,9 +191,46 @@ export function mountGraphControls(
     setValue: (value: boolean | number) => void;
   };
   const bounds: Bound[] = [];
+  const groupTitles = new Map<GroupId, HTMLElement>();
 
-  function appendGroup(titleKey: string, fields: Field[]): void {
-    el.append(createSectionTitle(t(titleKey)));
+  function appendGroup(
+    id: GroupId,
+    titleKey: string,
+    fields: Field[],
+  ): void {
+    const section = document.createElement("section");
+    section.className = compact
+      ? "inimark-graph-float-group"
+      : "inimark-graph-settings-group";
+    section.dataset.groupId = id;
+
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = compact
+      ? "inimark-graph-float-group-header"
+      : "inimark-graph-settings-group-header";
+
+    const chevron = document.createElement("span");
+    chevron.className = compact
+      ? "inimark-graph-float-group-chevron"
+      : "inimark-graph-settings-group-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML = CHEVRON;
+
+    const title = document.createElement("span");
+    title.className = compact
+      ? "inimark-graph-float-group-title"
+      : "inimark-graph-settings-group-title";
+    title.textContent = t(titleKey);
+    groupTitles.set(id, title);
+
+    header.append(chevron, title);
+
+    const body = document.createElement("div");
+    body.className = compact
+      ? "inimark-graph-float-group-body"
+      : "inimark-graph-settings-group-body";
+
     for (const field of fields) {
       if (field.kind === "toggle") {
         const toggle = createToggle({
@@ -187,7 +246,7 @@ export function mountGraphControls(
             toggle.setChecked(Boolean(value));
           },
         });
-        el.append(
+        body.append(
           createRow(
             t(field.titleKey),
             field.descKey ? t(field.descKey) : undefined,
@@ -218,7 +277,7 @@ export function mountGraphControls(
           slider.setValue(Number(value));
         },
       });
-      el.append(
+      body.append(
         createRow(
           t(field.titleKey),
           field.descKey ? t(field.descKey) : undefined,
@@ -227,10 +286,30 @@ export function mountGraphControls(
         ),
       );
     }
+
+    function applyCollapsed(isCollapsed: boolean): void {
+      section.classList.toggle("is-collapsed", isCollapsed);
+      chevron.classList.toggle("is-expanded", !isCollapsed);
+      header.setAttribute("aria-expanded", String(!isCollapsed));
+      body.hidden = isCollapsed;
+    }
+
+    applyCollapsed(collapsed.has(id));
+
+    header.addEventListener("click", () => {
+      const next = !section.classList.contains("is-collapsed");
+      if (next) collapsed.add(id);
+      else collapsed.delete(id);
+      saveCollapsed(collapsed);
+      applyCollapsed(next);
+    });
+
+    section.append(header, body);
+    el.append(section);
   }
 
-  appendGroup("settings.group.graphAppearance", APPEARANCE_FIELDS);
-  appendGroup("settings.group.graphForce", FORCE_FIELDS);
+  appendGroup("appearance", "settings.group.graphAppearance", APPEARANCE_FIELDS);
+  appendGroup("forces", "settings.group.graphForce", FORCE_FIELDS);
 
   let playBtn: HTMLButtonElement | null = null;
   if (options.onPlayTimelapse) {
@@ -252,6 +331,10 @@ export function mountGraphControls(
       for (const bound of bounds) {
         bound.setValue(settings[bound.key] as boolean | number);
       }
+      groupTitles.get("appearance")!.textContent = t(
+        "settings.group.graphAppearance",
+      );
+      groupTitles.get("forces")!.textContent = t("settings.group.graphForce");
       if (playBtn) {
         playBtn.textContent = t("settings.graph.playTimelapse");
         playBtn.title = t("settings.graph.playTimelapseDesc");

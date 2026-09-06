@@ -74,10 +74,7 @@ html.platform-macos .inimark-right-sidebar-topbar {
 /* Windows: right-sidebar toggle is fixed left of captions — reserve chrome
    width in the open topbar so tabs don't sit under the toggle / captions. */
 html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-right-sidebar-topbar {
-  padding-right: calc(
-    var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) +
-      var(--inimark-space-2)
-  );
+  padding-right: calc(var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) + var(--inimark-space-2));
 }
 
 .inimark-right-sidebar-topbar .inimark-sidebar-tabs {
@@ -292,12 +289,12 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   flex-direction: column;
   align-items: flex-end;
   gap: var(--inimark-space-2);
-  max-width: min(280px, calc(100% - 1.5rem));
+  max-width: calc(100% - 1.5rem);
   max-height: calc(100% - 1.5rem);
   pointer-events: none;
 }
 
-.inimark-graph-float > * {
+.inimark-graph-float>* {
   pointer-events: auto;
 }
 
@@ -339,8 +336,11 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 .inimark-graph-float-panel {
   display: none;
   flex-direction: column;
-  width: min(260px, 100%);
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
   max-height: min(70vh, 520px);
+  height: fit-content;
   overflow: hidden;
   padding: var(--inimark-space-3);
   padding-bottom: var(--inimark-space-2);
@@ -364,7 +364,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 .inimark-graph-float-body {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
   overflow: auto;
   padding-bottom: var(--inimark-space-1);
@@ -392,7 +392,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 .inimark-graph-float-timelapse-btn {
   display: block;
   width: 100%;
-  margin-top: var(--inimark-space-3);
+  margin-top: var(--inimark-space-2);
   padding: 6px 10px;
   border: 1px solid var(--inimark-border);
   border-radius: var(--inimark-radius-sm, 6px);
@@ -407,16 +407,61 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   filter: brightness(1.05);
 }
 
-.inimark-graph-float-controls .inimark-settings-section-title {
-  margin: var(--inimark-space-2) 0 var(--inimark-space-1);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--inimark-muted-fg);
+.inimark-graph-float-group {
+  margin-bottom: 2px;
 }
 
-.inimark-graph-float-controls .inimark-settings-section-title:first-child {
-  margin-top: 0;
+.inimark-graph-float-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 4px 2px;
+  border: none;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  border-radius: var(--inimark-radius-sm, 6px);
+  text-align: left;
+}
+
+.inimark-graph-float-group-header:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-graph-float-group-chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.inimark-graph-float-group-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-graph-float-group-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.inimark-graph-float-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inimark-graph-float-group-body {
+  padding: 2px 0 6px;
+}
+
+.inimark-graph-float-group.is-collapsed .inimark-graph-float-group-body {
+  display: none;
 }
 
 .inimark-graph-float-row {
@@ -662,7 +707,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   background: var(--inimark-hover);
 }
 
-.inimark-sidebar-search-group.is-active > .inimark-sidebar-search-file {
+.inimark-sidebar-search-group.is-active>.inimark-sidebar-search-file {
   color: var(--inimark-fg);
 }
 
@@ -795,6 +840,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
     opacity: 0;
     transform: translate(-50%, -4px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -820,10 +866,8 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 html[data-glass="true"] .inimark-glass {
-  backdrop-filter: blur(var(--inimark-glass-blur, 24px))
-    saturate(var(--inimark-glass-saturate, 180%));
-  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 24px))
-    saturate(var(--inimark-glass-saturate, 180%));
+  backdrop-filter: blur(var(--inimark-glass-blur, 24px)) saturate(var(--inimark-glass-saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 24px)) saturate(var(--inimark-glass-saturate, 180%));
 }
 
 .inimark-icon {
@@ -879,12 +923,10 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   isolation: isolate;
   /* Menu clips; library bar stays visible so lift shadow isn't cut off */
   /* Surface sheen only — keep alpha low so backdrop stays visible */
-  background: linear-gradient(
-    135deg,
-    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-hi, 0.3) * var(--_o))),
-    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-mid, 0.06) * var(--_o))) 40%,
-    rgb(var(--_tint) / calc(var(--inimark-lg-sheen-lo, 0.14) * var(--_o)))
-  );
+  background: linear-gradient(135deg,
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-hi, 0.3) * var(--_o))),
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-mid, 0.06) * var(--_o))) 40%,
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-lo, 0.14) * var(--_o))));
   -webkit-backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
   backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
   border: 1px solid rgb(255 255 255 / var(--_border));
@@ -919,20 +961,18 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
     inset 0 -14px 28px rgb(255 255 255 / calc(0.06 * var(--_o)));
-  background: linear-gradient(
-    90deg,
-    transparent 8%,
-    rgb(255 255 255 / calc(0.35 * var(--_o))) 48%,
-    transparent 92%
-  );
+  background: linear-gradient(90deg,
+      transparent 8%,
+      rgb(255 255 255 / calc(0.35 * var(--_o))) 48%,
+      transparent 92%);
   background-size: 100% 1px;
   background-repeat: no-repeat;
   background-position: top center;
   mix-blend-mode: screen;
 }
 
-.inimark-library-bar > *,
-.inimark-sidebar-dock .inimark-menu > * {
+.inimark-library-bar>*,
+.inimark-sidebar-dock .inimark-menu>* {
   position: relative;
   z-index: 2;
 }
