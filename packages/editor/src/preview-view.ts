@@ -63,16 +63,10 @@ export function mountReadonlyMarkdownPreview(
       class: "wiki-link-preview-prose",
       spellcheck: "false",
     },
-    handleDOMEvents: {
-      // Keep selection stable; allow scrolling / click-to-open.
-      mousedown(_v, event) {
-        if (event.button === 2) return true;
-        return false;
-      },
-    },
     handleClick(_v, _pos, event) {
-      const t = event.target as HTMLElement | null;
-      const wiki = t?.closest(
+      const node = event.target as Node | null;
+      const el = node instanceof Element ? node : node?.parentElement ?? null;
+      const wiki = el?.closest(
         ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
       ) as HTMLElement | null;
       if (!wiki) return false;
@@ -84,6 +78,30 @@ export function mountReadonlyMarkdownPreview(
       getWikiLinkBridge()?.openNote(note, heading || undefined);
       options.onOpenNote?.(note, heading);
       return true;
+    },
+    handleDOMEvents: {
+      // Keep selection stable; allow scrolling / click-to-open.
+      mousedown(_v, event) {
+        if (event.button === 2) return true;
+        return false;
+      },
+      // DOM click is more reliable on widgets (target may be a text node).
+      click(_v, event) {
+        const node = event.target as Node | null;
+        const el = node instanceof Element ? node : node?.parentElement ?? null;
+        const wiki = el?.closest(
+          ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
+        ) as HTMLElement | null;
+        if (!wiki) return false;
+        const note = wiki.getAttribute("data-note");
+        if (!note || wiki.getAttribute("data-unresolved") === "1") return false;
+        event.preventDefault();
+        event.stopPropagation();
+        const heading = wiki.getAttribute("data-heading") || undefined;
+        getWikiLinkBridge()?.openNote(note, heading || undefined);
+        options.onOpenNote?.(note, heading);
+        return true;
+      },
     },
   });
 

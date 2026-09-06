@@ -335,6 +335,33 @@ function commitAutocomplete(view: EditorView, auto: AutoState): void {
 
 // ─── Click + hover ────────────────────────────────────────────────────────
 
+function wikiTargetFromEvent(event: Event): HTMLElement | null {
+  const node = event.target as Node | null;
+  const el = node instanceof Element ? node : node?.parentElement ?? null;
+  return (
+    (el?.closest(
+      ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
+    ) as HTMLElement | null) ?? null
+  );
+}
+
+function wikiHoverTargetFromEvent(event: Event): HTMLElement | null {
+  const node = event.target as Node | null;
+  const el = node instanceof Element ? node : node?.parentElement ?? null;
+  return (
+    (el?.closest(".wiki-link-widget, .wiki-embed-note") as HTMLElement | null) ??
+    null
+  );
+}
+
+function openWikiFromElement(wiki: HTMLElement): boolean {
+  const note = wiki.getAttribute("data-note");
+  if (!note) return false;
+  const heading = wiki.getAttribute("data-heading") || undefined;
+  getWikiLinkBridge()?.openNote(note, heading || undefined);
+  return true;
+}
+
 function wikiInteractionPlugin(): Plugin {
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -472,25 +499,19 @@ function wikiInteractionPlugin(): Plugin {
 
   return new Plugin({
     props: {
-      handleClick(_view, _pos, event) {
-        const t = event.target as HTMLElement | null;
-        const wiki = t?.closest(
-          ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
-        ) as HTMLElement | null;
-        if (!wiki) return false;
-        const note = wiki.getAttribute("data-note");
-        if (!note) return false;
-        const heading = wiki.getAttribute("data-heading") || undefined;
-        event.preventDefault();
-        getWikiLinkBridge()?.openNote(note, heading || undefined);
-        return true;
-      },
+      // Prefer DOM click over handleClick: widget clicks often target a text
+      // node, and handleClick can miss when mousedown is stopEvent'd.
       handleDOMEvents: {
+        click(_view, event) {
+          const wiki = wikiTargetFromEvent(event);
+          if (!wiki) return false;
+          event.preventDefault();
+          if (!openWikiFromElement(wiki)) return false;
+          hidePreview();
+          return true;
+        },
         mouseover(_view, event) {
-          const t = event.target as HTMLElement | null;
-          const wiki = t?.closest(".wiki-link-widget, .wiki-embed-note") as
-            | HTMLElement
-            | null;
+          const wiki = wikiHoverTargetFromEvent(event);
           if (!wiki) return false;
           const note = wiki.getAttribute("data-note");
           if (!note || wiki.getAttribute("data-unresolved") === "1") return false;
@@ -516,8 +537,7 @@ function wikiInteractionPlugin(): Plugin {
         },
         mouseout(_view, event) {
           const related = event.relatedTarget as Node | null;
-          const t = event.target as HTMLElement | null;
-          const wiki = t?.closest(".wiki-link-widget, .wiki-embed-note");
+          const wiki = wikiHoverTargetFromEvent(event);
           if (wiki && related && wiki.contains(related)) return false;
           if (previewEl && related && previewEl.contains(related)) return false;
           scheduleHide();
