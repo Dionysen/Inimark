@@ -89,6 +89,7 @@
   --inimark-graph-node-active: #d0d0d0;
   --inimark-graph-label: #dcdcdc;
   --inimark-graph-link: #3c3c3c;
+  --inimark-graph-highlight: color-mix(in srgb, var(--inimark-accent) 62%, #6b7280 38%);
 }
 
 :root[data-appearance="light"] {
@@ -96,6 +97,7 @@
   --inimark-graph-node-active: #4a4a4a;
   --inimark-graph-label: #333333;
   --inimark-graph-link: #c4c4c4;
+  --inimark-graph-highlight: color-mix(in srgb, var(--inimark-accent) 55%, #64748b 45%);
 }
 
 html.platform-macos {

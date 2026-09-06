@@ -209,6 +209,8 @@ export function mountGraphPanel(
   let nodes: GraphNode[] = [];
   let edges: GraphEdge[] = [];
   let dragId: string | null = null;
+  let hoverId: string | null = null;
+  let adjacency = new Map<string, Set<string>>();
   let downX = 0;
   let downY = 0;
   let pointerMoved = false;
@@ -731,6 +733,48 @@ export function mountGraphPanel(
     alpha += (alphaTarget - alpha) * (settling ? 0.05 : 0.0228);
   }
 
+  function rebuildAdjacency(): void {
+    adjacency = new Map();
+    for (const node of nodes) adjacency.set(node.id, new Set());
+    for (const edge of edges) {
+      adjacency.get(edge.source)?.add(edge.target);
+      adjacency.get(edge.target)?.add(edge.source);
+    }
+  }
+
+  function hoverFocus(): Set<string> | null {
+    if (!hoverId) return null;
+    const focus = new Set<string>([hoverId]);
+    const neighbors = adjacency.get(hoverId);
+    if (neighbors) {
+      for (const id of neighbors) focus.add(id);
+    }
+    return focus;
+  }
+
+  function nodeRadius(node: GraphNode, maxDeg: number, scaleClamp: number, nodeScale: number): number {
+    const degreeBoost = 5 + (node.degree / maxDeg) * 9;
+    return degreeBoost * scaleClamp * nodeScale;
+  }
+
+  /**
+   * Map drawn node radius → label px with a compressed band.
+   * Radius still drives size, but labels stay ~9–15px instead of tracking 1:1.
+   */
+  function labelFontSize(drawR: number): number {
+    const rLo = 4;
+    const rHi = 36;
+    const fLo = 9;
+    const fHi = 25;
+    const t = Math.max(0, Math.min(1, (drawR - rLo) / (rHi - rLo)));
+    return fLo + t * (fHi - fLo);
+  }
+
+  /** How much zoom enlarges drawn node radius (capped so extreme zoom stays readable). */
+  function nodeScaleClamp(): number {
+    return Math.min(3.2, Math.max(0.65, scale));
+  }
+
   function draw(): void {
     const rect = canvasWrap.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
@@ -754,29 +798,46 @@ export function mountGraphPanel(
       styles.getPropertyValue("--inimark-graph-label").trim() || "#dcdcdc";
     const linkColor =
       styles.getPropertyValue("--inimark-graph-link").trim() || "#3c3c3c";
+    const accent =
+      styles.getPropertyValue("--inimark-graph-highlight").trim() ||
+      styles.getPropertyValue("--inimark-accent").trim() ||
+      "#64748b";
+    // Canvas `font` cannot use CSS `var()` — invalid strings are ignored and
+    // the context keeps the default 10px, so labels never scaled with radius.
+    const uiFont =
+      styles.getPropertyValue("--font-ui").trim() ||
+      styles.fontFamily ||
+      "system-ui, sans-serif";
     const nodeScale = graphSettingFactor(graphSettings.nodeSize);
     const linkScale = graphSettingFactor(graphSettings.linkThickness);
-    // Obsidian-like: setting is base visibility, then fade with zoom-out.
-    // Zoom in → lower transparency (more opaque); zoom out → higher transparency.
     const textAlpha = graphLabelAlpha(graphSettings.textOpacity, scale);
+    const focus = hoverFocus();
+    const dimming = focus != null;
 
     const byId = new Map(nodes.map((node) => [node.id, node]));
-    ctx.strokeStyle = linkColor;
-    ctx.globalAlpha = 0.85;
-    ctx.lineWidth = Math.max(0.75, (1 / scale) * linkScale);
-    for (const edge of edges) {
+    const baseLine = Math.max(0.75, (1 / scale) * linkScale);
+
+    const drawEdge = (
+      edge: GraphEdge,
+      color: string,
+      alpha: number,
+      widthMul: number,
+    ) => {
       const a = byId.get(edge.source);
       const b = byId.get(edge.target);
-      if (!a || !b) continue;
+      if (!a || !b) return;
       const sa = worldToScreen(a.x, a.y);
       const sb = worldToScreen(b.x, b.y);
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = baseLine * widthMul;
       ctx.beginPath();
       ctx.moveTo(sa.x, sa.y);
       ctx.lineTo(sb.x, sb.y);
       ctx.stroke();
       if (graphSettings.showArrows) {
         const angle = Math.atan2(sb.y - sa.y, sb.x - sa.x);
-        const head = Math.max(5, 7 * Math.min(1.4, Math.max(0.7, scale)) * linkScale);
+        const head = Math.max(5, 7 * Math.min(1.4, Math.max(0.7, scale)) * linkScale * widthMul);
         const mx = (sa.x + sb.x) / 2;
         const my = (sa.y + sb.y) / 2;
         ctx.beginPath();
@@ -790,37 +851,85 @@ export function mountGraphPanel(
           my - head * Math.sin(angle + Math.PI / 7),
         );
         ctx.closePath();
-        ctx.fillStyle = linkColor;
-        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = color;
         ctx.fill();
-        ctx.globalAlpha = 0.85;
+      }
+    };
+
+    // Pass 1: dim / normal edges
+    for (const edge of edges) {
+      const hot =
+        focus != null &&
+        hoverId != null &&
+        ((edge.source === hoverId && focus.has(edge.target)) ||
+          (edge.target === hoverId && focus.has(edge.source)));
+      if (hot) continue;
+      drawEdge(edge, linkColor, dimming ? 0.18 : 0.85, 1);
+    }
+    // Pass 2: highlighted edges on top
+    if (focus && hoverId) {
+      for (const edge of edges) {
+        const hot =
+          (edge.source === hoverId && focus.has(edge.target)) ||
+          (edge.target === hoverId && focus.has(edge.source));
+        if (!hot) continue;
+        drawEdge(edge, accent, 1, 1.85);
       }
     }
     ctx.globalAlpha = 1;
 
-    const fontSize = Math.max(9, Math.min(12, 11 * Math.sqrt(scale)));
     const maxDeg = Math.max(1, ...nodes.map((node) => node.degree));
-    const scaleClamp = Math.min(1.4, Math.max(0.7, scale));
-    for (const node of nodes) {
+    const scaleClamp = nodeScaleClamp();
+
+    const drawNode = (node: GraphNode, highlighted: boolean) => {
       const s = worldToScreen(node.x, node.y);
       if (s.x < -40 || s.y < -40 || s.x > width + 40 || s.y > height + 40) {
-        continue;
+        return;
       }
-      // Obsidian-like: radius grows with degree
-      const degreeBoost = 3.5 + (node.degree / maxDeg) * 5.5;
-      const r = degreeBoost * scaleClamp * nodeScale;
+      const r = nodeRadius(node, maxDeg, scaleClamp, nodeScale);
+      const isHover = node.id === hoverId;
+      const drawR = r * (isHover ? 1.15 : 1);
+      const fontSize = labelFontSize(drawR);
       ctx.beginPath();
-      ctx.fillStyle = node.center ? nodeActive : nodeColor;
-      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-      ctx.fill();
-      if (textAlpha > 0.02) {
-        ctx.globalAlpha = textAlpha;
-        ctx.fillStyle = labelColor;
-        ctx.font = `${fontSize}px var(--font-ui, system-ui, sans-serif)`;
-        ctx.textAlign = "center";
-        ctx.fillText(node.label.slice(0, 24), s.x, s.y + r + fontSize + 2);
+      if (highlighted) {
+        ctx.fillStyle = isHover ? accent : nodeActive;
+        ctx.globalAlpha = 1;
+      } else if (dimming) {
+        ctx.fillStyle = node.center ? nodeActive : nodeColor;
+        ctx.globalAlpha = 0.22;
+      } else {
+        ctx.fillStyle = node.center ? nodeActive : nodeColor;
         ctx.globalAlpha = 1;
       }
+      ctx.arc(s.x, s.y, drawR, 0, Math.PI * 2);
+      ctx.fill();
+
+      const labelA = highlighted
+        ? Math.max(textAlpha, 0.92)
+        : dimming
+          ? textAlpha * 0.25
+          : textAlpha;
+      if (labelA > 0.02) {
+        ctx.globalAlpha = labelA;
+        ctx.fillStyle = highlighted ? (isHover ? accent : labelColor) : labelColor;
+        ctx.font = `${isHover ? "600 " : ""}${fontSize}px ${uiFont}`;
+        ctx.textAlign = "center";
+        ctx.fillText(node.label.slice(0, 24), s.x, s.y + drawR + fontSize + 2);
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    for (const node of nodes) {
+      if (focus?.has(node.id)) continue;
+      drawNode(node, false);
+    }
+    if (focus) {
+      for (const node of nodes) {
+        if (!focus.has(node.id) || node.id === hoverId) continue;
+        drawNode(node, true);
+      }
+      const hovered = hoverId ? byId.get(hoverId) : null;
+      if (hovered) drawNode(hovered, true);
     }
   }
 
@@ -837,6 +946,9 @@ export function mountGraphPanel(
     const data = mode === "local" ? buildLocalGraph(activePath) : buildVaultGraph();
     nodes = data.nodes;
     edges = data.edges;
+    hoverId = null;
+    canvas.style.cursor = "";
+    rebuildAdjacency();
     seedLayout();
     // Warm up long enough for repulsion/collision to space nodes evenly.
     for (let i = 0; i < 160; i++) stepForces(true);
@@ -852,18 +964,33 @@ export function mountGraphPanel(
     const rect = canvas.getBoundingClientRect();
     const sx = clientX - rect.left;
     const sy = clientY - rect.top;
-    const hitR = 12 / Math.max(scale, 0.3);
     const world = screenToWorld(sx, sy);
+    const maxDeg = Math.max(1, ...nodes.map((node) => node.degree));
+    const scaleClamp = nodeScaleClamp();
+    const nodeScale = graphSettingFactor(graphSettings.nodeSize);
     let best: GraphNode | null = null;
-    let bestDist = hitR;
+    let bestDist = Infinity;
     for (const node of nodes) {
+      const rScreen = nodeRadius(node, maxDeg, scaleClamp, nodeScale);
+      const hitR = Math.max(rScreen / Math.max(scale, 0.001), 8 / Math.max(scale, 0.3));
       const d = Math.hypot(node.x - world.x, node.y - world.y);
-      if (d <= bestDist) {
+      if (d <= hitR && d < bestDist) {
         bestDist = d;
         best = node;
       }
     }
     return best;
+  }
+
+  function updateHover(clientX: number, clientY: number): void {
+    if (panning || dragId) return;
+    const hit = hitNode(clientX, clientY);
+    const next = hit?.id ?? null;
+    if (next !== hoverId) {
+      hoverId = next;
+      draw();
+    }
+    canvas.style.cursor = next ? "pointer" : "";
   }
 
   canvas.addEventListener(
@@ -892,8 +1019,11 @@ export function mountGraphPanel(
 
     if (hit && event.button === 0) {
       dragId = hit.id;
+      hoverId = hit.id;
       panning = false;
+      canvas.style.cursor = "pointer";
       canvas.setPointerCapture(event.pointerId);
+      draw();
       return;
     }
 
@@ -901,10 +1031,12 @@ export function mountGraphPanel(
     if (event.button === 0 || event.button === 1) {
       panning = true;
       dragId = null;
+      hoverId = null;
       panLastX = event.clientX;
       panLastY = event.clientY;
       canvas.setPointerCapture(event.pointerId);
       canvas.style.cursor = "grabbing";
+      draw();
     }
   });
 
@@ -922,31 +1054,57 @@ export function mountGraphPanel(
       return;
     }
 
-    if (!dragId) return;
-    const node = nodes.find((n) => n.id === dragId);
-    if (!node) return;
-    const rect = canvas.getBoundingClientRect();
-    const world = screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
-    node.x = world.x;
-    node.y = world.y;
-    node.vx = 0;
-    node.vy = 0;
-    alpha = Math.max(alpha, 0.12);
-  });
-
-  canvas.addEventListener("pointerup", () => {
-    canvas.style.cursor = "";
-    if (panning) {
-      panning = false;
+    if (dragId) {
+      const node = nodes.find((n) => n.id === dragId);
+      if (!node) return;
+      const rect = canvas.getBoundingClientRect();
+      const world = screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
+      node.x = world.x;
+      node.y = world.y;
+      node.vx = 0;
+      node.vy = 0;
+      alpha = Math.max(alpha, 0.12);
+      canvas.style.cursor = "pointer";
       return;
     }
-    if (!dragId) return;
+
+    updateHover(event.clientX, event.clientY);
+  });
+
+  canvas.addEventListener("pointerup", (event) => {
+    if (panning) {
+      panning = false;
+      updateHover(event.clientX, event.clientY);
+      return;
+    }
+    if (!dragId) {
+      updateHover(event.clientX, event.clientY);
+      return;
+    }
     const id = dragId;
     dragId = null;
     if (!pointerMoved) {
       const node = nodes.find((n) => n.id === id);
       if (node) openHandler(node.path);
     }
+    updateHover(event.clientX, event.clientY);
+  });
+
+  canvas.addEventListener("pointerleave", () => {
+    if (panning || dragId) return;
+    if (hoverId) {
+      hoverId = null;
+      canvas.style.cursor = "";
+      draw();
+    }
+  });
+
+  canvas.addEventListener("pointercancel", () => {
+    panning = false;
+    dragId = null;
+    hoverId = null;
+    canvas.style.cursor = "";
+    draw();
   });
 
   const unsubIndex = linkIndex.subscribe(() => rebuild());
