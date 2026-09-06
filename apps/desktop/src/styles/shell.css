@@ -294,76 +294,76 @@ html.platform-windows .inimark-titlebar-btn {
   height: var(--inimark-titlebar-height);
 }
 
-/* ── Auto-hide scrollbars (transparent track; thumb on scroll or scrollbar hover) ── */
-
-.inimark-scroll-target,
-.inimark-tree,
-.inimark-sidebar-search-results,
-.inimark-editor-host,
-.inimark-settings-main,
-.inimark-settings-shortcuts,
-.ProseMirror,
+/* ── Unified custom overlay scrollbars (theme via --inimark-scrollbar-*) ──
+ * Native bars are hidden. Rails live in #inimark-scrollbar-layer (fixed).
+ * Reveal: scroll flash, or pointer in the edge gutter / on the rail.
+ */
+.inimark-scrollbar,
 .cm-editor .cm-scroller {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
 }
 
-.inimark-scroll-target[data-scrolling],
-.inimark-scroll-target[data-scrollbar-hover],
-.inimark-tree[data-scrolling],
-.inimark-tree[data-scrollbar-hover],
-.inimark-sidebar-search-results[data-scrolling],
-.inimark-sidebar-search-results[data-scrollbar-hover],
-.inimark-editor-host[data-scrolling],
-.inimark-editor-host[data-scrollbar-hover],
-.inimark-settings-main[data-scrolling],
-.inimark-settings-main[data-scrollbar-hover],
-.inimark-settings-shortcuts[data-scrolling],
-.inimark-settings-shortcuts[data-scrollbar-hover],
-.ProseMirror[data-scrolling],
-.ProseMirror[data-scrollbar-hover],
-.cm-editor .cm-scroller[data-scrolling],
-.cm-editor .cm-scroller[data-scrollbar-hover] {
-  scrollbar-color: var(--inimark-scrollbar-thumb) var(--inimark-scrollbar-track);
+.inimark-scrollbar::-webkit-scrollbar,
+.cm-editor .cm-scroller::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
-::-webkit-scrollbar {
-  width: var(--inimark-scrollbar-size);
-  height: var(--inimark-scrollbar-size);
+.inimark-scrollbar-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  pointer-events: none;
+  overflow: hidden;
 }
 
-::-webkit-scrollbar-track {
+.inimark-scrollbar-rail {
+  position: fixed;
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
   background: var(--inimark-scrollbar-track);
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: transparent;
+.inimark-scrollbar-rail.is-visible {
+  opacity: 1;
+}
+
+.inimark-scrollbar-rail.is-interactive {
+  pointer-events: auto;
+}
+
+.inimark-scrollbar-rail--y {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.inimark-scrollbar-rail--x {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.inimark-scrollbar-thumb {
+  flex: none;
   border-radius: var(--inimark-scrollbar-radius);
-  background-clip: padding-box;
-  border: 2px solid transparent;
-  transition: background-color 0.15s ease;
+  background: var(--inimark-scrollbar-thumb);
+  will-change: transform;
+  touch-action: none;
 }
 
-.inimark-scroll-target[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-scroll-target[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.inimark-tree[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-tree[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.inimark-sidebar-search-results[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-sidebar-search-results[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.inimark-editor-host[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-editor-host[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.inimark-settings-main[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-settings-main[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.inimark-settings-shortcuts[data-scrolling]::-webkit-scrollbar-thumb,
-.inimark-settings-shortcuts[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.ProseMirror[data-scrolling]::-webkit-scrollbar-thumb,
-.ProseMirror[data-scrollbar-hover]::-webkit-scrollbar-thumb,
-.cm-editor .cm-scroller[data-scrolling]::-webkit-scrollbar-thumb,
-.cm-editor .cm-scroller[data-scrollbar-hover]::-webkit-scrollbar-thumb {
-  background-color: var(--inimark-scrollbar-thumb);
-  transition: background-color 0s;
+.inimark-scrollbar-rail--y .inimark-scrollbar-thumb {
+  margin-inline-end: 1px;
 }
 
-::-webkit-scrollbar-thumb:active {
-  background-color: var(--inimark-scrollbar-thumb-hover);
+.inimark-scrollbar-rail--x .inimark-scrollbar-thumb {
+  margin-block-end: 1px;
+}
+
+.inimark-scrollbar-rail.is-visible .inimark-scrollbar-thumb:hover,
+.inimark-scrollbar-rail.is-dragging .inimark-scrollbar-thumb {
+  background: var(--inimark-scrollbar-thumb-hover);
 }

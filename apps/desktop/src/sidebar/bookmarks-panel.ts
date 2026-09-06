@@ -28,7 +28,7 @@ export function createBookmarksPanel(
   handlers: BookmarksPanelHandlers,
 ): BookmarksPanelController {
   const el = document.createElement("div");
-  el.className = "inimark-bookmarks-host inimark-scroll-target";
+  el.className = "inimark-bookmarks-host inimark-scrollbar";
   el.setAttribute("role", "navigation");
   el.setAttribute("aria-label", t("sidebar.tabs.bookmarks"));
 

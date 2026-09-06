@@ -222,7 +222,7 @@ export function mountSettingsView(
   navTopbar.setAttribute("data-tauri-drag-region", "");
 
   const navBody = document.createElement("div");
-  navBody.className = "inimark-settings-nav-body";
+  navBody.className = "inimark-settings-nav-body inimark-scrollbar";
 
   const search = createSearchField({
     placeholder: t("settings.searchPlaceholder"),
@@ -282,7 +282,7 @@ export function mountSettingsView(
   });
 
   const main = document.createElement("div");
-  main.className = "inimark-settings-main";
+  main.className = "inimark-settings-main inimark-scrollbar";
 
   const content = document.createElement("div");
   content.className = "inimark-settings-content";

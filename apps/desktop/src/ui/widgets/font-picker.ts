@@ -143,7 +143,7 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
   search.spellcheck = false;
 
   const list = document.createElement("div");
-  list.className = "inimark-font-picker-list";
+  list.className = "inimark-font-picker-list inimark-scrollbar";
 
   panel.append(search, list);
   root.append(trigger);

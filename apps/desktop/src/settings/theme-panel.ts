@@ -552,7 +552,7 @@ export function renderThemePanel(
     sticky.append(header, preview);
 
     const variablesHost = document.createElement("div");
-    variablesHost.className = "theme-editor-variables";
+    variablesHost.className = "theme-editor-variables inimark-scrollbar";
 
     function handleVariableChange(name: string, newValue: string): void {
       let next = editVariables.map((v) => (v.name === name ? { ...v, value: newValue } : v));
@@ -694,7 +694,7 @@ export function renderThemePanel(
     sticky.append(header, previewWrap);
 
     const variablesHost = document.createElement("div");
-    variablesHost.className = "theme-editor-variables";
+    variablesHost.className = "theme-editor-variables inimark-scrollbar";
     const group = document.createElement("div");
     group.className = "theme-editor-group";
     const groupTitle = document.createElement("h4");

@@ -355,7 +355,7 @@ export function mountGraphPanel(
   canvasWrap.append(canvas);
 
   const lists = document.createElement("div");
-  lists.className = "inimark-graph-lists";
+  lists.className = "inimark-graph-lists inimark-scrollbar";
 
   const outSection = document.createElement("section");
   outSection.className = "inimark-graph-list-section";
@@ -450,7 +450,7 @@ export function mountGraphPanel(
     resetDefaultsBtn.classList.add("inimark-graph-float-reset");
     floatHeader.append(floatTitle, resetDefaultsBtn);
     const floatBody = document.createElement("div");
-    floatBody.className = "inimark-graph-float-body";
+    floatBody.className = "inimark-graph-float-body inimark-scrollbar";
     floatControls = mountGraphControls({
       compact: true,
       settings: graphSettings,

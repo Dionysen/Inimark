@@ -359,7 +359,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   searchMeta.className = "inimark-sidebar-search-meta";
   searchMeta.hidden = true;
   const searchResults = document.createElement("div");
-  searchResults.className = "inimark-sidebar-search-results inimark-scroll-target";
+  searchResults.className = "inimark-sidebar-search-results inimark-scrollbar";
   searchPanel.append(searchToolbar.el, searchField.el, searchMeta, searchResults);
 
   const bookmarksPanel = document.createElement("div");

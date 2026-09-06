@@ -58,7 +58,7 @@ export function createSelect(options: SelectOptions): SelectController {
   trigger.prepend(label);
 
   const panel = document.createElement("div");
-  panel.className = "inimark-select-panel";
+  panel.className = "inimark-select-panel inimark-scrollbar";
   panel.setAttribute("role", "listbox");
   panel.hidden = true;
 

@@ -193,7 +193,7 @@ export function mountShell(
   const editorPane = document.createElement("div");
   editorPane.className = "inimark-editor-pane";
   const editorHost = document.createElement("main");
-  editorHost.className = "inimark-editor-host";
+  editorHost.className = "inimark-editor-host inimark-scrollbar";
   editorPane.append(editorHost);
   graph.setEditorHost(editorPane);
 

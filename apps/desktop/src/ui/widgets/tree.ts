@@ -13,7 +13,7 @@ export interface TreeItemOptions {
 
 export function createTreeHost(ariaLabel = "Files"): HTMLElement {
   const tree = document.createElement("nav");
-  tree.className = "inimark-tree";
+  tree.className = "inimark-tree inimark-scrollbar";
   tree.setAttribute("aria-label", ariaLabel);
   return tree;
 }
