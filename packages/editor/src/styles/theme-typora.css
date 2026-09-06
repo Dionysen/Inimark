@@ -87,7 +87,7 @@
     ui-monospace,
     monospace
   );
-  font-size: 0.9em;
+  font-size: var(--font-mono-size, 0.9em);
   padding: var(--padding-code-inline-y, 0.15em) var(--padding-code-inline-x, 0.35em);
   margin: 0;
   background: var(--bg-code-inline, rgba(0, 0, 0, 0.04));

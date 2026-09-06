@@ -30,7 +30,13 @@ import {
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
-import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
+import {
+  applySettings,
+  loadSettings,
+  type AppSettings,
+  SETTINGS_STORAGE_KEY,
+  SETTINGS_SYNC_EVENT,
+} from "./settings/store.ts";
 import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
@@ -561,13 +567,17 @@ export function mountApp(host: HTMLElement): AppController {
     }),
   );
 
+  const applyIncomingSettings = (next: AppSettings) => {
+    settings = next;
+    applySettings(settings);
+    editor.setTypewriterMode(settings.typewriterMode);
+    shell.applySidebarTabLayout(settings);
+    shell.graph.applyGraphSettings(settings.graph);
+  };
+
   const onStorage = (event: StorageEvent) => {
     if (event.key === SETTINGS_STORAGE_KEY) {
-      settings = loadSettings();
-      applySettings(settings);
-      editor.setTypewriterMode(settings.typewriterMode);
-      shell.applySidebarTabLayout(settings);
-      shell.graph.applyGraphSettings(settings.graph);
+      applyIncomingSettings(loadSettings());
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       refreshLibraryList();
@@ -584,7 +594,13 @@ export function mountApp(host: HTMLElement): AppController {
 
   if (isTauri()) {
     void (async () => {
+      const { listen } = await import("@tauri-apps/api/event");
       const { getCurrentWindow } = await import("@tauri-apps/api/window");
+      const unlistenSettings = await listen<AppSettings>(SETTINGS_SYNC_EVENT, (event) => {
+        applyIncomingSettings(event.payload);
+      });
+      cleanups.push(unlistenSettings);
+
       const win = getCurrentWindow();
       const unlistenClose = await win.onCloseRequested((event) => {
         event.preventDefault();

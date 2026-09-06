@@ -202,7 +202,7 @@ export const en: Dictionary = {
       fontSize: "Font size",
       fontSizeDesc: "Base font size for editor content.",
       codeFontSize: "Code font size",
-      codeFontSizeDesc: "Font size inside code blocks.",
+      codeFontSizeDesc: "Font size for fenced and inline code.",
       lineHeight: "Line height",
       lineHeightDesc: "Leading for body paragraphs.",
       paragraphSpacing: "Paragraph spacing",

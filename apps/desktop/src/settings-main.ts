@@ -9,7 +9,14 @@ import { initThemeManager } from "./themes/manager.ts";
 import { initI18n } from "./i18n/index.ts";
 import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
 import { mountSettingsView } from "./settings/view.ts";
-import { applySettings, loadSettings, SETTINGS_STORAGE_KEY } from "./settings/store.ts";
+import {
+  applySettings,
+  loadSettings,
+  type AppSettings,
+  SETTINGS_STORAGE_KEY,
+  SETTINGS_SYNC_EVENT,
+} from "./settings/store.ts";
+import { isTauri } from "./platform/env.ts";
 
 initPlatform();
 const bootSettings = loadSettings();
@@ -43,7 +50,17 @@ void initThemeManager().then(() => {
     }
   });
 
+  let unlistenSettings: (() => void) | undefined;
+  if (isTauri()) {
+    void import("@tauri-apps/api/event").then(async ({ listen }) => {
+      unlistenSettings = await listen<AppSettings>(SETTINGS_SYNC_EVENT, (event) => {
+        applySettings(event.payload);
+      });
+    });
+  }
+
   window.addEventListener("beforeunload", () => {
+    unlistenSettings?.();
     teardownChromeGuards();
     teardownFullscreen();
     teardownScrollbars();

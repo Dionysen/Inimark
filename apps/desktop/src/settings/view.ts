@@ -332,6 +332,13 @@ export function mountSettingsView(
     renderContent();
   }
 
+  /** Persist + apply without remounting controls (needed for live slider drag). */
+  function updateLive(partial: Partial<AppSettings>): void {
+    settings = { ...settings, ...partial };
+    saveSettings(settings);
+    onChangeHandler(settings);
+  }
+
   function patchFormat(partial: Partial<AppSettings["markdownFormat"]>): void {
     update({
       markdownFormat: { ...settings.markdownFormat, ...partial },
@@ -408,8 +415,11 @@ export function mountSettingsView(
       step: 1,
       value: settings.fontSize,
       formatValue: (value) => `${value}px`,
+      onInput(value) {
+        updateLive({ fontSize: value });
+      },
       onChange(value) {
-        update({ fontSize: value });
+        updateLive({ fontSize: value });
       },
     });
     body.append(
@@ -426,8 +436,11 @@ export function mountSettingsView(
       step: 1,
       value: settings.codeFontSize,
       formatValue: (value) => `${value}px`,
+      onInput(value) {
+        updateLive({ codeFontSize: value });
+      },
       onChange(value) {
-        update({ codeFontSize: value });
+        updateLive({ codeFontSize: value });
       },
     });
     body.append(
@@ -444,8 +457,11 @@ export function mountSettingsView(
       step: 1,
       value: Math.round(settings.lineHeight * 10),
       formatValue: (value) => (value / 10).toFixed(1),
+      onInput(value) {
+        updateLive({ lineHeight: value / 10 });
+      },
       onChange(value) {
-        update({ lineHeight: value / 10 });
+        updateLive({ lineHeight: value / 10 });
       },
     });
     body.append(
@@ -462,8 +478,11 @@ export function mountSettingsView(
       step: 1,
       value: Math.round(settings.paragraphSpacing * 10),
       formatValue: (value) => (value / 10).toFixed(1),
+      onInput(value) {
+        updateLive({ paragraphSpacing: value / 10 });
+      },
       onChange(value) {
-        update({ paragraphSpacing: value / 10 });
+        updateLive({ paragraphSpacing: value / 10 });
       },
     });
     body.append(
@@ -480,8 +499,11 @@ export function mountSettingsView(
       step: 1,
       value: Math.round(settings.codeLineHeight * 10),
       formatValue: (value) => (value / 10).toFixed(1),
+      onInput(value) {
+        updateLive({ codeLineHeight: value / 10 });
+      },
       onChange(value) {
-        update({ codeLineHeight: value / 10 });
+        updateLive({ codeLineHeight: value / 10 });
       },
     });
     body.append(

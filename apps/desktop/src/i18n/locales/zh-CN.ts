@@ -202,7 +202,7 @@ export const zhCN: Dictionary = {
       fontSize: "正文字号",
       fontSizeDesc: "编辑器正文的基础字号。",
       codeFontSize: "代码字号",
-      codeFontSizeDesc: "代码块内的字号。",
+      codeFontSizeDesc: "代码块与行内代码的字号。",
       lineHeight: "行间距",
       lineHeightDesc: "正文段落的行高。",
       paragraphSpacing: "段间距",

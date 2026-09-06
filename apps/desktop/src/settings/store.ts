@@ -95,6 +95,8 @@ export interface AppSettings {
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
+/** Cross-window live sync (Tauri). Browser / same-origin popups still use `storage`. */
+export const SETTINGS_SYNC_EVENT = "settings-changed";
 
 export const DEFAULT_MARKDOWN_FORMAT: MarkdownFormatSettings = {
   formatOnSave: false,
@@ -192,6 +194,34 @@ export function loadSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings): void {
   localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  broadcastSettings(settings);
+}
+
+let settingsBroadcaster: ((settings: AppSettings) => void) | null = null;
+
+function broadcastSettings(settings: AppSettings): void {
+  if (settingsBroadcaster) {
+    settingsBroadcaster(settings);
+    return;
+  }
+  // Only wire Tauri IPC when running inside a webview with internals.
+  if (
+    typeof window === "undefined" ||
+    !("__TAURI_INTERNALS__" in window || "__TAURI__" in window)
+  ) {
+    settingsBroadcaster = () => {};
+    return;
+  }
+  void import("@tauri-apps/api/event")
+    .then(({ emit }) => {
+      settingsBroadcaster = (next) => {
+        void emit(SETTINGS_SYNC_EVENT, next).catch(() => {});
+      };
+      settingsBroadcaster(settings);
+    })
+    .catch(() => {
+      settingsBroadcaster = () => {};
+    });
 }
 
 export function applySettings(settings: AppSettings): void {
