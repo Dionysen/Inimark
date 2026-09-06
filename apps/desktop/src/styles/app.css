@@ -489,7 +489,10 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 .inimark-graph-list-item {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
   width: 100%;
   text-align: left;
   border: 0;
@@ -500,6 +503,28 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   padding: 0.3rem 0.35rem;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.inimark-graph-list-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-graph-list-item-folder {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--inimark-muted-fg);
+  font-size: 11px;
+}
+
+.inimark-graph-list-item-folder:empty {
+  display: none;
 }
 
 .inimark-graph-list-item:hover {

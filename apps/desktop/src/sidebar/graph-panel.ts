@@ -62,6 +62,13 @@ function noteLabel(pathOrName: string): string {
   return base.replace(/\.(md|markdown|mdown|canvas)$/i, "");
 }
 
+/** Immediate parent folder name, or empty if the file is at vault root. */
+function folderNameFromPath(path: string): string {
+  const parts = path.replace(/\\/g, "/").split("/").filter(Boolean);
+  if (parts.length < 2) return "";
+  return parts[parts.length - 2] ?? "";
+}
+
 function attachDegrees(nodes: GraphNode[], edges: GraphEdge[]): void {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   for (const node of nodes) node.degree = 0;
@@ -505,8 +512,17 @@ export function mountGraphPanel(
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "inimark-graph-list-item";
-      btn.textContent = item.label;
       btn.title = item.path;
+
+      const name = document.createElement("span");
+      name.className = "inimark-graph-list-item-name";
+      name.textContent = item.label;
+
+      const folder = document.createElement("span");
+      folder.className = "inimark-graph-list-item-folder";
+      folder.textContent = folderNameFromPath(item.path);
+
+      btn.append(name, folder);
       btn.addEventListener("click", () => openHandler(item.path));
       container.append(btn);
     }
