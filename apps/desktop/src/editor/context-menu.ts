@@ -1,11 +1,17 @@
 import type { Editor, EditorCommandName } from "@inimark/editor";
 import { t } from "../i18n/index.ts";
 import { detectPlatform } from "../platform/platform.ts";
+import {
+  acquireExclusiveLayer,
+  releaseExclusiveLayer,
+} from "../ui/exclusive-layer.ts";
 import { headingLevelBadgeHtml } from "../ui/heading-level-badge.ts";
 
 export interface EditorContextMenuController {
   destroy(): void;
 }
+
+const EDITOR_CONTEXT_LAYER = Symbol("editor-context-menu");
 
 type IconAction = {
   name: EditorCommandName;
@@ -284,9 +290,11 @@ export function mountEditorContextMenu(
 
   function close(): void {
     clearCloseTimer();
+    const wasOpen = open;
     open = false;
     menu.hidden = true;
     submenu.hidden = true;
+    if (wasOpen) releaseExclusiveLayer(EDITOR_CONTEXT_LAYER);
   }
 
   function runCommand(name: EditorCommandName): void {
@@ -425,6 +433,7 @@ export function mountEditorContextMenu(
       close();
       return;
     }
+    acquireExclusiveLayer(EDITOR_CONTEXT_LAYER, close);
     renderMenu();
     open = true;
     submenu.hidden = true;
@@ -484,6 +493,7 @@ export function mountEditorContextMenu(
       document.removeEventListener("mousedown", onDocumentMouseDown);
       document.removeEventListener("keydown", onKeyDown);
       clearCloseTimer();
+      close();
       menu.remove();
       submenu.remove();
     },

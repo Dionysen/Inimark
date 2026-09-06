@@ -46,6 +46,12 @@ export {
   type ColumnSide,
 } from "./column-resize.ts";
 export {
+  acquireExclusiveLayer,
+  dismissExclusiveLayers,
+  releaseExclusiveLayer,
+  type ExclusiveLayerId,
+} from "./exclusive-layer.ts";
+export {
   mountTitleBar,
   type TitleBarController,
   type TitleBarOptions,

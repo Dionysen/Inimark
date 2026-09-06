@@ -2,6 +2,12 @@ import { describe, expect, test } from "vitest";
 
 import { createEditor } from "@inimark/editor";
 import { mountEditorContextMenu } from "../src/editor/context-menu.ts";
+import { createMenu } from "../src/ui/widgets/menu.ts";
+import {
+  acquireExclusiveLayer,
+  dismissExclusiveLayers,
+  releaseExclusiveLayer,
+} from "../src/ui/exclusive-layer.ts";
 
 describe("editor context menu", () => {
   test("opens on right-click and runs bold command", () => {
@@ -39,5 +45,73 @@ describe("editor context menu", () => {
     menu.destroy();
     editor.destroy();
     host.remove();
+  });
+
+  test("closes when another exclusive menu opens", () => {
+    dismissExclusiveLayers();
+
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.append(host);
+
+    const editor = createEditor(host, { initialContent: "hello" });
+    const editorMenu = mountEditorContextMenu(host, editor);
+    const sidebarMenu = createMenu();
+    document.body.append(sidebarMenu.el);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 40,
+        clientY: 40,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    const panel = document.querySelector(".inimark-editor-context-menu") as HTMLElement;
+    expect(panel.hidden).toBe(false);
+
+    sidebarMenu.setOpen(true);
+    expect(panel.hidden).toBe(true);
+    expect(sidebarMenu.isOpen()).toBe(true);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 60,
+        clientY: 60,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(panel.hidden).toBe(false);
+    expect(sidebarMenu.isOpen()).toBe(false);
+
+    editorMenu.destroy();
+    editor.destroy();
+    sidebarMenu.destroy();
+    host.remove();
+    dismissExclusiveLayers();
+  });
+});
+
+describe("exclusive layer", () => {
+  test("only one layer stays open", () => {
+    dismissExclusiveLayers();
+    const closed: string[] = [];
+    const a = Symbol("a");
+    const b = Symbol("b");
+
+    acquireExclusiveLayer(a, () => closed.push("a"));
+    acquireExclusiveLayer(b, () => closed.push("b"));
+    expect(closed).toEqual(["a"]);
+
+    releaseExclusiveLayer(b);
+    acquireExclusiveLayer(a, () => closed.push("a2"));
+    expect(closed).toEqual(["a"]);
+
+    dismissExclusiveLayers();
+    expect(closed).toEqual(["a", "a2"]);
   });
 });

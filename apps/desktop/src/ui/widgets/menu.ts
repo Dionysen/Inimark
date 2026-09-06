@@ -1,3 +1,8 @@
+import {
+  acquireExclusiveLayer,
+  releaseExclusiveLayer,
+} from "../exclusive-layer.ts";
+
 export interface MenuItemOptions {
   label: string;
   /** Inline SVG / HTML shown to the left of the label. */
@@ -43,13 +48,20 @@ export function createMenu(): MenuController {
 
   let open = false;
 
+  function setOpen(next: boolean): void {
+    if (next) {
+      acquireExclusiveLayer(el, () => setOpen(false));
+    } else if (open) {
+      releaseExclusiveLayer(el);
+    }
+    open = next;
+    el.hidden = !next;
+    el.classList.toggle("is-open", next);
+  }
+
   return {
     el,
-    setOpen(next) {
-      open = next;
-      el.hidden = !next;
-      el.classList.toggle("is-open", next);
-    },
+    setOpen,
     isOpen() {
       return open;
     },
@@ -149,6 +161,7 @@ export function createMenu(): MenuController {
       body.append(empty);
     },
     destroy() {
+      if (open) setOpen(false);
       el.remove();
     },
   };
