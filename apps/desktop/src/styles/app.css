@@ -504,8 +504,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 }
 
 .inimark-graph-panel:not(.inimark-graph-panel--editor) .inimark-graph-canvas-wrap {
-  /* Match L/R/bottom so the rounded canvas sits evenly above the split. */
-  margin: var(--inimark-space-1) var(--inimark-space-2) var(--inimark-space-2);
+  margin: var(--inimark-space-1) var(--inimark-space-2) 0;
   border-radius: var(--inimark-radius-md);
   background: var(--inimark-content-bg);
 }
@@ -519,13 +518,13 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 
 .inimark-graph-split-handle {
   flex-shrink: 0;
-  height: 8px;
-  margin: 0;
+  height: 10px;
+  /* Outside the canvas, flush against its bottom edge — do not overlap. */
+  margin: 0 var(--inimark-space-2);
   cursor: row-resize;
   position: relative;
   background: transparent;
-  border-top: 1px solid var(--inimark-border);
-  border-bottom: 1px solid transparent;
+  border: none;
   z-index: 2;
 }
 
@@ -533,10 +532,10 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   content: "";
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 2px;
   width: 32px;
   height: 3px;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   border-radius: 999px;
   background: color-mix(in srgb, var(--inimark-muted-fg) 55%, transparent);
   opacity: 1;
@@ -551,10 +550,6 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   width: 40px;
   height: 4px;
   background: var(--inimark-accent);
-}
-
-.inimark-graph-split-handle.is-active {
-  border-top-color: color-mix(in srgb, var(--inimark-accent) 55%, var(--inimark-border));
 }
 
 .inimark-graph-lists {
@@ -793,6 +788,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow: hidden;
   white-space: normal;
   word-break: break-word;
