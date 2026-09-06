@@ -1,7 +1,7 @@
 {
   "name": "inimark",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.0",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
     "dev": "pnpm --filter @inimark/desktop dev",
