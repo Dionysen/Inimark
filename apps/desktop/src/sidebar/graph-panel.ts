@@ -85,6 +85,19 @@ const GRAPH_SCALE_MIN = 0.12;
 const GRAPH_SCALE_MAX = 15;
 
 /**
+ * Obsidian graph camera lerp: `current * k + target * (1 - k)`.
+ * Higher k = more inertia / slower catch-up.
+ */
+function camLerp(current: number, target: number, k = 0.9): number {
+  return current * k + target * (1 - k);
+}
+
+/** Zoom ease toward targetScale (lower = snappier stop). */
+const ZOOM_LERP_K = 0.72;
+/** Pan fling velocity decay each frame (lower = stops sooner). */
+const PAN_DECAY_K = 0.78;
+
+/**
  * Label alpha from the text-fade slider (0–100, center 50 = “0”).
  * - ≤50: always fully opaque at any zoom
  * - >50: more transparent when zoomed out; zooming in returns to opaque
@@ -219,12 +232,36 @@ export function mountGraphPanel(
   let panLastY = 0;
 
   // Camera: screen = world * scale + (panX, panY)
+  // Obsidian model: wheel updates targetScale; each frame lerps scale → target
+  // with pan velocity coasting after drag.
   let scale = 1;
+  let targetScale = 1;
   let panX = 0;
   let panY = 0;
+  let panvX = 0;
+  let panvY = 0;
+  let zoomAnchorX = 0;
+  let zoomAnchorY = 0;
+  /** When false, zoom lerps toward viewport center (Obsidian zoom-out). */
+  let zoomUseCursor = false;
+  let panVelDx = 0;
+  let panVelDy = 0;
+  let panVelDt = 16;
+  let panGestureT = 0;
   let alpha = 1; // cooling for force sim
   let graphSettings: GraphSettings = { ...loadSettings().graph };
   let syncFloatChrome: (() => void) | null = null;
+  /** Coalesce camera/UI updates into one paint per animation frame. */
+  let dirty = true;
+
+  function scheduleDraw(): void {
+    dirty = true;
+  }
+
+  function setScaleImmediate(next: number): void {
+    scale = next;
+    targetScale = next;
+  }
 
   function applyGraphSettingsLocal(next: GraphSettings): void {
     const wasAnimating = graphSettings.animate;
@@ -235,7 +272,7 @@ export function mountGraphPanel(
       // Cool toward rest; keep a bit of energy so layout can finish settling.
       alpha = Math.max(alpha, 0.15);
     }
-    draw();
+    scheduleDraw();
   }
 
   const toolbar =
@@ -413,7 +450,7 @@ export function mountGraphPanel(
         const delta = (event.clientY - startY) / rect.height;
         splitRatio = Math.max(SPLIT_MIN, Math.min(SPLIT_MAX, startRatio + delta));
         applySplit();
-        draw();
+        scheduleDraw();
       });
 
       const endSplit = () => {
@@ -586,9 +623,10 @@ export function mountGraphPanel(
 
   function fitCamera(width: number, height: number, pad = 48): void {
     if (nodes.length === 0 || width <= 0 || height <= 0) {
-      scale = 1;
+      setScaleImmediate(1);
       panX = width / 2;
       panY = height / 2;
+      panvX = panvY = 0;
       return;
     }
     let minX = Infinity;
@@ -605,11 +643,55 @@ export function mountGraphPanel(
     const bh = Math.max(maxY - minY, 40);
     const sx = (width - pad * 2) / bw;
     const sy = (height - pad * 2) / bh;
-    scale = Math.max(0.15, Math.min(2.5, Math.min(sx, sy)));
+    setScaleImmediate(Math.max(0.15, Math.min(2.5, Math.min(sx, sy))));
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     panX = width / 2 - cx * scale;
     panY = height / 2 - cy * scale;
+    panvX = panvY = 0;
+  }
+
+  /**
+   * Obsidian `updateZoom`: ease scale toward targetScale while keeping the
+   * zoom anchor's world point fixed under the cursor/center.
+   */
+  function updateZoom(): boolean {
+    targetScale = Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, targetScale));
+    const cur = scale;
+    const next = targetScale;
+    const gap = (cur > next ? cur / next : next / cur) - 1;
+    if (gap < 0.008) {
+      if (gap > 0) {
+        scale = next;
+        return true;
+      }
+      return false;
+    }
+
+    const rect = canvasWrap.getBoundingClientRect();
+    const zx = zoomUseCursor ? zoomAnchorX : rect.width / 2;
+    const zy = zoomUseCursor ? zoomAnchorY : rect.height / 2;
+    const wx = (zx - panX) / cur;
+    const wy = (zy - panY) / cur;
+    scale = camLerp(cur, next, ZOOM_LERP_K);
+    panX = zx - wx * scale;
+    panY = zy - wy * scale;
+    return true;
+  }
+
+  /** Pan coast: apply velocity, then decay toward rest. */
+  function applyPanInertia(): boolean {
+    if (panning) return false;
+    if (Math.abs(panvX) < 1e-4 && Math.abs(panvY) < 1e-4) {
+      panvX = 0;
+      panvY = 0;
+      return false;
+    }
+    panX += (1000 / 60) * panvX;
+    panY += (1000 / 60) * panvY;
+    panvX = camLerp(panvX, 0, PAN_DECAY_K);
+    panvY = camLerp(panvY, 0, PAN_DECAY_K);
+    return true;
   }
 
   /**
@@ -780,10 +862,16 @@ export function mountGraphPanel(
     const dpr = window.devicePixelRatio || 1;
     const width = Math.max(1, Math.floor(rect.width));
     const height = Math.max(1, Math.floor(rect.height));
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    const bw = Math.floor(width * dpr);
+    const bh = Math.floor(height * dpr);
+    // Reassigning canvas.width/height reallocates the buffer every time — only
+    // when the CSS size or DPR actually changes (was a major zoom stutter source).
+    if (canvas.width !== bw || canvas.height !== bh) {
+      canvas.width = bw;
+      canvas.height = bh;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+    }
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -815,7 +903,7 @@ export function mountGraphPanel(
     const dimming = focus != null;
 
     const byId = new Map(nodes.map((node) => [node.id, node]));
-    const baseLine = Math.max(0.75, (1 / scale) * linkScale);
+    const baseLine = Math.max(0.75, 1.25 * linkScale);
 
     const drawEdge = (
       edge: GraphEdge,
@@ -935,9 +1023,17 @@ export function mountGraphPanel(
 
   function tick(): void {
     const rect = canvasWrap.getBoundingClientRect();
+    let simulating = false;
     if (rect.width > 0 && rect.height > 0 && nodes.length > 0) {
+      const alphaBefore = alpha;
       stepForces();
+      simulating = alpha >= 0.001 || alphaBefore >= 0.001;
+    }
+    const zooming = updateZoom();
+    const coasting = applyPanInertia();
+    if (dirty || simulating || zooming || coasting) {
       draw();
+      dirty = false;
     }
     raf = requestAnimationFrame(tick);
   }
@@ -957,7 +1053,7 @@ export function mountGraphPanel(
     if (graphSettings.animate) alpha = Math.max(alpha, 0.2);
     updateLists();
     refreshChrome();
-    draw();
+    scheduleDraw();
   }
 
   function hitNode(clientX: number, clientY: number): GraphNode | null {
@@ -988,7 +1084,7 @@ export function mountGraphPanel(
     const next = hit?.id ?? null;
     if (next !== hoverId) {
       hoverId = next;
-      draw();
+      scheduleDraw();
     }
     canvas.style.cursor = next ? "pointer" : "";
   }
@@ -1000,13 +1096,21 @@ export function mountGraphPanel(
       const rect = canvas.getBoundingClientRect();
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;
-      const before = screenToWorld(sx, sy);
-      const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
-      scale = Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, scale * factor));
-      // Keep cursor world point stable
-      panX = sx - before.x * scale;
-      panY = sy - before.y * scale;
-      draw();
+      // Obsidian onWheel: normalize delta, write targetScale only (no instant scale).
+      let dy = event.deltaY;
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) dy *= 40;
+      else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) dy *= 800;
+      targetScale *= Math.pow(1.5, -dy / 120);
+      targetScale = Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, targetScale));
+      // Zoom-in anchors to cursor; zoom-out eases toward viewport center.
+      if (targetScale < scale) {
+        zoomUseCursor = false;
+      } else {
+        zoomUseCursor = true;
+        zoomAnchorX = sx;
+        zoomAnchorY = sy;
+      }
+      scheduleDraw();
     },
     { passive: false },
   );
@@ -1023,7 +1127,7 @@ export function mountGraphPanel(
       panning = false;
       canvas.style.cursor = "pointer";
       canvas.setPointerCapture(event.pointerId);
-      draw();
+      scheduleDraw();
       return;
     }
 
@@ -1034,9 +1138,13 @@ export function mountGraphPanel(
       hoverId = null;
       panLastX = event.clientX;
       panLastY = event.clientY;
+      panvX = panvY = 0;
+      panVelDx = panVelDy = 0;
+      panVelDt = 16;
+      panGestureT = performance.now();
       canvas.setPointerCapture(event.pointerId);
       canvas.style.cursor = "grabbing";
-      draw();
+      scheduleDraw();
     }
   });
 
@@ -1046,11 +1154,19 @@ export function mountGraphPanel(
     }
 
     if (panning) {
-      panX += event.clientX - panLastX;
-      panY += event.clientY - panLastY;
+      const dx = event.clientX - panLastX;
+      const dy = event.clientY - panLastY;
+      const now = performance.now();
+      const dt = Math.max(1, now - panGestureT);
+      panX += dx;
+      panY += dy;
+      panVelDx = camLerp(panVelDx, dx, 0.8);
+      panVelDy = camLerp(panVelDy, dy, 0.8);
+      panVelDt = camLerp(panVelDt, dt, 0.8);
+      panGestureT = now;
       panLastX = event.clientX;
       panLastY = event.clientY;
-      draw();
+      scheduleDraw();
       return;
     }
 
@@ -1074,6 +1190,14 @@ export function mountGraphPanel(
   canvas.addEventListener("pointerup", (event) => {
     if (panning) {
       panning = false;
+      const releasedAgo = performance.now() - panGestureT;
+      // Obsidian: only keep fling if the last sample was recent (<100ms).
+      if (releasedAgo > 100 || panVelDt < 1) {
+        panvX = panvY = 0;
+      } else {
+        panvX = panVelDx / panVelDt;
+        panvY = panVelDy / panVelDt;
+      }
       updateHover(event.clientX, event.clientY);
       return;
     }
@@ -1095,7 +1219,7 @@ export function mountGraphPanel(
     if (hoverId) {
       hoverId = null;
       canvas.style.cursor = "";
-      draw();
+      scheduleDraw();
     }
   });
 
@@ -1103,8 +1227,9 @@ export function mountGraphPanel(
     panning = false;
     dragId = null;
     hoverId = null;
+    panvX = panvY = 0;
     canvas.style.cursor = "";
-    draw();
+    scheduleDraw();
   });
 
   const unsubIndex = linkIndex.subscribe(() => rebuild());
@@ -1117,7 +1242,7 @@ export function mountGraphPanel(
     syncFloatChrome?.();
   });
   const ro = new ResizeObserver(() => {
-    draw();
+    scheduleDraw();
   });
   ro.observe(canvasWrap);
 
