@@ -6,6 +6,7 @@ import {
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
+import aboutIconUrl from "../../app-icon.png";
 import {
   attachColumnResize,
   loadPersistedWidth,
@@ -176,10 +177,13 @@ function createRow(
   const h = document.createElement("div");
   h.className = "inimark-settings-row-title";
   h.textContent = title;
-  const p = document.createElement("p");
-  p.className = "inimark-settings-row-desc";
-  p.textContent = description;
-  meta.append(h, p);
+  meta.append(h);
+  if (description) {
+    const p = document.createElement("p");
+    p.className = "inimark-settings-row-desc";
+    p.textContent = description;
+    meta.append(p);
+  }
   const ctrl = document.createElement("div");
   ctrl.className = "inimark-settings-row-control";
   ctrl.append(control);
@@ -797,31 +801,36 @@ export function mountSettingsView(
     const about = document.createElement("div");
     about.className = "inimark-about";
 
-    const name = document.createElement("p");
+    const hero = document.createElement("div");
+    hero.className = "inimark-about-hero";
+
+    const icon = document.createElement("img");
+    icon.className = "inimark-about-icon";
+    icon.src = aboutIconUrl;
+    icon.alt = "Inimark";
+    icon.width = 88;
+    icon.height = 88;
+    icon.draggable = false;
+
+    const name = document.createElement("h2");
     name.className = "inimark-about-name";
     name.textContent = "Inimark";
-
-    const version = document.createElement("p");
-    version.className = "inimark-about-version";
-    version.textContent = t("settings.about.version", { version: aboutVersion });
 
     const desc = document.createElement("p");
     desc.className = "inimark-about-desc";
     desc.textContent = t("settings.about.desc");
 
-    const license = document.createElement("p");
-    license.className = "inimark-about-license";
-    license.textContent = t("settings.about.license");
+    hero.append(icon, name, desc);
 
-    const updateRow = document.createElement("div");
-    updateRow.className = "inimark-about-update";
+    const versionValue = document.createElement("div");
+    versionValue.className = "inimark-about-value";
+    versionValue.textContent = aboutVersion;
+
+    const updateActions = document.createElement("div");
+    updateActions.className = "inimark-about-update-actions";
 
     const updateStatus = document.createElement("p");
     updateStatus.className = "inimark-about-update-status";
-    updateStatus.textContent = "";
-
-    const updateActions = document.createElement("div");
-    updateActions.className = "inimark-about-links";
 
     let checking = false;
     let installing = false;
@@ -833,7 +842,7 @@ export function mountSettingsView(
 
     const checkBtn = createButton({
       label: t("settings.about.checkUpdates"),
-      variant: "ghost",
+      variant: "primary",
       onClick: () => {
         void (async () => {
           if (!isTauri() || checking || installing) return;
@@ -851,7 +860,7 @@ export function mountSettingsView(
               pendingVersion = info.version;
               setStatus(t("settings.about.available", { version: info.version }));
               installBtn.hidden = false;
-              installBtn.textContent = t("settings.about.available", {
+              installBtn.textContent = t("settings.about.installUpdate", {
                 version: info.version,
               });
             }
@@ -866,8 +875,8 @@ export function mountSettingsView(
     });
 
     const installBtn = createButton({
-      label: t("settings.about.checkUpdates"),
-      variant: "primary",
+      label: t("settings.about.installUpdate", { version: "" }),
+      variant: "default",
       onClick: () => {
         void (async () => {
           if (!isTauri() || installing || !pendingVersion) return;
@@ -908,21 +917,35 @@ export function mountSettingsView(
     }
 
     updateActions.append(checkBtn, installBtn);
-    updateRow.append(updateStatus, updateActions);
+
+    const licenseLink = document.createElement("a");
+    licenseLink.className = "inimark-about-link";
+    licenseLink.href = "https://opensource.org/licenses/MIT";
+    licenseLink.target = "_blank";
+    licenseLink.rel = "noopener noreferrer";
+    licenseLink.textContent = t("settings.about.licenseName");
+
+    const list = document.createElement("div");
+    list.className = "inimark-about-list";
+    list.append(
+      createRow(t("settings.about.versionInfo"), "", versionValue),
+      createRow(t("settings.about.softwareUpdate"), "", updateActions),
+      createRow(t("settings.about.openSourceLicense"), "", licenseLink),
+    );
 
     const links = document.createElement("div");
     links.className = "inimark-about-links";
 
     const github = createButton({
       label: t("settings.about.github"),
-      variant: "ghost",
+      variant: "default",
       onClick: () => {
         window.open("https://github.com/Dionysen/Inimark2", "_blank", "noopener,noreferrer");
       },
     });
     const issues = createButton({
       label: t("settings.about.issues"),
-      variant: "ghost",
+      variant: "default",
       onClick: () => {
         window.open(
           "https://github.com/Dionysen/Inimark2/issues",
@@ -933,7 +956,7 @@ export function mountSettingsView(
     });
     links.append(github, issues);
 
-    about.append(name, version, desc, license, updateRow, links);
+    about.append(hero, list, updateStatus, links);
     body.append(about);
   }
 

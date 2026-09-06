@@ -195,22 +195,130 @@ html.platform-windows .inimark-settings-nav-topbar {
 }
 
 .inimark-about {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--inimark-space-4);
   padding: var(--inimark-space-3) 0;
 }
 
-.inimark-about-name {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+.inimark-about-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-2) 0 var(--inimark-space-1);
 }
 
-.inimark-about-version,
-.inimark-about-desc,
-.inimark-about-license {
-  margin: 0.5rem 0 0;
+.inimark-about-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.inimark-about-name {
+  margin: var(--inimark-space-2) 0 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--inimark-fg);
+}
+
+.inimark-about-desc {
+  margin: 0;
+  max-width: 22rem;
   color: var(--inimark-muted-fg);
   font-size: var(--inimark-control-font-size, 13px);
-  line-height: 1.5;
+  line-height: 1.55;
+}
+
+.inimark-about-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.inimark-about-list .inimark-settings-row:first-child {
+  border-top: 1px solid var(--inimark-border);
+}
+
+.inimark-about-list .inimark-settings-row {
+  /* Match other settings rows that host a control (title + control-height). */
+  box-sizing: border-box;
+  min-height: calc(var(--inimark-control-height) + var(--inimark-space-3) * 2);
+}
+
+.inimark-about-list .inimark-settings-row-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--inimark-control-height);
+  text-align: right;
+}
+
+.inimark-about-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--inimark-control-height);
+  color: var(--inimark-muted-fg);
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.4;
+}
+
+.inimark-about-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--inimark-control-height);
+  color: var(--inimark-accent);
+  font-size: var(--inimark-control-font-size, 13px);
+  text-decoration: none;
+  text-align: right;
+}
+
+.inimark-about-link:hover {
+  text-decoration: underline;
+}
+
+.inimark-about-update-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-actions .inimark-btn[hidden] {
+  display: none !important;
+}
+
+.inimark-about-update-status {
+  margin: 0;
+  min-height: 1.25em;
+  text-align: center;
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.inimark-about-update-status:empty {
+  display: none;
+}
+
+.inimark-about-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--inimark-space-2);
+  padding-top: var(--inimark-space-1);
+}
+
+.inimark-about-links .inimark-btn {
+  min-width: 7.5rem;
 }
 
 .inimark-settings-libraries-toolbar {
@@ -333,30 +441,6 @@ html.platform-windows .inimark-settings-nav-topbar {
 .inimark-settings-inline-controls .inimark-field {
   flex: 1;
   min-width: 0;
-}
-
-.inimark-about-links {
-  display: flex;
-  gap: var(--inimark-space-2);
-  margin-top: var(--inimark-space-3);
-}
-
-.inimark-about-update {
-  margin-top: var(--inimark-space-3);
-  padding-top: var(--inimark-space-3);
-  border-top: 1px solid var(--inimark-border);
-}
-
-.inimark-about-update-status {
-  margin: 0;
-  min-height: 1.4em;
-  color: var(--inimark-muted-fg);
-  font-size: var(--inimark-control-font-size, 13px);
-  line-height: 1.4;
-}
-
-.inimark-about-update .inimark-about-links {
-  margin-top: var(--inimark-space-2);
 }
 
 /* ── Sidebar tab layout (appearance) ─────────────────────────────── */
