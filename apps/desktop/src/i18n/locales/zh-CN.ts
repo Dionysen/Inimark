@@ -43,6 +43,7 @@ export const zhCN: Dictionary = {
       sort: "排序",
       locateFile: "定位当前文件",
       collapseAll: "全部折叠",
+      expandAll: "全部展开",
     },
     sort: {
       nameAsc: "名称（A–Z）",
@@ -86,10 +87,15 @@ export const zhCN: Dictionary = {
     ctx: {
       rename: "重命名",
       copyPath: "复制路径",
+      copyTo: "复制到…",
+      moveTo: "移动到…",
+      copyHere: "复制到此处",
+      moveHere: "移动到此处",
       delete: "删除",
       openDefault: "用默认应用打开",
       addBookmark: "添加收藏…",
       removeBookmark: "取消收藏",
+      vaultRoot: "仓库根目录",
     },
   },
   outline: {

@@ -9,6 +9,7 @@ import {
   createTreeChildren,
   createTreeHost,
   createTreeItem,
+  expandAllIcon,
   libraryIcon,
   locateFileIcon,
   menuIcons,
@@ -26,13 +27,16 @@ import { joinWorkspacePath } from "./platform/env.ts";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
+  copyWorkspaceEntry,
   deleteWorkspaceEntry,
+  moveWorkspaceEntry,
   openWorkspaceEntryWithDefaultApp,
   refreshWorkspaceTree,
   renameWorkspaceEntry,
   revealWorkspaceEntry,
 } from "./platform/workspace.ts";
 import { promptConfirm } from "./ui/confirm-dialog.ts";
+import { promptPickFolder } from "./ui/folder-picker-dialog.ts";
 import {
   highlightMatch,
   searchVaultIncremental,
@@ -325,7 +329,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       title: t("sidebar.toolbar.collapseAll"),
       icon: collapseAllIcon,
       onClick() {
-        collapseAllFolders();
+        toggleCollapseExpandFolders();
       },
     },
   ]);
@@ -467,6 +471,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function notifyExpandedChange(): void {
     handlers.expandedDirsChange([...expanded]);
+    syncCollapseExpandButton();
   }
 
   function closeMenu(): void {
@@ -771,6 +776,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     // Keep sort available so users can change preference without a library.
     sortBtn.disabled = false;
     sortBtn.title = sortLabel(filesSortMode);
+    syncCollapseExpandButton();
   }
 
   function setFilesSortMode(mode: FilesSortMode): void {
@@ -785,11 +791,46 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     rerender();
   }
 
+  function collectDirectoryPaths(
+    nodes: WorkspaceTreeNode[],
+    out: string[] = [],
+  ): string[] {
+    for (const node of nodes) {
+      if (node.kind !== "directory") continue;
+      out.push(node.path);
+      if (node.children?.length) collectDirectoryPaths(node.children, out);
+    }
+    return out;
+  }
+
+  function syncCollapseExpandButton(): void {
+    const anyExpanded = expanded.size > 0;
+    const label = anyExpanded
+      ? t("sidebar.toolbar.collapseAll")
+      : t("sidebar.toolbar.expandAll");
+    collapseAllBtn.title = label;
+    collapseAllBtn.setAttribute("aria-label", label);
+    collapseAllBtn.innerHTML = anyExpanded ? collapseAllIcon() : expandAllIcon();
+  }
+
+  function expandAllFolders(): void {
+    const dirs = collectDirectoryPaths(currentTree);
+    if (dirs.length === 0) return;
+    for (const path of dirs) expanded.add(path);
+    notifyExpandedChange();
+    rerender();
+  }
+
   function collapseAllFolders(): void {
     if (expanded.size === 0) return;
     expanded.clear();
     notifyExpandedChange();
     rerender();
+  }
+
+  function toggleCollapseExpandFolders(): void {
+    if (expanded.size > 0) collapseAllFolders();
+    else expandAllFolders();
   }
 
   function locateActiveFile(): void {
@@ -1032,6 +1073,22 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         void copyNodePath(node);
       },
     });
+    contextMenu.addItem({
+      label: t("sidebar.ctx.copyTo"),
+      icon: menuIcons.copyTo,
+      onClick() {
+        closeContextMenu();
+        void copyNodeTo(node);
+      },
+    });
+    contextMenu.addItem({
+      label: t("sidebar.ctx.moveTo"),
+      icon: menuIcons.moveTo,
+      onClick() {
+        closeContextMenu();
+        void moveNodeTo(node);
+      },
+    });
 
     const libraryId = currentLibraryId();
     if (node.kind === "file") {
@@ -1088,6 +1145,97 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     contextMenu.setOpen(true);
     requestAnimationFrame(() => positionContextMenu(event.clientX, event.clientY));
+  }
+
+  async function pickDestinationFolder(
+    node: WorkspaceTreeNode,
+    mode: "copy" | "move",
+  ): Promise<string | null> {
+    if (!currentWorkspace) return null;
+    const picked = await promptPickFolder({
+      title: mode === "copy" ? t("sidebar.ctx.copyTo") : t("sidebar.ctx.moveTo"),
+      confirmLabel: mode === "copy" ? t("sidebar.ctx.copyHere") : t("sidebar.ctx.moveHere"),
+      sourcePath: node.path,
+      rootLabel: currentWorkspace.rootName || t("sidebar.ctx.vaultRoot"),
+      folders: currentTree,
+      excludePaths: node.kind === "directory" ? [node.path] : [],
+      initialPath: parentRelativePath(node.path),
+    });
+    if (!picked.confirmed) return null;
+    return picked.path;
+  }
+
+  async function copyNodeTo(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const destDir = await pickDestinationFolder(node, "copy");
+    if (destDir == null) return;
+
+    const result = await copyWorkspaceEntry(currentWorkspace, node.path, destDir);
+    if (result.status === "error") {
+      console.error(result.message);
+      return;
+    }
+
+    const parent = parentRelativePath(result.path);
+    if (parent) {
+      const parts = parent.split("/").filter(Boolean);
+      let acc = "";
+      for (const part of parts) {
+        acc = acc ? `${acc}/${part}` : part;
+        expanded.add(acc);
+      }
+      notifyExpandedChange();
+    }
+    await refreshTreeFromDisk();
+  }
+
+  async function moveNodeTo(node: WorkspaceTreeNode): Promise<void> {
+    if (!currentWorkspace) return;
+    const destDir = await pickDestinationFolder(node, "move");
+    if (destDir == null) return;
+
+    const fromPath = node.path;
+    if (parentRelativePath(fromPath) === destDir) return;
+
+    const result = await moveWorkspaceEntry(currentWorkspace, fromPath, destDir);
+    if (result.status === "error") {
+      console.error(result.message);
+      return;
+    }
+    if (result.path === fromPath) return;
+
+    if (node.kind === "directory") {
+      remapExpandedPaths(fromPath, result.path);
+    }
+    const destParent = parentRelativePath(result.path);
+    if (destParent) {
+      const parts = destParent.split("/").filter(Boolean);
+      let acc = "";
+      for (const part of parts) {
+        acc = acc ? `${acc}/${part}` : part;
+        expanded.add(acc);
+      }
+    }
+    notifyExpandedChange();
+
+    const libraryId = currentLibraryId();
+    if (libraryId) remapBookmarkPath(libraryId, fromPath, result.path);
+
+    const wasActive =
+      activePath === fromPath ||
+      (node.kind === "directory" && Boolean(activePath?.startsWith(`${fromPath}/`)));
+
+    await refreshTreeFromDisk();
+    refreshBookmarksPanel();
+
+    if (wasActive) {
+      if (activePath === fromPath) {
+        handlers.fileRenamed(fromPath, result.path);
+      } else if (activePath) {
+        const mapped = `${result.path}${activePath.slice(fromPath.length)}`;
+        handlers.fileRenamed(activePath, mapped);
+      }
+    }
   }
 
   async function copyNodePath(node: WorkspaceTreeNode): Promise<void> {
@@ -1522,8 +1670,6 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     newFolderBtn.setAttribute("aria-label", t("sidebar.toolbar.newFolder"));
     locateBtn.title = t("sidebar.toolbar.locateFile");
     locateBtn.setAttribute("aria-label", t("sidebar.toolbar.locateFile"));
-    collapseAllBtn.title = t("sidebar.toolbar.collapseAll");
-    collapseAllBtn.setAttribute("aria-label", t("sidebar.toolbar.collapseAll"));
     updateFilesToolbarState();
 
     searchField.input.placeholder = t("sidebar.searchPlaceholder");
@@ -1569,6 +1715,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     setExpandedDirs(dirs) {
       expanded.clear();
       for (const dir of dirs) expanded.add(dir);
+      syncCollapseExpandButton();
       if (currentTree.length > 0) rerender();
     },
     getExpandedDirs() {

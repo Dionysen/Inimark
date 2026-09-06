@@ -43,6 +43,7 @@ export const en: Dictionary = {
       sort: "Sort",
       locateFile: "Locate current file",
       collapseAll: "Collapse all folders",
+      expandAll: "Expand all folders",
     },
     sort: {
       nameAsc: "Name (A–Z)",
@@ -86,10 +87,15 @@ export const en: Dictionary = {
     ctx: {
       rename: "Rename",
       copyPath: "Copy Path",
+      copyTo: "Copy to…",
+      moveTo: "Move to…",
+      copyHere: "Copy here",
+      moveHere: "Move here",
       delete: "Delete",
       openDefault: "Open with Default App",
       addBookmark: "Add bookmark…",
       removeBookmark: "Remove bookmark",
+      vaultRoot: "Vault root",
     },
   },
   outline: {

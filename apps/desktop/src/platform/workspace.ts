@@ -365,6 +365,115 @@ export async function renameWorkspaceEntry(
   }
 }
 
+async function uniqueChildRelativePath(
+  workspace: Workspace,
+  destDir: string,
+  name: string,
+): Promise<string> {
+  const { exists } = await import("@tauri-apps/plugin-fs");
+  const joinRel = (dir: string, file: string) =>
+    dir ? `${dir.replace(/\\/g, "/")}/${file}` : file;
+
+  let candidate = joinRel(destDir, name);
+  if (!(await exists(joinWorkspacePath(workspace.rootPath, candidate)))) {
+    return candidate;
+  }
+
+  const dot = name.includes(".") && !name.startsWith(".") ? name.lastIndexOf(".") : -1;
+  const base = dot >= 0 ? name.slice(0, dot) : name;
+  const ext = dot >= 0 ? name.slice(dot) : "";
+  for (let i = 1; i < 1000; i++) {
+    candidate = joinRel(destDir, `${base} ${i}${ext}`);
+    if (!(await exists(joinWorkspacePath(workspace.rootPath, candidate)))) {
+      return candidate;
+    }
+  }
+  return joinRel(destDir, `${base} ${Date.now()}${ext}`);
+}
+
+async function copyPathRecursive(fromPath: string, toPath: string): Promise<void> {
+  const { copyFile, mkdir, readDir, stat } = await import("@tauri-apps/plugin-fs");
+  const info = await stat(fromPath);
+  if (info.isDirectory) {
+    await mkdir(toPath, { recursive: true });
+    const entries = await readDir(fromPath);
+    for (const entry of entries) {
+      await copyPathRecursive(joinPath(fromPath, entry.name), joinPath(toPath, entry.name));
+    }
+    return;
+  }
+  await copyFile(fromPath, toPath);
+}
+
+function isForbiddenDest(sourceRelative: string, destDir: string): boolean {
+  const src = sourceRelative.replace(/\\/g, "/");
+  const dest = destDir.replace(/\\/g, "/");
+  if (dest === src) return true;
+  return dest.startsWith(`${src}/`);
+}
+
+/** Copy a file or folder into `destDir` ("" = vault root). */
+export async function copyWorkspaceEntry(
+  workspace: Workspace,
+  fromRelative: string,
+  destDir: string,
+): Promise<{ status: "copied"; path: string } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Copying is only supported in the desktop app." };
+  }
+  const from = fromRelative.replace(/\\/g, "/");
+  const dest = destDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  if (isForbiddenDest(from, dest)) {
+    return { status: "error", message: "Cannot copy a folder into itself." };
+  }
+  try {
+    const name = fileNameFromPath(from);
+    const toRelative = await uniqueChildRelativePath(workspace, dest, name);
+    const fromPath = joinWorkspacePath(workspace.rootPath, from);
+    const toPath = joinWorkspacePath(workspace.rootPath, toRelative);
+    await copyPathRecursive(fromPath, toPath);
+    return { status: "copied", path: toRelative };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+/** Move a file or folder into `destDir` ("" = vault root). */
+export async function moveWorkspaceEntry(
+  workspace: Workspace,
+  fromRelative: string,
+  destDir: string,
+): Promise<{ status: "moved"; path: string } | { status: "error"; message: string }> {
+  if (!isTauri()) {
+    return { status: "error", message: "Moving is only supported in the desktop app." };
+  }
+  const from = fromRelative.replace(/\\/g, "/");
+  const dest = destDir.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  if (isForbiddenDest(from, dest)) {
+    return { status: "error", message: "Cannot move a folder into itself." };
+  }
+  const parentIdx = from.lastIndexOf("/");
+  const currentParent = parentIdx >= 0 ? from.slice(0, parentIdx) : "";
+  if (currentParent === dest) {
+    return { status: "moved", path: from };
+  }
+  try {
+    const name = fileNameFromPath(from);
+    const toRelative = await uniqueChildRelativePath(workspace, dest, name);
+    const result = await renameWorkspaceEntry(workspace, from, toRelative);
+    if (result.status === "error") return result;
+    return { status: "moved", path: result.path };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export async function deleteWorkspaceEntry(
   workspace: Workspace,
   relativePath: string,

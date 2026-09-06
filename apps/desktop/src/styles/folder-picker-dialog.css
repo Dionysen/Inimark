@@ -1,0 +1,73 @@
+.inimark-folder-picker-panel {
+  width: min(24rem, 100%);
+  display: flex;
+  flex-direction: column;
+  max-height: min(32rem, calc(100vh - 2rem));
+}
+
+.inimark-folder-picker-source {
+  font-family: var(--inimark-font-mono);
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.inimark-folder-picker-list {
+  flex: 1;
+  min-height: 10rem;
+  max-height: 18rem;
+  overflow: auto;
+  margin: 0 0 var(--inimark-space-4);
+  padding: var(--inimark-space-1);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  background: var(--inimark-control-bg, var(--inimark-surface));
+}
+
+.inimark-folder-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 2px);
+  padding: 0 8px;
+  padding-left: calc(8px + var(--folder-depth, 0) * 14px);
+  border: 0;
+  border-radius: var(--inimark-radius-control);
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-folder-picker-item:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-folder-picker-item.is-selected {
+  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
+}
+
+.inimark-folder-picker-item-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+  display: inline-grid;
+  place-items: center;
+}
+
+.inimark-folder-picker-item-icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.inimark-folder-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
