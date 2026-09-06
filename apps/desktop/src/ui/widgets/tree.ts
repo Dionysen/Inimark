@@ -6,8 +6,11 @@ export interface TreeItemOptions {
   path: string;
   depth?: number;
   active?: boolean;
+  selected?: boolean;
   expanded?: boolean;
-  onClick?: () => void;
+  /** Marks the row as movable (pointer DnD). Does not enable HTML5 drag. */
+  draggable?: boolean;
+  onClick?: (event: MouseEvent) => void;
   onContextMenu?: (event: MouseEvent) => void;
 }
 
@@ -36,14 +39,20 @@ export function createTreeChildren(parentDepth: number): HTMLElement {
   return el;
 }
 
-export function createTreeItem(options: TreeItemOptions): HTMLButtonElement {
+/**
+ * Tree row. Uses a `div` (not `button`) for reliable pointer interaction in WKWebView.
+ */
+export function createTreeItem(options: TreeItemOptions): HTMLElement {
   const depth = options.depth ?? 0;
-  const row = document.createElement("button");
-  row.type = "button";
+  const row = document.createElement("div");
   row.className = `inimark-tree-item inimark-tree-item--${options.kind === "directory" ? "dir" : "file"}`;
   row.dataset.path = options.path;
+  row.dataset.kind = options.kind;
+  row.setAttribute("role", "treeitem");
+  row.tabIndex = 0;
   row.style.setProperty("--tree-depth", String(depth));
   if (options.active) row.classList.add("is-active");
+  if (options.selected) row.classList.add("is-selected");
 
   if (options.kind === "directory") {
     row.setAttribute("aria-expanded", options.expanded ? "true" : "false");
@@ -67,7 +76,20 @@ export function createTreeItem(options: TreeItemOptions): HTMLButtonElement {
     row.append(spacer, label);
   }
 
-  if (options.onClick) row.addEventListener("click", options.onClick);
+  if (options.draggable) {
+    // Pointer-based DnD only — HTML5 `draggable` is unreliable in Tauri/WKWebView.
+    row.classList.add("is-draggable");
+  }
+
+  if (options.onClick) {
+    row.addEventListener("click", (event) => options.onClick?.(event));
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        options.onClick?.(event as unknown as MouseEvent);
+      }
+    });
+  }
   if (options.onContextMenu) {
     row.addEventListener("contextmenu", (event) => {
       event.preventDefault();

@@ -219,6 +219,12 @@ export const en: Dictionary = {
       editorWidthDesc: "Maximum width of the writing column.",
       autoSave: "Auto save",
       autoSaveDesc: "Save the open library file shortly after edits.",
+      linkUpdateOnMove: "Update links on move",
+      linkUpdateOnMoveDesc:
+        "When notes are moved or renamed, update wiki links that pointed to them.",
+      linkUpdateAsk: "Ask each time",
+      linkUpdateAlways: "Always update",
+      linkUpdateNever: "Never update",
       formatOnSave: "Format on save",
       formatOnSaveDesc: "Apply Markdown hygiene options when saving.",
       cjkSpacing: "CJK spacing",
@@ -548,5 +554,11 @@ export const en: Dictionary = {
     deleteFileTitle: "Delete file?",
     deleteFolderTitle: "Delete folder?",
     deleteMessage: "Delete “{{name}}”? This cannot be undone.",
+    linkUpdateTitle: "Update links?",
+    linkUpdateMessage:
+      "{{links}} link(s) in {{files}} file(s) point to the moved note(s). Update them to the new path?",
+    linkUpdateConfirm: "Update",
+    linkUpdateSkip: "Don't update",
+    linkUpdateAlways: "Always update links when moving or renaming",
   },
 };

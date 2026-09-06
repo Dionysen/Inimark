@@ -55,6 +55,14 @@ textarea,
   user-select: text;
 }
 
+/* Pointer DnD (file tree) — suppress editor text selection while dragging. */
+html.is-pointer-dnd,
+html.is-pointer-dnd * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  cursor: grabbing !important;
+}
+
 /* Linux: transparent window + CSS corner clip */
 html.platform-linux #app {
   border-radius: var(--inimark-window-radius);

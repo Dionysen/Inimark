@@ -219,6 +219,11 @@ export const zhCN: Dictionary = {
       editorWidthDesc: "正文栏的最大宽度。",
       autoSave: "自动保存",
       autoSaveDesc: "编辑文库文件后稍后自动保存。",
+      linkUpdateOnMove: "移动时更新链接",
+      linkUpdateOnMoveDesc: "笔记被移动或重命名时，是否更新指向它们的双向链接。",
+      linkUpdateAsk: "每次询问",
+      linkUpdateAlways: "始终更新",
+      linkUpdateNever: "从不更新",
       formatOnSave: "保存时格式化",
       formatOnSaveDesc: "保存时应用 Markdown 整理选项。",
       cjkSpacing: "中西文空格",
@@ -542,5 +547,11 @@ export const zhCN: Dictionary = {
     deleteFileTitle: "删除文件？",
     deleteFolderTitle: "删除文件夹？",
     deleteMessage: "确定删除“{{name}}”？此操作无法撤销。",
+    linkUpdateTitle: "更新链接？",
+    linkUpdateMessage:
+      "有 {{links}} 处链接位于 {{files}} 个文件中指向被移动的笔记。是否更新为新路径？",
+    linkUpdateConfirm: "更新",
+    linkUpdateSkip: "不更新",
+    linkUpdateAlways: "移动或重命名时始终更新链接",
   },
 };

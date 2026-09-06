@@ -40,6 +40,7 @@ import {
   type FontPresetId,
   type ImageFilenameFormat,
   type ImageStorageMode,
+  type LinkUpdateMode,
   type MenuDensity,
   editorWidthLabel,
   loadSettings,
@@ -547,6 +548,26 @@ export function mountSettingsView(
         t("settings.editor.autoSave"),
         t("settings.editor.autoSaveDesc"),
         autoSave.el,
+      ),
+    );
+
+    const linkUpdate = createSelect({
+      value: settings.linkUpdateOnMove,
+      options: [
+        { value: "ask", label: t("settings.editor.linkUpdateAsk") },
+        { value: "always", label: t("settings.editor.linkUpdateAlways") },
+        { value: "never", label: t("settings.editor.linkUpdateNever") },
+      ],
+      minWidth: 180,
+      onChange(value) {
+        update({ linkUpdateOnMove: value as LinkUpdateMode });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.linkUpdateOnMove"),
+        t("settings.editor.linkUpdateOnMoveDesc"),
+        linkUpdate.el,
       ),
     );
 

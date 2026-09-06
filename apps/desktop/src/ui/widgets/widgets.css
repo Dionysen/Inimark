@@ -715,7 +715,7 @@ html[data-glass="true"] .inimark-select-panel {
 /* ── Tree ───────────────────────────────────────────────────────── */
 
 .inimark-tree {
-  --tree-row-gap: 0.15rem;
+  --tree-row-gap: 0;
   --tree-indent-base: var(--inimark-space-2);
   flex: 1;
   overflow: auto;
@@ -844,18 +844,103 @@ html[data-glass="true"] .inimark-select-panel {
   padding-right: var(--inimark-control-padding-x, var(--inimark-space-3));
   border-radius: var(--inimark-radius-control);
   cursor: pointer;
+  box-sizing: border-box;
+  outline: none;
   transition:
     background var(--inimark-control-transition),
-    color var(--inimark-control-transition);
+    color var(--inimark-control-transition),
+    box-shadow var(--inimark-control-transition);
+}
+
+.inimark-tree-item.is-draggable {
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
 }
 
 .inimark-tree-item:hover {
   background: var(--inimark-hover);
 }
 
+.inimark-tree-item:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--inimark-accent);
+}
+
 .inimark-tree-item.is-active {
   background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
   color: var(--inimark-fg);
+}
+
+.inimark-tree-item.is-selected {
+  background: color-mix(in srgb, var(--inimark-accent) 22%, transparent);
+  color: var(--inimark-fg);
+}
+
+.inimark-tree-item.is-selected.is-active {
+  background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
+}
+
+.inimark-tree.is-dnd {
+  cursor: grabbing;
+}
+
+.inimark-tree.is-dnd .inimark-tree-item--dir {
+  cursor: grabbing;
+}
+
+.inimark-tree-item.is-drop-target {
+  background: color-mix(in srgb, var(--inimark-accent) 32%, transparent) !important;
+  box-shadow:
+    inset 0 0 0 2px var(--inimark-accent),
+    0 0 0 1px color-mix(in srgb, var(--inimark-accent) 40%, transparent);
+  color: var(--inimark-fg);
+}
+
+.inimark-tree-item.is-drop-target::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--inimark-accent);
+}
+
+.inimark-tree.is-drop-root {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--inimark-accent) 70%, transparent);
+  border-radius: var(--inimark-radius-control);
+}
+
+.inimark-tree-item.is-dragging {
+  opacity: 0.4;
+}
+
+.inimark-tree-drag-ghost {
+  pointer-events: none;
+  opacity: 0.92;
+  background: var(--inimark-surface-raised, var(--inimark-surface));
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  box-shadow: var(--inimark-glass-shadow, 0 8px 24px rgba(0, 0, 0, 0.18));
+  padding-right: 1.5rem;
+}
+
+.inimark-tree-drag-count {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--inimark-accent);
+  color: var(--inimark-accent-fg, #fff);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
 }
 
 .inimark-tree-item--dir {

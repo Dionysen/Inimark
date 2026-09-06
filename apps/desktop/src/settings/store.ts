@@ -26,6 +26,8 @@ export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
 export type ImageFilenameFormat = "original" | "timestamp" | "both";
 export type AppLocale = "en" | "zh-CN" | "system";
+/** Wiki-link rewrite preference after move/rename. */
+export type LinkUpdateMode = "ask" | "always" | "never";
 
 export type { FontPresetId };
 export { FONT_PRESETS };
@@ -81,6 +83,8 @@ export interface AppSettings {
   codeLineHeight: number;
   typewriterMode: boolean;
   autoSave: boolean;
+  /** When notes are moved/renamed and other files link to them. */
+  linkUpdateOnMove: LinkUpdateMode;
   markdownFormat: MarkdownFormatSettings;
   menuDensity: MenuDensity;
   autoHideLibraryBar: boolean;
@@ -140,6 +144,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   codeLineHeight: 1.5,
   typewriterMode: false,
   autoSave: false,
+  linkUpdateOnMove: "ask",
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
   menuDensity: "normal",
   autoHideLibraryBar: false,
@@ -342,6 +347,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
+    linkUpdateOnMove: isLinkUpdateMode(parsed.linkUpdateOnMove)
+      ? parsed.linkUpdateOnMove
+      : DEFAULT_SETTINGS.linkUpdateOnMove,
     markdownFormat: {
       formatOnSave: Boolean(format.formatOnSave),
       cjkSpacing: Boolean(format.cjkSpacing),
@@ -444,6 +452,10 @@ function isAppLocale(value: unknown): value is AppLocale {
 
 function isMenuDensity(value: unknown): value is MenuDensity {
   return value === "compact" || value === "normal" || value === "comfortable";
+}
+
+function isLinkUpdateMode(value: unknown): value is LinkUpdateMode {
+  return value === "ask" || value === "always" || value === "never";
 }
 
 function isImageStorageMode(value: unknown): value is ImageStorageMode {

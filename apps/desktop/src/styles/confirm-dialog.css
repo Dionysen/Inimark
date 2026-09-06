@@ -41,3 +41,18 @@
   min-width: 4.75rem;
   padding-inline: 1rem;
 }
+
+.inimark-link-update-always {
+  margin: 0 0 var(--inimark-space-4);
+}
+
+.inimark-link-update-always-row {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  font-size: 0.85rem;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  user-select: none;
+}
+

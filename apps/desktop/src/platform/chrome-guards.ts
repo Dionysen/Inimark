@@ -52,7 +52,15 @@ export function isEditableChromeTarget(target: EventTarget | null): boolean {
  */
 export function installChromeGuards(doc: Document = document): () => void {
   const onSelectStart = (event: Event): void => {
+    // File-tree / chrome pointer DnD — never allow editor selection mid-drag.
+    if (document.documentElement.classList.contains("is-pointer-dnd")) {
+      event.preventDefault();
+      return;
+    }
     if (isEditableChromeTarget(event.target)) return;
+    // Allow selection start on movable chrome (pointer DnD / native drag).
+    const el = elementFromTarget(event.target);
+    if (el?.closest(".is-draggable, [draggable='true']")) return;
     event.preventDefault();
   };
 

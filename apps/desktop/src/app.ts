@@ -33,6 +33,7 @@ import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import {
   applySettings,
   loadSettings,
+  saveSettings,
   type AppSettings,
   SETTINGS_STORAGE_KEY,
   SETTINGS_SYNC_EVENT,
@@ -496,29 +497,66 @@ export function mountApp(host: HTMLElement): AppController {
   shell.sidebar.onOpenSettings(() => void openSettings());
   shell.sidebar.onSwitchLibrary((libraryId) => void switchLibrary(libraryId));
   shell.sidebar.onExpandedDirsChange(() => persistLibrarySession());
-  shell.sidebar.onFileRenamed((from, to) => {
-    if (!workspace) return;
+  shell.sidebar.onEntriesMoved((pairs) => {
+    if (!workspace || pairs.length === 0) return;
     void (async () => {
-      await linkIndex.rewriteWikiLinks(
-        from,
-        to,
-        async (path) => {
-          const opened = await readWorkspaceFile(workspace!, path);
-          return opened.status === "opened" ? opened.text : null;
-        },
-        async (path, content) => {
-          await writeWorkspaceFile(workspace!, path, content);
-        },
-      );
+      const settings = loadSettings();
+      const affected = linkIndex.getAffectedLinkCountForRenames(pairs);
+      let shouldUpdate = settings.linkUpdateOnMove === "always";
+
+      if (settings.linkUpdateOnMove === "ask" && affected.linksCount > 0) {
+        const { promptLinkUpdate } = await import("./ui/link-update-dialog.ts");
+        const result = await promptLinkUpdate({
+          filesCount: affected.filesCount,
+          linksCount: affected.linksCount,
+        });
+        if (result.choice === "cancel") {
+          // Still remap index paths; content left as-is.
+          linkIndex.remapPaths(pairs);
+          linkIndex.persistCache(workspace!.rootPath);
+          shell.graph.refresh();
+          return;
+        }
+        shouldUpdate = result.choice === "update";
+        if (result.always && shouldUpdate) {
+          const next = { ...settings, linkUpdateOnMove: "always" as const };
+          saveSettings(next);
+        }
+      } else if (settings.linkUpdateOnMove === "never") {
+        shouldUpdate = false;
+      }
+
+      if (shouldUpdate && affected.linksCount > 0) {
+        await linkIndex.rewriteWikiLinksBatch(
+          pairs,
+          async (path) => {
+            const opened = await readWorkspaceFile(workspace!, path);
+            return opened.status === "opened" ? opened.text : null;
+          },
+          async (path, content) => {
+            await writeWorkspaceFile(workspace!, path, content);
+          },
+        );
+      } else {
+        linkIndex.remapPaths(pairs);
+      }
       linkIndex.persistCache(workspace!.rootPath);
-      if (activeFilePath === from || activeFilePath?.startsWith(`${from}/`)) {
-        activeFilePath = activeFilePath === from
-          ? to
-          : activeFilePath.replace(from, to);
+
+      const activeMoved = pairs.find(
+        (p) =>
+          activeFilePath === p.from ||
+          activeFilePath?.startsWith(`${p.from}/`),
+      );
+      if (activeMoved && activeFilePath) {
+        activeFilePath =
+          activeFilePath === activeMoved.from
+            ? activeMoved.to
+            : `${activeMoved.to}${activeFilePath.slice(activeMoved.from.length)}`;
+        // Prefer exact mapping from directory root moves already applied in sidebar;
+        // keep UI in sync with sidebar active path.
         shell.setFileName(activeFilePath.split(/[/\\]/).pop() ?? activeFilePath);
         shell.sidebar.setActiveFile(activeFilePath);
         shell.graph.setActiveFile(activeFilePath);
-        // Reload if current file's wiki links may have changed
         const opened = await readWorkspaceFile(workspace!, activeFilePath);
         if (opened.status === "opened") {
           editor.setMarkdown(opened.text);

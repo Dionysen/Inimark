@@ -99,6 +99,8 @@ export type FileSelectOptions = {
   snippet?: string;
 };
 
+export type PathRenamePair = { from: string; to: string };
+
 export interface SidebarController {
   setWorkspace(workspace: Workspace | null): void;
   setActiveFile(path: string | null): void;
@@ -116,7 +118,8 @@ export interface SidebarController {
   onCloseLibrary(handler: () => void): void;
   onSwitchLibrary(handler: (libraryId: string) => void | Promise<void>): void;
   onExpandedDirsChange(handler: (dirs: string[]) => void): void;
-  onFileRenamed(handler: (from: string, to: string) => void): void;
+  /** Fired after files/folders are renamed or moved (all descendant note pairs). */
+  onEntriesMoved(handler: (pairs: PathRenamePair[]) => void | Promise<void>): void;
   onFileDeleted(handler: (path: string) => void): void;
   destroy(): void;
 }
@@ -191,6 +194,45 @@ function findTreeNode(
     }
   }
   return null;
+}
+
+function collectFilesUnder(node: WorkspaceTreeNode): string[] {
+  if (node.kind === "file") return [node.path];
+  const out: string[] = [];
+  for (const child of node.children ?? []) {
+    out.push(...collectFilesUnder(child));
+  }
+  return out;
+}
+
+/** Build note path pairs for a moved/renamed entry (folder → all descendant notes). */
+function buildRenamePairs(
+  fromPath: string,
+  toPath: string,
+  node: WorkspaceTreeNode,
+): PathRenamePair[] {
+  if (node.kind === "file") return [{ from: fromPath, to: toPath }];
+  return collectFilesUnder(node).map((filePath) => ({
+    from: filePath,
+    to: `${toPath}${filePath.slice(fromPath.length)}`,
+  }));
+}
+
+/** Prefer top-level paths when both a parent and its child are selected. */
+function topLevelPaths(paths: Iterable<string>): string[] {
+  const sorted = [...paths].sort((a, b) => a.length - b.length || a.localeCompare(b));
+  const result: string[] = [];
+  for (const path of sorted) {
+    if (result.some((parent) => path === parent || path.startsWith(`${parent}/`))) {
+      continue;
+    }
+    result.push(path);
+  }
+  return result;
+}
+
+function isModClick(event: MouseEvent): boolean {
+  return detectPlatform() === "macos" ? event.metaKey : event.ctrlKey;
 }
 
 function revealInLabel(): string {
@@ -287,6 +329,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   filesPanel.dataset.panel = "files";
   filesPanel.setAttribute("role", "tabpanel");
   const treeHost = createTreeHost(t("sidebar.treeAria"));
+  markNoDrag(treeHost);
 
   let filesSortMode = loadFilesSortMode();
 
@@ -465,9 +508,26 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     switchLibrary: (_libraryId: string): void | Promise<void> => {},
     expandedDirsChange: (_dirs: string[]): void => {},
     toggleSidebar: (): void => {},
-    fileRenamed: (_from: string, _to: string): void => {},
+    entriesMoved: (_pairs: PathRenamePair[]): void | Promise<void> => {},
     fileDeleted: (_path: string): void => {},
   };
+
+  const selectedPaths = new Set<string>();
+  let selectionAnchor: string | null = null;
+  /** Pointer DnD (HTML5 drag is unreliable in Tauri/WKWebView). */
+  let dropTargetPath: string | null = null;
+  let suppressTreeClick = false;
+  let treePointerDrag: {
+    pointerId: number;
+    paths: string[];
+    ghost: HTMLElement;
+    offsetX: number;
+    offsetY: number;
+    active: boolean;
+    startX: number;
+    startY: number;
+  } | null = null;
+  const TREE_DRAG_THRESHOLD_PX = 5;
 
   function notifyExpandedChange(): void {
     handlers.expandedDirsChange([...expanded]);
@@ -617,6 +677,154 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (event.target === treeHost) event.preventDefault();
   });
 
+  function resolveDropDirectoryAt(clientX: number, clientY: number): string | null {
+    const hit = document.elementFromPoint(clientX, clientY);
+    if (!hit) return null;
+    if (!treeHost.contains(hit) && hit !== treeHost) return null;
+
+    const el = hit.closest?.(".inimark-tree-item") as HTMLElement | null;
+    if (el && treeHost.contains(el)) {
+      if (el.dataset.kind === "directory") return el.dataset.path ?? "";
+      return parentRelativePath(el.dataset.path ?? "");
+    }
+
+    // Row gaps / indent guides sit between items — keep the last target so the
+    // highlight doesn't flicker to "vault root". Only the tree's empty chrome
+    // (padding below the list) should mean root.
+    if (hit !== treeHost && dropTargetPath != null) return dropTargetPath;
+    return "";
+  }
+
+  function endTreePointerDrag(commit: boolean, clientX?: number, clientY?: number): void {
+    const drag = treePointerDrag;
+    if (!drag) return;
+    const paths = drag.paths;
+    const wasActive = drag.active;
+    drag.ghost.remove();
+    treePointerDrag = null;
+    treeHost.classList.remove("is-dnd", "is-drop-root");
+    document.documentElement.classList.remove("is-pointer-dnd");
+    treeHost
+      .querySelectorAll(".is-dragging, .is-drop-target")
+      .forEach((el) => el.classList.remove("is-dragging", "is-drop-target"));
+    const dest =
+      commit && wasActive && clientX != null && clientY != null
+        ? resolveDropDirectoryAt(clientX, clientY)
+        : null;
+    setDropTarget(null);
+    if (wasActive) {
+      suppressTreeClick = true;
+      // Clear even if the synthetic click never arrives.
+      setTimeout(() => {
+        suppressTreeClick = false;
+      }, 0);
+    }
+    if (!commit || !wasActive || dest == null || paths.length === 0) return;
+    if (!canDropOn(dest, paths)) return;
+    void moveNodesToDirectory(paths, dest);
+  }
+
+  function activateTreePointerDrag(): void {
+    const drag = treePointerDrag;
+    if (!drag || drag.active) return;
+    drag.active = true;
+    treeHost.classList.add("is-dnd");
+    document.documentElement.classList.add("is-pointer-dnd");
+    window.getSelection()?.removeAllRanges();
+    document.body.append(drag.ghost);
+    for (const path of drag.paths) {
+      treeHost
+        .querySelector(`[data-path="${CSS.escape(path)}"]`)
+        ?.classList.add("is-dragging");
+    }
+    drag.ghost.style.left = `${drag.startX - drag.offsetX}px`;
+    drag.ghost.style.top = `${drag.startY - drag.offsetY}px`;
+  }
+
+  treeHost.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    if (event.shiftKey || isModClick(event)) return;
+    if (treePointerDrag) return;
+    const row = (event.target as Element | null)?.closest?.(
+      ".inimark-tree-item.is-draggable",
+    ) as HTMLElement | null;
+    if (!row || !treeHost.contains(row)) return;
+    const path = row.dataset.path;
+    if (!path) return;
+    const node = findTreeNode(currentTree, path);
+    if (!node) return;
+
+    if (!selectedPaths.has(path)) {
+      setSelection([path], path);
+      treeHost
+        .querySelectorAll(".inimark-tree-item.is-selected")
+        .forEach((el) => el.classList.remove("is-selected"));
+      row.classList.add("is-selected");
+    }
+
+    const paths = topLevelPaths(selectedPaths);
+    const rect = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true) as HTMLElement;
+    ghost.classList.add("inimark-tree-drag-ghost");
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.position = "fixed";
+    ghost.style.zIndex = "10000";
+    ghost.style.pointerEvents = "none";
+    ghost.style.left = `${rect.left}px`;
+    ghost.style.top = `${rect.top}px`;
+    if (paths.length > 1) {
+      const badge = document.createElement("span");
+      badge.className = "inimark-tree-drag-count";
+      badge.textContent = String(paths.length);
+      ghost.append(badge);
+    }
+
+    treePointerDrag = {
+      pointerId: event.pointerId,
+      paths,
+      ghost,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      active: false,
+      startX: event.clientX,
+      startY: event.clientY,
+    };
+
+    const onMove = (moveEvent: PointerEvent) => {
+      if (!treePointerDrag || moveEvent.pointerId !== treePointerDrag.pointerId) return;
+      const dx = moveEvent.clientX - treePointerDrag.startX;
+      const dy = moveEvent.clientY - treePointerDrag.startY;
+      if (!treePointerDrag.active) {
+        if (dx * dx + dy * dy < TREE_DRAG_THRESHOLD_PX * TREE_DRAG_THRESHOLD_PX) {
+          return;
+        }
+        activateTreePointerDrag();
+      }
+      moveEvent.preventDefault();
+      window.getSelection()?.removeAllRanges();
+      treePointerDrag.ghost.style.left = `${moveEvent.clientX - treePointerDrag.offsetX}px`;
+      treePointerDrag.ghost.style.top = `${moveEvent.clientY - treePointerDrag.offsetY}px`;
+      const dest = resolveDropDirectoryAt(moveEvent.clientX, moveEvent.clientY);
+      if (dest == null || !canDropOn(dest, treePointerDrag.paths)) {
+        setDropTarget(null);
+        return;
+      }
+      setDropTarget(dest);
+    };
+
+    const onUp = (upEvent: PointerEvent) => {
+      if (!treePointerDrag || upEvent.pointerId !== treePointerDrag.pointerId) return;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      endTreePointerDrag(true, upEvent.clientX, upEvent.clientY);
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+  });
+
   function handlePanelShown(panel: SidebarTabId): void {
     if (panel === "search") {
       queueMicrotask(() => searchField.focus());
@@ -716,10 +924,127 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   tabVisibilityObserver.observe(topbar);
   document.addEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
 
+  function flattenVisibleNodes(
+    nodes: WorkspaceTreeNode[],
+    out: WorkspaceTreeNode[] = [],
+  ): WorkspaceTreeNode[] {
+    for (const node of sortTreeNodes(nodes, filesSortMode)) {
+      out.push(node);
+      if (
+        node.kind === "directory" &&
+        expanded.has(node.path) &&
+        node.children?.length
+      ) {
+        flattenVisibleNodes(node.children, out);
+      }
+    }
+    return out;
+  }
+
+  function clearSelection(): void {
+    selectedPaths.clear();
+    selectionAnchor = null;
+  }
+
+  function setSelection(paths: string[], anchor?: string | null): void {
+    selectedPaths.clear();
+    for (const path of paths) selectedPaths.add(path);
+    selectionAnchor = anchor === undefined ? (paths[0] ?? null) : anchor;
+  }
+
+  function selectRange(toPath: string): void {
+    const visible = flattenVisibleNodes(currentTree);
+    const anchor = selectionAnchor ?? toPath;
+    const fromIdx = visible.findIndex((n) => n.path === anchor);
+    const toIdx = visible.findIndex((n) => n.path === toPath);
+    if (fromIdx < 0 || toIdx < 0) {
+      setSelection([toPath], toPath);
+      return;
+    }
+    const [start, end] = fromIdx <= toIdx ? [fromIdx, toIdx] : [toIdx, fromIdx];
+    selectedPaths.clear();
+    for (let i = start; i <= end; i++) selectedPaths.add(visible[i]!.path);
+    selectionAnchor = anchor;
+  }
+
+  function handleTreeClick(event: MouseEvent, node: WorkspaceTreeNode): void {
+    if (suppressTreeClick) {
+      suppressTreeClick = false;
+      return;
+    }
+    if (event.shiftKey) {
+      selectRange(node.path);
+      rerender();
+      return;
+    }
+    if (isModClick(event)) {
+      if (selectedPaths.has(node.path)) selectedPaths.delete(node.path);
+      else selectedPaths.add(node.path);
+      selectionAnchor = node.path;
+      rerender();
+      return;
+    }
+
+    if (node.kind === "directory") {
+      setSelection([node.path], node.path);
+      if (expanded.has(node.path)) expanded.delete(node.path);
+      else expanded.add(node.path);
+      notifyExpandedChange();
+      rerender();
+      return;
+    }
+
+    setSelection([node.path], node.path);
+    rerender();
+    void handlers.fileSelect(node.path);
+  }
+
+  function prepareContextSelection(node: WorkspaceTreeNode): void {
+    if (!selectedPaths.has(node.path)) {
+      setSelection([node.path], node.path);
+      rerender();
+    }
+  }
+
+  function setDropTarget(path: string | null): void {
+    if (dropTargetPath === path) return;
+    if (dropTargetPath != null && dropTargetPath !== "") {
+      treeHost
+        .querySelector(`[data-path="${CSS.escape(dropTargetPath)}"]`)
+        ?.classList.remove("is-drop-target");
+    }
+    if (dropTargetPath === "") {
+      treeHost.classList.remove("is-drop-root");
+    }
+    dropTargetPath = path;
+    if (path === "") {
+      treeHost.classList.add("is-drop-root");
+    } else if (path) {
+      treeHost
+        .querySelector(`[data-path="${CSS.escape(path)}"]`)
+        ?.classList.add("is-drop-target");
+    }
+  }
+
+  function isForbiddenDestForSource(destDir: string, source: string): boolean {
+    if (source === destDir) return true;
+    return destDir.startsWith(`${source}/`);
+  }
+
+  function canDropOn(destDir: string, sources: string[]): boolean {
+    return sources.some(
+      (source) =>
+        !isForbiddenDestForSource(destDir, source) &&
+        parentRelativePath(source) !== destDir,
+    );
+  }
+
   function renderTree(nodes: WorkspaceTreeNode[], depth = 0): DocumentFragment {
     const frag = document.createDocumentFragment();
     for (const node of nodes) {
       const branch = createTreeBranch();
+      const selected = selectedPaths.has(node.path);
+      const isDropTarget = dropTargetPath === node.path;
 
       if (node.kind === "directory") {
         const isOpen = expanded.has(node.path);
@@ -729,16 +1054,17 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           path: node.path,
           depth,
           expanded: isOpen,
-          onClick() {
-            if (expanded.has(node.path)) expanded.delete(node.path);
-            else expanded.add(node.path);
-            notifyExpandedChange();
-            rerender();
+          selected,
+          draggable: true,
+          onClick(event) {
+            handleTreeClick(event, node);
           },
           onContextMenu(event) {
+            prepareContextSelection(node);
             openTreeContextMenu(event, node);
           },
         });
+        if (isDropTarget) row.classList.add("is-drop-target");
         branch.append(row);
         if (isOpen && node.children && node.children.length > 0) {
           const children = createTreeChildren(depth);
@@ -755,10 +1081,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         path: node.path,
         depth,
         active: node.path === activePath,
-        onClick() {
-          void handlers.fileSelect(node.path);
+        selected,
+        draggable: true,
+        onClick(event) {
+          handleTreeClick(event, node);
         },
         onContextMenu(event) {
+          prepareContextSelection(node);
           openTreeContextMenu(event, node);
         },
       });
@@ -1191,51 +1520,100 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   async function moveNodeTo(node: WorkspaceTreeNode): Promise<void> {
     if (!currentWorkspace) return;
-    const destDir = await pickDestinationFolder(node, "move");
-    if (destDir == null) return;
+    const sources = topLevelPaths(
+      selectedPaths.has(node.path) ? selectedPaths : [node.path],
+    );
+    const exclude = sources.filter((path) => {
+      const n = findTreeNode(currentTree, path);
+      return n?.kind === "directory";
+    });
+    const picked = await promptPickFolder({
+      title: t("sidebar.ctx.moveTo"),
+      confirmLabel: t("sidebar.ctx.moveHere"),
+      sourcePath: sources.join(", "),
+      rootLabel: currentWorkspace.rootName || t("sidebar.ctx.vaultRoot"),
+      folders: currentTree,
+      excludePaths: exclude,
+      initialPath: parentRelativePath(node.path),
+    });
+    if (!picked.confirmed) return;
+    await moveNodesToDirectory(sources, picked.path);
+  }
 
-    const fromPath = node.path;
-    if (parentRelativePath(fromPath) === destDir) return;
-
-    const result = await moveWorkspaceEntry(currentWorkspace, fromPath, destDir);
-    if (result.status === "error") {
-      console.error(result.message);
-      return;
+  function expandAncestors(path: string): void {
+    const parts = path.split("/").filter(Boolean);
+    let acc = "";
+    for (let i = 0; i < parts.length - 1; i++) {
+      acc = acc ? `${acc}/${parts[i]}` : parts[i]!;
+      expanded.add(acc);
     }
-    if (result.path === fromPath) return;
+  }
 
-    if (node.kind === "directory") {
-      remapExpandedPaths(fromPath, result.path);
-    }
-    const destParent = parentRelativePath(result.path);
-    if (destParent) {
-      const parts = destParent.split("/").filter(Boolean);
-      let acc = "";
-      for (const part of parts) {
-        acc = acc ? `${acc}/${part}` : part;
-        expanded.add(acc);
+  function notifyEntriesMoved(pairs: PathRenamePair[]): void {
+    if (pairs.length === 0) return;
+    void handlers.entriesMoved(pairs);
+  }
+
+  async function moveNodesToDirectory(
+    sourcePaths: string[],
+    destDir: string,
+  ): Promise<void> {
+    if (!currentWorkspace) return;
+    const sources = topLevelPaths(sourcePaths).filter(
+      (path) =>
+        !isForbiddenDestForSource(destDir, path) &&
+        parentRelativePath(path) !== destDir,
+    );
+    if (sources.length === 0) return;
+
+    const allPairs: PathRenamePair[] = [];
+    const movedRoots: PathRenamePair[] = [];
+    const libraryId = currentLibraryId();
+
+    for (const fromPath of sources) {
+      const node = findTreeNode(currentTree, fromPath);
+      if (!node) continue;
+      if (parentRelativePath(fromPath) === destDir) continue;
+
+      const result = await moveWorkspaceEntry(currentWorkspace, fromPath, destDir);
+      if (result.status === "error") {
+        console.error(result.message);
+        continue;
       }
+      if (result.path === fromPath) continue;
+
+      movedRoots.push({ from: fromPath, to: result.path });
+      allPairs.push(...buildRenamePairs(fromPath, result.path, node));
+
+      if (node.kind === "directory") {
+        remapExpandedPaths(fromPath, result.path);
+      }
+      if (libraryId) remapBookmarkPath(libraryId, fromPath, result.path);
+
+      selectedPaths.delete(fromPath);
+      selectedPaths.add(result.path);
     }
+
+    if (destDir) expandAncestors(`${destDir}/x`);
     notifyExpandedChange();
 
-    const libraryId = currentLibraryId();
-    if (libraryId) remapBookmarkPath(libraryId, fromPath, result.path);
-
-    const wasActive =
-      activePath === fromPath ||
-      (node.kind === "directory" && Boolean(activePath?.startsWith(`${fromPath}/`)));
+    if (activePath) {
+      for (const { from, to } of movedRoots) {
+        if (activePath === from) {
+          activePath = to;
+          break;
+        }
+        if (activePath.startsWith(`${from}/`)) {
+          activePath = `${to}${activePath.slice(from.length)}`;
+          break;
+        }
+      }
+    }
 
     await refreshTreeFromDisk();
     refreshBookmarksPanel();
-
-    if (wasActive) {
-      if (activePath === fromPath) {
-        handlers.fileRenamed(fromPath, result.path);
-      } else if (activePath) {
-        const mapped = `${result.path}${activePath.slice(fromPath.length)}`;
-        handlers.fileRenamed(activePath, mapped);
-      }
-    }
+    notifyEntriesMoved(allPairs);
+    rerender();
   }
 
   async function copyNodePath(node: WorkspaceTreeNode): Promise<void> {
@@ -1310,7 +1688,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     node: WorkspaceTreeNode,
     options?: { onDone?: (path: string) => void },
   ): void {
-    const row = treeHost.querySelector<HTMLButtonElement>(
+    const row = treeHost.querySelector<HTMLElement>(
       `[data-path="${CSS.escape(node.path)}"]`,
     );
     const label = row?.querySelector<HTMLElement>(".inimark-tree-label");
@@ -1392,6 +1770,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       return node.path;
     }
 
+    const pairs = buildRenamePairs(node.path, toPath, node);
+
     if (node.kind === "directory") {
       remapExpandedPaths(node.path, toPath);
       notifyExpandedChange();
@@ -1400,20 +1780,17 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     const libraryId = currentLibraryId();
     if (libraryId) remapBookmarkPath(libraryId, node.path, toPath);
 
-    const wasActive =
-      activePath === node.path ||
-      (node.kind === "directory" && Boolean(activePath?.startsWith(`${node.path}/`)));
+    if (activePath === node.path) activePath = toPath;
+    else if (activePath?.startsWith(`${node.path}/`)) {
+      activePath = `${toPath}${activePath.slice(node.path.length)}`;
+    }
+
+    selectedPaths.delete(node.path);
+    selectedPaths.add(toPath);
+
     await refreshTreeFromDisk();
     refreshBookmarksPanel();
-
-    if (wasActive) {
-      if (activePath === node.path) {
-        handlers.fileRenamed(node.path, toPath);
-      } else if (activePath) {
-        const mapped = `${toPath}${activePath.slice(node.path.length)}`;
-        handlers.fileRenamed(activePath, mapped);
-      }
-    }
+    notifyEntriesMoved(pairs);
     return toPath;
   }
 
@@ -1625,6 +2002,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   function applyWorkspace(workspace: Workspace | null): void {
     closeContextMenu();
+    clearSelection();
     if (!workspace) {
       currentTree = [];
       currentWorkspace = null;
@@ -1761,8 +2139,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     onExpandedDirsChange(handler) {
       handlers.expandedDirsChange = handler;
     },
-    onFileRenamed(handler) {
-      handlers.fileRenamed = handler;
+    onEntriesMoved(handler) {
+      handlers.entriesMoved = handler;
     },
     onFileDeleted(handler) {
       handlers.fileDeleted = handler;

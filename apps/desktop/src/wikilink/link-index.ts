@@ -233,18 +233,75 @@ class LinkIndexServiceImpl {
 
   getAffectedLinkCount(oldPath: string): { filesCount: number; linksCount: number } {
     const oldNoteName = pathToNoteName(oldPath);
-    const backlinkFiles = this.getBacklinks(oldNoteName);
+    // Match rewriteWikiLinks: only exact note-name backlinks are rewritten.
+    const backlinkFiles = this.index.backlinks.get(oldNoteName) || [];
     let linksCount = 0;
     for (const filePath of backlinkFiles) {
       const targets = this.getOutlinks(filePath);
-      linksCount += targets.filter(
-        (t) =>
-          t === oldNoteName ||
-          t.split("/").pop()?.toLowerCase() ===
-            oldNoteName.split("/").pop()?.toLowerCase(),
-      ).length;
+      linksCount += targets.filter((t) => t === oldNoteName).length;
     }
     return { filesCount: backlinkFiles.length, linksCount };
+  }
+
+  /** Aggregate affected link counts for many path renames/moves. */
+  getAffectedLinkCountForRenames(
+    pairs: Array<{ from: string; to: string }>,
+  ): { filesCount: number; linksCount: number } {
+    const files = new Set<string>();
+    let linksCount = 0;
+    for (const { from, to } of pairs) {
+      if (pathToNoteName(from) === pathToNoteName(to)) continue;
+      const count = this.getAffectedLinkCount(from);
+      linksCount += count.linksCount;
+      for (const file of this.index.backlinks.get(pathToNoteName(from)) || []) {
+        files.add(file);
+      }
+    }
+    return { filesCount: files.size, linksCount };
+  }
+
+  /** Update index paths without rewriting file contents. */
+  remapPaths(pairs: Array<{ from: string; to: string }>): void {
+    if (pairs.length === 0) return;
+    for (const { from, to } of pairs) {
+      const fromNorm = from.replace(/\\/g, "/");
+      const toNorm = to.replace(/\\/g, "/");
+      if (fromNorm === toNorm) continue;
+
+      const outlinks = this.index.outlinks.get(fromNorm);
+      if (outlinks) {
+        this.index.outlinks.delete(fromNorm);
+        this.index.outlinks.set(toNorm, outlinks);
+      }
+
+      for (const [target, sources] of this.index.backlinks) {
+        let changed = false;
+        const next = sources.map((s) => {
+          if (s === fromNorm) {
+            changed = true;
+            return toNorm;
+          }
+          return s;
+        });
+        if (changed) this.index.backlinks.set(target, next);
+      }
+
+      for (const [name, path] of this.index.fileByName) {
+        if (path === fromNorm) {
+          this.index.fileByName.delete(name);
+          this.ensureFileByName(pathToNoteName(toNorm), toNorm);
+          break;
+        }
+      }
+      for (const [name, path] of [...this.index.imageByName]) {
+        if (path === fromNorm) {
+          this.index.imageByName.delete(name);
+          const base = toNorm.split("/").pop() || name;
+          this.ensureImageByName(base.toLowerCase(), toNorm);
+        }
+      }
+    }
+    this.notify();
   }
 
   /**
@@ -256,43 +313,63 @@ class LinkIndexServiceImpl {
     readFile: (path: string) => Promise<string | null>,
     writeFile: (path: string, content: string) => Promise<void>,
   ): Promise<{ filesUpdated: number; linksUpdated: number }> {
-    const oldNoteName = pathToNoteName(oldPath);
-    const newNoteName = pathToNoteName(newPath);
-    if (oldNoteName === newNoteName) return { filesUpdated: 0, linksUpdated: 0 };
+    return this.rewriteWikiLinksBatch(
+      [{ from: oldPath, to: newPath }],
+      readFile,
+      writeFile,
+    );
+  }
 
-    const backlinkFiles = this.getBacklinks(oldNoteName);
-    if (backlinkFiles.length === 0) {
-      this.removeFile(oldPath);
-      this.registerFile(newPath);
-      this.notify();
-      return { filesUpdated: 0, linksUpdated: 0 };
+  /** Rewrite links for many renames/moves, writing each backlink file at most once. */
+  async rewriteWikiLinksBatch(
+    pairs: Array<{ from: string; to: string }>,
+    readFile: (path: string) => Promise<string | null>,
+    writeFile: (path: string, content: string) => Promise<void>,
+  ): Promise<{ filesUpdated: number; linksUpdated: number }> {
+    const renames = pairs
+      .map(({ from, to }) => ({
+        from: from.replace(/\\/g, "/"),
+        to: to.replace(/\\/g, "/"),
+        oldNote: pathToNoteName(from),
+        newNote: pathToNoteName(to),
+      }))
+      .filter((p) => p.oldNote !== p.newNote);
+
+    const filesToEdit = new Map<string, Array<{ oldNote: string; newNote: string }>>();
+    for (const rename of renames) {
+      const sources = this.index.backlinks.get(rename.oldNote) || [];
+      for (const filePath of sources) {
+        const list = filesToEdit.get(filePath) || [];
+        list.push({ oldNote: rename.oldNote, newNote: rename.newNote });
+        filesToEdit.set(filePath, list);
+      }
     }
-
-    const escapedOld = escapeRegex(oldNoteName);
-    const linkRegex = new RegExp(`(!?\\[\\[${escapedOld})(?=\\]\\]|[#|])`, "g");
 
     let filesUpdated = 0;
     let linksUpdated = 0;
 
-    for (const filePath of backlinkFiles) {
+    for (const [filePath, edits] of filesToEdit) {
       const content = await readFile(filePath);
       if (content == null) continue;
-      let count = 0;
-      const newContent = content.replace(linkRegex, (match) => {
-        count++;
-        return match.replace(oldNoteName, newNoteName);
-      });
-      if (newContent !== content) {
-        await writeFile(filePath, newContent);
-        linksUpdated += count;
+      let next = content;
+      let fileLinks = 0;
+      for (const { oldNote, newNote } of edits) {
+        const escapedOld = escapeRegex(oldNote);
+        const linkRegex = new RegExp(`(!?\\[\\[${escapedOld})(?=\\]\\]|[#|])`, "g");
+        next = next.replace(linkRegex, (match) => {
+          fileLinks++;
+          return match.replace(oldNote, newNote);
+        });
+      }
+      if (next !== content) {
+        await writeFile(filePath, next);
+        linksUpdated += fileLinks;
         filesUpdated++;
-        this.addFileLinks(filePath, newContent);
+        this.addFileLinks(filePath, next);
       }
     }
 
-    this.removeFile(oldPath);
-    this.registerFile(newPath);
-    this.notify();
+    this.remapPaths(pairs);
     return { filesUpdated, linksUpdated };
   }
 
