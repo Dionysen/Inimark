@@ -6,6 +6,8 @@ import {
   createPanelToolbar,
   graphLocalModeIcon,
   graphOpenEditorIcon,
+  graphTimelapseIcon,
+  graphFitViewIcon,
   graphVaultModeIcon,
   settingsIcon,
 } from "../ui/widgets/index.ts";
@@ -31,6 +33,8 @@ export interface GraphPanelController {
   setMode(mode: GraphMode): void;
   setEditorHost(host: HTMLElement | null): void;
   applyGraphSettings(settings?: GraphSettings): void;
+  /** Obsidian-style timelapse: reveal nodes/links over time. */
+  playProgression(): void;
   refresh(): void;
   onOpenFile(handler: (path: string) => void): void;
   destroy(): void;
@@ -56,6 +60,35 @@ type GraphNode = {
 };
 
 type GraphEdge = { source: string; target: string };
+
+/** Obsidian progression slots: file appear + each outlink in file order. */
+type ProgressionSlot =
+  | { kind: "node"; id: string }
+  | { kind: "edge"; edge: GraphEdge };
+
+function buildProgressionSlots(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+): ProgressionSlot[] {
+  const ids = [...nodes.map((n) => n.id)].sort((a, b) => a.localeCompare(b));
+  const bySource = new Map<string, GraphEdge[]>();
+  for (const edge of edges) {
+    const list = bySource.get(edge.source);
+    if (list) list.push(edge);
+    else bySource.set(edge.source, [edge]);
+  }
+  for (const list of bySource.values()) {
+    list.sort((a, b) => a.target.localeCompare(b.target));
+  }
+  const slots: ProgressionSlot[] = [];
+  for (const id of ids) {
+    slots.push({ kind: "node", id });
+    for (const edge of bySource.get(id) ?? []) {
+      slots.push({ kind: "edge", edge });
+    }
+  }
+  return slots;
+}
 
 function noteLabel(pathOrName: string): string {
   const base = pathOrName.split(/[/\\]/).pop() || pathOrName;
@@ -253,6 +286,13 @@ export function mountGraphPanel(
   let syncFloatChrome: (() => void) | null = null;
   /** Coalesce camera/UI updates into one paint per animation frame. */
   let dirty = true;
+  /** Obsidian timelapse: 0 = off; >0 = reveal first N progression slots. */
+  let progression = 0;
+  let progressionGen = 0;
+  let progressionSlots: ProgressionSlot[] = [];
+  let progressionFullNodes: GraphNode[] = [];
+  let playTimelapseBtn: HTMLButtonElement | null = null;
+  let fitViewBtn: HTMLButtonElement | null = null;
 
   function scheduleDraw(): void {
     dirty = true;
@@ -261,6 +301,13 @@ export function mountGraphPanel(
   function setScaleImmediate(next: number): void {
     scale = next;
     targetScale = next;
+  }
+
+  function stopProgression(): void {
+    progression = 0;
+    progressionGen += 1;
+    progressionSlots = [];
+    progressionFullNodes = [];
   }
 
   function applyGraphSettingsLocal(next: GraphSettings): void {
@@ -343,6 +390,30 @@ export function mountGraphPanel(
     const float = document.createElement("div");
     float.className = "inimark-graph-float";
     let floatControls: ReturnType<typeof mountGraphControls> | null = null;
+
+    const floatToolbar = document.createElement("div");
+    floatToolbar.className = "inimark-graph-float-toolbar";
+
+    fitViewBtn = createIconButton({
+      label: t("settings.graph.fitView"),
+      title: t("settings.graph.fitViewDesc"),
+      html: graphFitViewIcon(),
+      onClick() {
+        fitGraphToView();
+      },
+    });
+    fitViewBtn.classList.add("inimark-graph-float-tool");
+
+    playTimelapseBtn = createIconButton({
+      label: t("settings.graph.playTimelapse"),
+      title: t("settings.graph.playTimelapseDesc"),
+      html: graphTimelapseIcon(),
+      onClick() {
+        playProgression();
+      },
+    });
+    playTimelapseBtn.classList.add("inimark-graph-float-tool");
+
     const floatToggle = createIconButton({
       label: t("settings.graph.floatToggle"),
       title: t("settings.graph.floatToggle"),
@@ -352,7 +423,10 @@ export function mountGraphPanel(
         floatToggle.classList.toggle("is-active", float.classList.contains("is-open"));
       },
     });
-    floatToggle.classList.add("inimark-graph-float-toggle");
+    floatToggle.classList.add("inimark-graph-float-tool", "inimark-graph-float-toggle");
+
+    // Left → right: fit, wand, settings
+    floatToolbar.append(fitViewBtn, playTimelapseBtn, floatToggle);
 
     const floatPanel = document.createElement("div");
     floatPanel.className = "inimark-graph-float-panel";
@@ -383,16 +457,30 @@ export function mountGraphPanel(
         applyGraphSettingsLocal(next);
         floatControls?.refresh(next);
       },
+      onPlayTimelapse() {
+        playProgression();
+      },
     });
     floatBody.append(floatControls.el);
     floatPanel.append(floatHeader, floatBody);
-    float.append(floatToggle, floatPanel);
+    float.append(floatToolbar, floatPanel);
     host.append(float);
 
     syncFloatChrome = () => {
       floatToggle.title = t("settings.graph.floatToggle");
       floatToggle.setAttribute("aria-label", t("settings.graph.floatToggle"));
       floatTitle.textContent = t("settings.graph.floatTitle");
+      if (fitViewBtn) {
+        fitViewBtn.title = t("settings.graph.fitViewDesc");
+        fitViewBtn.setAttribute("aria-label", t("settings.graph.fitView"));
+      }
+      if (playTimelapseBtn) {
+        playTimelapseBtn.title = t("settings.graph.playTimelapseDesc");
+        playTimelapseBtn.setAttribute(
+          "aria-label",
+          t("settings.graph.playTimelapse"),
+        );
+      }
       resetDefaultsBtn.title = t("settings.graph.resetDefaults");
       resetDefaultsBtn.setAttribute("aria-label", t("settings.graph.resetDefaults"));
       floatControls?.refresh(graphSettings);
@@ -621,7 +709,7 @@ export function mountGraphPanel(
     alpha = 1;
   }
 
-  function fitCamera(width: number, height: number, pad = 48): void {
+  function fitCamera(width: number, height: number, pad = 36): void {
     if (nodes.length === 0 || width <= 0 || height <= 0) {
       setScaleImmediate(1);
       panX = width / 2;
@@ -639,16 +727,27 @@ export function mountGraphPanel(
       minY = Math.min(minY, node.y);
       maxY = Math.max(maxY, node.y);
     }
-    const bw = Math.max(maxX - minX, 40);
-    const bh = Math.max(maxY - minY, 40);
+    // Leave room for node discs + labels so nothing clips the edges.
+    const margin = 18;
+    const bw = Math.max(maxX - minX, 1) + margin * 2;
+    const bh = Math.max(maxY - minY, 1) + margin * 2;
     const sx = (width - pad * 2) / bw;
     const sy = (height - pad * 2) / bh;
-    setScaleImmediate(Math.max(0.15, Math.min(2.5, Math.min(sx, sy))));
+    setScaleImmediate(
+      Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, Math.min(sx, sy))),
+    );
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     panX = width / 2 - cx * scale;
     panY = height / 2 - cy * scale;
     panvX = panvY = 0;
+  }
+
+  /** Fit every visible node into the canvas (fills the view as tightly as possible). */
+  function fitGraphToView(): void {
+    const rect = canvasWrap.getBoundingClientRect();
+    fitCamera(Math.max(rect.width, 1), Math.max(rect.height, 1), 28);
+    scheduleDraw();
   }
 
   /**
@@ -704,8 +803,11 @@ export function mountGraphPanel(
   function stepForces(settling = false): void {
     if (nodes.length === 0) return;
 
-    const alphaTarget = settling ? 0 : graphSettings.animate ? 0.05 : 0;
-    if (!settling && !graphSettings.animate && alpha < 0.001) return;
+    const alphaTarget =
+      settling ? 0 : graphSettings.animate || progression > 0 ? 0.08 : 0;
+    if (!settling && !graphSettings.animate && progression === 0 && alpha < 0.001) {
+      return;
+    }
 
     const n = nodes.length;
     const byId = new Map(nodes.map((node) => [node.id, node]));
@@ -1027,11 +1129,12 @@ export function mountGraphPanel(
     if (rect.width > 0 && rect.height > 0 && nodes.length > 0) {
       const alphaBefore = alpha;
       stepForces();
-      simulating = alpha >= 0.001 || alphaBefore >= 0.001;
+      simulating =
+        alpha >= 0.001 || alphaBefore >= 0.001 || progression > 0;
     }
     const zooming = updateZoom();
     const coasting = applyPanInertia();
-    if (dirty || simulating || zooming || coasting) {
+    if (dirty || simulating || zooming || coasting || progression > 0) {
       draw();
       dirty = false;
     }
@@ -1039,6 +1142,7 @@ export function mountGraphPanel(
   }
 
   function rebuild(): void {
+    stopProgression();
     const data = mode === "local" ? buildLocalGraph(activePath) : buildVaultGraph();
     nodes = data.nodes;
     edges = data.edges;
@@ -1054,6 +1158,128 @@ export function mountGraphPanel(
     updateLists();
     refreshChrome();
     scheduleDraw();
+  }
+
+  function applyProgressionSlice(count: number): void {
+    const slice = progressionSlots.slice(0, Math.max(0, count));
+    const visibleIds = new Set<string>();
+    const nextEdges: GraphEdge[] = [];
+    for (const slot of slice) {
+      if (slot.kind === "node") {
+        visibleIds.add(slot.id);
+      } else {
+        nextEdges.push(slot.edge);
+        visibleIds.add(slot.edge.source);
+        visibleIds.add(slot.edge.target);
+      }
+    }
+    const prev = new Map(nodes.map((node) => [node.id, node]));
+    const nextNodes: GraphNode[] = [];
+    for (const template of progressionFullNodes) {
+      if (!visibleIds.has(template.id)) continue;
+      const existing = prev.get(template.id);
+      if (existing) {
+        nextNodes.push(existing);
+        continue;
+      }
+      nextNodes.push({
+        ...template,
+        x: (Math.random() - 0.5) * 36,
+        y: (Math.random() - 0.5) * 36,
+        vx: 0,
+        vy: 0,
+      });
+    }
+    nodes = nextNodes;
+    edges = nextEdges;
+    attachDegrees(nodes, edges);
+    rebuildAdjacency();
+    alpha = Math.max(alpha, 0.45);
+    scheduleDraw();
+  }
+
+  /**
+   * Obsidian `renderProgression`: reveal graph slots over time while forces run.
+   * Speed ≈ clamp(0.5 * sqrt(slotCount), 5, 100) slots/sec.
+   */
+  function playProgression(): void {
+    stopProgression();
+    // Timelapse is for the global vault graph (Obsidian hides it on local).
+    const data = buildVaultGraph();
+    if (data.nodes.length === 0) {
+      rebuild();
+      return;
+    }
+    if (mode !== "vault") {
+      mode = "vault";
+      syncModeButton();
+      editorGraph?.setMode(oppositeMode(mode));
+    }
+    progressionFullNodes = data.nodes.map((node) => ({
+      ...node,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      degree: 0,
+    }));
+    progressionSlots = buildProgressionSlots(data.nodes, data.edges);
+    const total = progressionSlots.length;
+    const speed = Math.max(5, Math.min(100, 0.5 * Math.sqrt(Math.max(total, 1))));
+    const gen = ++progressionGen;
+    progression = 1;
+    hoverId = null;
+    canvas.style.cursor = "";
+    nodes = [];
+    edges = [];
+    rebuildAdjacency();
+    updateLists();
+    refreshChrome();
+
+    const rect = canvasWrap.getBoundingClientRect();
+    setScaleImmediate(1);
+    panX = Math.max(rect.width, 200) / 2;
+    panY = Math.max(rect.height, 160) / 2;
+    panvX = panvY = 0;
+
+    applyProgressionSlice(1);
+    const startedAt = Date.now();
+
+    const tickProgression = () => {
+      if (gen !== progressionGen || progression <= 0) return;
+      const next = 1 + Math.floor((speed * (Date.now() - startedAt)) / 1000);
+      if (next !== progression) {
+        if (next > total) {
+          const prev = new Map(nodes.map((node) => [node.id, node]));
+          nodes = progressionFullNodes.map((template) => {
+            const existing = prev.get(template.id);
+            return (
+              existing ?? {
+                ...template,
+                x: (Math.random() - 0.5) * 36,
+                y: (Math.random() - 0.5) * 36,
+                vx: 0,
+                vy: 0,
+              }
+            );
+          });
+          edges = data.edges;
+          attachDegrees(nodes, edges);
+          rebuildAdjacency();
+          stopProgression();
+          alpha = Math.max(alpha, graphSettings.animate ? 0.2 : 0.12);
+          const r = canvasWrap.getBoundingClientRect();
+          fitCamera(Math.max(r.width, 200), Math.max(r.height, 160));
+          updateLists();
+          scheduleDraw();
+          return;
+        }
+        progression = next;
+        applyProgressionSlice(progression);
+      }
+      requestAnimationFrame(tickProgression);
+    };
+    requestAnimationFrame(tickProgression);
   }
 
   function hitNode(clientX: number, clientY: number): GraphNode | null {
@@ -1275,6 +1501,9 @@ export function mountGraphPanel(
       syncFloatChrome?.();
       editorGraph?.applyGraphSettings(next);
     },
+    playProgression() {
+      playProgression();
+    },
     refresh() {
       rebuild();
       editorGraph?.refresh();
@@ -1284,6 +1513,7 @@ export function mountGraphPanel(
       editorGraph?.onOpenFile(handler);
     },
     destroy() {
+      stopProgression();
       cancelAnimationFrame(raf);
       closeEditorGraph();
       unsubIndex();

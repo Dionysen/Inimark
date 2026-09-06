@@ -28,6 +28,8 @@ export {
   settingsImageIcon,
   settingsGraphIcon,
   settingsAboutIcon,
+  graphTimelapseIcon,
+  graphFitViewIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
 export {

@@ -301,13 +301,39 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   pointer-events: auto;
 }
 
-.inimark-graph-float-toggle {
-  width: var(--inimark-chrome-btn-size, 28px);
-  height: var(--inimark-chrome-btn-size, 28px);
+.inimark-graph-float-toolbar {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.inimark-graph-float-toolbar .inimark-graph-float-tool.inimark-icon-btn {
+  box-sizing: border-box;
+  width: var(--inimark-chrome-btn-size, 26px);
+  height: var(--inimark-chrome-btn-size, 26px);
+  min-width: var(--inimark-chrome-btn-size, 26px);
+  min-height: var(--inimark-chrome-btn-size, 26px);
+  padding: 0;
   border-radius: var(--inimark-radius-control);
   background: color-mix(in srgb, var(--inimark-bg) 88%, transparent);
   border: 1px solid var(--inimark-border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-float-toolbar .inimark-graph-float-tool.inimark-icon-btn .inimark-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.inimark-graph-float-toolbar .inimark-graph-float-tool.inimark-icon-btn:hover:not(:disabled) {
+  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
+}
+
+.inimark-graph-float-toolbar .inimark-graph-float-toggle.is-active {
+  color: var(--inimark-accent);
 }
 
 .inimark-graph-float-panel {
@@ -361,6 +387,24 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 
 .inimark-graph-float-reset:hover:not(:disabled) {
   color: var(--inimark-fg);
+}
+
+.inimark-graph-float-timelapse-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--inimark-space-3);
+  padding: 6px 10px;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm, 6px);
+  background: var(--inimark-accent);
+  color: var(--inimark-accent-fg, #fff);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inimark-graph-float-timelapse-btn:hover {
+  filter: brightness(1.05);
 }
 
 .inimark-graph-float-controls .inimark-settings-section-title {

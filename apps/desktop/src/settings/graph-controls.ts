@@ -13,6 +13,8 @@ export interface GraphControlsOptions {
   compact?: boolean;
   settings: GraphSettings;
   onChange: (partial: Partial<GraphSettings>) => void;
+  /** Obsidian-style timelapse replay (global graph float). */
+  onPlayTimelapse?: () => void;
 }
 
 type Field =
@@ -230,6 +232,19 @@ export function mountGraphControls(
   appendGroup("settings.group.graphAppearance", APPEARANCE_FIELDS);
   appendGroup("settings.group.graphForce", FORCE_FIELDS);
 
+  let playBtn: HTMLButtonElement | null = null;
+  if (options.onPlayTimelapse) {
+    playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = compact
+      ? "inimark-graph-float-timelapse-btn"
+      : "inimark-btn inimark-graph-timelapse-btn";
+    playBtn.textContent = t("settings.graph.playTimelapse");
+    playBtn.title = t("settings.graph.playTimelapseDesc");
+    playBtn.addEventListener("click", () => options.onPlayTimelapse?.());
+    el.append(playBtn);
+  }
+
   return {
     el,
     refresh(next) {
@@ -237,7 +252,10 @@ export function mountGraphControls(
       for (const bound of bounds) {
         bound.setValue(settings[bound.key] as boolean | number);
       }
-      // Retitle section headers / labels on locale change by remounting caller.
+      if (playBtn) {
+        playBtn.textContent = t("settings.graph.playTimelapse");
+        playBtn.title = t("settings.graph.playTimelapseDesc");
+      }
     },
     destroy() {
       el.replaceChildren();
