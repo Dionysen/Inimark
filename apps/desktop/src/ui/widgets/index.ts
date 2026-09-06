@@ -30,6 +30,8 @@ export {
   settingsAboutIcon,
   graphTimelapseIcon,
   graphFitViewIcon,
+  graphOutlinkIcon,
+  graphBacklinkIcon,
   type IconButtonOptions,
 } from "./icon-button.ts";
 export {

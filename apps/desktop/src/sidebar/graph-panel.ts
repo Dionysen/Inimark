@@ -8,6 +8,8 @@ import {
   graphOpenEditorIcon,
   graphTimelapseIcon,
   graphFitViewIcon,
+  graphOutlinkIcon,
+  graphBacklinkIcon,
   graphVaultModeIcon,
   settingsIcon,
 } from "../ui/widgets/index.ts";
@@ -626,6 +628,7 @@ export function mountGraphPanel(
   function renderLinkList(
     container: HTMLElement,
     items: Array<{ path: string; label: string }>,
+    kind: "out" | "back",
   ): void {
     container.replaceChildren();
     if (items.length === 0) {
@@ -635,11 +638,17 @@ export function mountGraphPanel(
       container.append(empty);
       return;
     }
+    const iconHtml = kind === "out" ? graphOutlinkIcon() : graphBacklinkIcon();
     for (const item of items) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "inimark-graph-list-item";
       btn.title = item.path;
+
+      const icon = document.createElement("span");
+      icon.className = "inimark-graph-list-item-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML = iconHtml;
 
       const name = document.createElement("span");
       name.className = "inimark-graph-list-item-name";
@@ -649,7 +658,7 @@ export function mountGraphPanel(
       folder.className = "inimark-graph-list-item-folder";
       folder.textContent = folderNameFromPath(item.path);
 
-      btn.append(name, folder);
+      btn.append(icon, name, folder);
       btn.addEventListener("click", () => openHandler(item.path));
       container.append(btn);
     }
@@ -658,8 +667,8 @@ export function mountGraphPanel(
   function updateLists(): void {
     if (variant === "editor") return;
     if (!activePath) {
-      renderLinkList(outList, []);
-      renderLinkList(backList, []);
+      renderLinkList(outList, [], "out");
+      renderLinkList(backList, [], "back");
       return;
     }
     const outItems = linkIndex
@@ -677,8 +686,8 @@ export function mountGraphPanel(
         label: fileNameFromPath(path).replace(/\.(md|markdown|mdown)$/i, ""),
       }),
     );
-    renderLinkList(outList, outItems);
-    renderLinkList(backList, backItems);
+    renderLinkList(outList, outItems, "out");
+    renderLinkList(backList, backItems, "back");
   }
 
   function worldToScreen(wx: number, wy: number): { x: number; y: number } {
