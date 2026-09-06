@@ -3,7 +3,7 @@ import { createSlider, createTextField } from "../ui/widgets/index.ts";
 
 export interface ThemeSizeFieldOptions {
   label: string;
-  varName: string;
+  description: string;
   value: string;
   meta: ThemeSizeToken;
   onChange: (value: string) => void;
@@ -54,7 +54,7 @@ function commitFromDisplay(raw: string, meta: ThemeSizeToken): string {
 export function createThemeSizeField(options: ThemeSizeFieldOptions): HTMLElement & {
   updateValue(next: string): void;
 } {
-  const { label, varName, meta, onChange } = options;
+  const { label, description, meta, onChange } = options;
   let value = options.value;
   let editing = false;
   let draft = formatDisplay(value, meta);
@@ -67,10 +67,10 @@ export function createThemeSizeField(options: ThemeSizeFieldOptions): HTMLElemen
   const labelEl = document.createElement("label");
   labelEl.className = "theme-editor-label";
   labelEl.textContent = label;
-  const varEl = document.createElement("span");
-  varEl.className = "theme-editor-var-name";
-  varEl.textContent = varName;
-  labelBlock.append(labelEl, varEl);
+  const descEl = document.createElement("span");
+  descEl.className = "theme-editor-desc";
+  descEl.textContent = description;
+  labelBlock.append(labelEl, descEl);
 
   const control = document.createElement("div");
   control.className = "theme-editor-control";

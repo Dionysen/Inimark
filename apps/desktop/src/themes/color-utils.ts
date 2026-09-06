@@ -171,21 +171,53 @@ export function supportsEyeDropper(): boolean {
   return typeof window !== "undefined" && "EyeDropper" in window;
 }
 
+/** Pick a screen color via EyeDropper API, or the native macOS sampler via Tauri. */
 export async function pickColorWithEyeDropper(): Promise<string | null> {
-  if (!supportsEyeDropper()) return null;
+  if (supportsEyeDropper()) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dropper = new (window as any).EyeDropper();
+      const result = await dropper.open();
+      if (typeof result?.sRGBHex === "string") return result.sRGBHex;
+    } catch {
+      /* cancelled or unsupported in this session */
+    }
+  }
+
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dropper = new (window as any).EyeDropper();
-    const result = await dropper.open();
-    return typeof result?.sRGBHex === "string" ? result.sRGBHex : null;
+    const { invoke } = await import("@tauri-apps/api/core");
+    const hex = await invoke<string>("pick_screen_color");
+    return typeof hex === "string" && hex.length > 0 ? hex : null;
   } catch {
     return null;
   }
 }
 
+/** Classic light/dark transparency checkerboard (cell size in CSS px). */
+export function applyCheckerboard(el: HTMLElement, cellPx = 8): void {
+  el.style.backgroundColor = "#ffffff";
+  el.style.backgroundImage =
+    "repeating-conic-gradient(#c8c8c8 0% 25%, #ffffff 0% 50%)";
+  el.style.backgroundSize = `${cellPx * 2}px ${cellPx * 2}px`;
+  el.style.backgroundPosition = "0 0";
+}
+
+/**
+ * Checkerboard under a foreground gradient (e.g. alpha slider).
+ * `foreground` is a CSS image such as `linear-gradient(...)`.
+ */
+export function applyCheckerboardUnder(
+  el: HTMLElement,
+  foreground: string,
+  cellPx = 8,
+): void {
+  el.style.backgroundColor = "#ffffff";
+  el.style.backgroundImage = `${foreground}, repeating-conic-gradient(#c8c8c8 0% 25%, #ffffff 0% 50%)`;
+  el.style.backgroundSize = `100% 100%, ${cellPx * 2}px ${cellPx * 2}px`;
+  el.style.backgroundPosition = "0 0, 0 0";
+}
+
+/** @deprecated Prefer applyCheckerboard — kept for any external callers. */
 export function checkerboardCss(): string {
-  return `linear-gradient(45deg, #c0c0c0 25%, transparent 25%),
-    linear-gradient(-45deg, #c0c0c0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #c0c0c0 75%),
-    linear-gradient(-45deg, transparent 75%, #c0c0c0 75%)`.replace(/\s+/g, " ");
+  return "repeating-conic-gradient(#c8c8c8 0% 25%, #ffffff 0% 50%)";
 }

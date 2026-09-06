@@ -1,90 +1,25 @@
-/** English labels for the theme editor (replaces i18n keys from Inimark). */
+import { t } from "../i18n/index.ts";
 
-export const THEME_SECTION_LABELS: Record<string, string> = {
-  groupChrome: "Chrome & surfaces",
-  groupBody: "Editor body",
-  groupCodeBlock: "Code blocks",
-  groupCodeInline: "Inline code",
-  groupBlockquote: "Blockquote",
-  groupMetadata: "Metadata",
-  groupTable: "Table",
-  groupTag: "Tags",
-  groupScrollbar: "Scrollbar",
-  groupCodeHighlight: "Syntax highlighting",
-};
-
-export const THEME_TOKEN_LABELS: Record<string, string> = {
-  bgSecondary: "Secondary background",
-  bgSurface: "Surface",
-  bgHover: "Hover",
-  bgTertiary: "Tertiary background",
-  bgInput: "Input background",
-  border: "Border",
-  accent: "Accent",
-  accentHover: "Accent hover",
-  danger: "Danger",
-  bgPrimary: "Primary background",
-  textPrimary: "Primary text",
-  textSecondary: "Secondary text",
-  textTertiary: "Tertiary text",
-  textStrong: "Strong text",
-  bgCode: "Code block background",
-  bgCodeInline: "Inline code background",
-  textCode: "Inline code text",
-  codeInlineBorder: "Inline code border",
-  codeInlineBorderWidth: "Inline code border width",
-  blockquoteBorder: "Blockquote border",
-  blockquoteBg: "Blockquote background",
-  blockquoteText: "Blockquote text",
-  metadataBg: "Metadata background",
-  metadataBorder: "Metadata border",
-  tableHeaderBg: "Table header",
-  tableCellBg: "Table cell",
-  tagBg: "Tag background",
-  tagText: "Tag text",
-  tagBorder: "Tag border",
-  scrollbarThumb: "Scrollbar thumb",
-  scrollbarThumbHover: "Scrollbar thumb hover",
-  scrollbarTrack: "Scrollbar track",
-  sidebarChromeOpacity: "Sidebar chrome opacity",
-  radiusControl: "Control radius",
-  controlHeight: "Control height",
-  controlPaddingX: "Control padding X",
-  controlFontSize: "Control font size",
-  menuItemPaddingY: "Menu item padding Y",
-  treeItemPaddingY: "Tree item padding Y",
-  treeIndentHintColor: "Tree indent hint color",
-  treeIndentHintWidth: "Tree indent hint width",
-  treeIndentHintSize: "Tree indent hint size",
-  treeIndentHintVisible: "Show tree indent hints",
-  radiusCodeBlock: "Code block radius",
-  radiusCodeInline: "Inline code radius",
-  paddingCodeInlineY: "Inline code padding Y",
-  paddingCodeInlineX: "Inline code padding X",
-  blockquoteBorderWidth: "Blockquote border width",
-  paddingBlockquoteY: "Blockquote padding Y",
-  paddingBlockquoteX: "Blockquote padding X",
-  radiusMetadata: "Metadata radius",
-  marginMetadataBottom: "Metadata bottom margin",
-  radiusTable: "Table radius",
-  radiusTag: "Tag radius",
-  paddingTagY: "Tag padding Y",
-  paddingTagX: "Tag padding X",
-  radiusScrollbar: "Scrollbar radius",
-  scrollbarSize: "Scrollbar size",
-  hljsKeyword: "Keywords",
-  hljsString: "Strings",
-  hljsComment: "Comments",
-  hljsNumber: "Numbers",
-  hljsBuiltIn: "Built-ins",
-};
-
-export const BUILTIN_THEME_LABELS: Record<string, string> = {
-  light: "Light",
-  grey: "Grey",
-  dark: "Dark",
-};
-
+/** Section / token title from i18n (`settings.theme.sections.*` or `settings.theme.token.*`). */
 export function themeLabel(key: string, fallback?: string): string {
-  return THEME_TOKEN_LABELS[key] ?? THEME_SECTION_LABELS[key] ?? fallback ?? key;
+  const sectionKey = `settings.theme.sections.${key}`;
+  const section = t(sectionKey);
+  if (section !== sectionKey) return section;
+  const tokenKey = `settings.theme.token.${key}`;
+  const token = t(tokenKey);
+  if (token !== tokenKey) return token;
+  return fallback ?? key;
+}
+
+/** Longer explanation shown under the token title. */
+export function themeTokenDesc(labelKey: string): string {
+  const key = `settings.theme.token.${labelKey}Desc`;
+  const value = t(key);
+  return value === key ? "" : value;
+}
+
+export function builtinThemeLabel(id: string): string {
+  const key = `settings.theme.builtin.${id}`;
+  const value = t(key);
+  return value === key ? id : value;
 }

@@ -2,7 +2,7 @@ import { createToggle } from "../ui/widgets/index.ts";
 
 export interface ThemeToggleFieldOptions {
   label: string;
-  varName: string;
+  description: string;
   value: string;
   onChange: (value: string) => void;
 }
@@ -17,7 +17,7 @@ export function createThemeToggleField(options: ThemeToggleFieldOptions): HTMLEl
   updateValue(next: string): void;
   destroy(): void;
 } {
-  const { label, varName, onChange } = options;
+  const { label, description, onChange } = options;
   let value = options.value;
 
   const row = document.createElement("div");
@@ -28,13 +28,15 @@ export function createThemeToggleField(options: ThemeToggleFieldOptions): HTMLEl
   const labelEl = document.createElement("label");
   labelEl.className = "theme-editor-label";
   labelEl.textContent = label;
-  const varEl = document.createElement("span");
-  varEl.className = "theme-editor-var-name";
-  varEl.textContent = varName;
-  labelBlock.append(labelEl, varEl);
+  const descEl = document.createElement("span");
+  descEl.className = "theme-editor-desc";
+  descEl.textContent = description;
+  labelBlock.append(labelEl, descEl);
 
   const control = document.createElement("div");
   control.className = "theme-editor-control";
+  const group = document.createElement("div");
+  group.className = "theme-editor-toggle-group";
 
   const toggle = createToggle({
     checked: parseVisible(value),
@@ -44,7 +46,8 @@ export function createThemeToggleField(options: ThemeToggleFieldOptions): HTMLEl
       onChange(value);
     },
   });
-  control.append(toggle.el);
+  group.append(toggle.el);
+  control.append(group);
   row.append(labelBlock, control);
 
   return Object.assign(row, {

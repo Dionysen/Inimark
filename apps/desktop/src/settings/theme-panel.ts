@@ -19,7 +19,7 @@ import { syncAccentRgb } from "../themes/color-utils.ts";
 import { createThemeColorField } from "../themes/color-field.ts";
 import { createThemeSizeField } from "../themes/size-field.ts";
 import { createThemeToggleField } from "../themes/toggle-field.ts";
-import { BUILTIN_THEME_LABELS, themeLabel } from "../themes/labels.ts";
+import { builtinThemeLabel, themeLabel, themeTokenDesc } from "../themes/labels.ts";
 import {
   getCustomThemeCss,
   getCodeThemeCss,
@@ -114,21 +114,6 @@ const SVG_EXPORT =
 const SVG_IMPORT =
   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
-interface EditPreview {
-  bg: string;
-  accent: string;
-  text: string;
-  strong: string;
-  border: string;
-  codeBg: string;
-  codeText: string;
-  codeBorder: string;
-  codeBorderWidth: string;
-  radiusInline: string;
-  paddingInlineY: string;
-  paddingInlineX: string;
-}
-
 type DeleteConfirm =
   | { kind: "app"; name: string; id: string }
   | { kind: "code"; name: string; id: string };
@@ -141,25 +126,6 @@ type NameDialogState = {
 };
 
 type FieldDestroyable = HTMLElement & { destroy?: () => void; updateValue?: (v: string) => void };
-
-function computeEditPreview(vars: ThemeVariable[]): EditPreview {
-  const get = (name: string, fallback: string) =>
-    vars.find((v) => v.name === name)?.value || fallback;
-  return {
-    bg: get("--bg-primary", "#ffffff"),
-    accent: get("--accent", "#4eb289"),
-    text: get("--text-primary", "#1e293b"),
-    strong: get("--text-strong", "#bd387d"),
-    border: get("--border", "#a5cfc0"),
-    codeBg: get("--bg-code-inline", "rgba(78, 178, 137, 0.08)"),
-    codeText: get("--text-code", "#e83e8c"),
-    codeBorder: get("--code-inline-border", get("--border", "#a5cfc0")),
-    codeBorderWidth: get("--code-inline-border-width", "1px"),
-    radiusInline: get("--radius-code-inline", "4px"),
-    paddingInlineY: get("--padding-code-inline-y", "3px"),
-    paddingInlineX: get("--padding-code-inline-x", "6px"),
-  };
-}
 
 export function renderThemePanel(
   host: HTMLElement,
@@ -177,7 +143,6 @@ export function renderThemePanel(
 
   let editingTheme: ThemeManifest | null = null;
   let editVariables: ThemeVariable[] = [];
-  let editPreview: EditPreview = computeEditPreview([]);
 
   let editingCodeTheme: CustomCodeTheme | null = null;
   let editCodeVariables: ThemeVariable[] = [];
@@ -215,8 +180,7 @@ export function renderThemePanel(
   }
 
   function resolveAppDisplayName(id: string, customThemes: ThemeManifest[]): string {
-    const builtin = BUILTIN_THEME_LABELS[id];
-    if (builtin) return builtin;
+    if (id === "light" || id === "grey" || id === "dark") return builtinThemeLabel(id);
     if (id.startsWith("custom-")) {
       const mid = id.replace("custom-", "");
       return customThemes.find((m) => m.id === mid)?.name || id;
@@ -359,7 +323,6 @@ export function renderThemePanel(
       mergeWithSchema(variables, getBuiltinColorMap("light") ?? undefined),
     ) as ThemeVariable[];
     editVariables = merged;
-    editPreview = computeEditPreview(merged);
     editingTheme = manifest;
     const snap = themeManager.getSnapshot();
     themeManager.setPreferredAppTheme(snap.resolvedMode, `custom-${manifest.id}`);
@@ -495,61 +458,7 @@ export function renderThemePanel(
     cancelBtn.addEventListener("click", () => void handleCancelAppEdit(manifest));
     actions.append(saveBtn, cancelBtn);
     header.append(title, actions);
-
-    const preview = document.createElement("div");
-    preview.className = "theme-editor-preview theme-editor-preview-rich";
-    preview.style.background = editPreview.bg;
-    preview.style.borderColor = editPreview.accent;
-
-    const previewSidebar = document.createElement("div");
-    previewSidebar.className = "theme-editor-preview-sidebar";
-    previewSidebar.style.background =
-      editVariables.find((v) => v.name === "--bg-secondary")?.value ?? "";
-
-    const line1 = document.createElement("div");
-    line1.className = "theme-editor-preview-line";
-    line1.style.background = editPreview.accent;
-    line1.style.width = "70%";
-    const line2 = document.createElement("div");
-    line2.className = "theme-editor-preview-line";
-    line2.style.background = editPreview.text;
-    line2.style.opacity = "0.35";
-    line2.style.width = "55%";
-    previewSidebar.append(line1, line2);
-
-    const previewEditor = document.createElement("div");
-    previewEditor.className = "theme-editor-preview-editor";
-
-    const text1 = document.createElement("div");
-    text1.className = "theme-editor-preview-text";
-    text1.style.color = editPreview.text;
-    text1.textContent = t("settings.theme.previewBody");
-
-    const text2 = document.createElement("div");
-    text2.className = "theme-editor-preview-text";
-    text2.style.color = editPreview.strong;
-    text2.style.fontWeight = "700";
-    text2.append(t("settings.theme.strongEmphasis"));
-    const inlineCode = document.createElement("code");
-    inlineCode.className = "theme-editor-preview-inline-code";
-    inlineCode.style.background = editPreview.codeBg;
-    inlineCode.style.color = editPreview.codeText;
-    inlineCode.style.borderColor = editPreview.codeBorder;
-    inlineCode.style.borderWidth = editPreview.codeBorderWidth;
-    inlineCode.style.borderStyle = "solid";
-    inlineCode.style.borderRadius = editPreview.radiusInline;
-    inlineCode.style.padding = `${editPreview.paddingInlineY} ${editPreview.paddingInlineX}`;
-    inlineCode.textContent = "inline_code";
-    text2.append(inlineCode);
-
-    const accentBar = document.createElement("div");
-    accentBar.className = "theme-editor-preview-accent";
-    accentBar.style.background = editPreview.accent;
-    accentBar.textContent = t("settings.theme.accent");
-
-    previewEditor.append(text1, text2, accentBar);
-    preview.append(previewSidebar, previewEditor);
-    sticky.append(header, preview);
+    sticky.append(header);
 
     const variablesHost = document.createElement("div");
     variablesHost.className = "theme-editor-variables inimark-scrollbar";
@@ -560,21 +469,6 @@ export function renderThemePanel(
         next = syncAccentRgb(next) as ThemeVariable[];
       }
       editVariables = next;
-      editPreview = computeEditPreview(next);
-      preview.style.background = editPreview.bg;
-      preview.style.borderColor = editPreview.accent;
-      previewSidebar.style.background =
-        next.find((v) => v.name === "--bg-secondary")?.value ?? "";
-      line1.style.background = editPreview.accent;
-      line2.style.background = editPreview.text;
-      text1.style.color = editPreview.text;
-      text2.style.color = editPreview.strong;
-      inlineCode.style.background = editPreview.codeBg;
-      inlineCode.style.color = editPreview.codeText;
-      inlineCode.style.borderColor = editPreview.border;
-      inlineCode.style.borderRadius = editPreview.radiusInline;
-      inlineCode.style.padding = `${editPreview.paddingInlineY} ${editPreview.paddingInlineX}`;
-      accentBar.style.background = editPreview.accent;
       schedulePreview(manifest.id, next);
     }
 
@@ -590,7 +484,7 @@ export function renderThemePanel(
         if (field.kind === "color") {
           const row = createThemeColorField({
             label: themeLabel(field.meta.labelKey),
-            varName: field.variable.name,
+            description: themeTokenDesc(field.meta.labelKey),
             value: field.variable.value,
             onChange: (val) => handleVariableChange(field.variable.name, val),
           }) as FieldDestroyable;
@@ -600,7 +494,7 @@ export function renderThemePanel(
           group.append(
             createThemeSizeField({
               label: themeLabel(field.meta.labelKey),
-              varName: field.variable.name,
+              description: themeTokenDesc(field.meta.labelKey),
               value: field.variable.value,
               meta: field.meta,
               onChange: (val) => handleVariableChange(field.variable.name, val),
@@ -609,7 +503,7 @@ export function renderThemePanel(
         } else {
           const row = createThemeToggleField({
             label: themeLabel(field.meta.labelKey),
-            varName: field.variable.name,
+            description: themeTokenDesc(field.meta.labelKey),
             value: field.variable.value,
             onChange: (val) => handleVariableChange(field.variable.name, val),
           });
@@ -720,7 +614,7 @@ export function renderThemePanel(
       if (!variable) continue;
       const row = createThemeColorField({
         label: themeLabel(token.labelKey),
-        varName: token.name,
+        description: themeTokenDesc(token.labelKey),
         value: variable.value,
         onChange: (val) => handleCodeVariableChange(token.name, val),
       }) as FieldDestroyable;
@@ -998,7 +892,7 @@ export function renderThemePanel(
 
       for (const value of BUILTIN_THEMES) {
         const colors = BUILTIN_PREVIEW_COLORS[value] ?? ["#ffffff", "#4eb289", "#1e293b", "#e2e8f0"];
-        const label = BUILTIN_THEME_LABELS[value] ?? value;
+        const label = builtinThemeLabel(value);
         const preferred = theme === value;
 
         const card = document.createElement("div");

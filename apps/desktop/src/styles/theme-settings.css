@@ -169,21 +169,6 @@
 .settings-button.theme-editor-cancel { background: var(--bg-surface); color: var(--text-secondary); }
 .settings-button.warning { background: #ef4444; }
 
-.theme-editor-preview-rich {
-  height: 88px; border-radius: 8px; border: 1px solid var(--border);
-  display: flex; overflow: hidden; margin-bottom: 16px;
-}
-.theme-editor-preview-sidebar { width: 72px; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; }
-.theme-editor-preview-line { height: 6px; border-radius: 3px; }
-.theme-editor-preview-editor { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 16px; }
-.theme-editor-preview-text { font-size: 13px; }
-.theme-editor-preview-accent { display: inline-flex; align-self: flex-start; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: #fff; }
-.theme-editor-preview-inline-code {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  border-style: solid;
-}
-
 .theme-editor-variables {
   display: flex;
   flex-direction: column;
@@ -210,18 +195,60 @@
   align-items: center;
   gap: 12px;
   min-height: 36px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: var(--bg-secondary);
   border-radius: 6px;
 }
-.theme-editor-label-block { width: 140px; flex-shrink: 0; }
+.theme-editor-label-block {
+  width: min(280px, 42%);
+  flex-shrink: 0;
+  min-width: 0;
+}
 .theme-editor-label { font-size: 13px; font-weight: 500; display: block; }
-.theme-editor-var-name { font-size: 10px; color: var(--text-tertiary); font-family: var(--font-ui, var(--inimark-font-ui)); }
-.theme-editor-control { flex: 1; display: flex; justify-content: flex-end; }
-.theme-editor-color-group { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; }
-.theme-color-swatch { position: relative; width: var(--inimark-control-height, 32px); height: var(--inimark-control-height, 32px); padding: 0; border: 1px solid var(--border); border-radius: var(--inimark-radius-control, 6px); cursor: pointer; overflow: hidden; flex-shrink: 0; }
+.theme-editor-desc {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+  font-family: var(--font-ui, var(--inimark-font-ui));
+}
+.theme-editor-control {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.theme-editor-color-group,
+.theme-editor-size-group,
+.theme-editor-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.theme-editor-color-group { justify-content: flex-start; }
+.theme-editor-size-group { justify-content: flex-start; }
+.theme-editor-toggle-group { justify-content: flex-end; }
+.theme-color-swatch {
+  position: relative;
+  width: var(--inimark-control-height, 32px);
+  height: var(--inimark-control-height, 32px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--inimark-radius-control, 6px);
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
 .theme-color-swatch-checker, .theme-color-swatch-fill { position: absolute; inset: 0; }
-.theme-editor-color-input { flex: 1; max-width: 220px; }
+.theme-color-swatch-checker { border-radius: inherit; }
+.theme-editor-color-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+}
 .theme-editor-icon-btn {
   width: var(--inimark-control-height, 32px);
   height: var(--inimark-control-height, 32px);
@@ -230,9 +257,12 @@
   background: var(--bg-surface);
   flex-shrink: 0;
 }
-.theme-editor-size-group { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: flex-end; }
-.theme-editor-size-slider { flex: 1; min-width: 0; }
-.theme-editor-size-input { max-width: 88px; flex-shrink: 0; }
+.theme-editor-size-slider { flex: 1 1 auto; min-width: 0; }
+.theme-editor-size-input {
+  width: calc(var(--inimark-control-height, 32px) * 2 + 8px);
+  flex: 0 0 auto;
+  max-width: none;
+}
 .theme-editor-size-input .inimark-field__input { text-align: center; }
 
 .theme-color-popover {
@@ -240,13 +270,14 @@
   background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.22);
 }
-.theme-color-sv { position: relative; width: 100%; height: 150px; border-radius: 8px; cursor: crosshair; border: 1px solid var(--border); }
-.theme-color-sv-thumb { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.theme-color-sv { position: relative; width: 100%; height: 150px; border-radius: 8px; cursor: crosshair; border: 1px solid var(--border); touch-action: none; }
+.theme-color-sv-thumb { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.35); }
 .theme-color-sliders { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .theme-color-slider-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-secondary); }
 .theme-color-slider-track { position: relative; flex: 1; height: 12px; border-radius: 6px; border: 1px solid var(--border); overflow: hidden; }
-.theme-color-slider { position: absolute; inset: 0; cursor: pointer; }
-.theme-color-slider-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: #fff; transform: translate(-50%, -50%); pointer-events: none; }
+.theme-color-slider { position: absolute; inset: 0; cursor: pointer; touch-action: none; }
+.theme-color-slider-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 1px solid rgba(0,0,0,0.25); transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.theme-color-alpha-value { min-width: 2.5rem; text-align: right; font-variant-numeric: tabular-nums; }
 
 .settings-code-theme-preview { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 12px; }
 .settings-code-theme-preview-toolbar { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); }

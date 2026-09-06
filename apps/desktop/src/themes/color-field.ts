@@ -1,18 +1,19 @@
 import {
-  checkerboardCss,
+  applyCheckerboard,
+  applyCheckerboardUnder,
   formatColor,
   hsvaToRgba,
   parseColor,
   pickColorWithEyeDropper,
   rgbaToHsva,
-  supportsEyeDropper,
   type HsvaColor,
 } from "./color-utils.ts";
 import { createIconButton, createTextField } from "../ui/widgets/index.ts";
+import { t } from "../i18n/index.ts";
 
 export interface ThemeColorFieldOptions {
   label: string;
-  varName: string;
+  description: string;
   value: string;
   onChange: (value: string) => void;
 }
@@ -26,12 +27,22 @@ function svBackground(h: number): string {
   return `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, ${pure})`;
 }
 
+type PopoverParts = {
+  sv: HTMLElement;
+  svThumb: HTMLElement;
+  hueThumb: HTMLElement;
+  alphaTrack: HTMLElement;
+  alphaThumb: HTMLElement;
+  alphaVal: HTMLElement;
+};
+
 export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElement {
-  const { label, varName, onChange } = options;
+  const { label, description, onChange } = options;
   let value = options.value;
   let open = false;
   let hsva = rgbaToHsva(parseColor(value));
   let textDraft = value;
+  let parts: PopoverParts | null = null;
 
   const row = document.createElement("div");
   row.className = "theme-editor-row";
@@ -41,10 +52,10 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   const labelEl = document.createElement("label");
   labelEl.className = "theme-editor-label";
   labelEl.textContent = label;
-  const varEl = document.createElement("span");
-  varEl.className = "theme-editor-var-name";
-  varEl.textContent = varName;
-  labelBlock.append(labelEl, varEl);
+  const descEl = document.createElement("span");
+  descEl.className = "theme-editor-desc";
+  descEl.textContent = description;
+  labelBlock.append(labelEl, descEl);
 
   const control = document.createElement("div");
   control.className = "theme-editor-control";
@@ -58,7 +69,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
 
   const checker = document.createElement("span");
   checker.className = "theme-color-swatch-checker";
-  checker.style.backgroundImage = checkerboardCss();
+  applyCheckerboard(checker, 6);
   const fill = document.createElement("span");
   fill.className = "theme-color-swatch-fill";
   swatch.append(checker, fill);
@@ -82,29 +93,34 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   });
 
   const copyBtn = createIconButton({
-    label: "Copy color",
-    title: "Copy color",
+    label: t("settings.theme.copyColor"),
+    title: t("settings.theme.copyColor"),
   });
   copyBtn.classList.add("theme-editor-icon-btn");
   copyBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 
-  group.append(swatch, text.el, copyBtn);
-  if (supportsEyeDropper()) {
-    const dropperBtn = createIconButton({
-      label: "Eyedropper",
-      title: "Eyedropper",
-    });
-    dropperBtn.classList.add("theme-editor-icon-btn");
-    dropperBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 5 3 3"/><path d="M18 2c.5.5 2 2.5 2 4 0 1-.5 2-2 2s-2-.5-2-2 1.5-3.5 2-4Z"/></svg>`;
-    dropperBtn.addEventListener("click", async () => {
-      const hex = await pickColorWithEyeDropper();
-      if (!hex) return;
-      const next = rgbaToHsva(parseColor(hex));
-      next.a = hsva.a;
-      commit(next);
-    });
-    group.append(dropperBtn);
-  }
+  const dropperBtn = createIconButton({
+    label: t("settings.theme.eyedropper"),
+    title: t("settings.theme.eyedropper"),
+  });
+  dropperBtn.classList.add("theme-editor-icon-btn");
+  dropperBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 5 3 3"/><path d="M18 2c.5.5 2 2.5 2 4 0 1-.5 2-2 2s-2-.5-2-2 1.5-3.5 2-4Z"/></svg>`;
+  dropperBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const wasOpen = open;
+    if (wasOpen) setOpen(false);
+    const hex = await pickColorWithEyeDropper();
+    if (!hex) {
+      if (wasOpen) setOpen(true);
+      return;
+    }
+    const next = rgbaToHsva(parseColor(hex));
+    next.a = hsva.a;
+    commit(next);
+  });
+
+  group.append(swatch, text.el, dropperBtn, copyBtn);
 
   const popover = document.createElement("div");
   popover.className = "theme-color-popover";
@@ -121,7 +137,7 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     value = formatted;
     onChange(formatted);
     refresh();
-    if (open) renderPopover();
+    syncPopover();
   }
 
   function refresh(): void {
@@ -147,41 +163,69 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     popover.style.visibility = "visible";
   }
 
-  function renderPopover(): void {
-    popover.replaceChildren();
+  function syncPopover(): void {
+    if (!parts) return;
     const rgba = hsvaToRgba(hsva);
     const solid = formatColor({ ...rgba, a: 1 });
     const preview = formatColor(rgba);
 
+    parts.sv.style.background = svBackground(hsva.h);
+    parts.svThumb.style.left = `${hsva.s}%`;
+    parts.svThumb.style.top = `${100 - hsva.v}%`;
+    parts.svThumb.style.background = solid;
+
+    parts.hueThumb.style.left = `${(hsva.h / 360) * 100}%`;
+    applyCheckerboardUnder(
+      parts.alphaTrack,
+      `linear-gradient(to right, transparent, ${solid})`,
+      5,
+    );
+    parts.alphaThumb.style.left = `${hsva.a * 100}%`;
+    parts.alphaVal.textContent = `${Math.round(hsva.a * 100)}%`;
+    fill.style.background = preview === "transparent" ? "transparent" : preview;
+  }
+
+  function bindTrackDrag(
+    track: HTMLElement,
+    read: (clientX: number, clientY: number, rect: DOMRect) => void,
+  ): void {
+    let dragging = false;
+    track.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragging = true;
+      track.setPointerCapture(e.pointerId);
+      read(e.clientX, e.clientY, track.getBoundingClientRect());
+    });
+    track.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      read(e.clientX, e.clientY, track.getBoundingClientRect());
+    });
+    const end = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      if (track.hasPointerCapture(e.pointerId)) {
+        track.releasePointerCapture(e.pointerId);
+      }
+    };
+    track.addEventListener("pointerup", end);
+    track.addEventListener("pointercancel", end);
+  }
+
+  function buildPopover(): void {
+    popover.replaceChildren();
+
     const sv = document.createElement("div");
     sv.className = "theme-color-sv";
-    sv.style.background = svBackground(hsva.h);
     const svThumb = document.createElement("span");
     svThumb.className = "theme-color-sv-thumb";
     sv.append(svThumb);
 
-    let svDragging = false;
-    const updateSv = (clientX: number, clientY: number) => {
-      const rect = sv.getBoundingClientRect();
+    bindTrackDrag(sv, (clientX, clientY, rect) => {
       const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
       const y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
       commit({ ...hsva, s: x * 100, v: (1 - y) * 100 });
-    };
-    sv.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      svDragging = true;
-      sv.setPointerCapture(e.pointerId);
-      updateSv(e.clientX, e.clientY);
-    });
-    sv.addEventListener("pointermove", (e) => {
-      if (!svDragging) return;
-      updateSv(e.clientX, e.clientY);
-    });
-    sv.addEventListener("pointerup", () => {
-      svDragging = false;
-    });
-    sv.addEventListener("pointercancel", () => {
-      svDragging = false;
     });
 
     const sliders = document.createElement("div");
@@ -192,32 +236,43 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     const hueTrack = document.createElement("div");
     hueTrack.className = "theme-color-slider-track";
     hueTrack.style.background = hueGradient();
-    const hueSlider = createHueAlphaSlider(0, 360, hsva.h, (h) => commit({ ...hsva, h }));
+    const hueSlider = document.createElement("div");
+    hueSlider.className = "theme-color-slider";
+    const hueThumb = document.createElement("span");
+    hueThumb.className = "theme-color-slider-thumb";
+    hueSlider.append(hueThumb);
     hueTrack.append(hueSlider);
     hueRow.append(document.createTextNode("Hue"), hueTrack);
+
+    bindTrackDrag(hueSlider, (clientX, _clientY, rect) => {
+      const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      commit({ ...hsva, h: t * 360 });
+    });
 
     const alphaRow = document.createElement("div");
     alphaRow.className = "theme-color-slider-row";
     const alphaTrack = document.createElement("div");
     alphaTrack.className = "theme-color-slider-track theme-color-alpha-track";
-    alphaTrack.style.backgroundImage = `${checkerboardCss()}, linear-gradient(to right, transparent, ${solid})`;
-    alphaTrack.style.backgroundSize = "10px 10px, 100% 100%";
-    const alphaSlider = createHueAlphaSlider(0, 100, Math.round(hsva.a * 100), (pct) =>
-      commit({ ...hsva, a: pct / 100 }),
-    );
+    const alphaSlider = document.createElement("div");
+    alphaSlider.className = "theme-color-slider";
+    const alphaThumb = document.createElement("span");
+    alphaThumb.className = "theme-color-slider-thumb";
+    alphaSlider.append(alphaThumb);
     alphaTrack.append(alphaSlider);
     const alphaVal = document.createElement("span");
     alphaVal.className = "theme-color-alpha-value";
-    alphaVal.textContent = `${Math.round(hsva.a * 100)}%`;
     alphaRow.append(document.createTextNode("Alpha"), alphaTrack, alphaVal);
+
+    bindTrackDrag(alphaSlider, (clientX, _clientY, rect) => {
+      const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      commit({ ...hsva, a: t });
+    });
 
     sliders.append(hueRow, alphaRow);
     popover.append(sv, sliders);
 
-    svThumb.style.left = `${hsva.s}%`;
-    svThumb.style.top = `${100 - hsva.v}%`;
-    svThumb.style.background = solid;
-    fill.style.background = preview === "transparent" ? "transparent" : preview;
+    parts = { sv, svThumb, hueThumb, alphaTrack, alphaThumb, alphaVal };
+    syncPopover();
   }
 
   function setOpen(next: boolean): void {
@@ -227,10 +282,11 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     if (open) {
       hsva = rgbaToHsva(parseColor(value));
       textDraft = value;
-      renderPopover();
+      buildPopover();
       document.body.append(popover);
       requestAnimationFrame(() => placePopover());
     } else {
+      parts = null;
       popover.remove();
       refresh();
     }
@@ -241,9 +297,9 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   copyBtn.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(value);
-      copyBtn.title = "Copied!";
+      copyBtn.title = t("settings.theme.copied");
       window.setTimeout(() => {
-        copyBtn.title = "Copy color";
+        copyBtn.title = t("settings.theme.copyColor");
       }, 1200);
     } catch {
       /* ignore */
@@ -275,50 +331,8 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
     destroy() {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
+      parts = null;
       popover.remove();
     },
   });
-}
-
-function createHueAlphaSlider(
-  min: number,
-  max: number,
-  value: number,
-  onChange: (v: number) => void,
-): HTMLElement {
-  const el = document.createElement("div");
-  el.className = "theme-color-slider";
-  const thumb = document.createElement("span");
-  thumb.className = "theme-color-slider-thumb";
-  el.append(thumb);
-
-  let dragging = false;
-  const update = (clientX: number) => {
-    const rect = el.getBoundingClientRect();
-    const t = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    onChange(min + t * (max - min));
-  };
-
-  const setThumb = (v: number) => {
-    const pct = ((v - min) / (max - min)) * 100;
-    thumb.style.left = `${pct}%`;
-  };
-
-  setThumb(value);
-
-  el.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    dragging = true;
-    el.setPointerCapture(e.pointerId);
-    update(e.clientX);
-  });
-  el.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    update(e.clientX);
-  });
-  el.addEventListener("pointerup", () => {
-    dragging = false;
-  });
-
-  return el;
 }

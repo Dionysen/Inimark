@@ -8,6 +8,7 @@ use tauri::{Manager, RunEvent, WindowEvent};
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
 
+use commands::color_commands::pick_screen_color;
 use commands::font_commands::list_system_fonts;
 use commands::shell_commands::{open_with_default_app, reveal_in_file_manager};
 
@@ -47,7 +48,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             list_system_fonts,
             reveal_in_file_manager,
-            open_with_default_app
+            open_with_default_app,
+            pick_screen_color
         ])
         .setup(|app| {
             for label in WINDOW_LABELS {
