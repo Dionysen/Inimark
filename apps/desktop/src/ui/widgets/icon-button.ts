@@ -77,6 +77,11 @@ export function closeIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 6 6 18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m6 6 12 12"/></svg>`;
 }
 
+/** Horizontal three-dot overflow / more menu. */
+export function moreIcon(): string {
+  return `<svg class="inimark-icon inimark-icon--more" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="4" cy="9" r="1.35" fill="currentColor"/><circle cx="9" cy="9" r="1.35" fill="currentColor"/><circle cx="14" cy="9" r="1.35" fill="currentColor"/></svg>`;
+}
+
 /** Right sidebar toggle — open=true shows filled right pane. */
 export function rightSidebarToggleIcon(open: boolean): string {
   if (open) {

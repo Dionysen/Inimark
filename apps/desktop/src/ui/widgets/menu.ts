@@ -19,17 +19,105 @@ export interface MenuItemOptions {
   onClick?: () => void;
 }
 
+export interface MenuSubmenuOptions {
+  label: string;
+  icon?: string;
+  title?: string;
+  /** Current value shown after the label (e.g. active appearance mode). */
+  meta?: string;
+  items: MenuItemOptions[];
+}
+
 export interface MenuController {
   el: HTMLDivElement;
   setOpen(open: boolean): void;
   isOpen(): boolean;
+  /** True when `node` is inside the root menu or any open flyout submenu. */
+  contains(node: Node | null): boolean;
   clear(): void;
   setPath(text: string, title?: string): void;
   addHeading(text: string): void;
   addItem(options: MenuItemOptions): HTMLButtonElement;
+  /** Parent row that reveals a flyout submenu on hover. */
+  addSubmenuItem(options: MenuSubmenuOptions): HTMLElement;
   addDivider(): void;
   setEmpty(text: string): void;
   destroy(): void;
+}
+
+const CHEVRON_RIGHT =
+  `<svg class="inimark-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+const CHECKMARK =
+  `<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "inimark-menu-item";
+  btn.setAttribute("role", "menuitem");
+  if (options.title) btn.title = options.title;
+  if (options.selected) btn.classList.add("is-selected");
+  if (options.danger) btn.classList.add("is-danger");
+  if (options.icon) btn.classList.add("inimark-menu-item--with-icon");
+  if (options.checked != null) {
+    btn.classList.add("inimark-menu-item--checkable");
+    if (options.checked) {
+      btn.classList.add("is-checked");
+      btn.setAttribute("aria-checked", "true");
+    } else {
+      btn.setAttribute("aria-checked", "false");
+    }
+  }
+
+  if (options.icon) {
+    const icon = document.createElement("span");
+    icon.className = "inimark-menu-item__icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = options.icon;
+    btn.append(icon);
+  }
+
+  const content = document.createElement("span");
+  content.className = "inimark-menu-item__content";
+
+  const nameRow = document.createElement("span");
+  nameRow.className = "inimark-menu-item__name-row";
+
+  const name = document.createElement("span");
+  name.className = "inimark-menu-item__name";
+  name.textContent = options.label;
+  nameRow.append(name);
+
+  if (options.badge) {
+    const badge = document.createElement("span");
+    badge.className = "inimark-menu-item__badge";
+    badge.setAttribute("aria-hidden", "true");
+    badge.innerHTML = options.badge;
+    nameRow.append(badge);
+  }
+
+  content.append(nameRow);
+
+  if (options.meta) {
+    const meta = document.createElement("span");
+    meta.className = "inimark-menu-item__meta";
+    meta.textContent = options.meta;
+    content.append(meta);
+  }
+
+  btn.append(content);
+
+  if (options.checked != null) {
+    const check = document.createElement("span");
+    check.className = "inimark-menu-item__check";
+    check.setAttribute("aria-hidden", "true");
+    check.innerHTML = CHECKMARK;
+    btn.append(check);
+  }
+
+  if (options.onClick) btn.addEventListener("click", options.onClick);
+  return btn;
 }
 
 export function createMenu(): MenuController {
@@ -47,16 +135,41 @@ export function createMenu(): MenuController {
   el.append(path, body);
 
   let open = false;
+  const flyouts: HTMLElement[] = [];
+  let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearCloseTimer(): void {
+    if (closeTimer != null) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+  }
+
+  function hideFlyouts(): void {
+    clearCloseTimer();
+    for (const panel of flyouts) {
+      panel.hidden = true;
+      panel.classList.remove("is-open");
+    }
+  }
 
   function setOpen(next: boolean): void {
     if (next) {
       acquireExclusiveLayer(el, () => setOpen(false));
     } else if (open) {
+      hideFlyouts();
       releaseExclusiveLayer(el);
     }
     open = next;
     el.hidden = !next;
     el.classList.toggle("is-open", next);
+    if (!next) hideFlyouts();
+  }
+
+  function destroyFlyouts(): void {
+    hideFlyouts();
+    for (const panel of flyouts) panel.remove();
+    flyouts.length = 0;
   }
 
   return {
@@ -65,7 +178,13 @@ export function createMenu(): MenuController {
     isOpen() {
       return open;
     },
+    contains(node) {
+      if (!node) return false;
+      if (el.contains(node)) return true;
+      return flyouts.some((panel) => panel.contains(node));
+    },
     clear() {
+      destroyFlyouts();
       body.replaceChildren();
     },
     setPath(text, title) {
@@ -80,74 +199,101 @@ export function createMenu(): MenuController {
       body.append(heading);
     },
     addItem(options) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "inimark-menu-item";
-      btn.setAttribute("role", "menuitem");
-      if (options.title) btn.title = options.title;
-      if (options.selected) btn.classList.add("is-selected");
-      if (options.danger) btn.classList.add("is-danger");
-      if (options.icon) btn.classList.add("inimark-menu-item--with-icon");
-      if (options.checked != null) {
-        btn.classList.add("inimark-menu-item--checkable");
-        if (options.checked) {
-          btn.classList.add("is-checked");
-          btn.setAttribute("aria-checked", "true");
-        } else {
-          btn.setAttribute("aria-checked", "false");
-        }
-      }
-
-      if (options.icon) {
-        const icon = document.createElement("span");
-        icon.className = "inimark-menu-item__icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.innerHTML = options.icon;
-        btn.append(icon);
-      }
-
-      const content = document.createElement("span");
-      content.className = "inimark-menu-item__content";
-
-      const nameRow = document.createElement("span");
-      nameRow.className = "inimark-menu-item__name-row";
-
-      const name = document.createElement("span");
-      name.className = "inimark-menu-item__name";
-      name.textContent = options.label;
-      nameRow.append(name);
-
-      if (options.badge) {
-        const badge = document.createElement("span");
-        badge.className = "inimark-menu-item__badge";
-        badge.setAttribute("aria-hidden", "true");
-        badge.innerHTML = options.badge;
-        nameRow.append(badge);
-      }
-
-      content.append(nameRow);
-
-      if (options.meta) {
-        const meta = document.createElement("span");
-        meta.className = "inimark-menu-item__meta";
-        meta.textContent = options.meta;
-        content.append(meta);
-      }
-
-      btn.append(content);
-
-      if (options.checked != null) {
-        const check = document.createElement("span");
-        check.className = "inimark-menu-item__check";
-        check.setAttribute("aria-hidden", "true");
-        check.innerHTML =
-          `<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-        btn.append(check);
-      }
-
-      if (options.onClick) btn.addEventListener("click", options.onClick);
+      const btn = buildMenuItemButton(options);
       body.append(btn);
       return btn;
+    },
+    addSubmenuItem(options) {
+      const wrap = document.createElement("div");
+      wrap.className = "inimark-menu-submenu-wrap";
+
+      const btn = buildMenuItemButton({
+        label: options.label,
+        icon: options.icon,
+        title: options.title,
+        meta: options.meta,
+      });
+      btn.classList.add("inimark-menu-item--submenu");
+      btn.setAttribute("aria-haspopup", "menu");
+      btn.setAttribute("aria-expanded", "false");
+
+      const arrow = document.createElement("span");
+      arrow.className = "inimark-menu-item__arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.innerHTML = CHEVRON_RIGHT;
+      btn.append(arrow);
+
+      const panel = document.createElement("div");
+      panel.className = "inimark-menu inimark-menu--submenu inimark-glass";
+      panel.hidden = true;
+      panel.setAttribute("role", "menu");
+
+      const panelBody = document.createElement("div");
+      panelBody.className = "inimark-menu__section";
+      for (const item of options.items) {
+        panelBody.append(buildMenuItemButton(item));
+      }
+      panel.append(panelBody);
+      document.body.append(panel);
+      flyouts.push(panel);
+
+      function positionPanel(): void {
+        const rect = wrap.getBoundingClientRect();
+        const GAP = 4;
+        const width = Math.max(160, panel.offsetWidth || 160);
+        const height = Math.max(40, panel.offsetHeight || 40);
+        // Prefer left of the parent — More menu sits on the right edge.
+        let left = rect.left - width - GAP;
+        if (left < GAP) left = rect.right + GAP;
+        if (left + width > window.innerWidth - GAP) {
+          left = Math.max(GAP, window.innerWidth - width - GAP);
+        }
+        let top = rect.top;
+        if (top + height > window.innerHeight - GAP) {
+          top = Math.max(GAP, window.innerHeight - height - GAP);
+        }
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
+      }
+
+      function showPanel(): void {
+        clearCloseTimer();
+        for (const other of flyouts) {
+          if (other !== panel) {
+            other.hidden = true;
+            other.classList.remove("is-open");
+          }
+        }
+        panel.hidden = false;
+        panel.classList.add("is-open");
+        btn.setAttribute("aria-expanded", "true");
+        wrap.classList.add("is-open");
+        positionPanel();
+        requestAnimationFrame(positionPanel);
+      }
+
+      function scheduleHidePanel(): void {
+        clearCloseTimer();
+        closeTimer = setTimeout(() => {
+          panel.hidden = true;
+          panel.classList.remove("is-open");
+          btn.setAttribute("aria-expanded", "false");
+          wrap.classList.remove("is-open");
+          closeTimer = null;
+        }, 180);
+      }
+
+      wrap.addEventListener("mouseenter", showPanel);
+      wrap.addEventListener("mouseleave", scheduleHidePanel);
+      panel.addEventListener("mouseenter", () => {
+        clearCloseTimer();
+        showPanel();
+      });
+      panel.addEventListener("mouseleave", scheduleHidePanel);
+
+      wrap.append(btn);
+      body.append(wrap);
+      return wrap;
     },
     addDivider() {
       const divider = document.createElement("div");
@@ -162,6 +308,7 @@ export function createMenu(): MenuController {
     },
     destroy() {
       if (open) setOpen(false);
+      destroyFlyouts();
       el.remove();
     },
   };

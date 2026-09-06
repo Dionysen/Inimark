@@ -23,6 +23,7 @@ export const en: Dictionary = {
     expandSidebar: "Expand sidebar",
     collapseRightSidebar: "Collapse right sidebar",
     expandRightSidebar: "Expand right sidebar",
+    more: "More",
     showInFinder: "Show in Finder",
     showInExplorer: "Show in Explorer",
     showInFiles: "Show in Files",

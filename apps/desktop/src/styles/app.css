@@ -106,6 +106,32 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
   margin-right: var(--inimark-space-2);
 }
 
+.inimark-titlebar-more-btn {
+  margin-left: 0;
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+/* When the right sidebar is open, More stays alone at the trailing edge. */
+.inimark-shell:not(.is-right-sidebar-closed) .inimark-titlebar-more-btn {
+  margin-right: var(--inimark-space-2);
+}
+
+.inimark-icon--more {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.inimark-titlebar-more-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 10.5rem;
+}
+
+.inimark-titlebar-more-menu .inimark-menu__path {
+  display: none;
+}
+
 /* Windows: pin toggle to the same spot whether the right sidebar is open or closed. */
 html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   position: fixed;
@@ -113,6 +139,24 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
   right: calc(var(--inimark-caption-cluster-width) + var(--inimark-space-2));
   z-index: 30;
   margin: 0;
+}
+
+/* Windows + collapsed right sidebar: More sits left of the fixed toggle
+   (editing area spans the window). When the right sidebar is open, More stays
+   in normal titlebar flow so it remains right-aligned in the editor column. */
+html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-more-btn {
+  position: fixed;
+  top: calc((var(--inimark-titlebar-height) - var(--inimark-chrome-btn-size)) / 2);
+  right: calc(
+    var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) + var(--inimark-space-1) +
+      var(--inimark-space-2)
+  );
+  z-index: 30;
+  margin: 0;
+}
+
+html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titlebar-trailing {
+  padding-right: var(--inimark-space-2);
 }
 
 .inimark-sidebar-empty-hint {

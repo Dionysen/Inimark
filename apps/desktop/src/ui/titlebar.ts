@@ -7,11 +7,15 @@ import {
   supportsWindowChrome,
   toggleMaximizeWindow,
 } from "../platform/window-chrome.ts";
+import { getThemeManager } from "../themes/manager.ts";
+import type { AppearanceMode } from "../themes/appearance.ts";
 import {
   createIconButton,
+  moreIcon,
   rightSidebarToggleIcon,
   sidebarToggleIcon,
-} from "./icon-button.ts";
+} from "./widgets/icon-button.ts";
+import { createMenu } from "./widgets/menu.ts";
 import {
   windowCloseIcon,
   windowMaximizeIcon,
@@ -40,12 +44,23 @@ export interface TitleBarOptions {
   controlMode?: WindowControlMode;
   sidebarToggle?: SidebarToggleOptions;
   rightSidebarToggle?: SidebarToggleOptions;
+  /** Editor chrome: overflow menu with appearance controls. */
+  showMoreMenu?: boolean;
   onClose?: () => void | Promise<void>;
 }
+
+const APPEARANCE_MODES: AppearanceMode[] = ["system", "light", "dark"];
 
 function markNoDrag(el: HTMLElement): void {
   el.setAttribute("data-tauri-drag-region", "false");
   el.style.setProperty("-webkit-app-region", "no-drag");
+}
+
+function isWindowsPlatform(): boolean {
+  return (
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("platform-windows")
+  );
 }
 
 export function mountTitleBar(
@@ -56,6 +71,7 @@ export function mountTitleBar(
   const showControls =
     !usesNativeWindowControls() &&
     (options.showWindowControls ?? supportsWindowChrome());
+  const showMoreMenu = options.showMoreMenu ?? Boolean(options.rightSidebarToggle);
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
   let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
@@ -91,6 +107,43 @@ export function mountTitleBar(
   markNoDrag(trailing);
 
   center.append(titleEl);
+
+  let moreBtn: HTMLButtonElement | null = null;
+  let moreMenu: ReturnType<typeof createMenu> | null = null;
+  let unsubscribeTheme: (() => void) | null = null;
+  let stopOutsideClick: (() => void) | null = null;
+
+  if (showMoreMenu) {
+    moreMenu = createMenu();
+    moreMenu.el.classList.add("inimark-titlebar-more-menu");
+    moreMenu.setPath("");
+    host.append(moreMenu.el);
+
+    moreBtn = createIconButton({
+      label: t("common.more"),
+      title: t("common.more"),
+      onClick: () => toggleMoreMenu(),
+    });
+    moreBtn.className = "inimark-sidebar-toggle-btn inimark-titlebar-more-btn";
+    moreBtn.innerHTML = moreIcon();
+    moreBtn.setAttribute("aria-haspopup", "menu");
+    moreBtn.setAttribute("aria-expanded", "false");
+    markNoDrag(moreBtn);
+    trailing.append(moreBtn);
+
+    const onDocMouseDown = (event: MouseEvent) => {
+      if (!moreMenu?.isOpen()) return;
+      const target = event.target as Node | null;
+      if (moreBtn?.contains(target) || moreMenu.contains(target)) return;
+      closeMoreMenu();
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    stopOutsideClick = () => document.removeEventListener("mousedown", onDocMouseDown);
+
+    unsubscribeTheme = getThemeManager().subscribe(() => {
+      if (moreMenu?.isOpen()) renderMoreMenu();
+    });
+  }
 
   let rightSidebarToggleBtn: HTMLButtonElement | null = null;
   if (options.rightSidebarToggle) {
@@ -190,6 +243,62 @@ export function mountTitleBar(
   leading.addEventListener("dblclick", onDoubleClick);
   center.addEventListener("dblclick", onDoubleClick);
 
+  function closeMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    moreMenu.setOpen(false);
+    moreBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function positionMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    const rect = moreBtn.getBoundingClientRect();
+    const menuWidth = Math.max(160, moreMenu.el.offsetWidth || 160);
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8,
+    );
+    moreMenu.el.style.top = `${rect.bottom + 4}px`;
+    moreMenu.el.style.left = `${left}px`;
+  }
+
+  function renderMoreMenu(): void {
+    if (!moreMenu) return;
+    const themeManager = getThemeManager();
+    const { appearanceMode } = themeManager.getSnapshot();
+    moreMenu.clear();
+    moreMenu.setPath("");
+    moreMenu.addSubmenuItem({
+      label: t("settings.theme.appearanceMode"),
+      items: APPEARANCE_MODES.map((mode) => ({
+        label: t(`settings.theme.${mode}`),
+        checked: appearanceMode === mode,
+        onClick() {
+          themeManager.setAppearanceMode(mode);
+          closeMoreMenu();
+        },
+      })),
+    });
+  }
+
+  function toggleMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    if (moreMenu.isOpen()) {
+      closeMoreMenu();
+      return;
+    }
+    renderMoreMenu();
+    moreMenu.setOpen(true);
+    moreBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionMoreMenu());
+  }
+
+  function updateMoreButton(): void {
+    if (!moreBtn) return;
+    const label = t("common.more");
+    moreBtn.title = label;
+    moreBtn.setAttribute("aria-label", label);
+  }
+
   function updateSidebarToggle(): void {
     if (!sidebarToggleBtn) return;
     // Obsidian-style: titlebar toggle only when sidebar is collapsed.
@@ -204,9 +313,7 @@ export function mountTitleBar(
     if (!rightSidebarToggleBtn) return;
     // Windows: keep the titlebar toggle always visible (fixed left of captions).
     // Other platforms: Obsidian-style — only when the right sidebar is collapsed.
-    const pinToggle =
-      typeof document !== "undefined" &&
-      document.documentElement.classList.contains("platform-windows");
+    const pinToggle = isWindowsPlatform();
     rightSidebarToggleBtn.hidden = pinToggle ? false : rightSidebarOpen;
     rightSidebarToggleBtn.innerHTML = rightSidebarToggleIcon(rightSidebarOpen);
     const label = rightSidebarOpen
@@ -218,9 +325,12 @@ export function mountTitleBar(
 
   updateSidebarToggle();
   updateRightSidebarToggle();
+  updateMoreButton();
   const unsubscribeLocale = onLocaleChange(() => {
     updateSidebarToggle();
     updateRightSidebarToggle();
+    updateMoreButton();
+    if (moreMenu?.isOpen()) renderMoreMenu();
   });
 
   return {
@@ -234,9 +344,16 @@ export function mountTitleBar(
     setRightSidebarOpen(open) {
       rightSidebarOpen = open;
       updateRightSidebarToggle();
+      if (moreMenu?.isOpen()) {
+        requestAnimationFrame(() => positionMoreMenu());
+      }
     },
     destroy() {
       unsubscribeLocale();
+      unsubscribeTheme?.();
+      stopOutsideClick?.();
+      closeMoreMenu();
+      moreMenu?.destroy();
       unlistenMaximize?.();
       host.replaceChildren();
       host.className = "";

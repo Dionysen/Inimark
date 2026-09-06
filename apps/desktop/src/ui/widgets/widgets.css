@@ -706,6 +706,44 @@ html[data-glass="true"] .inimark-select-panel {
   height: 0.875rem;
 }
 
+.inimark-menu-item__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-menu-item__arrow .inimark-icon,
+.inimark-menu-item__arrow svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.inimark-menu-item--submenu {
+  cursor: default;
+}
+
+.inimark-menu-submenu-wrap.is-open > .inimark-menu-item--submenu,
+.inimark-menu-submenu-wrap:hover > .inimark-menu-item--submenu {
+  background: var(--inimark-hover);
+}
+
+.inimark-menu--submenu {
+  position: fixed;
+  z-index: 45;
+  min-width: 10rem;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.inimark-menu--submenu[hidden] {
+  display: none !important;
+}
+
 .inimark-menu__empty {
   margin: 0.5rem;
   font-size: 0.82rem;

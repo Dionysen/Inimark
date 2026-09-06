@@ -24,6 +24,7 @@ export {
   menuIcons,
   type MenuController,
   type MenuItemOptions,
+  type MenuSubmenuOptions,
   createToggle,
   type ToggleController,
   type ToggleOptions,

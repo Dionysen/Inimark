@@ -23,6 +23,7 @@ export const zhCN: Dictionary = {
     expandSidebar: "展开侧边栏",
     collapseRightSidebar: "折叠右侧边栏",
     expandRightSidebar: "展开右侧边栏",
+    more: "更多",
     showInFinder: "在 Finder 中显示",
     showInExplorer: "在资源管理器中显示",
     showInFiles: "在文件管理器中显示",
