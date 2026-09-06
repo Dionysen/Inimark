@@ -155,7 +155,7 @@ export function mountApp(host: HTMLElement): AppController {
       if (!path) return null;
       const opened = await readWorkspaceFile(workspace, path);
       if (opened.status !== "opened") return null;
-      return opened.text.replace(/^---[\s\S]*?---\s*/, "").trim().slice(0, 400);
+      return opened.text.replace(/^---[\s\S]*?---\s*/, "").trim();
     },
   });
   cleanups.push(() => setWikiLinkBridge(null));

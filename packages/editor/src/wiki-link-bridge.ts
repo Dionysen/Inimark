@@ -10,7 +10,7 @@ export interface WikiLinkBridge {
   searchNotes(query: string): WikiNoteHit[];
   openNote(noteName: string, heading?: string): void;
   createNote?(noteName: string): void;
-  /** Short markdown/text preview for hover card. */
+  /** Markdown source for hover card (rendered by the editor). */
   previewNote?(noteName: string): Promise<string | null>;
 }
 

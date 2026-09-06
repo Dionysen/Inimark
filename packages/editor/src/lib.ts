@@ -16,6 +16,11 @@ export {
 } from "./wiki-link-bridge.ts";
 export type { WikiLinkBridge, WikiNoteHit } from "./wiki-link-bridge.ts";
 export {
+  mountReadonlyMarkdownPreview,
+  type MarkdownPreviewController,
+  type MarkdownPreviewOptions,
+} from "./preview-view.ts";
+export {
   buildMarkdownTreeFromDirectory,
   pickMarkdownDirectory,
   readMarkdownFileHandle,

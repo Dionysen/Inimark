@@ -845,16 +845,92 @@
 .wiki-link-preview {
   position: fixed;
   z-index: 1000;
-  max-width: 20rem;
-  max-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, calc(100vw - 1.5rem));
+  max-height: min(28rem, 70vh);
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--inimark-border, var(--border, #e5e7eb));
+  border-radius: 10px;
+  background: var(--inimark-content-bg, var(--bg-primary, var(--bg, #fff)));
+  color: var(--inimark-fg, var(--text-primary, var(--fg, #111)));
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.22),
+    0 0 0 1px color-mix(in srgb, var(--inimark-border, var(--border, #000)) 35%, transparent);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.wiki-link-preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.45rem 0.55rem 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--inimark-border, var(--border, #e5e7eb));
+  background: color-mix(
+    in srgb,
+    var(--inimark-surface, var(--bg-surface, #f3f4f6)) 70%,
+    var(--inimark-content-bg, var(--bg-primary, #fff))
+  );
+}
+
+.wiki-link-preview-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--inimark-muted-fg, var(--text-secondary, #6b7280));
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.wiki-link-preview-open {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--inimark-muted-fg, var(--text-secondary, #6b7280));
+  cursor: pointer;
+}
+
+.wiki-link-preview-open:hover {
+  color: var(--inimark-fg, var(--text-primary, #111));
+  background: var(--inimark-hover, var(--bg-hover, rgba(0, 0, 0, 0.06)));
+}
+
+.wiki-link-preview-open .inimark-icon,
+.wiki-link-preview-open svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.wiki-link-preview-body {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 8px;
-  background: var(--bg, #fff);
-  color: var(--fg, #111);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: pre-wrap;
+  padding: 0.65rem 0.95rem 0.9rem;
+  overscroll-behavior: contain;
+}
+
+/* Read-only PM surface — inherit editor theme typography; drop editor min-height. */
+.wiki-link-preview-body .ProseMirror {
+  min-height: 0;
+  padding: 0;
+  font-size: var(--inimark-editor-font-size, 15px);
+  font-family: var(--editor-font, var(--inimark-font-ui, inherit));
+  line-height: 1.65;
+  cursor: default;
+}
+
+.wiki-link-preview-body .ProseMirror-focused {
+  outline: none;
 }

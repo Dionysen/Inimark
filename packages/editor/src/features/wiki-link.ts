@@ -5,14 +5,22 @@ import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 import { markConsumed, type InlineSpan } from "../inline-parse.ts";
 import type { FeatureSpec, InlineFeatureSpec } from "./_types.ts";
 import { getWikiLinkBridge } from "../wiki-link-bridge.ts";
+import type { MarkdownPreviewController } from "../preview-view.ts";
 
 // Obsidian-style [[wiki]] / ![[embed]] — source stays in the doc; a widget
 // shows the display label (or image) when the cursor is outside the span.
+//
+// NOTE: do not statically import preview-view.ts for values — it pulls
+// features/index → wiki-link and creates a TDZ crash on ALL_FEATURES.
 
 const WIKI_RE = /(!?)\[\[([^\]]+)\]\]/g;
 const PARTIAL_RE = /(?:^|[^\]])\[\[([^\]]*)$/;
 const MAX_VISIBLE = 8;
 const HOVER_DELAY_MS = 420;
+const HIDE_DELAY_MS = 220;
+
+const OPEN_ICON =
+  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M15 3h6v6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M10 14 21 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
 
 function parseInner(content: string): {
   noteName: string;
@@ -329,15 +337,137 @@ function commitAutocomplete(view: EditorView, auto: AutoState): void {
 
 function wikiInteractionPlugin(): Plugin {
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+  let hideTimer: ReturnType<typeof setTimeout> | null = null;
   let previewEl: HTMLElement | null = null;
+  let previewView: MarkdownPreviewController | null = null;
+  let activeNote: string | null = null;
 
-  function hidePreview(): void {
+  function clearHoverTimer(): void {
     if (hoverTimer) {
       clearTimeout(hoverTimer);
       hoverTimer = null;
     }
+  }
+
+  function clearHideTimer(): void {
+    if (hideTimer) {
+      clearTimeout(hideTimer);
+      hideTimer = null;
+    }
+  }
+
+  function hidePreview(): void {
+    clearHoverTimer();
+    clearHideTimer();
+    previewView?.destroy();
+    previewView = null;
     previewEl?.remove();
     previewEl = null;
+    activeNote = null;
+  }
+
+  function scheduleHide(): void {
+    clearHoverTimer();
+    clearHideTimer();
+    hideTimer = setTimeout(() => {
+      hidePreview();
+    }, HIDE_DELAY_MS);
+  }
+
+  function positionPreview(anchor: HTMLElement): void {
+    if (!previewEl) return;
+    const rect = anchor.getBoundingClientRect();
+    const gap = 8;
+    const width = previewEl.offsetWidth || 360;
+    const height = previewEl.offsetHeight || 280;
+    let left = Math.min(rect.left, window.innerWidth - width - gap);
+    left = Math.max(gap, left);
+    let top = rect.bottom + gap;
+    if (top + height > window.innerHeight - gap && rect.top > height + gap) {
+      top = rect.top - height - gap;
+    }
+    top = Math.max(gap, Math.min(top, window.innerHeight - height - gap));
+    previewEl.style.left = `${left}px`;
+    previewEl.style.top = `${top}px`;
+  }
+
+  function showPreview(note: string, anchor: HTMLElement): void {
+    const bridge = getWikiLinkBridge();
+    if (!bridge?.previewNote) return;
+    clearHideTimer();
+    clearHoverTimer();
+    hoverTimer = setTimeout(() => {
+      void (async () => {
+        try {
+          const text = await bridge.previewNote!(note);
+          if (!text) return;
+          // Stale hover — user moved on or preview was dismissed.
+          if (activeNote !== note) return;
+
+          previewView?.destroy();
+          previewView = null;
+          previewEl?.remove();
+          previewEl = document.createElement("div");
+          previewEl.className = "wiki-link-preview";
+          previewEl.setAttribute("role", "dialog");
+
+          const toolbar = document.createElement("div");
+          toolbar.className = "wiki-link-preview-toolbar";
+
+          const pathEl = document.createElement("span");
+          pathEl.className = "wiki-link-preview-path";
+          const resolved = bridge.resolveNote(note);
+          pathEl.textContent = resolved || note;
+          pathEl.title = resolved || note;
+
+          const openBtn = document.createElement("button");
+          openBtn.type = "button";
+          openBtn.className = "wiki-link-preview-open";
+          openBtn.title = note;
+          openBtn.setAttribute("aria-label", note);
+          openBtn.innerHTML = OPEN_ICON;
+          openBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            bridge.openNote(note);
+            hidePreview();
+          });
+
+          toolbar.append(pathEl, openBtn);
+
+          const body = document.createElement("div");
+          body.className = "wiki-link-preview-body";
+          previewEl.append(toolbar, body);
+          document.body.append(previewEl);
+          activeNote = note;
+
+          // Dynamic import breaks the features/index ↔ preview-view cycle.
+          const { mountReadonlyMarkdownPreview } = await import("../preview-view.ts");
+          if (activeNote !== note || !previewEl) {
+            // Hover dismissed while the chunk was loading.
+            return;
+          }
+          previewView = mountReadonlyMarkdownPreview(body, text, {
+            onOpenNote() {
+              hidePreview();
+            },
+          });
+
+          previewEl.addEventListener("mouseenter", () => {
+            clearHideTimer();
+          });
+          previewEl.addEventListener("mouseleave", () => {
+            scheduleHide();
+          });
+
+          positionPreview(anchor);
+          requestAnimationFrame(() => positionPreview(anchor));
+        } catch (err) {
+          console.error("wiki-link preview failed", err);
+          hidePreview();
+        }
+      })();
+    }, HOVER_DELAY_MS);
   }
 
   return new Plugin({
@@ -367,21 +497,21 @@ function wikiInteractionPlugin(): Plugin {
           const bridge = getWikiLinkBridge();
           if (!bridge?.previewNote) return false;
 
-          hidePreview();
-          hoverTimer = setTimeout(() => {
-            void (async () => {
-              const text = await bridge.previewNote!(note);
-              if (!text) return;
-              previewEl?.remove();
-              previewEl = document.createElement("div");
-              previewEl.className = "wiki-link-preview";
-              previewEl.textContent = text.slice(0, 400);
-              document.body.append(previewEl);
-              const rect = wiki.getBoundingClientRect();
-              previewEl.style.left = `${Math.min(rect.left, window.innerWidth - 320)}px`;
-              previewEl.style.top = `${rect.bottom + 6}px`;
-            })();
-          }, HOVER_DELAY_MS);
+          clearHideTimer();
+          // Already showing / pending for this note — don't restart the timer
+          // on nested mouseover (would prevent the card from ever appearing).
+          if (previewEl && activeNote === note) return false;
+          if (activeNote === note && hoverTimer != null) return false;
+
+          if (previewEl && activeNote !== note) {
+            previewView?.destroy();
+            previewView = null;
+            previewEl.remove();
+            previewEl = null;
+          }
+
+          activeNote = note;
+          showPreview(note, wiki);
           return false;
         },
         mouseout(_view, event) {
@@ -390,7 +520,7 @@ function wikiInteractionPlugin(): Plugin {
           const wiki = t?.closest(".wiki-link-widget, .wiki-embed-note");
           if (wiki && related && wiki.contains(related)) return false;
           if (previewEl && related && previewEl.contains(related)) return false;
-          hidePreview();
+          scheduleHide();
           return false;
         },
         blur() {
@@ -407,6 +537,11 @@ function wikiInteractionPlugin(): Plugin {
       };
     },
   });
+}
+
+/** Live-editor-only wiki chrome (autocomplete + hover card). */
+export function wikiLinkEditorPlugins(): Plugin[] {
+  return [wikiAutocompletePlugin(), wikiInteractionPlugin()];
 }
 
 export const wikiLink: FeatureSpec = {
@@ -432,5 +567,6 @@ export const wikiLink: FeatureSpec = {
     },
   },
 
-  plugins: () => [wikiAutocompletePlugin(), wikiInteractionPlugin()],
+  // Autocomplete / hover live in `wikiLinkEditorPlugins` so the read-only
+  // preview surface can reuse feature nodeViews without nesting hover cards.
 };

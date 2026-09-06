@@ -9,6 +9,7 @@ import { syntaxHintsPlugin } from "./decorations.ts";
 import { documentMetadataPlugin } from "./document-metadata.ts";
 import { focusModePlugin } from "./modes.ts";
 import { collectKeymaps, collectPlugins } from "./features/index.ts";
+import { wikiLinkEditorPlugins } from "./features/wiki-link.ts";
 import { markdownInputRules, spaceBreaksStoredMarks } from "./input-rules.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
 import { searchRevealPlugin } from "./search-reveal.ts";
@@ -60,6 +61,9 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     // watchers see the post-normalize doc) and before syntaxHints (so any
     // extra decorations merge into PM's decoration pipeline naturally).
     ...collectPlugins(schema),
+    // Wiki autocomplete + hover preview — editor-only (not used by the
+    // read-only hover card surface).
+    ...wikiLinkEditorPlugins(),
     syntaxHintsPlugin(),
     searchRevealPlugin(),
     headingFlashPlugin(),
