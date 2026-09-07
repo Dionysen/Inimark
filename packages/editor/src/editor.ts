@@ -11,6 +11,7 @@ import { focusModePlugin } from "./modes.ts";
 import { collectKeymaps, collectPlugins } from "./features/index.ts";
 import { wikiLinkEditorPlugins } from "./features/wiki-link.ts";
 import { markdownInputRules, spaceBreaksStoredMarks } from "./input-rules.ts";
+import { markdownPastePlugin } from "./paste.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
 import { searchRevealPlugin } from "./search-reveal.ts";
 import { headingFlashPlugin } from "./heading-flash.ts";
@@ -55,6 +56,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     focusModePlugin(),
     markdownInputRules(),
     spaceBreaksStoredMarks(),
+    markdownPastePlugin(),
     documentMetadataPlugin(),
     normalizeInlinePlugin(),
     // Feature-contributed plugins sit after normalize (so block-draft
