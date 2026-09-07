@@ -1,3 +1,11 @@
+import {
+  cloneWorkspaceTreeNode,
+  createDirectoryTreeNode,
+  createFileTreeNode,
+  insertWorkspaceTreeNode,
+  moveWorkspaceTreeNodeInMemory,
+  removeWorkspaceTreeNode,
+} from "./platform/workspace-tree.ts";
 import { onLocaleChange, t } from "./i18n/index.ts";
 import {
   collapseAllIcon,
@@ -31,7 +39,6 @@ import {
   deleteWorkspaceEntry,
   moveWorkspaceEntry,
   openWorkspaceEntryWithDefaultApp,
-  refreshWorkspaceTree,
   renameWorkspaceEntry,
   revealWorkspaceEntry,
 } from "./platform/workspace.ts";
@@ -1181,17 +1188,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
   }
 
-  async function refreshTreeFromDisk(): Promise<boolean> {
-    if (!currentWorkspace) return false;
-    try {
-      currentWorkspace.tree = await refreshWorkspaceTree(currentWorkspace);
-      currentTree = currentWorkspace.tree;
-      rerender();
-      return true;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
+  function commitLocalTreeChange(): void {
+    if (currentWorkspace) currentTree = currentWorkspace.tree;
+    rerender();
   }
 
   function getSiblingNodes(parentDir: string): WorkspaceTreeNode[] {
@@ -1225,7 +1224,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       expanded.add(parentDir);
       notifyExpandedChange();
     }
-    await refreshTreeFromDisk();
+    insertWorkspaceTreeNode(
+      currentWorkspace.tree,
+      parentDir,
+      createFileTreeNode(relativePath),
+    );
+    commitLocalTreeChange();
     const node = findTreeNode(currentTree, relativePath);
     if (!node) {
       void handlers.fileSelect(relativePath);
@@ -1255,7 +1259,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (parentDir) expanded.add(parentDir);
     expanded.add(relativePath);
     notifyExpandedChange();
-    await refreshTreeFromDisk();
+    insertWorkspaceTreeNode(
+      currentWorkspace.tree,
+      parentDir,
+      createDirectoryTreeNode(relativePath),
+    );
+    commitLocalTreeChange();
     const node = findTreeNode(currentTree, relativePath);
     if (node) startInlineRename(node);
   }
@@ -1556,7 +1565,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       }
       notifyExpandedChange();
     }
-    await refreshTreeFromDisk();
+    const sourceNode = findTreeNode(currentTree, node.path);
+    if (sourceNode) {
+      const cloned = cloneWorkspaceTreeNode(sourceNode, node.path, result.path);
+      insertWorkspaceTreeNode(currentWorkspace.tree, parent, cloned);
+    }
+    commitLocalTreeChange();
   }
 
   async function moveNodeTo(node: WorkspaceTreeNode): Promise<void> {
@@ -1633,6 +1647,10 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
       selectedPaths.delete(fromPath);
       selectedPaths.add(result.path);
+
+      if (!moveWorkspaceTreeNodeInMemory(currentWorkspace.tree, fromPath, result.path)) {
+        console.error(`Failed to update tree for move: ${fromPath} -> ${result.path}`);
+      }
     }
 
     if (destDir) expandAncestors(`${destDir}/x`);
@@ -1651,10 +1669,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       }
     }
 
-    await refreshTreeFromDisk();
+    commitLocalTreeChange();
     refreshBookmarksPanel();
     notifyEntriesMoved(allPairs);
-    rerender();
   }
 
   async function copyNodePath(node: WorkspaceTreeNode): Promise<void> {
@@ -1718,7 +1735,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       else removeBookmark(libraryId, node.path);
     }
 
-    await refreshTreeFromDisk();
+    removeWorkspaceTreeNode(currentWorkspace.tree, node.path);
+    commitLocalTreeChange();
     refreshBookmarksPanel();
     if (deletedActive) {
       handlers.fileDeleted(node.path);
@@ -1829,7 +1847,10 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     selectedPaths.delete(node.path);
     selectedPaths.add(toPath);
 
-    await refreshTreeFromDisk();
+    if (!moveWorkspaceTreeNodeInMemory(currentWorkspace.tree, node.path, toPath)) {
+      console.error(`Failed to update tree for rename: ${node.path} -> ${toPath}`);
+    }
+    commitLocalTreeChange();
     refreshBookmarksPanel();
     notifyEntriesMoved(pairs);
     return toPath;
