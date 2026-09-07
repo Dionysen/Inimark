@@ -35,7 +35,13 @@ export function mountShortcutHandler(
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.defaultPrevented) return;
     if (event.repeat) return;
-    if (document.querySelector(".inimark-confirm-dialog")) return;
+    if (
+      document.querySelector(
+        ".inimark-confirm-dialog, .inimark-quick-open-overlay",
+      )
+    ) {
+      return;
+    }
     if (isShortcutRecordingActive()) return;
 
     const inEditor = isEditableTarget(event.target);

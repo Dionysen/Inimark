@@ -43,6 +43,14 @@ import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
+import { showQuickOpenDialog } from "./ui/quick-open-dialog.ts";
+import {
+  flattenWorkspaceFiles,
+} from "./quick-open/search.ts";
+import {
+  getRecentFiles,
+  recordRecentFile,
+} from "./quick-open/recent-files.ts";
 import {
   buildLinkIndexForWorkspace,
   linkIndex,
@@ -346,6 +354,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setDirty(false);
       persistLibrarySession();
       scheduleOutlineSync(result.text);
+      recordRecentFile(activeLibraryId, path);
     } else {
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
@@ -438,17 +447,15 @@ export function mountApp(host: HTMLElement): AppController {
     }
   }
 
-  async function openFile(): Promise<void> {
-    if (!(await confirmDiscardChanges())) return;
-    const result = await editor.openMarkdownFile();
-    if (result.status === "opened") {
-      activeFilePath = null;
-      shell.setFileName(result.name);
-      shell.sidebar.setActiveFile(null);
-      shell.setDirty(false);
-      persistLibrarySession();
-      scheduleOutlineSync(editor.getMarkdown());
-    }
+  async function openQuickOpen(): Promise<void> {
+    const selected = await showQuickOpenDialog({
+      hasWorkspace: Boolean(workspace),
+      files: workspace ? flattenWorkspaceFiles(workspace.tree) : [],
+      recentPaths: getRecentFiles(activeLibraryId),
+      currentFilePath: activeFilePath,
+    });
+    if (!selected) return;
+    await openWorkspaceFile(selected);
   }
 
   async function newFile(): Promise<void> {
@@ -614,7 +621,7 @@ export function mountApp(host: HTMLElement): AppController {
       save: () => void saveCurrentFile(),
       "save-as": () => void saveFileAs(),
       new: () => void newFile(),
-      open: () => void openFile(),
+      open: () => void openQuickOpen(),
       "open-folder": () => void openFolder(),
       close: () => void closeCurrent(),
       "toggle-sidebar": () => shell.toggleSidebar(),
