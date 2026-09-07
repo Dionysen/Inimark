@@ -120,6 +120,33 @@ describe("table toolbar", () => {
     }
   });
 
+  test("resize popup dismisses when clicking outside the popup", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| --- | --- |\n| a | b |",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      document.body.querySelector<HTMLElement>(".table-toolbar button[title='Resize']")?.click();
+      const popup = document.body.querySelector<HTMLElement>(".table-resize-popup");
+      expect(popup?.style.display).toBe("block");
+
+      editor.view.dom.dispatchEvent(
+        new MouseEvent("mousedown", { bubbles: true, cancelable: true }),
+      );
+
+      expect(popup?.style.display).toBe("none");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+    }
+  });
+
   test("resize popup commits dimensions from numeric inputs and preserves column alignment", () => {
     const host = createHost();
     const editor = createEditor(host, {

@@ -495,88 +495,140 @@
 }
 
 /* ─── Table toolbar (body-mounted floating UI) ───────────────────── */
+/* Surface chrome matches .inimark-menu / editor context menus via
+   inimark-glass + shared design tokens. */
+.table-toolbar.inimark-glass,
+.table-resize-popup.inimark-glass {
+  background: var(--inimark-glass-bg, var(--inimark-surface-raised, var(--inimark-surface, #fff)));
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border, #e3e3e3));
+  box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 14%, transparent));
+}
+
+html[data-glass="true"] .table-toolbar.inimark-glass,
+html[data-glass="true"] .table-resize-popup.inimark-glass {
+  backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
+}
+
 .table-toolbar {
   position: fixed;
   display: none;
   align-items: center;
-  gap: 4px;
-  padding: 4px 6px;
-  background: #fff;
-  border: 1px solid #e3e3e3;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  z-index: 10;
-  font-family: system-ui, -apple-system, sans-serif;
+  gap: var(--inimark-space-1, 4px);
+  padding: var(--inimark-menu-padding, 4px) var(--inimark-space-2, 8px);
+  border-radius: var(--inimark-radius-menu, 8px);
+  z-index: 60;
+  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
+  font-size: var(--inimark-control-font-size, 13px);
+  color: var(--inimark-fg, #1f1f1f);
 }
+
 .table-tb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: var(--inimark-chrome-btn-size, 26px);
+  height: var(--inimark-chrome-btn-size, 26px);
   padding: 0;
   border: none;
   background: transparent;
-  color: #555;
-  border-radius: 4px;
+  color: var(--inimark-fg, #1f1f1f);
+  border-radius: var(--inimark-radius-menu-item, var(--inimark-radius-control, 6px));
   cursor: pointer;
+  transition:
+    background var(--inimark-control-transition, 150ms ease),
+    color var(--inimark-control-transition, 150ms ease);
 }
-.table-tb-btn:hover { background: #f0f0f0; }
-.table-tb-btn.active { background: #f0eaff; color: #1f1f1f; }
-.table-tb-trash:hover { background: #fde8e8; color: #c0392b; }
+
+.table-tb-btn:hover {
+  background: var(--inimark-hover, #f0f0f0);
+}
+
+.table-tb-btn.active {
+  background: color-mix(in srgb, var(--inimark-accent, #4078c0) 16%, transparent);
+  color: var(--inimark-fg, #1f1f1f);
+}
+
+.table-tb-trash:hover {
+  background: color-mix(in srgb, var(--danger, #cf222e) 12%, transparent);
+  color: var(--danger, #c0392b);
+}
+
 .table-tb-sep {
   width: 1px;
   align-self: stretch;
-  background: #e3e3e3;
-  margin: 2px 4px;
+  background: var(--inimark-border, #e3e3e3);
+  margin: 2px var(--inimark-space-1, 4px);
 }
-.table-tb-spacer { flex: 1; min-width: 12px; }
+
+.table-tb-spacer {
+  flex: 1;
+  min-width: var(--inimark-space-3, 12px);
+}
 
 .table-resize-popup {
   position: fixed;
   display: none;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  padding: 14px;
-  z-index: 11;
+  padding: var(--inimark-space-3, 12px);
+  border-radius: var(--inimark-radius-menu, 8px);
+  z-index: 61;
+  color: var(--inimark-fg, #1f1f1f);
+  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
+  font-size: var(--inimark-control-font-size, 13px);
 }
+
 .table-resize-grid {
   display: grid;
   grid-template-columns: repeat(10, 18px);
   gap: 3px;
-  margin-bottom: 12px;
+  margin-bottom: var(--inimark-space-3, 12px);
 }
+
 .table-resize-cell {
   width: 18px;
   height: 18px;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  background: #fff;
+  border: 1px solid var(--inimark-border, #ccc);
+  border-radius: calc(var(--inimark-radius-control, 6px) * 0.5);
+  background: var(--inimark-input-bg, var(--inimark-content-bg, #fff));
   cursor: pointer;
+  transition:
+    background var(--inimark-control-transition, 150ms ease),
+    border-color var(--inimark-control-transition, 150ms ease);
 }
+
 .table-resize-cell.hover {
-  background: #909090;
-  border-color: #707070;
+  background: color-mix(in srgb, var(--inimark-accent, #4078c0) 55%, transparent);
+  border-color: var(--inimark-accent, #4078c0);
 }
+
 .table-resize-inputs {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
-  font: 13px/1 system-ui, -apple-system, sans-serif;
-  color: #555;
+  gap: var(--inimark-space-2, 6px);
+  border-top: 1px solid var(--inimark-border, #eee);
+  padding-top: var(--inimark-space-2, 10px);
+  color: var(--inimark-muted-fg, #555);
 }
+
 .table-resize-inputs input {
-  width: 36px;
-  padding: 4px 6px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
+  width: 2.25rem;
+  padding: var(--inimark-space-1, 4px) var(--inimark-space-2, 6px);
+  border: 1px solid var(--inimark-border, #d0d0d0);
+  border-radius: var(--inimark-radius-control, 6px);
+  background: var(--inimark-input-bg, var(--inimark-content-bg, #fff));
+  color: var(--inimark-fg, #1f1f1f);
   text-align: center;
   font: inherit;
+  transition:
+    border-color var(--inimark-control-transition, 150ms ease),
+    background var(--inimark-control-transition, 150ms ease);
+}
+
+.table-resize-inputs input:focus {
+  outline: none;
+  border-color: var(--inimark-accent, #4078c0);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring, color-mix(in srgb, var(--inimark-accent, #4078c0) 45%, transparent));
 }
 
 /* ─── built-in dark appearance for editor chrome ────────────────── */
@@ -727,47 +779,6 @@
 }
 :root[data-appearance="dark"] .ProseMirror .code-block-node .diagram-panel[data-diagram-state="error"] {
   color: #ff8f86;
-}
-:root[data-appearance="dark"] .table-toolbar,
-:root[data-appearance="dark"] .table-resize-popup {
-  background: #24262a;
-  border-color: #3c3f43;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
-}
-:root[data-appearance="dark"] .table-tb-btn {
-  color: #bbb4aa;
-}
-:root[data-appearance="dark"] .table-tb-btn:hover {
-  background: #303339;
-  color: #ece7dd;
-}
-:root[data-appearance="dark"] .table-tb-btn.active {
-  background: #343044;
-  color: #f0d7ff;
-}
-:root[data-appearance="dark"] .table-tb-trash:hover {
-  background: #452b2d;
-  color: #ffb0a8;
-}
-:root[data-appearance="dark"] .table-tb-sep {
-  background: #3c3f43;
-}
-:root[data-appearance="dark"] .table-resize-cell {
-  background: #202225;
-  border-color: #4a4d52;
-}
-:root[data-appearance="dark"] .table-resize-cell.hover {
-  background: #8ab4e7;
-  border-color: #8ab4e7;
-}
-:root[data-appearance="dark"] .table-resize-inputs {
-  color: #bbb4aa;
-  border-top-color: #3c3f43;
-}
-:root[data-appearance="dark"] .table-resize-inputs input {
-  color: #e4ded4;
-  background: #202225;
-  border-color: #4a4d52;
 }
 
 /* ── Wiki links ──────────────────────────────────────────────────── */

@@ -182,7 +182,7 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
   popup: HTMLElement;
 } {
   const root = document.createElement("div");
-  root.className = "table-toolbar";
+  root.className = "table-toolbar inimark-glass";
 
   const grid = document.createElement("button");
   grid.type = "button";
@@ -265,7 +265,7 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
   // to null mid-action. The snapshot keeps the target table stable.
   let popupSnapshot: TableInfo | null = null;
   const popup = document.createElement("div");
-  popup.className = "table-resize-popup";
+  popup.className = "table-resize-popup inimark-glass";
   popup.style.display = "none";
   // Block focus loss when clicking the popup background — preserves
   // editor selection so the snapshot stays valid. Inputs are exempt;
@@ -320,14 +320,56 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
     if (!t) return;
     setHighlight(Number(t.dataset.r), Number(t.dataset.c));
   });
+
+  popup.append(gridEl, inputs);
+
+  const isPopupOpen = () => popup.style.display === "block";
+
+  const dismissOnPointer = (event: Event) => {
+    if (!isPopupOpen()) return;
+    const target = event.target as Node;
+    if (popup.contains(target) || grid.contains(target)) return;
+    closePopup();
+  };
+
+  const dismissOnFocusIn = (event: FocusEvent) => {
+    if (!isPopupOpen()) return;
+    const target = event.target as Node;
+    if (popup.contains(target) || grid.contains(target)) return;
+    closePopup();
+  };
+
+  const closePopup = () => {
+    popup.style.display = "none";
+    popupSnapshot = null;
+    document.removeEventListener("mousedown", dismissOnPointer, true);
+    document.removeEventListener("focusin", dismissOnFocusIn, true);
+  };
+
+  const openPopup = (liveInfo: TableInfo) => {
+    popupSnapshot = liveInfo;
+    let R = 0;
+    let C = 0;
+    liveInfo.node.forEach((row) => {
+      R++;
+      C = Math.max(C, row.childCount);
+    });
+    setHighlight(Math.min(R, MAX_R), Math.min(C, MAX_C));
+    const r = grid.getBoundingClientRect();
+    popup.style.top = `${r.bottom + 4}px`;
+    popup.style.left = `${r.left}px`;
+    popup.style.display = "block";
+    document.addEventListener("mousedown", dismissOnPointer, true);
+    document.addEventListener("focusin", dismissOnFocusIn, true);
+  };
+
   gridEl.addEventListener("click", (e) => {
     const t = (e.target as HTMLElement).closest(".table-resize-cell") as HTMLElement | null;
     if (!t) return;
     const target = popupSnapshot ?? getInfo();
     if (!target) return;
     resizeTable(view, target, Number(t.dataset.r), Number(t.dataset.c));
-    popup.style.display = "none";
-    popupSnapshot = null;
+    closePopup();
   });
   const commitInputs = () => {
     const target = popupSnapshot ?? getInfo();
@@ -335,8 +377,7 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
     const R = Math.max(1, Math.min(20, Number(rIn.value) || 1));
     const C = Math.max(1, Math.min(20, Number(cIn.value) || 1));
     resizeTable(view, target, R, C);
-    popup.style.display = "none";
-    popupSnapshot = null;
+    closePopup();
   };
   rIn.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -351,33 +392,18 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
     }
   });
 
-  popup.append(gridEl, inputs);
-
   grid.addEventListener("mousedown", (e) => e.preventDefault());
   grid.addEventListener("click", () => {
     const liveInfo = getInfo();
     if (!liveInfo) return;
-    if (popup.style.display === "block") {
-      popup.style.display = "none";
-      popupSnapshot = null;
+    if (isPopupOpen()) {
+      closePopup();
       return;
     }
-    popupSnapshot = liveInfo;
-    // Initialize highlight to current dims.
-    let R = 0, C = 0;
-    liveInfo.node.forEach((row) => {
-      R++;
-      C = Math.max(C, row.childCount);
-    });
-    setHighlight(Math.min(R, MAX_R), Math.min(C, MAX_C));
-    // Anchor below the trigger button.
-    const r = grid.getBoundingClientRect();
-    popup.style.top = `${r.bottom + 4}px`;
-    popup.style.left = `${r.left}px`;
-    popup.style.display = "block";
+    openPopup(liveInfo);
   });
 
-  return { root, popup };
+  return { root, popup, closePopup };
 }
 
 function tableToolbarPlugin(): Plugin {
@@ -387,7 +413,8 @@ function tableToolbarPlugin(): Plugin {
       // Lazy: toolbar DOM is only built and appended when this view is
       // both focused and on a table. Unfocused views (every case-card
       // in the harness with a table seed) never create toolbar DOM.
-      let toolbar: { root: HTMLElement; popup: HTMLElement } | null = null;
+      let toolbar: { root: HTMLElement; popup: HTMLElement; closePopup: () => void } | null =
+        null;
 
       const ensureMounted = () => {
         if (!toolbar) {
@@ -400,6 +427,7 @@ function tableToolbarPlugin(): Plugin {
         return toolbar;
       };
       const unmount = () => {
+        toolbar?.closePopup();
         if (toolbar?.root.isConnected) {
           toolbar.root.remove();
           toolbar.popup.remove();
