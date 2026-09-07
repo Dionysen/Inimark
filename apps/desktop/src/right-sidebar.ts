@@ -179,6 +179,16 @@ export function mountRightSidebar(
     activateHandler(panel);
   }
 
+  function tabStripRightEdge(topbarRect: DOMRect, styles: CSSStyleDeclaration): number {
+    const padR = parseFloat(styles.paddingRight) || 0;
+    const collapseStyle = getComputedStyle(collapseBtn);
+    if (collapseStyle.display !== "none" && collapseStyle.visibility !== "hidden") {
+      const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+      return collapseBtn.getBoundingClientRect().left - gap;
+    }
+    return topbarRect.right - padR;
+  }
+
   function updateTabVisibility(): void {
     const order = tabIds;
     for (const id of order) {
@@ -190,14 +200,8 @@ export function mountRightSidebar(
     if (topbarRect.width <= 0) return;
 
     const styles = getComputedStyle(topbar);
-    const padR = parseFloat(styles.paddingRight) || 0;
-    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
-    const collapseLeft = collapseBtn.getBoundingClientRect().left;
-    const available = Math.max(
-      0,
-      collapseLeft - gap - (topbarRect.left + (parseFloat(styles.paddingLeft) || 0)),
-    );
-    void padR;
+    const padL = parseFloat(styles.paddingLeft) || 0;
+    const available = Math.max(0, tabStripRightEdge(topbarRect, styles) - (topbarRect.left + padL));
     const tabGap = 2;
 
     let used = 0;

@@ -893,7 +893,6 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-tree-item.is-draggable {
   user-select: none;
   touch-action: none;
-  cursor: grab;
 }
 
 .inimark-tree-item:hover {
