@@ -396,7 +396,8 @@ export function createEditor(
   }
 
   view = buildView(options.initialContent ?? "");
-  host.addEventListener("mousedown", onEditorSurfaceMouseDown);
+  // Capture so caret placement runs before ProseMirror's default mousedown handling.
+  host.addEventListener("mousedown", onEditorSurfaceMouseDown, true);
 
   const controller: Editor = {
     getMarkdown(): string {

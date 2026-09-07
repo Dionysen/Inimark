@@ -43,6 +43,21 @@ export function selectionAtEditableEnd(doc: PMNode): TextSelection {
   return TextSelection.atEnd(doc);
 }
 
+/** Place the caret at the start of the trailing sentinel paragraph, if any. */
+export function selectionAtSentinelStart(doc: PMNode): TextSelection | null {
+  const pos = trailingSentinelStart(doc);
+  if (pos == null) return null;
+  return TextSelection.create(doc, pos);
+}
+
+/** Position at the start of the trailing sentinel paragraph, if present. */
+export function trailingSentinelStart(doc: PMNode): number | null {
+  if (doc.childCount === 0 || !isEmptyParagraph(doc.lastChild!)) return null;
+  let pos = 0;
+  for (let i = 0; i < doc.childCount - 1; i++) pos += doc.child(i).nodeSize;
+  return pos + 1;
+}
+
 export function trailingSentinelPlugin(): Plugin {
   return new Plugin({
     appendTransaction(transactions, _oldState, newState) {

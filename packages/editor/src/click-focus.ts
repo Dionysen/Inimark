@@ -2,6 +2,8 @@ import type { Node as PMNode } from "prosemirror-model";
 import { Plugin, TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
+import { isEmptyParagraph, trailingSentinelStart } from "./trailing-sentinel.ts";
+
 type BlockRect = {
   nodePos: number;
   node: PMNode;
@@ -44,9 +46,15 @@ function isOpaqueChromeClick(target: Element): boolean {
   return false;
 }
 
-function blockRect(view: EditorView, nodePos: number, node: PMNode): BlockRect | null {
+function blockRect(
+  view: EditorView,
+  nodePos: number,
+  node: PMNode,
+  prevBottom: number | null,
+): BlockRect | null {
   const from = nodePos + 1;
   const to = nodePos + node.nodeSize - 1;
+  const opaque = OPAQUE_BLOCKS.has(node.type.name);
   try {
     const start = view.coordsAtPos(from);
     const end = view.coordsAtPos(to);
@@ -57,10 +65,13 @@ function blockRect(view: EditorView, nodePos: number, node: PMNode): BlockRect |
       to,
       top: Math.min(start.top, end.top),
       bottom: Math.max(start.bottom, end.bottom),
-      opaque: OPAQUE_BLOCKS.has(node.type.name),
+      opaque,
     };
   } catch {
-    return null;
+    if (!isEmptyParagraph(node)) return null;
+    const top = prevBottom ?? view.dom.getBoundingClientRect().top;
+    const line = 24;
+    return { nodePos, node, from, to, top, bottom: top + line, opaque };
   }
 }
 
@@ -68,25 +79,96 @@ function collectBlockRects(view: EditorView): BlockRect[] {
   const doc = view.state.doc;
   const blocks: BlockRect[] = [];
   let pos = 0;
+  let prevBottom: number | null = null;
   for (let i = 0; i < doc.childCount; i++) {
     const node = doc.child(i);
-    const rect = blockRect(view, pos, node);
-    if (rect) blocks.push(rect);
+    const rect = blockRect(view, pos, node, prevBottom);
+    if (rect) {
+      blocks.push(rect);
+      prevBottom = rect.bottom;
+    }
     pos += node.nodeSize;
   }
   return blocks;
 }
 
+function contentBottomBeforeSentinel(view: EditorView): number | null {
+  const doc = view.state.doc;
+  if (doc.childCount < 2 || !isEmptyParagraph(doc.lastChild!)) return null;
+  let pos = 0;
+  for (let i = 0; i < doc.childCount - 1; i++) pos += doc.child(i).nodeSize;
+  const lastContent = doc.child(doc.childCount - 2)!;
+  try {
+    return view.coordsAtPos(pos + lastContent.nodeSize - 1).bottom;
+  } catch {
+    return null;
+  }
+}
+
+function posInTrailingSentinel(doc: PMNode, pos: number): boolean {
+  const start = trailingSentinelStart(doc);
+  if (start == null) return false;
+  const $pos = doc.resolve(pos);
+  if ($pos.depth < 1 || $pos.index(0) !== doc.childCount - 1) return false;
+  return isEmptyParagraph($pos.node(1));
+}
+
+function clickTargetIsSentinelParagraph(view: EditorView, target: Element | null): boolean {
+  if (!target) return false;
+  const sentinelEl = view.dom.lastElementChild;
+  if (!sentinelEl || sentinelEl.tagName !== "P") return false;
+  return target === sentinelEl || sentinelEl.contains(target);
+}
+
+/** Clicks that should land at the start of the trailing sentinel, not end-of-prev-line. */
+function shouldFocusTrailingSentinel(
+  view: EditorView,
+  clientY: number,
+  blocks: BlockRect[],
+  target: Element | null = null,
+): boolean {
+  const sentinelStart = trailingSentinelStart(view.state.doc);
+  if (sentinelStart == null || blocks.length === 0) return false;
+
+  const last = blocks[blocks.length - 1]!;
+  if (!isEmptyParagraph(last.node)) return false;
+
+  if (clickTargetIsSentinelParagraph(view, target)) return true;
+
+  const contentBottom = contentBottomBeforeSentinel(view);
+  if (contentBottom != null && clientY > contentBottom + 2) return true;
+
+  if (clientY >= last.top - 2 && clientY <= last.bottom + 2) {
+    if (blocks.length < 2) return true;
+    const prev = blocks[blocks.length - 2]!;
+    if (clientY > prev.bottom - 2) return true;
+  }
+
+  return false;
+}
+
+function prosePosForBlock(block: BlockRect, preferStart: boolean): number {
+  if (isEmptyParagraph(block.node) || preferStart) return block.from;
+  return block.to;
+}
+
 function posInBlock(block: BlockRect, y: number): number {
+  if (isEmptyParagraph(block.node)) return block.from;
   const mid = (block.top + block.bottom) / 2;
   return y >= mid ? block.to : block.from;
 }
 
-function nearestEditablePos(blocks: BlockRect[], index: number, dir: -1 | 1): number | null {
+function nearestEditablePos(
+  blocks: BlockRect[],
+  index: number,
+  dir: -1 | 1,
+  preferStart = false,
+): number | null {
   for (let i = index + dir; i >= 0 && i < blocks.length; i += dir) {
     const block = blocks[i]!;
     if (block.opaque) continue;
-    return dir < 0 ? block.to : block.from;
+    if (dir < 0) return prosePosForBlock(block, false);
+    return prosePosForBlock(block, preferStart || isEmptyParagraph(block.node));
   }
   return null;
 }
@@ -99,6 +181,24 @@ function hitIsInsideOpaqueBlock(view: EditorView, pos: number): boolean {
   return false;
 }
 
+function posFromCoordsHit(
+  view: EditorView,
+  clientX: number,
+  clientY: number,
+  blocks: BlockRect[],
+  target: Element | null,
+): number | null {
+  const hit = view.posAtCoords({ left: clientX, top: clientY });
+  if (!hit || hitIsInsideOpaqueBlock(view, hit.pos)) return null;
+  if (
+    shouldFocusTrailingSentinel(view, clientY, blocks, target) &&
+    !posInTrailingSentinel(view.state.doc, hit.pos)
+  ) {
+    return null;
+  }
+  return hit.pos;
+}
+
 /** Map a screen click to the nearest prose caret position. */
 export function focusPosFromClick(
   view: EditorView,
@@ -106,27 +206,36 @@ export function focusPosFromClick(
   clientY: number,
   target: Element | null = null,
 ): number | null {
-  const opaqueChrome = target ? isOpaqueChromeClick(target) : false;
-
-  if (!opaqueChrome) {
-    const hit = view.posAtCoords({ left: clientX, top: clientY });
-    if (hit && !hitIsInsideOpaqueBlock(view, hit.pos)) return hit.pos;
-  }
-
-  for (const dy of [0, -8, 8, -16, 16, -32, 32]) {
-    const probe = view.posAtCoords({ left: clientX, top: clientY + dy });
-    if (probe && !hitIsInsideOpaqueBlock(view, probe.pos)) return probe.pos;
+  const sentinelStart = trailingSentinelStart(view.state.doc);
+  if (target && !view.dom.contains(target) && sentinelStart != null) {
+    return sentinelStart;
   }
 
   const blocks = collectBlockRects(view);
   if (blocks.length === 0) return 1;
 
+  if (sentinelStart != null && shouldFocusTrailingSentinel(view, clientY, blocks, target)) {
+    return sentinelStart;
+  }
+
+  const opaqueChrome = target ? isOpaqueChromeClick(target) : false;
+
+  if (!opaqueChrome) {
+    const hit = posFromCoordsHit(view, clientX, clientY, blocks, target);
+    if (hit != null) return hit;
+  }
+
+  for (const dy of [0, -8, 8, -16, 16, -32, 32]) {
+    const probe = posFromCoordsHit(view, clientX, clientY + dy, blocks, target);
+    if (probe != null) return probe;
+  }
+
   const editorRect = view.dom.getBoundingClientRect();
   const x = Math.max(editorRect.left + 4, Math.min(clientX, editorRect.right - 4));
 
   for (const dy of [0, -8, 8, -16, 16]) {
-    const probe = view.posAtCoords({ left: x, top: clientY + dy });
-    if (probe && !hitIsInsideOpaqueBlock(view, probe.pos)) return probe.pos;
+    const probe = posFromCoordsHit(view, x, clientY + dy, blocks, target);
+    if (probe != null) return probe;
   }
 
   if (clientY < blocks[0]!.top) {
@@ -135,7 +244,11 @@ export function focusPosFromClick(
 
   const last = blocks[blocks.length - 1]!;
   if (clientY > last.bottom) {
-    return nearestEditablePos(blocks, blocks.length - 1, 1) ?? last.to;
+    return (
+      sentinelStart ??
+      nearestEditablePos(blocks, blocks.length - 1, 1, true) ??
+      last.to
+    );
   }
 
   for (let i = 0; i < blocks.length; i++) {
@@ -165,7 +278,7 @@ export function focusPosFromClick(
     if (clientY > cur.bottom && clientY < next.top) {
       const gapMid = (cur.bottom + next.top) / 2;
       if (clientY >= gapMid) {
-        return nearestEditablePos(blocks, i, 1) ?? next.from;
+        return nearestEditablePos(blocks, i, 1, true) ?? next.from;
       }
       return nearestEditablePos(blocks, i + 1, -1) ?? cur.to;
     }
@@ -196,6 +309,7 @@ export function needsClickRedirect(
 
   const first = blocks[0]!;
   const last = blocks[blocks.length - 1]!;
+  if (shouldFocusTrailingSentinel(view, clientY, blocks, target)) return true;
   if (clientY < first.top - 2 || clientY > last.bottom + 2) return true;
 
   const hit = view.posAtCoords({ left: clientX, top: clientY });
@@ -218,6 +332,7 @@ export function focusEditorAtPoint(
   );
   if (pos == null) return false;
   event?.preventDefault();
+  if (event instanceof MouseEvent) event.stopPropagation();
   const tr = view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)).scrollIntoView();
   view.dispatch(tr);
   view.focus();
