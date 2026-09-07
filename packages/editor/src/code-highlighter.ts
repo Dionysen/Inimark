@@ -124,6 +124,7 @@ type CodeMirrorEditorOptions = {
   language?: string;
   markdownSource?: boolean;
   onChange?: (doc: string, update: ViewUpdate) => void;
+  extraExtensions?: Extension[];
 };
 
 export type EmbeddedCodeMirrorEditor = {
@@ -195,6 +196,9 @@ export function createEmbeddedCodeMirrorEditor(
   const extensions = commonExtensions(languageCompartment, options.onChange);
   if (options.markdownSource) {
     extensions.push(markdown({ codeLanguages: codeMirrorLanguages }));
+  }
+  if (options.extraExtensions?.length) {
+    extensions.push(...options.extraExtensions);
   }
 
   const view = new CodeMirrorView({

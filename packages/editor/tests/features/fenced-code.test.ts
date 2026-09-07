@@ -88,6 +88,135 @@ describe("fenced code node view", () => {
     }
   });
 
+  test("language menu closes when the language input blurs", async () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```\nplain\n```" });
+
+    try {
+      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      expect(input).not.toBeNull();
+
+      input!.focus();
+      const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
+      expect(menu?.hidden).toBe(false);
+
+      input!.blur();
+      await nextTick(0);
+
+      expect(menu?.hidden).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
+  test("ArrowUp from language input returns to CodeMirror at the last line", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```ts\nline1\nline2\n```" });
+
+    try {
+      const cm = codeMirrorView(host);
+      cm.focus();
+      cm.dispatch({ selection: { anchor: cm.state.doc.length } });
+      cm.contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+      );
+
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(true);
+
+      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      input!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }),
+      );
+
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(false);
+      expect(document.activeElement).toBe(cm.contentDOM);
+      expect(cm.state.selection.main.head).toBe(cm.state.doc.length);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
+  test("CodeMirror ArrowUp on the first line exits to the block above", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "above\n\n```ts\nbody\n```",
+    });
+
+    try {
+      const cm = codeMirrorView(host);
+      cm.dispatch({ selection: { anchor: 0 } });
+      cm.dom.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }),
+      );
+
+      expect(editor.view.state.selection.$from.parent.textContent).toBe("above");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
+  test("CodeMirror ArrowDown at end enters lang input then exits below", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```ts\nbody\n```" });
+
+    try {
+      const cm = codeMirrorView(host);
+      cm.focus();
+      cm.dispatch({ selection: { anchor: cm.state.doc.length } });
+      expect(cm.state.selection.main.head).toBe(cm.state.doc.length);
+      cm.contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+      );
+
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(true);
+
+      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      input!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+      );
+
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(false);
+      expect(editor.view.state.doc.childCount).toBe(2);
+      expect(editor.view.state.selection.$from.parent.type.name).toBe("paragraph");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
+  test("CodeMirror ArrowRight at end exits below the code block", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "lead\n\n```ts\nbody\n```\n\nafter",
+    });
+
+    try {
+      const cm = codeMirrorView(host);
+      cm.focus();
+      cm.dispatch({ selection: { anchor: cm.state.doc.length } });
+      cm.contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+      );
+
+      expect(editor.view.state.selection.$from.parent.textContent).toBe("after");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
   test("ArrowDown from the language input appends a paragraph at document end", () => {
     const host = createHost();
     const editor = createEditor(host, { initialContent: "```ts\nbody\n```" });

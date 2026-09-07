@@ -11,6 +11,8 @@ import {
   type EditorView,
   type NodeView,
 } from "prosemirror-view";
+import { Prec, type Extension } from "@codemirror/state";
+import { keymap, type EditorView as CodeMirrorView } from "@codemirror/view";
 
 import { leaveLineDraft } from "../block-draft.ts";
 import {
@@ -96,6 +98,39 @@ function codeBlockPosAt(state: EditorState, pos: number): number | null {
     if (node.type.name === "code_block") return $.before(d);
   }
   return null;
+}
+
+function exitCodeBlockUp(view: EditorView, blockPos: number): void {
+  const tr = view.state.tr.setMeta(langFocusKey, null);
+  tr.setSelection(TextSelection.create(tr.doc, blockPos > 0 ? blockPos : 0));
+  view.dispatch(tr);
+  view.focus();
+}
+
+function enterLangFocus(view: EditorView, blockPos: number, node: PMNode): void {
+  const endInside = blockPos + node.nodeSize - 1;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(view.state.doc, endInside))
+      .setMeta(langFocusKey, { pos: blockPos }),
+  );
+}
+
+function exitCodeBlockDown(view: EditorView, blockPos: number, node: PMNode): void {
+  const afterBlock = blockPos + node.nodeSize;
+  const tr = view.state.tr.setMeta(langFocusKey, null);
+  if (afterBlock < view.state.doc.content.size) {
+    tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
+  } else {
+    const paraType = view.state.schema.nodes.paragraph;
+    const newPara = paraType?.createAndFill();
+    if (newPara) {
+      tr.insert(afterBlock, newPara);
+      tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
+    }
+  }
+  view.dispatch(tr);
+  view.focus();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +223,7 @@ class CodeBlockView implements NodeView {
       language: lang,
       className: "typora-web-cm-code",
       onChange: this.onCodeChange,
+      extraExtensions: [this.createBoundaryKeymap()],
     });
 
     codeMount.addEventListener("focusin", this.onFocusIn);
@@ -195,6 +231,7 @@ class CodeBlockView implements NodeView {
     diagram.addEventListener("click", this.onDiagramClick);
     input.addEventListener("focus", this.onInputFocus);
     input.addEventListener("click", this.onInputFocus);
+    input.addEventListener("blur", this.onInputBlur);
     input.addEventListener("input", this.onInput);
     input.addEventListener("keydown", this.onInputKeyDown);
     input.addEventListener("mousedown", (e) => e.stopPropagation());
@@ -208,6 +245,90 @@ class CodeBlockView implements NodeView {
     // construction with the starting deco set — do it manually).
     this.applyDecorations(decorations);
     this.renderDiagram(node);
+  }
+
+  private createBoundaryKeymap(): Extension {
+    return Prec.highest(
+      keymap.of([
+        {
+          key: "ArrowUp",
+          run: (cmView) => this.tryExitUpFromCodeMirror(cmView),
+        },
+        {
+          key: "ArrowDown",
+          run: (cmView) => this.tryEnterLangFromCodeMirror(cmView),
+        },
+        {
+          key: "ArrowRight",
+          run: (cmView) => this.tryExitRightFromCodeMirror(cmView),
+        },
+      ]),
+    );
+  }
+
+  private blockContext():
+    | { blockPos: number; node: PMNode }
+    | null {
+    const blockPos = this.getPos();
+    if (blockPos == null) return null;
+    const node = this.view.state.doc.nodeAt(blockPos);
+    if (!node || node.type.name !== "code_block") return null;
+    return { blockPos, node };
+  }
+
+  private isAtCodeMirrorTop(cmView: CodeMirrorView): boolean {
+    const head = cmView.state.selection.main.head;
+    return cmView.state.doc.lineAt(head).number === 1;
+  }
+
+  private isAtCodeMirrorBottom(cmView: CodeMirrorView): boolean {
+    const head = cmView.state.selection.main.head;
+    return head === cmView.state.doc.length;
+  }
+
+  private tryExitUpFromCodeMirror(cmView: CodeMirrorView): boolean {
+    if (!this.isAtCodeMirrorTop(cmView)) return false;
+    const ctx = this.blockContext();
+    if (!ctx) return true;
+    exitCodeBlockUp(this.view, ctx.blockPos);
+    return true;
+  }
+
+  private tryEnterLangFromCodeMirror(cmView: CodeMirrorView): boolean {
+    if (!this.isAtCodeMirrorBottom(cmView)) return false;
+    const ctx = this.blockContext();
+    if (!ctx) return true;
+    enterLangFocus(this.view, ctx.blockPos, ctx.node);
+    return true;
+  }
+
+  private tryExitRightFromCodeMirror(cmView: CodeMirrorView): boolean {
+    if (!this.isAtCodeMirrorBottom(cmView)) return false;
+    const ctx = this.blockContext();
+    if (!ctx) return true;
+    exitCodeBlockDown(this.view, ctx.blockPos, ctx.node);
+    return true;
+  }
+
+  private hadLangFocus = false;
+
+  private returnToCodeBody(): void {
+    const ctx = this.blockContext();
+    if (!ctx) return;
+    this.hideLanguageMenu();
+    const endInside = ctx.blockPos + ctx.node.nodeSize - 1;
+    this.view.dispatch(
+      this.view.state.tr
+        .setSelection(TextSelection.create(this.view.state.doc, endInside))
+        .setMeta(langFocusKey, null),
+    );
+    try {
+      const cmView = this.cm.view;
+      cmView.dispatch({ selection: { anchor: cmView.state.doc.length } });
+      cmView.focus();
+    } catch {
+      /* ignore */
+    }
   }
 
   private applyDecorations(decorations: readonly Decoration[]): void {
@@ -231,9 +352,21 @@ class CodeBlockView implements NodeView {
     }
     if (langFocus) {
       try { this.inputEl.focus(); } catch { /* ignore */ }
-    } else if (active && !this.dom.contains(document.activeElement)) {
-      try { this.cm.view.focus(); } catch { /* ignore */ }
+    } else {
+      this.hideLanguageMenu();
+      if (this.hadLangFocus && active) {
+        try {
+          const cmView = this.cm.view;
+          cmView.dispatch({ selection: { anchor: cmView.state.doc.length } });
+          cmView.focus();
+        } catch {
+          /* ignore */
+        }
+      } else if (active && !this.dom.contains(document.activeElement)) {
+        try { this.cm.view.focus(); } catch { /* ignore */ }
+      }
     }
+    this.hadLangFocus = langFocus;
   }
 
   private onFocusIn = (): void => {
@@ -258,15 +391,29 @@ class CodeBlockView implements NodeView {
     try { this.cm.view.focus(); } catch { /* ignore */ }
   };
 
+  private isLanguageMenuOpen(): boolean {
+    return !this.menuEl.hidden;
+  }
+
+  private dismissMenuOnFocusIn = (event: FocusEvent): void => {
+    if (!this.isLanguageMenuOpen()) return;
+    const target = event.target as Node;
+    if (target === this.inputEl || this.menuEl.contains(target)) return;
+    this.hideLanguageMenu();
+  };
+
   private openLanguageMenu(): void {
     this.renderLanguageMenu();
     this.menuEl.hidden = false;
     this.menuEl.scrollTop = 0;
     this.positionLanguageMenu();
+    document.addEventListener("focusin", this.dismissMenuOnFocusIn, true);
   }
 
   private hideLanguageMenu(): void {
+    if (this.menuEl.hidden) return;
     this.menuEl.hidden = true;
+    document.removeEventListener("focusin", this.dismissMenuOnFocusIn, true);
   }
 
   private onViewportChange = (): void => {
@@ -342,6 +489,15 @@ class CodeBlockView implements NodeView {
     this.openLanguageMenu();
   };
 
+  private onInputBlur = (): void => {
+    // Defer so mousedown on a menu item runs before we dismiss.
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active === this.inputEl || this.menuEl.contains(active)) return;
+      this.hideLanguageMenu();
+    }, 0);
+  };
+
   private onMenuMouseDown = (event: MouseEvent): void => {
     event.preventDefault();
     event.stopPropagation();
@@ -356,7 +512,14 @@ class CodeBlockView implements NodeView {
   private onDocumentMouseDown = (event: MouseEvent): void => {
     const target = event.target as Node | null;
     if (target && this.menuEl.contains(target)) return;
-    if (target && this.dom.contains(target)) return;
+    if (target && this.dom.contains(target)) {
+      if (!this.inputEl.contains(target)) this.hideLanguageMenu();
+      if (!this.dom.classList.contains("diagram-error")) {
+        this.dom.classList.remove("diagram-source-open");
+        this.sourceFrameEl.classList.remove("diagram-source-open");
+      }
+      return;
+    }
     this.hideLanguageMenu();
     if (!this.dom.classList.contains("diagram-error")) {
       this.dom.classList.remove("diagram-source-open");
@@ -383,42 +546,18 @@ class CodeBlockView implements NodeView {
   };
 
   private onInputKeyDown = (e: KeyboardEvent): void => {
+    const ctx = this.blockContext();
+    if (!ctx) return;
     if (e.key === "ArrowUp" || (e.key === "Enter" && !e.shiftKey)) {
       e.preventDefault();
-      const pos = this.getPos();
-      if (pos == null) return;
-      const node = this.view.state.doc.nodeAt(pos);
-      if (!node) return;
-      // Move PM selection to end of code body, clear lang-focus.
-      const endInside = pos + node.nodeSize - 1;
-      const tr = this.view.state.tr.setSelection(
-        TextSelection.create(this.view.state.doc, endInside),
-      );
-      tr.setMeta(langFocusKey, null);
-      this.view.dispatch(tr);
-      this.view.focus();
+      this.returnToCodeBody();
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      const pos = this.getPos();
-      if (pos == null) return;
-      const node = this.view.state.doc.nodeAt(pos);
-      if (!node) return;
-      const afterBlock = pos + node.nodeSize;
-      const tr = this.view.state.tr;
-      tr.setMeta(langFocusKey, null);
-      if (afterBlock < this.view.state.doc.content.size) {
-        tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
-      } else {
-        // At doc end: append a paragraph below (Typora style).
-        const paraType = this.view.state.schema.nodes.paragraph;
-        const newPara = paraType?.createAndFill();
-        if (newPara) {
-          tr.insert(afterBlock, newPara);
-          tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
-        }
-      }
-      this.view.dispatch(tr);
-      this.view.focus();
+      this.hideLanguageMenu();
+      exitCodeBlockDown(this.view, ctx.blockPos, ctx.node);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      this.hideLanguageMenu();
     }
   };
 
@@ -582,10 +721,12 @@ class CodeBlockView implements NodeView {
     this.diagramEl.removeEventListener("click", this.onDiagramClick);
     this.inputEl.removeEventListener("focus", this.onInputFocus);
     this.inputEl.removeEventListener("click", this.onInputFocus);
+    this.inputEl.removeEventListener("blur", this.onInputBlur);
     this.inputEl.removeEventListener("input", this.onInput);
     this.inputEl.removeEventListener("keydown", this.onInputKeyDown);
     this.menuEl.removeEventListener("mousedown", this.onMenuMouseDown);
     document.removeEventListener("mousedown", this.onDocumentMouseDown);
+    document.removeEventListener("focusin", this.dismissMenuOnFocusIn, true);
     window.removeEventListener("resize", this.onViewportChange);
     window.removeEventListener("scroll", this.onViewportChange, true);
     window.removeEventListener("typora-web:appearancechange", this.onAppearanceChange);
@@ -657,7 +798,13 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
         return decos.length > 0 ? DecorationSet.create(state.doc, decos) : null;
       },
       handleKeyDown(view, e) {
-        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return false;
+        if (
+          e.key !== "ArrowDown" &&
+          e.key !== "ArrowUp" &&
+          e.key !== "ArrowRight"
+        ) {
+          return false;
+        }
         if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return false;
         const state = view.state;
         const lf = langFocusKey.getState(state);
@@ -672,27 +819,18 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
           }
           if (e.key === "ArrowUp") {
             const endInside = lf.pos + node.nodeSize - 1;
-            const tr = state.tr
-              .setSelection(TextSelection.create(state.doc, endInside))
-              .setMeta(langFocusKey, null);
-            view.dispatch(tr);
+            view.dispatch(
+              state.tr
+                .setSelection(TextSelection.create(state.doc, endInside))
+                .setMeta(langFocusKey, null),
+            );
             return true;
           }
-          // ArrowDown
-          const afterBlock = lf.pos + node.nodeSize;
-          const tr = state.tr.setMeta(langFocusKey, null);
-          if (afterBlock < state.doc.content.size) {
-            tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
-          } else {
-            const paraType = state.schema.nodes.paragraph;
-            const newPara = paraType?.createAndFill();
-            if (newPara) {
-              tr.insert(afterBlock, newPara);
-              tr.setSelection(TextSelection.create(tr.doc, afterBlock + 1));
-            }
+          if (e.key === "ArrowDown") {
+            exitCodeBlockDown(view, lf.pos, node);
+            return true;
           }
-          view.dispatch(tr);
-          return true;
+          return false;
         }
 
         const sel = state.selection;
@@ -706,15 +844,31 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
           $from.parent.type.name === "code_block" &&
           $from.parentOffset === $from.parent.content.size
         ) {
-          const cbPos = $from.before();
-          // PM selection stays put (end of code body); lang-focus hides
-          // the caret via `data-lang-focus` + CSS `.cb-lang-focus
-          // .play-caret{display:none}` and the pretty renderCase.
-          view.dispatch(state.tr.setMeta(langFocusKey, { pos: cbPos }));
+          enterLangFocus(view, $from.before(), $from.parent);
           return true;
         }
 
-        // Case C: cursor at START of a block whose previous sibling is a
+        // Case C: cursor at START of a code_block → ArrowUp exits upward.
+        if (
+          e.key === "ArrowUp" &&
+          $from.parent.type.name === "code_block" &&
+          $from.parentOffset === 0
+        ) {
+          exitCodeBlockUp(view, $from.before());
+          return true;
+        }
+
+        // Case D: cursor at END of a code_block → ArrowRight exits downward.
+        if (
+          e.key === "ArrowRight" &&
+          $from.parent.type.name === "code_block" &&
+          $from.parentOffset === $from.parent.content.size
+        ) {
+          exitCodeBlockDown(view, $from.before(), $from.parent);
+          return true;
+        }
+
+        // Case E: cursor at START of a block whose previous sibling is a
         // code_block → ArrowUp enters that preceding code_block's lang input.
         if (
           e.key === "ArrowUp" &&
@@ -723,22 +877,18 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
         ) {
           const parentPos = $from.before();
           if (parentPos > 0) {
-            // Previous sibling starts at the depth-1 index just before.
             const $before = state.doc.resolve(parentPos);
             const index = $before.index();
             if (index > 0) {
               const prev = $before.parent.child(index - 1);
               if (prev.type.name === "code_block") {
                 const prevPos = parentPos - prev.nodeSize;
-                // Park PM selection at the end of the prev code_block's body
-                // so the PM caret isn't left in the block below. It gets
-                // hidden by `data-lang-focus`; on ArrowUp-exit it becomes
-                // visible at the body end, which is what the user wants.
                 const endInside = prevPos + prev.nodeSize - 1;
-                const tr = state.tr
-                  .setSelection(TextSelection.create(state.doc, endInside))
-                  .setMeta(langFocusKey, { pos: prevPos });
-                view.dispatch(tr);
+                view.dispatch(
+                  state.tr
+                    .setSelection(TextSelection.create(state.doc, endInside))
+                    .setMeta(langFocusKey, { pos: prevPos }),
+                );
                 return true;
               }
             }
