@@ -226,7 +226,6 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  -webkit-app-region: no-drag;
 }
 
 .inimark-sidebar-tab {

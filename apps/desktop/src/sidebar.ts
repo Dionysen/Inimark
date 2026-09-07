@@ -285,7 +285,6 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   const tabs = document.createElement("div");
   tabs.className = "inimark-sidebar-tabs";
   tabs.setAttribute("role", "tablist");
-  markNoDrag(tabs);
 
   let tabIds: SidebarTabId[] = (() => {
     const settings = loadSettings();
