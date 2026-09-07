@@ -24,6 +24,7 @@
     "fs:default",
     "updater:default",
     "process:default",
+    "window-state:default",
     {
       "identifier": "fs:allow-read-dir",
       "allow": [{ "path": "**" }]

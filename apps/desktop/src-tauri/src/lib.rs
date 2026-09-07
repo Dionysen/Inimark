@@ -4,6 +4,7 @@
 mod commands;
 
 use tauri::{Manager, RunEvent, WindowEvent};
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
@@ -46,6 +47,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             list_system_fonts,
             reveal_in_file_manager,
@@ -74,6 +76,9 @@ pub fn run() {
             "settings" => {
                 if let WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
+                    let _ = window
+                        .app_handle()
+                        .save_window_state(StateFlags::all());
                     let _ = window.hide();
                 }
             }
@@ -87,6 +92,7 @@ pub fn run() {
                     match event {
                         WindowEvent::CloseRequested { .. } => {}
                         WindowEvent::Destroyed => {
+                            let _ = app_handle.save_window_state(StateFlags::all());
                             if let Some(settings) = app_handle.get_webview_window("settings") {
                                 let _ = settings.destroy();
                             }
