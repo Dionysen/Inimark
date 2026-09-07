@@ -6,18 +6,14 @@ let browserPopup: Window | null = null;
 
 export async function openSettingsWindow(): Promise<void> {
   if (isTauri()) {
-    const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
-    const settings = await WebviewWindow.getByLabel(SETTINGS_WINDOW_LABEL);
-    if (!settings) {
-      throw new Error("Settings window is not configured");
-    }
-    await settings.show();
-    await settings.setFocus();
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("toggle_settings_window");
     return;
   }
 
   if (browserPopup && !browserPopup.closed) {
-    browserPopup.focus();
+    browserPopup.close();
+    browserPopup = null;
     return;
   }
 

@@ -17,6 +17,9 @@ import {
   SETTINGS_SYNC_EVENT,
 } from "./settings/store.ts";
 import { isTauri } from "./platform/env.ts";
+import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
+import { mountShortcutHandler } from "./shortcuts/handler.ts";
+import { openSettingsWindow } from "./settings/window.ts";
 
 initPlatform();
 const bootSettings = loadSettings();
@@ -24,6 +27,10 @@ initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
 const teardownChromeGuards = installChromeGuards();
 const teardownFullscreen = initFullscreenChrome();
 const teardownScrollbars = initAutoHideScrollbars();
+const teardownShortcutGuard = installNativeShortcutGuard();
+const teardownShortcuts = mountShortcutHandler({
+  "open-settings": () => void openSettingsWindow(),
+});
 
 const host = document.querySelector<HTMLElement>("#app");
 if (!host) {
@@ -64,6 +71,8 @@ void initThemeManager().then(() => {
     teardownChromeGuards();
     teardownFullscreen();
     teardownScrollbars();
+    teardownShortcutGuard();
+    teardownShortcuts();
     view.destroy();
   });
 });

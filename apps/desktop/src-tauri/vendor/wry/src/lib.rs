@@ -1684,7 +1684,7 @@ impl Default for PlatformSpecificWebViewAttributes {
   fn default() -> Self {
     Self {
       additional_browser_args: None,
-      browser_accelerator_keys: true, // This is WebView2's default behavior
+      browser_accelerator_keys: false,
       default_context_menus: true,    // This is WebView2's default behavior
       theme: None,
       use_https: false, // To match macOS & Linux behavior in the context of mixed content.

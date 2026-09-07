@@ -1,5 +1,9 @@
 import type { AppShortcutId } from "./defaults.ts";
 import {
+  blockNativeShortcut,
+  isShortcutRecordingActive,
+} from "./guard.ts";
+import {
   getShortcutKeys,
   loadShortcuts,
   matchShortcut,
@@ -32,6 +36,7 @@ export function mountShortcutHandler(
     if (event.defaultPrevented) return;
     if (event.repeat) return;
     if (document.querySelector(".inimark-confirm-dialog")) return;
+    if (isShortcutRecordingActive()) return;
 
     const inEditor = isEditableTarget(event.target);
     for (const binding of shortcuts) {
@@ -55,16 +60,19 @@ export function mountShortcutHandler(
       }
 
       event.preventDefault();
+      event.stopPropagation();
       void handler();
       return;
     }
+
+    blockNativeShortcut(event);
   };
 
-  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("storage", onStorage);
 
   return () => {
-    window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("storage", onStorage);
   };
 }
