@@ -124,6 +124,13 @@ export const zhCN: Dictionary = {
     backlinks: "入链",
     emptyLinks: "暂无",
   },
+  wordCount: {
+    label: "{{count}} 字",
+    toggle: "字数统计设置",
+    panelTitle: "字数统计",
+    includeSymbols: "包含符号",
+    includeSymbolsDesc: "统计 Markdown 语法与标点。关闭时仅统计纯文本。",
+  },
   editor: {
     welcome: "# 欢迎\n\n开始写作…",
     fontZoom: "{{size}}px",

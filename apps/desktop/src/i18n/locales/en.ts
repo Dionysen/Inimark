@@ -124,6 +124,13 @@ export const en: Dictionary = {
     backlinks: "Incoming",
     emptyLinks: "None",
   },
+  wordCount: {
+    label: "{{count}} chars",
+    toggle: "Word count settings",
+    panelTitle: "Word count",
+    includeSymbols: "Include symbols",
+    includeSymbolsDesc: "Count Markdown syntax and punctuation. Off counts plain text only.",
+  },
   editor: {
     welcome: "# Welcome\n\nStart writing…",
     fontZoom: "{{size}}px",

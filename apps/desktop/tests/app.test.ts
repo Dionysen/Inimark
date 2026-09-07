@@ -11,6 +11,7 @@ describe("desktop app shell", () => {
 
     const app = mountApp(host);
     expect(app.editor.getMarkdown()).toContain("Welcome");
+    expect(host.querySelector(".inimark-statusbar")).not.toBeNull();
 
     app.editor.setMarkdown("# Hello from test");
     expect(app.editor.getMarkdown()).toBe("# Hello from test");

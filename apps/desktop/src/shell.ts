@@ -33,6 +33,7 @@ const RIGHT_SIDEBAR_WIDTH_MAX = 420;
 
 export interface ShellController {
   editorHost: HTMLElement;
+  editorPane: HTMLElement;
   mainColumn: HTMLElement;
   sidebar: SidebarController;
   rightSidebar: RightSidebarController;
@@ -240,6 +241,7 @@ export function mountShell(
 
   return {
     editorHost,
+    editorPane,
     mainColumn,
     sidebar,
     rightSidebar,

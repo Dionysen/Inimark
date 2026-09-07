@@ -875,6 +875,107 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   cursor: text;
 }
 
+.inimark-statusbar {
+  position: absolute;
+  right: var(--inimark-space-3);
+  bottom: var(--inimark-space-3);
+  z-index: 12;
+  pointer-events: none;
+}
+
+.inimark-statusbar > * {
+  pointer-events: auto;
+}
+
+.inimark-statusbar-count {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  min-height: var(--inimark-chrome-btn-size, 26px);
+  padding: 0 10px;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm);
+  background: color-mix(in srgb, var(--inimark-bg) 94%, transparent);
+  color: var(--inimark-fg-muted);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.inimark-statusbar-count:hover {
+  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
+}
+
+.inimark-statusbar-count.is-active {
+  color: var(--inimark-accent);
+  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+}
+
+.inimark-statusbar-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--inimark-space-2));
+  display: none;
+  flex-direction: column;
+  width: 220px;
+  min-width: 220px;
+  max-width: min(90vw, 260px);
+  padding: var(--inimark-space-3);
+  border-radius: var(--inimark-radius-md);
+  background: color-mix(in srgb, var(--inimark-bg) 94%, transparent);
+  border: 1px solid var(--inimark-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+.inimark-statusbar.is-open .inimark-statusbar-panel {
+  display: flex;
+}
+
+.inimark-statusbar-header {
+  margin-bottom: var(--inimark-space-2);
+}
+
+.inimark-statusbar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--inimark-fg);
+}
+
+.inimark-statusbar-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-statusbar-row-meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.inimark-statusbar-row-title {
+  font-size: 12px;
+  color: var(--inimark-fg);
+}
+
+.inimark-statusbar-row-desc {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--inimark-fg-muted);
+}
+
+.inimark-statusbar-row-control {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
 /* Ctrl/Cmd + wheel font zoom toast (centered under titlebar) */
 .inimark-font-size-indicator {
   position: absolute;

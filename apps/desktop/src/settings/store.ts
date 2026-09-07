@@ -48,6 +48,11 @@ export interface ImageSettings {
 }
 
 /** Relationship graph appearance + force layout (0–100 sliders). */
+export interface WordCountSettings {
+  /** When true, count raw Markdown (symbols included). Otherwise count plain text only. */
+  includeSymbols: boolean;
+}
+
 export interface GraphSettings {
   showArrows: boolean;
   /** Label fade: 50 = center/0 (always opaque); >50 fades when zoomed out. */
@@ -96,6 +101,7 @@ export interface AppSettings {
   glassEffect: boolean;
   image: ImageSettings;
   graph: GraphSettings;
+  wordCount: WordCountSettings;
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
@@ -115,6 +121,10 @@ export const DEFAULT_IMAGE_SETTINGS: ImageSettings = {
   filenameFormat: "both",
   autoCreateAssetsDir: true,
   fixedDirectoryPath: "",
+};
+
+export const DEFAULT_WORD_COUNT_SETTINGS: WordCountSettings = {
+  includeSymbols: false,
 };
 
 export const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
@@ -153,6 +163,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   glassEffect: false,
   image: { ...DEFAULT_IMAGE_SETTINGS },
   graph: { ...DEFAULT_GRAPH_SETTINGS },
+  wordCount: { ...DEFAULT_WORD_COUNT_SETTINGS },
 };
 
 const EDITOR_WIDTHS: Record<EditorWidth, string> = {
@@ -311,6 +322,10 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ...DEFAULT_GRAPH_SETTINGS,
     ...(parsed.graph ?? {}),
   };
+  const wordCount = {
+    ...DEFAULT_WORD_COUNT_SETTINGS,
+    ...(parsed.wordCount ?? {}),
+  };
   const tabLayout = normalizeSidebarTabLayout(
     parsed.leftSidebarTabs,
     parsed.rightSidebarTabs,
@@ -378,6 +393,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
         typeof image.fixedDirectoryPath === "string" ? image.fixedDirectoryPath : "",
     },
     graph: normalizeGraphSettings(graph),
+    wordCount: {
+      includeSymbols: Boolean(wordCount.includeSymbols),
+    },
   };
 }
 

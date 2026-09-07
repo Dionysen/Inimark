@@ -28,6 +28,7 @@ import {
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
+import { mountWordCount } from "./editor/word-count.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import {
@@ -65,6 +66,7 @@ export function mountApp(host: HTMLElement): AppController {
   let closeInProgress = false;
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
   const cleanups: Array<() => void> = [];
+  let wordCount: ReturnType<typeof mountWordCount> | null = null;
 
   const editor = createEditor(shell.editorHost, {
     initialContent: t("editor.welcome"),
@@ -72,12 +74,27 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setDirty(true);
       scheduleAutoSave();
       scheduleOutlineSync(md);
+      wordCount?.scheduleUpdate();
       if (workspace && activeFilePath) {
         linkIndex.addFileLinks(activeFilePath, md);
       }
     },
   });
   editor.setTypewriterMode(settings.typewriterMode);
+
+  wordCount = mountWordCount({
+    host: shell.editorPane,
+    editor,
+    getSettings: () => settings,
+    onWordCountChange(partial) {
+      settings = {
+        ...settings,
+        wordCount: { ...settings.wordCount, ...partial },
+      };
+      saveSettings(settings);
+    },
+  });
+  cleanups.push(() => wordCount?.destroy());
 
   let cachedImageUrl: ((path: string) => string | null) | null = null;
   void (async () => {
