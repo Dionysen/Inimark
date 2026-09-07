@@ -2,6 +2,7 @@
 import { EditorState, TextSelection } from "prosemirror-state";
 
 import { createState } from "../src/editor.ts";
+import { selectionAtEditableEnd } from "../src/trailing-sentinel.ts";
 import { type Event, feedEvent } from "../specs/events.ts";
 import { fakeView } from "../specs/sim.ts";
 import type { FeatureSpecs } from "../specs/_types.ts";
@@ -15,7 +16,7 @@ export type { Event } from "../specs/events.ts";
 export function setup(md = ""): EditorState {
   const doc = md ? parse(md) : schema.nodes.doc.createAndFill()!;
   const base = createState(doc);
-  return base.apply(base.tr.setSelection(TextSelection.atEnd(doc)));
+  return base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
 }
 
 export function apply(state: EditorState, events: Event[]): EditorState {

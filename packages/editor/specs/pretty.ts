@@ -172,6 +172,10 @@ export function pretty(state: EditorState): string {
   const view = new EditorView(mount, { state });
   try {
     const blocks = Array.from(view.dom.children).map(renderNode);
+    // Mirror serialize(): trailing empty paragraphs are editing sentinels.
+    while (blocks.length > 0 && blocks[blocks.length - 1] === "") {
+      blocks.pop();
+    }
     return blocks.join("\n").replace(/\n+$/, "");
   } finally {
     view.destroy();

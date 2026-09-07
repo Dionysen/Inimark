@@ -17,6 +17,11 @@ import { searchRevealPlugin } from "./search-reveal.ts";
 import { headingFlashPlugin } from "./heading-flash.ts";
 import { schema } from "./schema.ts";
 import { commonShortcutKeymap } from "./shortcuts.ts";
+import {
+  ensureTrailingSentinel,
+  trailingSentinelPlugin,
+} from "./trailing-sentinel.ts";
+import { clickFocusPlugin } from "./click-focus.ts";
 
 // Open `<a>` links on Cmd/Ctrl+click. Inside contenteditable, a plain
 // click moves the caret instead of navigating — opting in to the
@@ -69,6 +74,8 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     syntaxHintsPlugin(),
     searchRevealPlugin(),
     headingFlashPlugin(),
+    trailingSentinelPlugin(),
+    clickFocusPlugin(),
     openLinkOnModClickPlugin(),
   ];
   if (cursorWidget) plugins.push(cursorRenderPlugin());
@@ -80,5 +87,9 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
 }
 
 export function createState(doc: PMNode): EditorState {
-  return EditorState.create({ schema, doc, plugins: defaultPlugins() });
+  return EditorState.create({
+    schema,
+    doc: ensureTrailingSentinel(doc),
+    plugins: defaultPlugins(),
+  });
 }

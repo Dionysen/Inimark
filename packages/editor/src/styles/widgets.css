@@ -21,8 +21,16 @@
  * `editor.toggleSource()` keeps layout stable. The source editor baseline
  * here is just enough to make source mode usable out of the box;
  * consumers can override with their own font / colors. */
-.typora-web-wrap { display: block; }
-.typora-web-editor-host { display: block; }
+.typora-web-wrap {
+  display: block;
+  min-height: 100%;
+  cursor: text;
+}
+.typora-web-editor-host {
+  display: block;
+  min-height: 100%;
+  cursor: text;
+}
 .typora-web-editor-host[hidden] { display: none; }
 .typora-web-source-editor {
   display: block;
@@ -67,7 +75,12 @@
 /* ─── PM root reset ──────────────────────────────────────────────── */
 .ProseMirror {
   outline: none;
-  min-height: 168px;
+  min-height: 100%;
+  cursor: text;
+}
+.ProseMirror > p:last-child {
+  /* Keep the trailing sentinel (and empty docs) clickable. */
+  min-height: 1.5em;
 }
 .ProseMirror[contenteditable="true"]:focus { outline: none; }
 .ProseMirror a { cursor: pointer; }
@@ -393,8 +406,12 @@
 .ProseMirror .code-block-node {
   display: block;
   position: relative;
+  cursor: text;
 }
-.ProseMirror .code-block-node > pre { position: relative; }
+.ProseMirror .code-block-node > pre {
+  position: relative;
+  cursor: text;
+}
 .ProseMirror .code-block-node .pm-code-content {
   display: none;
 }

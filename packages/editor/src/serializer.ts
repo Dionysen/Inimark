@@ -7,6 +7,7 @@ import {
   collectMarkDelims,
 } from "./features/index.ts";
 import { schema } from "./schema.ts";
+import { stripTrailingEmptyParagraphs } from "./trailing-sentinel.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configurable surface: mark delimiters and character escaping. md and pretty
@@ -380,7 +381,7 @@ const blockHandlers: Record<string, BlockHandler> = {
 
 export function serialize(doc: PMNode): string {
   const state = new SerializerState(mdConfig);
-  state.renderDoc(doc);
+  state.renderDoc(stripTrailingEmptyParagraphs(doc));
   return state.out.replace(/\n+$/, "\n");
 }
 
@@ -390,7 +391,7 @@ export function serializeWith(
   markers: readonly PosMarker[] = [],
 ): string {
   const state = new SerializerState(config, markers);
-  state.renderDoc(doc);
+  state.renderDoc(stripTrailingEmptyParagraphs(doc));
   const leftover = state.markers
     .filter((m) => !m.done)
     .map((m) => m.char)

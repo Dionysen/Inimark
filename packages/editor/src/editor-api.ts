@@ -21,6 +21,8 @@ import {
   type EmbeddedCodeMirrorEditor,
 } from "./code-highlighter.ts";
 import { defaultPlugins } from "./editor.ts";
+import { ensureTrailingSentinel } from "./trailing-sentinel.ts";
+import { handleEditorSurfaceMouseDown } from "./click-focus.ts";
 import {
   createMarkdownFile,
   pickMarkdownFile,
@@ -195,7 +197,8 @@ export function createEditor(
   }
 
   function buildView(initialMd: string): EditorView {
-    const doc = initialMd ? parse(initialMd) : schema.nodes.doc.createAndFill()!;
+    const parsed = initialMd ? parse(initialMd) : schema.nodes.doc.createAndFill()!;
+    const doc = ensureTrailingSentinel(parsed);
     const base = EditorState.create({
       schema,
       doc,
@@ -387,7 +390,13 @@ export function createEditor(
     sourceHost.addEventListener("focusout", () => options.onBlur!());
   }
 
+  function onEditorSurfaceMouseDown(e: MouseEvent): void {
+    if (inSource) return;
+    handleEditorSurfaceMouseDown(view, e, host);
+  }
+
   view = buildView(options.initialContent ?? "");
+  host.addEventListener("mousedown", onEditorSurfaceMouseDown);
 
   const controller: Editor = {
     getMarkdown(): string {
@@ -609,6 +618,7 @@ export function createEditor(
       document.removeEventListener("pointerup", endPointerSelecting, true);
       document.removeEventListener("pointercancel", endPointerSelecting, true);
       if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
+      host.removeEventListener("mousedown", onEditorSurfaceMouseDown);
       wrap.style.removeProperty("--typewriter-pad");
       sourceView?.destroy();
       view.destroy();

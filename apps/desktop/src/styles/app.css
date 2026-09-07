@@ -872,6 +872,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;
   background: var(--inimark-content-bg);
+  cursor: text;
 }
 
 /* Ctrl/Cmd + wheel font zoom toast (centered under titlebar) */
@@ -910,6 +911,8 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 .inimark-editor-host .typora-web-wrap {
   max-width: var(--inimark-editor-max-width);
   margin: 0 auto;
+  min-height: 100%;
+  cursor: text;
 }
 
 .inimark-editor-host .ProseMirror,

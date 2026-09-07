@@ -1,6 +1,5 @@
 ﻿import { describe, expect, test } from "vitest";
 import { DOMParser as PMDOMParser, DOMSerializer } from "prosemirror-model";
-import { TextSelection } from "prosemirror-state";
 
 import {
   calloutAttrsFromSource,
@@ -9,6 +8,7 @@ import {
   getCalloutAttrsFromElement,
   normalizeCalloutKind,
 } from "../src/callouts.ts";
+import { selectionAtEditableEnd } from "../src/trailing-sentinel.ts";
 import { createState } from "../src/editor.ts";
 import { parse } from "../src/parser.ts";
 import { schema } from "../src/schema.ts";
@@ -166,7 +166,7 @@ describe("callouts", () => {
       ]),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(doc)));
+    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
     let next = state;
 
     const handled = convertCurrentBlockquoteCallout(state, (tr) => {
@@ -186,7 +186,7 @@ describe("callouts", () => {
       ]),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(doc)));
+    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
     let next = state;
 
     const handled = commonShortcutKeymap(schema)["Shift-Enter"]!(state, (tr) => {

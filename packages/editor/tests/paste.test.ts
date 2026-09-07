@@ -73,11 +73,13 @@ describe("markdown paste", () => {
     const { view, cleanup } = mountView("");
     try {
       expect(insertMarkdownFromText(view, "# Title\n\nParagraph")).toBe(true);
-      expect(view.state.doc.childCount).toBe(2);
+      expect(view.state.doc.childCount).toBe(3);
       expect(view.state.doc.child(0).type).toBe(schema.nodes.heading);
       expect(view.state.doc.child(0).attrs.level).toBe(1);
       expect(view.state.doc.child(1).type).toBe(schema.nodes.paragraph);
       expect(view.state.doc.child(1).textContent).toBe("Paragraph");
+      expect(view.state.doc.child(2).type).toBe(schema.nodes.paragraph);
+      expect(view.state.doc.child(2).textContent).toBe("");
     } finally {
       cleanup();
     }
