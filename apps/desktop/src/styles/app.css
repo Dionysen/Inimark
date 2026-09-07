@@ -1323,34 +1323,6 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   height: 18px;
 }
 
-.inimark-editor-context-icon-wrap::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--inimark-border);
-  border-radius: 8px;
-  background: var(--inimark-surface-raised, var(--inimark-surface));
-  color: var(--inimark-fg);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-  transition-delay: 0s;
-  z-index: 62;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-}
-
-.inimark-editor-context-icon-wrap:hover::after {
-  opacity: 1;
-  transition-delay: 0.45s;
-}
-
 .inimark-editor-context-divider {
   height: 1px;
   margin: 4px 2px;

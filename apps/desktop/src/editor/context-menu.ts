@@ -6,6 +6,7 @@ import {
   releaseExclusiveLayer,
 } from "../ui/exclusive-layer.ts";
 import { headingLevelBadgeHtml } from "../ui/heading-level-badge.ts";
+import { bindTooltip } from "../ui/widgets/tooltip.ts";
 
 export interface EditorContextMenuController {
   destroy(): void;
@@ -379,9 +380,10 @@ export function mountEditorContextMenu(
       for (const action of row) {
         const wrap = document.createElement("div");
         wrap.className = "inimark-editor-context-icon-wrap";
-        wrap.dataset.tooltip = action.shortcut
-          ? `${action.label} (${action.shortcut})`
-          : action.label;
+        bindTooltip(
+          wrap,
+          action.shortcut ? `${action.label} (${action.shortcut})` : action.label,
+        );
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "inimark-editor-context-icon-btn";

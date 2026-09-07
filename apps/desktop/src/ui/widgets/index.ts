@@ -60,6 +60,12 @@ export {
   type FontPickerOptions,
 } from "./font-picker.ts";
 export { createMenu, menuIcons, type MenuController, type MenuItemOptions, type MenuSubmenuOptions } from "./menu.ts";
+export {
+  bindTooltip,
+  initTooltipLayer,
+  unbindTooltip,
+  updateTooltip,
+} from "./tooltip.ts";
 export { createToggle, type ToggleController, type ToggleOptions } from "./toggle.ts";
 export {
   createTreeHost,

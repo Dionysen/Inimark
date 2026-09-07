@@ -1,3 +1,5 @@
+import { bindTooltip } from "./tooltip.ts";
+
 export type ButtonVariant = "default" | "ghost" | "primary" | "danger";
 
 export interface ButtonOptions {
@@ -13,7 +15,7 @@ export function createButton(options: ButtonOptions): HTMLButtonElement {
   button.type = "button";
   button.className = `inimark-control inimark-btn inimark-btn--${options.variant ?? "default"}`;
   button.textContent = options.label;
-  if (options.title) button.title = options.title;
+  if (options.title) bindTooltip(button, options.title);
   if (options.disabled) button.disabled = true;
   if (options.onClick) button.addEventListener("click", options.onClick);
   return button;

@@ -1,3 +1,5 @@
+import { bindTooltip } from "./tooltip.ts";
+
 export interface ToggleOptions {
   checked?: boolean;
   title?: string;
@@ -17,7 +19,7 @@ export function createToggle(options: ToggleOptions = {}): ToggleController {
   el.type = "button";
   el.className = "inimark-control inimark-toggle";
   el.setAttribute("role", "switch");
-  if (options.title) el.title = options.title;
+  if (options.title) bindTooltip(el, options.title);
 
   const thumb = document.createElement("span");
   thumb.className = "inimark-toggle__thumb";

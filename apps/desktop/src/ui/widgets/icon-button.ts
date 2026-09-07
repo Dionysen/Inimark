@@ -1,3 +1,5 @@
+import { bindTooltip } from "./tooltip.ts";
+
 export interface IconButtonOptions {
   label: string;
   title?: string;
@@ -10,7 +12,7 @@ export function createIconButton(options: IconButtonOptions): HTMLButtonElement 
   button.type = "button";
   button.className = "inimark-control inimark-icon-btn";
   button.setAttribute("aria-label", options.label);
-  if (options.title) button.title = options.title;
+  if (options.title) bindTooltip(button, options.title);
   if (options.html) button.innerHTML = options.html;
   else button.innerHTML = options.label;
   if (options.onClick) button.addEventListener("click", options.onClick);

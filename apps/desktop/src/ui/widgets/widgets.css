@@ -1121,3 +1121,46 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-toggle.is-on .inimark-toggle__thumb {
   transform: translateX(18px);
 }
+
+/* ── Tooltip (menu-aligned chrome) ──────────────────────────────── */
+
+.inimark-tooltip {
+  position: fixed;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 20rem;
+  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
+  border-radius: var(--inimark-radius-menu-item);
+  background: var(--inimark-glass-bg, var(--inimark-surface));
+  box-shadow: var(--inimark-glass-shadow);
+  color: var(--inimark-fg);
+  font-size: var(--inimark-control-font-size);
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.inimark-tooltip.is-visible {
+  opacity: 1;
+}
+
+.inimark-tooltip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.inimark-tooltip__meta {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--inimark-muted-fg);
+  white-space: nowrap;
+}
+

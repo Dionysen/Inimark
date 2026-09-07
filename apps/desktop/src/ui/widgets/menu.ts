@@ -2,6 +2,7 @@ import {
   acquireExclusiveLayer,
   releaseExclusiveLayer,
 } from "../exclusive-layer.ts";
+import { bindTooltip, unbindTooltip } from "./tooltip.ts";
 
 export interface MenuItemOptions {
   label: string;
@@ -56,7 +57,7 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
   btn.type = "button";
   btn.className = "inimark-menu-item";
   btn.setAttribute("role", "menuitem");
-  if (options.title) btn.title = options.title;
+  if (options.title) bindTooltip(btn, options.title);
   if (options.selected) btn.classList.add("is-selected");
   if (options.danger) btn.classList.add("is-danger");
   if (options.icon) btn.classList.add("inimark-menu-item--with-icon");
@@ -189,7 +190,8 @@ export function createMenu(): MenuController {
     },
     setPath(text, title) {
       path.textContent = text;
-      path.title = title ?? text;
+      if (text) bindTooltip(path, title ?? text);
+      else unbindTooltip(path);
       path.hidden = !text;
     },
     addHeading(text) {
