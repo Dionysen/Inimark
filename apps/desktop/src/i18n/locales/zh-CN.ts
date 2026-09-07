@@ -86,6 +86,8 @@ export const zhCN: Dictionary = {
       heading: "文库",
     },
     ctx: {
+      addFile: "添加文件",
+      addFolder: "添加文件夹",
       rename: "重命名",
       copyPath: "复制路径",
       copyTo: "复制到…",

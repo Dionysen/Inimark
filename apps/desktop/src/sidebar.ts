@@ -339,7 +339,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       title: t("sidebar.toolbar.newFile"),
       icon: newFileIcon,
       onClick() {
-        void createNewFile();
+        void createNewFile(getCreateTargetDirectory());
       },
     },
     {
@@ -347,7 +347,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       title: t("sidebar.toolbar.newFolder"),
       icon: newFolderIcon,
       onClick() {
-        void createNewFolder();
+        void createNewFolder(getCreateTargetDirectory());
       },
     },
     {
@@ -1194,21 +1194,41 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     }
   }
 
-  async function createNewFile(): Promise<void> {
+  function getSiblingNodes(parentDir: string): WorkspaceTreeNode[] {
+    if (!parentDir) return currentTree;
+    const parent = findTreeNode(currentTree, parentDir);
+    return parent?.children ?? [];
+  }
+
+  function getCreateTargetDirectory(): string {
+    const paths = topLevelPaths(selectedPaths);
+    if (paths.length !== 1) return "";
+    const path = paths[0]!;
+    const node = findTreeNode(currentTree, path);
+    if (node?.kind === "directory") return path;
+    return parentRelativePath(path);
+  }
+
+  async function createNewFile(parentDir: string): Promise<void> {
     if (!currentWorkspace) return;
-    const rootNames = new Set(
-      currentTree.map((n) => n.name.toLowerCase()),
+    const siblingNames = new Set(
+      getSiblingNodes(parentDir).map((n) => n.name.toLowerCase()),
     );
-    const fileName = uniqueChildName(rootNames, t("common.untitled"), ".md");
-    const result = await createWorkspaceFile(currentWorkspace, fileName, "");
+    const fileName = uniqueChildName(siblingNames, t("common.untitled"), ".md");
+    const relativePath = joinRelativePath(parentDir, fileName);
+    const result = await createWorkspaceFile(currentWorkspace, relativePath, "");
     if (result.status === "error") {
       console.error(result.message);
       return;
     }
+    if (parentDir) {
+      expanded.add(parentDir);
+      notifyExpandedChange();
+    }
     await refreshTreeFromDisk();
-    const node = findTreeNode(currentTree, fileName);
+    const node = findTreeNode(currentTree, relativePath);
     if (!node) {
-      void handlers.fileSelect(fileName);
+      void handlers.fileSelect(relativePath);
       return;
     }
     // Rename before opening — selecting the file focuses the editor and
@@ -1220,21 +1240,23 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
   }
 
-  async function createNewFolder(): Promise<void> {
+  async function createNewFolder(parentDir: string): Promise<void> {
     if (!currentWorkspace) return;
-    const rootNames = new Set(
-      currentTree.map((n) => n.name.toLowerCase()),
+    const siblingNames = new Set(
+      getSiblingNodes(parentDir).map((n) => n.name.toLowerCase()),
     );
-    const folderName = uniqueChildName(rootNames, t("common.newFolder"));
-    const result = await createWorkspaceDirectory(currentWorkspace, folderName);
+    const folderName = uniqueChildName(siblingNames, t("common.newFolder"));
+    const relativePath = joinRelativePath(parentDir, folderName);
+    const result = await createWorkspaceDirectory(currentWorkspace, relativePath);
     if (result.status === "error") {
       console.error(result.message);
       return;
     }
-    expanded.add(folderName);
+    if (parentDir) expanded.add(parentDir);
+    expanded.add(relativePath);
     notifyExpandedChange();
     await refreshTreeFromDisk();
-    const node = findTreeNode(currentTree, folderName);
+    const node = findTreeNode(currentTree, relativePath);
     if (node) startInlineRename(node);
   }
 
@@ -1386,6 +1408,25 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
     contextMenu.clear();
     contextMenu.setPath("");
+    if (node.kind === "directory") {
+      contextMenu.addItem({
+        label: t("sidebar.ctx.addFile"),
+        icon: newFileIcon(),
+        onClick() {
+          closeContextMenu();
+          void createNewFile(node.path);
+        },
+      });
+      contextMenu.addItem({
+        label: t("sidebar.ctx.addFolder"),
+        icon: newFolderIcon(),
+        onClick() {
+          closeContextMenu();
+          void createNewFolder(node.path);
+        },
+      });
+      contextMenu.addDivider();
+    }
     contextMenu.addItem({
       label: t("sidebar.ctx.rename"),
       icon: menuIcons.rename,

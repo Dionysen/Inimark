@@ -86,6 +86,8 @@ export const en: Dictionary = {
       heading: "Libraries",
     },
     ctx: {
+      addFile: "Add file",
+      addFolder: "Add folder",
       rename: "Rename",
       copyPath: "Copy Path",
       copyTo: "Copy to…",
