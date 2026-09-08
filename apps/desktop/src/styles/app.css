@@ -1263,7 +1263,7 @@ html[data-auto-hide-library-bar="true"] .inimark-sidebar-dock:focus-within {
 /* Solid menu chrome when frosted glass setting is off */
 .inimark-sidebar-dock .inimark-menu {
   isolation: isolate;
-  background: var(--inimark-surface-raised);
+  background: var(--bg-menu, var(--inimark-surface-raised));
   border: 1px solid var(--inimark-border);
   box-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
 }
@@ -1296,8 +1296,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
 }
 
 /* Soft milk tint behind content (liquid-glass ::before) */
-.inimark-library-bar::before,
-html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::before {
+.inimark-library-bar::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1305,6 +1304,16 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::before {
   pointer-events: none;
   border-radius: inherit;
   background: rgb(var(--_tint) / var(--_fill));
+}
+
+html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--bg-menu, rgb(var(--_tint))) calc(var(--_fill) * 100%), transparent);
 }
 
 /* Specular rim — below content so screen-blend doesn't wash text */

@@ -102,7 +102,7 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "sidebar",
     "tabs",
   ],
-  theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight"],
+  theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight", "menu"],
   shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
   libraries: ["folder", "vault", "workspace", "files"],
   image: ["image", "assets", "paste", "filename", "upload"],

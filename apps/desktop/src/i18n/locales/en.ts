@@ -308,7 +308,7 @@ export const en: Dictionary = {
     theme: {
       glassEffect: "Frosted glass",
       glassEffectDesc:
-        "Translucent blur on menus. off uses solid menu backgrounds.",
+        "Translucent blur on menus. When off, menus use the Menu background color.",
       appearanceMode: "Appearance mode",
       appearanceModeDesc:
         "Choose whether the app follows your system, or stays in light or dark mode.",
@@ -377,7 +377,9 @@ export const en: Dictionary = {
         bgSecondary: "Secondary background",
         bgSecondaryDesc: "Sidebar, settings nav, and other chrome behind panels.",
         bgSurface: "Surface",
-        bgSurfaceDesc: "Raised panels, menus, and floating chrome.",
+        bgSurfaceDesc: "Raised panels and floating chrome.",
+        bgMenu: "Menu background",
+        bgMenuDesc: "Dropdown menus, context menus, and the More menu.",
         bgHover: "Hover",
         bgHoverDesc: "Background tint when hovering list rows and controls.",
         bgTertiary: "Tertiary background",

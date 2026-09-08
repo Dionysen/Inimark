@@ -62,7 +62,7 @@
 
   /* Menus — solid by default; frosted when html[data-glass="true"].
      Floating library chrome always uses liquid glass (see app.css). */
-  --inimark-glass-bg: var(--inimark-surface-raised);
+  --inimark-glass-bg: var(--bg-menu, var(--inimark-surface-raised));
   --inimark-glass-border: var(--inimark-border);
   --inimark-glass-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
   --inimark-glass-blur: 0px;
@@ -121,7 +121,7 @@ html.platform-windows {
 }
 
 html[data-glass="true"] {
-  --inimark-glass-bg: color-mix(in srgb, var(--inimark-surface-raised) 42%, transparent);
+  --inimark-glass-bg: color-mix(in srgb, var(--bg-menu, var(--inimark-surface-raised)) 42%, transparent);
   --inimark-glass-border: color-mix(in srgb, #fff 22%, transparent);
   --inimark-glass-shadow:
     inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),

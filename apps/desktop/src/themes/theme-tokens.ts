@@ -76,6 +76,7 @@ export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
   // 界面
   { name: "--bg-secondary", section: "chrome", labelKey: "bgSecondary" },
   { name: "--bg-surface", section: "chrome", labelKey: "bgSurface" },
+  { name: "--bg-menu", section: "chrome", labelKey: "bgMenu" },
   { name: "--bg-hover", section: "chrome", labelKey: "bgHover" },
   { name: "--bg-tertiary", section: "chrome", labelKey: "bgTertiary" },
   { name: "--bg-input", section: "chrome", labelKey: "bgInput" },
@@ -220,6 +221,7 @@ const LIGHT_DEFAULTS: Record<string, string> = {
   "--bg-primary": "#ffffff",
   "--bg-secondary": "#f5f7fa",
   "--bg-surface": "#f1f5f9",
+  "--bg-menu": "#e8ecf1",
   "--bg-hover": "rgba(0, 0, 0, 0.06)",
   "--bg-tertiary": "#e8ecf1",
   "--bg-code": "#f6f8fa",
@@ -255,6 +257,7 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--bg-primary": "#1b1d24",
   "--bg-secondary": "#111217",
   "--bg-surface": "#1b1d24",
+  "--bg-menu": "#1b1d24",
   "--bg-hover": "rgba(255, 255, 255, 0.08)",
   "--bg-tertiary": "#1b1d24",
   "--bg-code": "#1f2129",
@@ -293,6 +296,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--bg-primary": "#ffffff",
     "--bg-secondary": "#f5f7fa",
     "--bg-surface": "#f1f5f9",
+    "--bg-menu": "#e8ecf1",
     "--bg-hover": "rgba(0, 0, 0, 0.06)",
     "--bg-tertiary": "#e8ecf1",
     "--bg-code": "#f6f8fa",
@@ -328,6 +332,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--bg-primary": "#f8fafc",
     "--bg-secondary": "#f1f5f9",
     "--bg-surface": "#f8fafc",
+    "--bg-menu": "#e2e8f0",
     "--bg-hover": "rgba(71, 85, 105, 0.08)",
     "--bg-tertiary": "#e2e8f0",
     "--bg-code": "#f1f5f9",
@@ -363,6 +368,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--bg-primary": "#1b1d24",
     "--bg-secondary": "#111217",
     "--bg-surface": "#1b1d24",
+    "--bg-menu": "#1b1d24",
     "--bg-hover": "rgba(255, 255, 255, 0.08)",
     "--bg-tertiary": "#1b1d24",
     "--bg-code": "#1f2129",
@@ -458,6 +464,7 @@ function resolveColorTokenValue(
   if (token.name === "--scrollbar-track") return colors[token.name] ?? "transparent";
   if (token.name === "--code-inline-border" && colors["--border"]) return colors["--border"];
   if (token.name === "--metadata-bg" && colors["--bg-secondary"]) return colors["--bg-secondary"];
+  if (token.name === "--bg-menu" && colors["--bg-tertiary"]) return colors["--bg-tertiary"];
   if (token.name === "--metadata-border" && colors["--border"]) return colors["--border"];
   if (token.name === "--blockquote-border" && colors["--border"]) return colors["--border"];
   if (token.name === "--blockquote-bg") return colors[token.name] ?? "transparent";
