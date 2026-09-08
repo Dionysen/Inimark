@@ -257,11 +257,11 @@ export function createMenu(): MenuController {
 
       function positionPanel(): void {
         const rect = wrap.getBoundingClientRect();
-        const GAP = 4;
+        const GAP = 2;
         const width = Math.max(160, panel.offsetWidth || 160);
         const height = Math.max(40, panel.offsetHeight || 40);
-        // Prefer left of the parent — More menu sits on the right edge.
-        let left = rect.left - width - GAP;
+        // Prefer left of the parent — overlap slightly so the pointer can cross without a dead zone.
+        let left = rect.left - width + GAP;
         if (left < GAP) left = rect.right + GAP;
         if (left + width > window.innerWidth - GAP) {
           left = Math.max(GAP, window.innerWidth - width - GAP);
@@ -301,24 +301,29 @@ export function createMenu(): MenuController {
         requestAnimationFrame(positionPanel);
       }
 
-      function scheduleHidePanel(): void {
+      function hidePanel(): void {
         clearCloseTimer();
-        closeTimer = setTimeout(() => {
-          panel.hidden = true;
-          panel.classList.remove("is-open");
-          btn.setAttribute("aria-expanded", "false");
-          wrap.classList.remove("is-open");
-          closeTimer = null;
-        }, 180);
+        panel.hidden = true;
+        panel.classList.remove("is-open");
+        btn.setAttribute("aria-expanded", "false");
+        wrap.classList.remove("is-open");
+      }
+
+      function handlePointerLeave(event: MouseEvent): void {
+        const related = event.relatedTarget;
+        if (related instanceof Node && (panel.contains(related) || wrap.contains(related))) {
+          return;
+        }
+        hidePanel();
       }
 
       wrap.addEventListener("mouseenter", showPanel);
-      wrap.addEventListener("mouseleave", scheduleHidePanel);
+      wrap.addEventListener("mouseleave", handlePointerLeave);
       panel.addEventListener("mouseenter", () => {
         clearCloseTimer();
         showPanel();
       });
-      panel.addEventListener("mouseleave", scheduleHidePanel);
+      panel.addEventListener("mouseleave", handlePointerLeave);
 
       wrap.append(btn);
       body.append(wrap);
