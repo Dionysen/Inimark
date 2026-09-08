@@ -10,7 +10,7 @@ import {
   persistWidth,
   type ColumnResizeController,
 } from "./ui/column-resize.ts";
-import { mountTitleBar, type TitleBarController } from "./ui/titlebar.ts";
+import { mountTitleBar, type TitleBarController, type TitleBarMoreMenuActions } from "./ui/titlebar.ts";
 import { mountOutlinePanel } from "./sidebar/outline-panel.ts";
 import {
   mountGraphPanel,
@@ -72,6 +72,7 @@ function loadRightSidebarOpen(): boolean {
 
 export interface ShellMountOptions {
   onCloseRequest?: () => void | Promise<void>;
+  moreMenuActions?: TitleBarMoreMenuActions;
 }
 
 export function mountShell(
@@ -206,6 +207,7 @@ export function mountShell(
   titlebar = mountTitleBar(titlebarHost, {
     title: "Untitled",
     onClose: options.onCloseRequest,
+    moreMenuActions: options.moreMenuActions,
     sidebarToggle: {
       open: sidebarOpen,
       onToggle: toggleSidebar,

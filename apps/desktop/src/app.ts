@@ -15,7 +15,7 @@ import {
   setLastLibraryId,
   upsertLibrary,
 } from "./libraries/store.ts";
-import { isTauri, joinWorkspacePath } from "./platform/env.ts";
+import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
@@ -42,6 +42,7 @@ import {
 import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
+import { FileNavigationHistory } from "./navigation-history.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 import { showQuickOpenDialog } from "./ui/quick-open-dialog.ts";
 import {
@@ -65,8 +66,39 @@ export function mountApp(host: HTMLElement): AppController {
   let settings = loadSettings();
   applySettings(settings);
 
+  const navHistory = new FileNavigationHistory();
+
+  async function copyToClipboard(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const shell = mountShell(host, {
     onCloseRequest: () => requestAppClose(),
+    moreMenuActions: {
+      canGoBack: () => navHistory.canBack(),
+      canGoForward: () => navHistory.canForward(),
+      onBack: () => void goHistoryBack(),
+      onForward: () => void goHistoryForward(),
+      canRename: () => Boolean(workspace && activeFilePath),
+      onRename: () => shell.sidebar.renameActiveFile(),
+      canCopyPath: () => Boolean(workspace && activeFilePath),
+      onCopyFileName: () => {
+        if (!activeFilePath) return;
+        void copyToClipboard(fileNameFromPath(activeFilePath));
+      },
+      onCopyRelativePath: () => {
+        if (!activeFilePath) return;
+        void copyToClipboard(activeFilePath);
+      },
+      onCopyAbsolutePath: () => {
+        if (!workspace || !activeFilePath) return;
+        void copyToClipboard(joinWorkspacePath(workspace.rootPath, activeFilePath));
+      },
+    },
   });
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
@@ -355,6 +387,7 @@ export function mountApp(host: HTMLElement): AppController {
       persistLibrarySession();
       scheduleOutlineSync(result.text);
       recordRecentFile(activeLibraryId, path);
+      navHistory.record(path);
     } else {
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
@@ -372,6 +405,18 @@ export function mountApp(host: HTMLElement): AppController {
     }
   }
 
+  async function goHistoryBack(): Promise<void> {
+    const path = navHistory.back();
+    if (!path) return;
+    await navHistory.navigate((next) => openWorkspaceFile(next), path);
+  }
+
+  async function goHistoryForward(): Promise<void> {
+    const path = navHistory.forward();
+    if (!path) return;
+    await navHistory.navigate((next) => openWorkspaceFile(next), path);
+  }
+
   async function activateWorkspace(
     next: Workspace,
     options?: { restoreSession?: boolean },
@@ -381,6 +426,7 @@ export function mountApp(host: HTMLElement): AppController {
     upsertLibrary(workspace.rootPath, workspace.rootName);
     setLastLibraryId(activeLibraryId);
     refreshLibraryList();
+    navHistory.clear();
     shell.sidebar.setWorkspace(workspace);
     void buildLinkIndexForWorkspace(workspace);
 
@@ -566,6 +612,8 @@ export function mountApp(host: HTMLElement): AppController {
       }
       linkIndex.persistCache(workspace!.rootPath);
 
+      navHistory.remap(pairs);
+
       const activeMoved = pairs.find(
         (p) =>
           activeFilePath === p.from ||
@@ -611,6 +659,7 @@ export function mountApp(host: HTMLElement): AppController {
     workspace = null;
     activeFilePath = null;
     activeLibraryId = null;
+    navHistory.clear();
     shell.sidebar.setWorkspace(null);
     linkIndex.clear();
     shell.graph.setActiveFile(null);

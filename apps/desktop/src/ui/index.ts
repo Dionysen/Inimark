@@ -56,6 +56,7 @@ export {
   mountTitleBar,
   type TitleBarController,
   type TitleBarOptions,
+  type TitleBarMoreMenuActions,
   type WindowControlMode,
   type SidebarToggleOptions,
 } from "./titlebar.ts";

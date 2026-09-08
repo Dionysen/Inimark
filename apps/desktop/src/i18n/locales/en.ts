@@ -28,6 +28,17 @@ export const en: Dictionary = {
     showInExplorer: "Show in Explorer",
     showInFiles: "Show in Files",
   },
+  titlebar: {
+    more: {
+      back: "Back",
+      forward: "Forward",
+      rename: "Rename current file",
+      copy: "Copy",
+      copyFileName: "File name",
+      copyRelativePath: "Relative path",
+      copyAbsolutePath: "Absolute path",
+    },
+  },
   sidebar: {
     tabs: {
       files: "Files",

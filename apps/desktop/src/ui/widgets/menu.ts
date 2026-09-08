@@ -17,6 +17,7 @@ export interface MenuItemOptions {
   danger?: boolean;
   /** Show a trailing checkmark (sort menus, etc.). */
   checked?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }
 
@@ -61,6 +62,11 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
   if (options.selected) btn.classList.add("is-selected");
   if (options.danger) btn.classList.add("is-danger");
   if (options.icon) btn.classList.add("inimark-menu-item--with-icon");
+  if (options.disabled) {
+    btn.disabled = true;
+    btn.classList.add("is-disabled");
+    btn.setAttribute("aria-disabled", "true");
+  }
   if (options.checked != null) {
     btn.classList.add("inimark-menu-item--checkable");
     if (options.checked) {
@@ -117,7 +123,9 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
     btn.append(check);
   }
 
-  if (options.onClick) btn.addEventListener("click", options.onClick);
+  if (options.onClick && !options.disabled) {
+    btn.addEventListener("click", options.onClick);
+  }
   return btn;
 }
 
@@ -137,6 +145,7 @@ export function createMenu(): MenuController {
 
   let open = false;
   const flyouts: HTMLElement[] = [];
+  const submenuWraps: HTMLElement[] = [];
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   function clearCloseTimer(): void {
@@ -151,6 +160,11 @@ export function createMenu(): MenuController {
     for (const panel of flyouts) {
       panel.hidden = true;
       panel.classList.remove("is-open");
+    }
+    for (const wrap of submenuWraps) {
+      wrap.classList.remove("is-open");
+      const trigger = wrap.querySelector<HTMLElement>(".inimark-menu-item--submenu");
+      trigger?.setAttribute("aria-expanded", "false");
     }
   }
 
@@ -171,6 +185,7 @@ export function createMenu(): MenuController {
     hideFlyouts();
     for (const panel of flyouts) panel.remove();
     flyouts.length = 0;
+    submenuWraps.length = 0;
   }
 
   return {
@@ -238,6 +253,7 @@ export function createMenu(): MenuController {
       panel.append(panelBody);
       document.body.append(panel);
       flyouts.push(panel);
+      submenuWraps.push(wrap);
 
       function positionPanel(): void {
         const rect = wrap.getBoundingClientRect();
@@ -258,14 +274,25 @@ export function createMenu(): MenuController {
         panel.style.top = `${top}px`;
       }
 
+      function deactivateOtherSubmenus(): void {
+        for (const other of flyouts) {
+          if (other === panel) continue;
+          other.hidden = true;
+          other.classList.remove("is-open");
+        }
+        for (const otherWrap of submenuWraps) {
+          if (otherWrap === wrap) continue;
+          otherWrap.classList.remove("is-open");
+          const trigger = otherWrap.querySelector<HTMLElement>(
+            ".inimark-menu-item--submenu",
+          );
+          trigger?.setAttribute("aria-expanded", "false");
+        }
+      }
+
       function showPanel(): void {
         clearCloseTimer();
-        for (const other of flyouts) {
-          if (other !== panel) {
-            other.hidden = true;
-            other.classList.remove("is-open");
-          }
-        }
+        deactivateOtherSubmenus();
         panel.hidden = false;
         panel.classList.add("is-open");
         btn.setAttribute("aria-expanded", "true");
@@ -329,4 +356,7 @@ export const menuIcons = {
   bookmark: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
   library: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 4.5h3.25v15H5.25A1.25 1.25 0 0 1 4 18.25V4.5z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7.25 4.5H11v15H7.25"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11.75 5.75 20 4v14.5l-8.25 1.75V5.75z"/></svg>`,
   close: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 6 6 18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m6 6 12 12"/></svg>`,
+  back: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7"/></svg>`,
+  forward: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m12 5 7 7-7 7"/></svg>`,
+  appearance: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77"/></svg>`,
 } as const;

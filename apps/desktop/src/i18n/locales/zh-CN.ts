@@ -28,6 +28,17 @@ export const zhCN: Dictionary = {
     showInExplorer: "在资源管理器中显示",
     showInFiles: "在文件管理器中显示",
   },
+  titlebar: {
+    more: {
+      back: "后退",
+      forward: "前进",
+      rename: "重命名当前文件",
+      copy: "复制",
+      copyFileName: "文件名",
+      copyRelativePath: "相对路径",
+      copyAbsolutePath: "绝对路径",
+    },
+  },
   sidebar: {
     tabs: {
       files: "文件",

@@ -15,7 +15,7 @@ import {
   rightSidebarToggleIcon,
   sidebarToggleIcon,
 } from "./widgets/icon-button.ts";
-import { createMenu } from "./widgets/menu.ts";
+import { createMenu, menuIcons } from "./widgets/menu.ts";
 import {
   windowCloseIcon,
   windowMaximizeIcon,
@@ -37,6 +37,20 @@ export interface SidebarToggleOptions {
   onToggle: () => void;
 }
 
+/** Actions for the editor titlebar overflow (“More”) menu. */
+export interface TitleBarMoreMenuActions {
+  canGoBack: () => boolean;
+  canGoForward: () => boolean;
+  onBack: () => void;
+  onForward: () => void;
+  canRename: () => boolean;
+  onRename: () => void;
+  canCopyPath: () => boolean;
+  onCopyFileName: () => void;
+  onCopyRelativePath: () => void;
+  onCopyAbsolutePath: () => void;
+}
+
 export interface TitleBarOptions {
   title?: string;
   /** When omitted, shows custom controls in Tauri on non-macOS platforms. */
@@ -46,6 +60,7 @@ export interface TitleBarOptions {
   rightSidebarToggle?: SidebarToggleOptions;
   /** Editor chrome: overflow menu with appearance controls. */
   showMoreMenu?: boolean;
+  moreMenuActions?: TitleBarMoreMenuActions;
   onClose?: () => void | Promise<void>;
 }
 
@@ -72,6 +87,7 @@ export function mountTitleBar(
     !usesNativeWindowControls() &&
     (options.showWindowControls ?? supportsWindowChrome());
   const showMoreMenu = options.showMoreMenu ?? Boolean(options.rightSidebarToggle);
+  const moreActions = options.moreMenuActions;
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
   let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
@@ -267,8 +283,73 @@ export function mountTitleBar(
     const { appearanceMode } = themeManager.getSnapshot();
     moreMenu.clear();
     moreMenu.setPath("");
+
+    if (moreActions) {
+      moreMenu.addItem({
+        label: t("titlebar.more.back"),
+        icon: menuIcons.back,
+        disabled: !moreActions.canGoBack(),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onBack();
+        },
+      });
+      moreMenu.addItem({
+        label: t("titlebar.more.forward"),
+        icon: menuIcons.forward,
+        disabled: !moreActions.canGoForward(),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onForward();
+        },
+      });
+      moreMenu.addDivider();
+      moreMenu.addItem({
+        label: t("titlebar.more.rename"),
+        icon: menuIcons.rename,
+        disabled: !moreActions.canRename(),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onRename();
+        },
+      });
+      moreMenu.addSubmenuItem({
+        label: t("titlebar.more.copy"),
+        icon: menuIcons.copy,
+        items: [
+          {
+            label: t("titlebar.more.copyFileName"),
+            disabled: !moreActions.canCopyPath(),
+            onClick() {
+              closeMoreMenu();
+              moreActions.onCopyFileName();
+            },
+          },
+          {
+            label: t("titlebar.more.copyRelativePath"),
+            disabled: !moreActions.canCopyPath(),
+            onClick() {
+              closeMoreMenu();
+              moreActions.onCopyRelativePath();
+            },
+          },
+          {
+            label: t("titlebar.more.copyAbsolutePath"),
+            disabled: !moreActions.canCopyPath(),
+            onClick() {
+              closeMoreMenu();
+              moreActions.onCopyAbsolutePath();
+            },
+          },
+        ],
+      });
+      moreMenu.addDivider();
+    }
+
     moreMenu.addSubmenuItem({
       label: t("settings.theme.appearanceMode"),
+      icon: menuIcons.appearance,
+      meta: t(`settings.theme.${appearanceMode}`),
       items: APPEARANCE_MODES.map((mode) => ({
         label: t(`settings.theme.${mode}`),
         checked: appearanceMode === mode,

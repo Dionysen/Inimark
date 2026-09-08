@@ -124,6 +124,8 @@ export interface SidebarController {
   copySelection(): void;
   pasteClipboard(): Promise<void>;
   renameSelection(): void;
+  /** Rename the currently open file (expands tree + inline rename). */
+  renameActiveFile(): void;
   deleteSelection(): Promise<void>;
   /** True when explorer shortcuts should run (selection + recent tree interaction). */
   isTreeShortcutContext(): boolean;
@@ -1320,6 +1322,23 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (node) startInlineRename(node);
   }
 
+  function renameActiveFile(): void {
+    if (!activePath || !currentWorkspace) return;
+    const path = activePath;
+    const node = findTreeNode(currentTree, path);
+    if (!node || node.kind !== "file") return;
+
+    if (tabIds.includes("files")) setActivePanel("files");
+    locateActiveFile();
+    setSelection([path], path);
+    treeShortcutArmed = true;
+    rerender();
+    queueMicrotask(() => {
+      const latest = findTreeNode(currentTree, path);
+      if (latest) startInlineRename(latest);
+    });
+  }
+
   function isTreeShortcutContext(): boolean {
     return (
       treeShortcutArmed &&
@@ -2446,6 +2465,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     copySelection,
     pasteClipboard,
     renameSelection,
+    renameActiveFile,
     deleteSelection,
     isTreeShortcutContext,
     onToggleSidebar(handler) {
