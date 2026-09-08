@@ -20,7 +20,10 @@ import {
 
 export type { SidebarTabId };
 
-export type EditorWidth = "narrow" | "medium" | "wide" | "full";
+export const EDITOR_WIDTH_MIN = 480;
+export const EDITOR_WIDTH_MAX = 1280;
+export const EDITOR_WIDTH_DEFAULT = 768;
+
 export type AppearanceMode = "light" | "dark" | "system";
 export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
@@ -78,7 +81,7 @@ export interface AppSettings {
   locale: AppLocale;
   fontSize: number;
   codeFontSize: number;
-  editorWidth: EditorWidth;
+  editorWidth: number;
   appearance: AppearanceMode;
   editorFont: string;
   codeFont: string;
@@ -146,7 +149,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   locale: "system",
   fontSize: 16,
   codeFontSize: 14,
-  editorWidth: "medium",
+  editorWidth: EDITOR_WIDTH_DEFAULT,
   appearance: "light",
   editorFont: "system",
   codeFont: "code",
@@ -169,11 +172,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   wordCount: { ...DEFAULT_WORD_COUNT_SETTINGS },
 };
 
-const EDITOR_WIDTHS: Record<EditorWidth, string> = {
-  narrow: "36rem",
-  medium: "48rem",
-  wide: "60rem",
-  full: "100%",
+const EDITOR_WIDTH_LEGACY: Record<string, number> = {
+  narrow: 576,
+  medium: EDITOR_WIDTH_DEFAULT,
+  wide: 960,
+  full: EDITOR_WIDTH_MAX,
 };
 
 const DENSITY_VARS: Record<
@@ -250,7 +253,7 @@ export function applySettings(settings: AppSettings): void {
   root.style.setProperty("--font-mono-size", `${settings.codeFontSize}px`);
   root.style.setProperty(
     "--inimark-editor-max-width",
-    EDITOR_WIDTHS[settings.editorWidth],
+    `${settings.editorWidth}px`,
   );
   root.style.setProperty("--editor-font", resolveFontValue(settings.editorFont, "system"));
   root.style.setProperty("--font-mono", resolveFontValue(settings.codeFont, "code"));
@@ -280,19 +283,6 @@ export function resolveAppearance(mode: AppearanceMode): "light" | "dark" {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
   return mode;
-}
-
-export function editorWidthLabel(width: EditorWidth): string {
-  switch (width) {
-    case "narrow":
-      return t("settings.width.narrow");
-    case "medium":
-      return t("settings.width.medium");
-    case "wide":
-      return t("settings.width.wide");
-    case "full":
-      return t("settings.width.full");
-  }
 }
 
 export function menuDensityLabel(density: MenuDensity): string {
@@ -337,9 +327,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     locale: isAppLocale(parsed.locale) ? parsed.locale : DEFAULT_SETTINGS.locale,
     fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, 10, 24),
     codeFontSize: clamp(parsed.codeFontSize ?? DEFAULT_SETTINGS.codeFontSize, 10, 24),
-    editorWidth: isEditorWidth(parsed.editorWidth)
-      ? parsed.editorWidth
-      : DEFAULT_SETTINGS.editorWidth,
+    editorWidth: normalizeEditorWidth(parsed.editorWidth),
     appearance: isAppearance(parsed.appearance)
       ? parsed.appearance
       : DEFAULT_SETTINGS.appearance,
@@ -462,8 +450,14 @@ function clampFloat(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value * 10) / 10));
 }
 
-function isEditorWidth(value: unknown): value is EditorWidth {
-  return value === "narrow" || value === "medium" || value === "wide" || value === "full";
+function normalizeEditorWidth(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return clamp(value, EDITOR_WIDTH_MIN, EDITOR_WIDTH_MAX);
+  }
+  if (typeof value === "string" && value in EDITOR_WIDTH_LEGACY) {
+    return EDITOR_WIDTH_LEGACY[value]!;
+  }
+  return DEFAULT_SETTINGS.editorWidth;
 }
 
 function isAppearance(value: unknown): value is AppearanceMode {

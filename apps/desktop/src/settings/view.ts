@@ -36,13 +36,13 @@ import {
 import {
   type AppLocale,
   type AppSettings,
-  type EditorWidth,
   type FontPresetId,
   type ImageFilenameFormat,
   type ImageStorageMode,
   type LinkUpdateMode,
   type MenuDensity,
-  editorWidthLabel,
+  EDITOR_WIDTH_MAX,
+  EDITOR_WIDTH_MIN,
   loadSettings,
   menuDensityLabel,
   patchGraphSettings,
@@ -88,6 +88,7 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "typewriter",
     "immersive",
     "focus",
+    "width",
     "line height",
   ],
   appearance: [
@@ -359,38 +360,6 @@ export function mountSettingsView(
   let graphControlsCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
-    body.append(createSectionTitle(t("settings.group.experience")));
-
-    const typewriter = createToggle({
-      checked: settings.typewriterMode,
-      title: t("settings.editor.typewriter"),
-      onChange(checked) {
-        update({ typewriterMode: checked });
-      },
-    });
-    body.append(
-      createRow(
-        t("settings.editor.typewriter"),
-        t("settings.editor.typewriterDesc"),
-        typewriter.el,
-      ),
-    );
-
-    const immersiveEditing = createToggle({
-      checked: settings.immersiveEditing,
-      title: t("settings.editor.immersiveEditing"),
-      onChange(checked) {
-        update({ immersiveEditing: checked });
-      },
-    });
-    body.append(
-      createRow(
-        t("settings.editor.immersiveEditing"),
-        t("settings.editor.immersiveEditingDesc"),
-        immersiveEditing.el,
-      ),
-    );
-
     body.append(createSectionTitle(t("settings.group.typography")));
 
     const editorFont = createFontPicker({
@@ -532,22 +501,56 @@ export function mountSettingsView(
       ),
     );
 
-    const widthSelect = createSelect({
+    const editorWidth = createSlider({
+      min: EDITOR_WIDTH_MIN,
+      max: EDITOR_WIDTH_MAX,
+      step: 1,
       value: settings.editorWidth,
-      options: (["narrow", "medium", "wide", "full"] as EditorWidth[]).map((option) => ({
-        value: option,
-        label: editorWidthLabel(option),
-      })),
-      minWidth: 150,
+      formatValue: (value) => `${value}px`,
+      onInput(value) {
+        updateLive({ editorWidth: value });
+      },
       onChange(value) {
-        update({ editorWidth: value as EditorWidth });
+        updateLive({ editorWidth: value });
       },
     });
     body.append(
       createRow(
         t("settings.editor.editorWidth"),
         t("settings.editor.editorWidthDesc"),
-        widthSelect.el,
+        editorWidth.el,
+      ),
+    );
+
+    body.append(createSectionTitle(t("settings.group.experience")));
+
+    const typewriter = createToggle({
+      checked: settings.typewriterMode,
+      title: t("settings.editor.typewriter"),
+      onChange(checked) {
+        update({ typewriterMode: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.typewriter"),
+        t("settings.editor.typewriterDesc"),
+        typewriter.el,
+      ),
+    );
+
+    const immersiveEditing = createToggle({
+      checked: settings.immersiveEditing,
+      title: t("settings.editor.immersiveEditing"),
+      onChange(checked) {
+        update({ immersiveEditing: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.immersiveEditing"),
+        t("settings.editor.immersiveEditingDesc"),
+        immersiveEditing.el,
       ),
     );
 

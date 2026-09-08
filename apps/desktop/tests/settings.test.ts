@@ -33,13 +33,13 @@ describe("settings store", () => {
     saveSettings({
       ...DEFAULT_SETTINGS,
       fontSize: 18,
-      editorWidth: "wide",
+      editorWidth: 960,
       appearance: "dark",
       autoSave: true,
     });
     const loaded = loadSettings();
     expect(loaded.fontSize).toBe(18);
-    expect(loaded.editorWidth).toBe("wide");
+    expect(loaded.editorWidth).toBe(960);
     expect(loaded.autoSave).toBe(true);
 
     applySettings(loaded);
@@ -47,7 +47,7 @@ describe("settings store", () => {
       "18px",
     );
     expect(document.documentElement.style.getPropertyValue("--inimark-editor-max-width")).toBe(
-      "60rem",
+      "960px",
     );
     expect(document.documentElement.dataset.glass).toBe("false");
   });

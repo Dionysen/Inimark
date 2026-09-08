@@ -58,7 +58,7 @@
   --inimark-sidebar-dock-height: 3.25rem;
 
   --inimark-editor-font-size: var(--editor-font-size, 16px);
-  --inimark-editor-max-width: 48rem;
+  --inimark-editor-max-width: 768px;
 
   /* Menus — solid by default; frosted when html[data-glass="true"].
      Floating library chrome always uses liquid glass (see app.css). */

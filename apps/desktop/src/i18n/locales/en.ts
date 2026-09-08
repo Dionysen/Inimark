@@ -262,7 +262,8 @@ export const en: Dictionary = {
       codeLineHeight: "Code line height",
       codeLineHeightDesc: "Leading inside code blocks.",
       editorWidth: "Editor width",
-      editorWidthDesc: "Maximum width of the writing column.",
+      editorWidthDesc:
+        "Maximum width of the writing column (480–1280px). Drag the left or right edge in the editor to adjust.",
       autoSave: "Auto save",
       autoSaveDesc: "Save the open library file shortly after edits.",
       linkUpdateOnMove: "Update links on move",
