@@ -596,7 +596,7 @@ html[data-glass="true"] .inimark-select-panel {
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  min-height: calc(var(--inimark-menu-item-padding-y) * 2 + 1.25rem);
+  min-height: var(--inimark-menu-row-height);
   padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
   border: 0;
   border-radius: var(--inimark-radius-menu-item);

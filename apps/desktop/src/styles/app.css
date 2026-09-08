@@ -1292,7 +1292,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 4px 0;
+  padding: 0;
 }
 
 .inimark-editor-context-icon-wrap {
@@ -1302,8 +1302,8 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
 .inimark-editor-context-icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: var(--inimark-menu-row-height);
+  height: var(--inimark-menu-row-height);
   border: 0;
   border-radius: var(--inimark-radius-menu-item);
   padding: 0;
@@ -1319,8 +1319,8 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
 }
 
 .inimark-editor-context-icon-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 1rem;
+  height: 1rem;
 }
 
 .inimark-editor-context-divider {
@@ -1338,7 +1338,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   align-items: center;
   width: 100%;
   gap: 0.5rem;
-  min-height: calc(var(--inimark-menu-item-padding-y, 4px) * 2 + 1.25rem);
+  min-height: var(--inimark-menu-row-height);
   padding: var(--inimark-menu-item-padding-y, 4px) var(--inimark-control-padding-x, 8px);
   border: 0;
   border-radius: var(--inimark-radius-menu-item);

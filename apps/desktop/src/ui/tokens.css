@@ -37,6 +37,7 @@
   --inimark-control-padding-x: var(--control-padding-x, 8px);
   --inimark-control-font-size: var(--control-font-size, 13px);
   --inimark-menu-item-padding-y: var(--menu-item-padding-y, 4px);
+  --inimark-menu-row-height: calc(var(--inimark-menu-item-padding-y) * 2 + 1.25rem);
   --inimark-tree-item-padding-y: var(--tree-item-padding-y, 5px);
   --inimark-control-bg: var(--bg-input, var(--inimark-content-bg));
   --inimark-control-transition: 150ms ease;
