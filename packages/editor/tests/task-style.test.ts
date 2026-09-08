@@ -8,5 +8,10 @@ describe("task list styling", () => {
 
     expect(widgetsCss).toContain(".ProseMirror li:has(> p > .checkbox-frame:first-child)");
     expect(widgetsCss).toContain("list-style-type: none;");
+    expect(widgetsCss).toContain("border-radius: 50%;");
+    expect(widgetsCss).toContain("background: var(--accent");
+    expect(widgetsCss).toContain("vertical-align: middle;");
+    expect(widgetsCss).toContain("width: 1em;");
+    expect(widgetsCss).toContain("aspect-ratio: 1 / 1;");
   });
 });

@@ -363,43 +363,48 @@
   list-style-type: none;
 }
 
-/* Outer wrapper — extends the inline-block to the right with
- * transparent padding so the native caret (which positions itself at
- * the OUTER edge of an inline-block, not past the margin) ends up
- * visually separated from the visible glyph. */
+/* Outer wrapper — extends the inline box to the right with transparent
+ * padding so the native caret ends up visually separated from the glyph. */
 .ProseMirror .checkbox-frame {
   display: inline-block;
-  padding-right: 8px;
-  vertical-align: -2px;
+  width: 1em;
+  height: 1em;
+  line-height: 0;
+  padding-right: 1.35em;
+  vertical-align: middle;
   user-select: none;
+  flex-shrink: 0;
 }
 .ProseMirror .checkbox {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  vertical-align: -2px;
-  border: 1.5px solid #888;
-  border-radius: 3px;
-  background: #fff;
+  display: block;
+  width: 1em;
+  height: 1em;
+  aspect-ratio: 1 / 1;
+  border: max(1px, 0.085em) solid var(--border, #888);
+  border-radius: 50%;
+  background: var(--bg-primary, #fff);
   cursor: pointer;
   user-select: none;
   position: relative;
   box-sizing: border-box;
+  transition: background 150ms ease, border-color 150ms ease;
 }
 .ProseMirror .checkbox[data-checked="1"] {
-  background: #1f1f1f;
-  border-color: #1f1f1f;
+  background: var(--accent, #4078c0);
+  border-color: var(--border, #888);
 }
 .ProseMirror .checkbox[data-checked="1"]::after {
   content: "";
   position: absolute;
-  left: 3px;
-  top: 0;
-  width: 4px;
-  height: 8px;
+  left: 50%;
+  top: 50%;
+  width: 0.22em;
+  height: 0.42em;
   border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  border-color: color-contrast(var(--accent, #4078c0) vs #fff, #111);
+  border-width: 0 0.11em 0.11em 0;
+  transform: translate(-50%, -58%) rotate(45deg);
+  box-sizing: border-box;
 }
 
 /* ─── Fenced code NodeView chrome ────────────────────────────────── */
@@ -720,17 +725,6 @@ html[data-glass="true"] .table-resize-popup.inimark-glass {
 }
 :root[data-appearance="dark"] .ProseMirror .emoji-completion-name {
   color: #bbb4aa;
-}
-:root[data-appearance="dark"] .ProseMirror .checkbox {
-  background: #202225;
-  border-color: #8b8f95;
-}
-:root[data-appearance="dark"] .ProseMirror .checkbox[data-checked="1"] {
-  background: #ece7dd;
-  border-color: #ece7dd;
-}
-:root[data-appearance="dark"] .ProseMirror .checkbox[data-checked="1"]::after {
-  border-color: #202225;
 }
 :root[data-appearance="dark"] .ProseMirror .code-block-node .cb-lang-input {
   background: #24262a;
