@@ -305,18 +305,33 @@ html.platform-windows .inimark-titlebar-btn {
 /* ── Unified custom overlay scrollbars (theme via --inimark-scrollbar-*) ──
  * Native bars are hidden. Rails live in #inimark-scrollbar-layer (fixed).
  * Reveal: scroll flash, or pointer in the edge gutter / on the rail.
+ *
+ * WebView2 can still paint Fluent/default overlay bars during wheel scroll unless
+ * every pseudo-part is zeroed out (display:none alone is not enough on Windows).
  */
 .inimark-scrollbar,
 .cm-editor .cm-scroller {
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scrollbar-color: transparent transparent;
 }
 
 .inimark-scrollbar::-webkit-scrollbar,
 .cm-editor .cm-scroller::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent;
+  appearance: none;
+}
+
+.inimark-scrollbar::-webkit-scrollbar-thumb,
+.cm-editor .cm-scroller::-webkit-scrollbar-thumb,
+.inimark-scrollbar::-webkit-scrollbar-track,
+.cm-editor .cm-scroller::-webkit-scrollbar-track,
+.inimark-scrollbar::-webkit-scrollbar-corner,
+.cm-editor .cm-scroller::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
 }
 
 .inimark-scrollbar-layer {
@@ -374,6 +389,7 @@ html.platform-windows .inimark-titlebar-btn {
   margin-block-end: 1px;
 }
 
+.inimark-scrollbar-rail.is-scrolling .inimark-scrollbar-thumb,
 .inimark-scrollbar-rail.is-visible .inimark-scrollbar-thumb:hover,
 .inimark-scrollbar-rail.is-dragging .inimark-scrollbar-thumb {
   background: var(--inimark-scrollbar-thumb-hover);

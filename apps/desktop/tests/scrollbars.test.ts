@@ -118,6 +118,11 @@ describe("custom overlay scrollbars", () => {
 
     host.dispatchEvent(new WheelEvent("wheel", { deltaY: 40, bubbles: true }));
     expect(rail?.classList.contains("is-visible")).toBe(true);
+    expect(rail?.classList.contains("is-scrolling")).toBe(true);
+
+    vi.advanceTimersByTime(700);
+    expect(rail?.classList.contains("is-visible")).toBe(false);
+    expect(rail?.classList.contains("is-scrolling")).toBe(false);
 
     teardown();
     host.remove();

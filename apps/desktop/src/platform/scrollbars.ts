@@ -128,12 +128,18 @@ function setVisible(inst: ScrollbarInstance, visible: boolean): void {
   inst.railX.classList.toggle("is-interactive", show && isScrollableX(inst.host));
 }
 
+function setScrolling(inst: ScrollbarInstance, scrolling: boolean): void {
+  inst.scrolling = scrolling;
+  inst.railY.classList.toggle("is-scrolling", scrolling);
+  inst.railX.classList.toggle("is-scrolling", scrolling);
+}
+
 function flash(inst: ScrollbarInstance): void {
-  inst.scrolling = true;
+  setScrolling(inst, true);
   setVisible(inst, true);
   clearTimeout(inst.hideTimer);
   inst.hideTimer = setTimeout(() => {
-    inst.scrolling = false;
+    setScrolling(inst, false);
     if (!inst.hover && !inst.drag) setVisible(inst, false);
   }, SCROLL_HIDE_DELAY_MS);
 }
