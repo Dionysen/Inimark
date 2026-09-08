@@ -48,8 +48,8 @@ describe("common editing shortcuts", () => {
     expect(serialize(next.doc)).toBe("Title");
   });
 
-  test("Mod-Shift-M inserts a math block", () => {
-    const next = apply(setup(""), ["<Mod-Shift-M>"]);
+  test("Alt-Mod-b inserts a math block", () => {
+    const next = apply(setup(""), ["<Alt-Mod-b>"]);
     expect(serialize(next.doc)).toBe("$$\n\n$$");
   });
 
@@ -67,35 +67,70 @@ describe("common editing shortcuts", () => {
     expect(paragraph?.child(2).textContent).toBe("next");
   });
 
-  test("Mod-Shift-K inserts an empty fenced code block shell", () => {
-    const next = apply(setup(""), ["<Mod-Shift-K>"]);
+  test("Alt-Mod-c inserts an empty fenced code block shell", () => {
+    const next = apply(setup(""), ["<Alt-Mod-c>"]);
     expect(serialize(next.doc)).toBe("```\n\n```");
     expect(next.doc.resolve(next.selection.from).parent.type.name).toBe("code_block");
   });
 
-  test("Mod-Shift-K places the caret inside a code block inserted after text", () => {
-    const next = apply(setup("hello"), ["<Mod-Shift-K>"]);
+  test("Alt-Mod-c places the caret inside a code block inserted after text", () => {
+    const next = apply(setup("hello"), ["<Alt-Mod-c>"]);
     expect(serialize(next.doc)).toBe("hello\n\n```\n\n```");
     expect(next.doc.resolve(next.selection.from).parent.type.name).toBe("code_block");
   });
 
-  test("Mod-Shift-Q wraps the current paragraph in a blockquote", () => {
-    const next = apply(setup("quote"), ["<Mod-Shift-Q>"]);
-    expect(serialize(next.doc)).toBe("> quote");
-  });
-
-  test("Mod-Shift-8 wraps the current paragraph in a bullet list", () => {
-    const next = apply(setup("item"), ["<Mod-Shift-8>"]);
+  test("Alt-Mod-u wraps the current paragraph in a bullet list", () => {
+    const next = apply(setup("item"), ["<Alt-Mod-u>"]);
     expect(serialize(next.doc)).toBe("- item");
   });
 
-  test("Mod-Shift-x turns the current paragraph into a task list", () => {
-    const next = apply(setup("item"), ["<Mod-Shift-x>"]);
+  test("Alt-Mod-o wraps the current paragraph in an ordered list", () => {
+    const next = apply(setup("item"), ["<Alt-Mod-o>"]);
+    expect(serialize(next.doc)).toBe("1. item");
+  });
+
+  test("Alt-Mod-x turns the current paragraph into a task list", () => {
+    const next = apply(setup("item"), ["<Alt-Mod-x>"]);
     expect(serialize(next.doc)).toBe("- [ ] item");
+  });
+
+  test("Alt-Mod-q wraps the current paragraph in a blockquote", () => {
+    const next = apply(setup("quote"), ["<Alt-Mod-q>"]);
+    expect(serialize(next.doc)).toBe("> quote");
+  });
+
+  test("Alt-Mod-r inserts a footnote marker", () => {
+    const next = apply(setup("text"), ["<Alt-Mod-r>"]);
+    expect(serialize(next.doc)).toBe("text\\[^\\]");
+  });
+
+  test("Mod-= promotes the current heading level", () => {
+    const next = apply(setup("## Title"), ["<Mod-=>"]);
+    expect(serialize(next.doc)).toBe("# Title");
+  });
+
+  test("Mod-- demotes the current heading level", () => {
+    const next = apply(setup("# Title"), ["<Mod-->"]);
+    expect(serialize(next.doc)).toBe("## Title");
+  });
+
+  test("Alt-Mod-- inserts a horizontal rule", () => {
+    const next = apply(setup("before"), ["<Alt-Mod-->"]);
+    expect(serialize(next.doc)).toBe("before\n\n---");
   });
 
   test("undo and redo are wired through common shortcuts", () => {
     const next = apply(setup(""), ["a", "<Mod-z>", "<Mod-y>"]);
     expect(serialize(next.doc)).toBe("a");
+  });
+
+  test("empty format blocks toggle back to paragraph with the same shortcut", () => {
+    expect(serialize(apply(apply(setup(""), ["<Mod-1>"]), ["<Mod-1>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-q>"]), ["<Alt-Mod-q>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-u>"]), ["<Alt-Mod-u>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-o>"]), ["<Alt-Mod-o>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-x>"]), ["<Alt-Mod-x>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-c>"]), ["<Alt-Mod-c>"]).doc)).toBe("");
+    expect(serialize(apply(apply(setup(""), ["<Alt-Mod-b>"]), ["<Alt-Mod-b>"]).doc)).toBe("");
   });
 });

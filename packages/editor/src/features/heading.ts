@@ -1,4 +1,5 @@
 import type { Schema } from "prosemirror-model";
+import type { Command } from "prosemirror-state";
 import { Plugin, Selection, TextSelection } from "prosemirror-state";
 
 import { leaveLineDraft } from "../block-draft.ts";
@@ -88,12 +89,41 @@ function makeHeadingPlugin(schema: Schema) {
   });
 }
 
+function changeHeadingLevel(schema: Schema, delta: number): Command {
+  return (state, dispatch) => {
+    const $from = state.selection.$from;
+    for (let d = $from.depth; d >= 0; d--) {
+      const node = $from.node(d);
+      if (node.type.name !== "heading") continue;
+      const level = node.attrs.level as number;
+      const pos = $from.before(d);
+      if (dispatch) {
+        const tr = state.tr;
+        if (delta < 0) {
+          const newLevel = Math.max(1, level - 1);
+          if (newLevel === level) return true;
+          tr.setNodeMarkup(pos, null, { ...node.attrs, level: newLevel });
+        } else if (level >= 6) {
+          tr.setBlockType(pos, pos + node.nodeSize, schema.nodes.paragraph);
+        } else {
+          tr.setNodeMarkup(pos, null, { ...node.attrs, level: level + 1 });
+        }
+        dispatch(tr);
+      }
+      return true;
+    }
+    return false;
+  };
+}
+
 export const heading: FeatureSpec = {
   name: "heading",
 
   plugins: (schema) => [makeHeadingPlugin(schema).plugin, headingArrowDownPlugin()],
 
   keymap: (schema) => ({
+    "Mod-=": changeHeadingLevel(schema, -1),
+    "Mod--": changeHeadingLevel(schema, 1),
     // Empty heading + Backspace at start → unwrap to paragraph.
     // PM's baseKeymap Backspace (joinBackward) would merge into the
     // previous block — we want the heading-in-place to become a

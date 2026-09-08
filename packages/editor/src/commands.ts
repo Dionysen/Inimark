@@ -1,12 +1,17 @@
-import { deleteSelection, setBlockType, wrapIn } from "prosemirror-commands";
+import { deleteSelection, setBlockType } from "prosemirror-commands";
 import type { Schema } from "prosemirror-model";
 import { TextSelection, type Command } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
-import { wrapInList } from "prosemirror-schema-list";
 
-import { insertMathBlockCommand } from "./features/math.ts";
-import { insertCodeBlockTransaction } from "./features/fenced-code.ts";
-import { insertTaskListCommand } from "./features/task.ts";
+import {
+  toggleBlockquote,
+  toggleBulletList,
+  toggleCodeBlock,
+  toggleHeading,
+  toggleMathBlock,
+  toggleOrderedList,
+  toggleTaskList,
+} from "./format-toggle.ts";
 import { schema } from "./schema.ts";
 import { wrapSelection } from "./shortcuts.ts";
 
@@ -44,17 +49,6 @@ function run(view: EditorView, command: Command): boolean {
   const ok = command(view.state, view.dispatch.bind(view), view);
   if (ok) view.focus();
   return ok;
-}
-
-function setHeading(level: number): Command {
-  return setBlockType(schema.nodes.heading, { level, style: "atx" });
-}
-
-function insertCodeBlock(s: Schema): Command {
-  return (state, dispatch) => {
-    if (dispatch) dispatch(insertCodeBlockTransaction(state, s));
-    return true;
-  };
 }
 
 function insertHorizontalRule(s: Schema): Command {
@@ -129,27 +123,27 @@ export function executeEditorCommand(
     case "link":
       return run(view, wrapSelection("[", "](url)"));
     case "quote":
-      return run(view, wrapIn(schema.nodes.blockquote));
+      return run(view, toggleBlockquote(schema));
     case "list":
-      return run(view, wrapInList(schema.nodes.bullet_list));
+      return run(view, toggleBulletList(schema));
     case "ordered-list":
-      return run(view, wrapInList(schema.nodes.ordered_list));
+      return run(view, toggleOrderedList(schema));
     case "check":
-      return run(view, insertTaskListCommand(schema));
+      return run(view, toggleTaskList(schema));
     case "paragraph":
       return run(view, setBlockType(schema.nodes.paragraph));
     case "heading-1":
-      return run(view, setHeading(1));
+      return run(view, toggleHeading(schema, 1));
     case "heading-2":
-      return run(view, setHeading(2));
+      return run(view, toggleHeading(schema, 2));
     case "heading-3":
-      return run(view, setHeading(3));
+      return run(view, toggleHeading(schema, 3));
     case "heading-4":
-      return run(view, setHeading(4));
+      return run(view, toggleHeading(schema, 4));
     case "heading-5":
-      return run(view, setHeading(5));
+      return run(view, toggleHeading(schema, 5));
     case "heading-6":
-      return run(view, setHeading(6));
+      return run(view, toggleHeading(schema, 6));
     case "hr":
       return run(view, insertHorizontalRule(schema));
     case "more":
@@ -157,9 +151,9 @@ export function executeEditorCommand(
     case "table":
       return run(view, insertTable(schema));
     case "code":
-      return run(view, insertCodeBlock(schema));
+      return run(view, toggleCodeBlock(schema));
     case "math":
-      return run(view, insertMathBlockCommand(schema));
+      return run(view, toggleMathBlock(schema));
     case "upload":
       return run(view, insertText("![]()"));
     case "wiki-link":

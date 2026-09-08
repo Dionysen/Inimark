@@ -290,7 +290,7 @@ export const en: Dictionary = {
       collapseBlank: "Collapse blank lines",
       collapseBlankDesc: "Reduce runs of 3+ blank lines to a single blank line.",
     },
-      appearance: {
+    appearance: {
       uiFont: "UI font",
       uiFontDesc: "Font for chrome, sidebar, and menus.",
       menuDensity: "Menu density",

@@ -36,6 +36,12 @@ function modKey(): string {
   return detectPlatform() === "macos" ? "⌘" : "Ctrl";
 }
 
+function altModShortcut(key: string): string {
+  const m = modKey();
+  if (detectPlatform() === "macos") return `⌥ ${m} ${key}`;
+  return `Alt+${m}+${key}`;
+}
+
 function svg(paths: string, size = 18): string {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 }
@@ -137,25 +143,25 @@ function buildIconRows(): IconAction[][] {
       {
         name: "quote",
         label: t("editor.ctx.quote"),
-        shortcut: `${m}Shift+Q`,
+        shortcut: altModShortcut("Q"),
         icon: ICONS.quote,
       },
       {
         name: "list",
         label: t("editor.ctx.bulletList"),
-        shortcut: `${m}Shift+8`,
+        shortcut: altModShortcut("U"),
         icon: ICONS.listUnordered,
       },
       {
         name: "ordered-list",
         label: t("editor.ctx.orderedList"),
-        shortcut: `${m}Shift+7`,
+        shortcut: altModShortcut("O"),
         icon: ICONS.listOrdered,
       },
       {
         name: "check",
         label: t("editor.ctx.taskList"),
-        shortcut: `${m}Shift+X`,
+        shortcut: altModShortcut("X"),
         icon: ICONS.checkSquare,
       },
       { name: "highlight", label: t("editor.ctx.highlight"), icon: ICONS.highlight },
@@ -229,21 +235,33 @@ function buildSubmenus(): SubmenuRow[] {
       icon: ICONS.plus,
       items: [
         { kind: "item", name: "upload", label: t("editor.ctx.image"), icon: ICONS.image },
-        { kind: "item", name: "hr", label: t("editor.ctx.hr"), icon: ICONS.minus },
+        {
+          kind: "item",
+          name: "hr",
+          label: t("editor.ctx.hr"),
+          shortcut: altModShortcut("-"),
+          icon: ICONS.minus,
+        },
         { kind: "item", name: "more", label: t("editor.ctx.moreTag"), icon: ICONS.minus },
-        { kind: "item", name: "table", label: t("editor.ctx.table"), icon: ICONS.table },
+        {
+          kind: "item",
+          name: "table",
+          label: t("editor.ctx.table"),
+          shortcut: altModShortcut("T"),
+          icon: ICONS.table,
+        },
         {
           kind: "item",
           name: "code",
           label: t("editor.ctx.codeBlock"),
-          shortcut: `${m}Shift+K`,
+          shortcut: altModShortcut("C"),
           icon: ICONS.codeBlock,
         },
         {
           kind: "item",
           name: "math",
           label: t("editor.ctx.mathBlock"),
-          shortcut: `${m}Shift+M`,
+          shortcut: altModShortcut("B"),
           icon: ICONS.math,
         },
         { kind: "divider" },

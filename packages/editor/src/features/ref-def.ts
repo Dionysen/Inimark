@@ -1,5 +1,5 @@
 import type { Node as PMNode, Schema } from "prosemirror-model";
-import { Plugin, TextSelection } from "prosemirror-state";
+import { Plugin, TextSelection, type Command } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 import type { FeatureSpec } from "./_types.ts";
@@ -122,6 +122,19 @@ function buildLinkDef(
   ]);
 }
 
+function insertLinkRefDraft(): Command {
+  return (state, dispatch) => {
+    const { from, to } = state.selection;
+    const text = "[ref]: ";
+    if (dispatch) {
+      const tr = state.tr.insertText(text, from, to);
+      tr.setSelection(TextSelection.create(tr.doc, from + text.length));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
 export const refDef: FeatureSpec = {
   name: "ref-def",
 
@@ -157,6 +170,7 @@ export const refDef: FeatureSpec = {
   plugins: () => [refDraftPlugin()],
 
   keymap: (schema) => ({
+    "Alt-Mod-l": insertLinkRefDraft(),
     Enter: (state, dispatch) => {
       const sel = state.selection;
       if (!sel.empty) return false;

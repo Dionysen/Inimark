@@ -1,4 +1,6 @@
 import type { Schema } from "prosemirror-model";
+import type { Command } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 
 import { leaveLineDraft } from "../block-draft.ts";
 import type { FeatureSpec } from "./_types.ts";
@@ -53,9 +55,27 @@ function makeHrPlugin(schema: Schema) {
   });
 }
 
+function insertHorizontalRule(schema: Schema): Command {
+  return (state, dispatch) => {
+    const { from, to } = state.selection;
+    const hr = schema.nodes.horizontal_rule!.create();
+    const para = schema.nodes.paragraph!.create();
+    if (dispatch) {
+      const tr = state.tr.replaceWith(from, to, [hr, para]);
+      tr.setSelection(TextSelection.create(tr.doc, from + hr.nodeSize + 1));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
 export const hr: FeatureSpec = {
   name: "horizontal_rule",
 
   plugins: (schema) => [makeHrPlugin(schema).plugin],
+
+  keymap: (schema) => ({
+    "Alt-Mod--": insertHorizontalRule(schema),
+  }),
 
 };

@@ -195,6 +195,39 @@ describe("fenced code node view", () => {
     }
   });
 
+  test("Alt-Mod-c in an empty CodeMirror block lifts to a paragraph", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```ts\nbody\n```" });
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+
+    try {
+      const cm = codeMirrorView(host);
+      cm.focus();
+      cm.dispatch({
+        changes: { from: 0, to: cm.state.doc.length, insert: "" },
+      });
+
+      cm.contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "c",
+          altKey: true,
+          metaKey: isMac,
+          ctrlKey: !isMac,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+
+      expect(editor.view.state.doc.child(0).type.name).toBe("paragraph");
+      expect(editor.view.state.selection.$from.parent.type.name).toBe("paragraph");
+      expect(editor.getMarkdown().replace(/\n+$/g, "")).toBe("");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
   test("Backspace in an empty CodeMirror block lifts to a paragraph", () => {
     const host = createHost();
     const editor = createEditor(host, { initialContent: "```ts\nbody\n```" });

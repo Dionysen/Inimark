@@ -170,7 +170,7 @@ describe("editor modes", () => {
       "- [x] 通过工具栏打开和保存本地 `.md` 文件。",
       "- [x] 使用 `Shift-Enter` 插入硬换行，并留在当前段落中继续输入。",
       "- [x] 使用 `F8` 切换**专注模式**，使用 `F9` 切换**打字机模式**。",
-      "- [x] 使用 `Mod-b`、`Mod-i`、`Mod-k`、`Mod-Shift-7`、`Mod-Shift-8` 等常见快捷键。",
+      "- [x] 使用 `Mod-b`、`Mod-i`、`Mod-k`、`Alt-Mod-o`、`Alt-Mod-u` 等常见快捷键。",
       "",
       "> 当光标离开源码标记时，标记会弱化显示，但 Markdown 源码仍然可编辑。",
     ].join("\n");

@@ -214,6 +214,14 @@ function liftEmptyCodeBlock(view: EditorView, blockPos: number): boolean {
   return true;
 }
 
+function isToggleCodeBlockShortcut(event: KeyboardEvent): boolean {
+  if (event.key.toLowerCase() !== "c" || event.shiftKey) return false;
+  const isMac =
+    typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+  const mod = isMac ? event.metaKey : event.ctrlKey;
+  return mod && event.altKey;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // NodeView: outer <pre data-lang><code/></pre> plus a chrome overlay with
 // a <input class="cb-lang-input">. The input mutates code_block.attrs.lang
@@ -351,6 +359,10 @@ class CodeBlockView implements NodeView {
           key: "Delete",
           run: (cmView) => this.tryLiftEmptyCodeBlock(cmView),
         },
+        {
+          key: "Alt-Mod-c",
+          run: (cmView) => this.tryToggleCodeBlockShortcut(cmView),
+        },
       ]),
     );
   }
@@ -400,6 +412,13 @@ class CodeBlockView implements NodeView {
   }
 
   private tryLiftEmptyCodeBlock(cmView: CodeMirrorView): boolean {
+    if (cmView.state.doc.length > 0) return false;
+    const ctx = this.blockContext();
+    if (!ctx) return true;
+    return liftEmptyCodeBlock(this.view, ctx.blockPos);
+  }
+
+  private tryToggleCodeBlockShortcut(cmView: CodeMirrorView): boolean {
     if (cmView.state.doc.length > 0) return false;
     const ctx = this.blockContext();
     if (!ctx) return true;
@@ -648,6 +667,14 @@ class CodeBlockView implements NodeView {
   private onInputKeyDown = (e: KeyboardEvent): void => {
     const ctx = this.blockContext();
     if (!ctx) return;
+    if (isToggleCodeBlockShortcut(e)) {
+      if (ctx.node.content.size === 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        liftEmptyCodeBlock(this.view, ctx.blockPos);
+      }
+      return;
+    }
     if (e.key === "ArrowUp" || (e.key === "Enter" && !e.shiftKey)) {
       e.preventDefault();
       this.returnToCodeBody();
@@ -1095,6 +1122,15 @@ export const fencedCode: FeatureSpec = {
         dispatch(tr);
       }
       return true;
+    },
+
+    // Fallback when PM still owns the key event (no CodeMirror focus).
+    "Alt-Mod-c": (state, dispatch, view) => {
+      const $from = state.selection.$from;
+      if ($from.parent.type.name !== "code_block") return false;
+      if ($from.parent.content.size > 0) return false;
+      if (!view) return false;
+      return liftEmptyCodeBlock(view, $from.before());
     },
   }),
 

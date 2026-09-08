@@ -28,17 +28,32 @@ function isSpecial(e: string): boolean {
 
 function parseSpecial(e: string): { key: string; mods: Set<string> } {
   const inner = e.slice(1, -1);
-  const parts = inner.split("-");
-  const key = parts.pop()!;
-  return { key, mods: new Set(parts) };
+  const modNames = ["Mod", "Ctrl", "Meta", "Alt", "Shift"];
+  const mods = new Set<string>();
+  let rest = inner;
+  while (true) {
+    const hit = modNames.find((m) => rest.startsWith(`${m}-`));
+    if (!hit) break;
+    mods.add(hit);
+    rest = rest.slice(hit.length + 1);
+  }
+  const key = rest === "" ? "-" : rest;
+  return { key, mods };
 }
 
 function buildKeyEvent(spec: string): KeyboardEvent {
   const { key, mods } = parseSpecial(spec);
   const isMod = mods.has("Mod");
+  const resolvedKey = key.length === 1 ? key.toLowerCase() : key;
+  const code =
+    key === "-"
+      ? "Minus"
+      : key.length === 1
+        ? `Key${key.toUpperCase()}`
+        : key;
   return {
-    key: key.length === 1 ? key.toLowerCase() : key,
-    code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
+    key: resolvedKey,
+    code,
     ctrlKey: mods.has("Ctrl") || (isMod && !isMac),
     metaKey: mods.has("Meta") || (isMod && isMac),
     shiftKey: mods.has("Shift"),

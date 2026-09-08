@@ -1,5 +1,5 @@
 import type { Node as PMNode, Schema } from "prosemirror-model";
-import { Plugin, TextSelection } from "prosemirror-state";
+import { Plugin, TextSelection, type Command } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import type { FeatureSpec } from "./_types.ts";
@@ -540,6 +540,95 @@ function renderCellInline(cell: PMNode): string {
   return out.replace(/\|/g, "\\|");
 }
 
+function cellCursorPos(
+  tableStart: number,
+  tableNode: PMNode,
+  rowIdx: number,
+  cellIdx: number,
+): number {
+  let pos = tableStart + 1;
+  for (let r = 0; r < rowIdx; r++) pos += tableNode.child(r).nodeSize;
+  const row = tableNode.child(rowIdx);
+  pos += 1;
+  for (let c = 0; c < cellIdx; c++) pos += row.child(c).nodeSize;
+  return pos + 1;
+}
+
+function insertTableAtSelection(schema: Schema, rows = 3, cols = 3): Command {
+  return (state, dispatch) => {
+    const makeRow = (header: boolean) => {
+      const cells = [];
+      for (let c = 0; c < cols; c++) {
+        cells.push(schema.nodes.table_cell.create({ header, align: null }));
+      }
+      return schema.nodes.table_row.create(null, cells);
+    };
+    const rowNodes = [makeRow(true)];
+    for (let r = 1; r < rows; r++) rowNodes.push(makeRow(false));
+    const table = schema.nodes.table.create(null, rowNodes);
+    if (dispatch) {
+      const tr = state.tr.replaceSelectionWith(table);
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
+function moveTableRow(direction: -1 | 1): Command {
+  return (state, dispatch) => {
+    const info = findTableAtSelection(state);
+    if (!info) return false;
+    const { rowIdx, cellIdx, pos, node: tableNode } = info;
+    const targetIdx = rowIdx + direction;
+    if (targetIdx < 0 || targetIdx >= tableNode.childCount) return false;
+    if (dispatch) {
+      const rows: PMNode[] = [];
+      tableNode.forEach((row) => rows.push(row));
+      const swapped = rows[rowIdx];
+      rows[rowIdx] = rows[targetIdx]!;
+      rows[targetIdx] = swapped!;
+      const schema = state.schema;
+      const newTable = schema.nodes.table.create(null, rows);
+      const tr = state.tr.replaceWith(pos, pos + tableNode.nodeSize, newTable);
+      tr.setSelection(
+        TextSelection.create(tr.doc, cellCursorPos(pos, newTable, targetIdx, cellIdx)),
+      );
+      dispatch(tr);
+    }
+    return true;
+  };
+}
+
+function moveTableColumn(direction: -1 | 1): Command {
+  return (state, dispatch) => {
+    const info = findTableAtSelection(state);
+    if (!info) return false;
+    const { rowIdx, cellIdx, pos, node: tableNode } = info;
+    const colCount = tableNode.child(0).childCount;
+    const targetIdx = cellIdx + direction;
+    if (targetIdx < 0 || targetIdx >= colCount) return false;
+    const schema = state.schema;
+    const newRows: PMNode[] = [];
+    tableNode.forEach((row) => {
+      const cells: PMNode[] = [];
+      row.forEach((cell) => cells.push(cell));
+      const swapped = cells[cellIdx];
+      cells[cellIdx] = cells[targetIdx]!;
+      cells[targetIdx] = swapped!;
+      newRows.push(schema.nodes.table_row.create(null, cells));
+    });
+    if (dispatch) {
+      const newTable = schema.nodes.table.create(null, newRows);
+      const tr = state.tr.replaceWith(pos, pos + tableNode.nodeSize, newTable);
+      tr.setSelection(
+        TextSelection.create(tr.doc, cellCursorPos(pos, newTable, rowIdx, targetIdx)),
+      );
+      dispatch(tr);
+    }
+    return true;
+  };
+}
+
 export const table: FeatureSpec = {
   name: "table",
 
@@ -594,6 +683,16 @@ export const table: FeatureSpec = {
   plugins: () => [tableToolbarPlugin()],
 
   keymap: (schema: Schema) => ({
+    "Alt-Mod-t": insertTableAtSelection(schema),
+    "Mod-Ctrl-ArrowUp": moveTableRow(-1),
+    "Mod-Ctrl-ArrowDown": moveTableRow(1),
+    "Mod-Ctrl-ArrowLeft": moveTableColumn(-1),
+    "Mod-Ctrl-ArrowRight": moveTableColumn(1),
+    "Alt-Mod-ArrowUp": moveTableRow(-1),
+    "Alt-Mod-ArrowDown": moveTableRow(1),
+    "Alt-Mod-ArrowLeft": moveTableColumn(-1),
+    "Alt-Mod-ArrowRight": moveTableColumn(1),
+
     // Cell navigation. Tab / Shift-Tab move the cursor row-major; at the
     // boundary (last/first cell) the keystroke is consumed but the
     // selection is unchanged — that matches Typora and avoids letting
@@ -746,10 +845,10 @@ export const table: FeatureSpec = {
       state.closeNode();
     },
     // thead/tbody are wrappers in md-it but our schema is flat — skip them.
-    thead_open: () => {},
-    thead_close: () => {},
-    tbody_open: () => {},
-    tbody_close: () => {},
+    thead_open: () => { },
+    thead_close: () => { },
+    tbody_open: () => { },
+    tbody_close: () => { },
     tr_open: (state, _tok, schema) => {
       state.openNode(schema.nodes.table_row);
     },
