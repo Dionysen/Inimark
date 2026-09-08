@@ -437,3 +437,16 @@ export function setBookmarkGroupCollapsed(
     return { ...current, collapsedGroupIds: [...set] };
   });
 }
+
+export function setAllBookmarkGroupsCollapsed(
+  libraryId: string,
+  collapsed: boolean,
+): void {
+  updateLibrary(libraryId, (current) => {
+    if (current.groups.length === 0) return current;
+    return {
+      ...current,
+      collapsedGroupIds: collapsed ? current.groups.map((g) => g.id) : [],
+    };
+  });
+}

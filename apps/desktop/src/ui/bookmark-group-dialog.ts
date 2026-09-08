@@ -9,16 +9,33 @@ let activeDialog: HTMLElement | null = null;
 export function promptRenameBookmarkGroup(
   currentName: string,
 ): Promise<string | null> {
+  return promptBookmarkGroupName({
+    title: t("sidebar.bookmarks.renameGroup"),
+    initialName: currentName,
+  });
+}
+
+export function promptCreateBookmarkGroup(): Promise<string | null> {
+  return promptBookmarkGroupName({
+    title: t("sidebar.bookmarks.createGroupTitle"),
+    initialName: "",
+  });
+}
+
+function promptBookmarkGroupName(options: {
+  title: string;
+  initialName: string;
+}): Promise<string | null> {
   if (activeDialog) return Promise.resolve(null);
 
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.className = "inimark-confirm-dialog inimark-bookmark-dialog";
     overlay.innerHTML = `
-      <div class="inimark-confirm-dialog-panel inimark-bookmark-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="inimark-bookmark-group-rename-title">
-        <h2 class="inimark-confirm-dialog-title" id="inimark-bookmark-group-rename-title"></h2>
+      <div class="inimark-confirm-dialog-panel inimark-bookmark-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="inimark-bookmark-group-name-title">
+        <h2 class="inimark-confirm-dialog-title" id="inimark-bookmark-group-name-title"></h2>
         <div class="inimark-bookmark-dialog-field">
-          <div class="inimark-bookmark-dialog-label" id="inimark-bookmark-group-rename-label"></div>
+          <div class="inimark-bookmark-dialog-label" id="inimark-bookmark-group-name-label"></div>
           <input type="text" class="inimark-bookmark-dialog-input" />
         </div>
         <div class="inimark-confirm-dialog-actions">
@@ -28,12 +45,12 @@ export function promptRenameBookmarkGroup(
       </div>
     `;
 
-    overlay.querySelector("#inimark-bookmark-group-rename-title")!.textContent =
-      t("sidebar.bookmarks.renameGroup");
-    overlay.querySelector("#inimark-bookmark-group-rename-label")!.textContent =
+    overlay.querySelector("#inimark-bookmark-group-name-title")!.textContent =
+      options.title;
+    overlay.querySelector("#inimark-bookmark-group-name-label")!.textContent =
       t("sidebar.bookmarks.groupLabel");
     const input = overlay.querySelector<HTMLInputElement>(".inimark-bookmark-dialog-input")!;
-    input.value = currentName;
+    input.value = options.initialName;
     input.placeholder = t("sidebar.bookmarks.newGroupPlaceholder");
 
     const cancelBtn = overlay.querySelector<HTMLButtonElement>('[data-choice="cancel"]')!;
@@ -81,7 +98,7 @@ export function promptRenameBookmarkGroup(
     document.body.append(overlay);
     activeDialog = overlay;
     input.focus();
-    input.select();
+    if (options.initialName) input.select();
   });
 }
 

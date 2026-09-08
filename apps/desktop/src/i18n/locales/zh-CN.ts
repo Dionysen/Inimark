@@ -55,6 +55,7 @@ export const zhCN: Dictionary = {
     toolbar: {
       newFile: "新建文件",
       newFolder: "新建文件夹",
+      newGroup: "新建分组",
       sort: "排序",
       locateFile: "定位当前文件",
       collapseAll: "全部折叠",
@@ -86,6 +87,7 @@ export const zhCN: Dictionary = {
       open: "打开",
       revealInFiles: "在文件中显示",
       renameGroup: "重命名分组",
+      createGroupTitle: "新建分组",
       copyGroup: "复制分组",
       copyGroupMessage: "是否将「{{name}}」分组内的收藏一并复制到新分组？",
       copyGroupEmpty: "仅复制分组",

@@ -55,6 +55,7 @@ export const en: Dictionary = {
     toolbar: {
       newFile: "New file",
       newFolder: "New folder",
+      newGroup: "New group",
       sort: "Sort",
       locateFile: "Locate current file",
       collapseAll: "Collapse all folders",
@@ -86,6 +87,7 @@ export const en: Dictionary = {
       open: "Open",
       revealInFiles: "Show in Files",
       renameGroup: "Rename group",
+      createGroupTitle: "New group",
       copyGroup: "Duplicate group",
       copyGroupMessage: "Also copy the bookmarks inside “{{name}}” to the new group?",
       copyGroupEmpty: "Group only",

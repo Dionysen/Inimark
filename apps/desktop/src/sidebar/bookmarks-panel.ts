@@ -15,11 +15,14 @@ export interface BookmarksPanelHandlers {
   onOpenItem(item: BookmarkItem): void;
   onItemContextMenu(event: MouseEvent, item: BookmarkItem): void;
   onGroupContextMenu?(event: MouseEvent, groupId: string): void;
+  onCollapseChange?(): void;
 }
 
 export interface BookmarksPanelController {
   el: HTMLElement;
   render(libraryId: string | null, activePath: string | null): void;
+  /** Scroll the first matching bookmark row into view. Returns false if not found. */
+  scrollToPath(path: string): boolean;
   destroy(): void;
 }
 
@@ -56,10 +59,6 @@ export function createBookmarksPanel(
           ),
         );
 
-      // Hide empty custom groups; always show default when any bookmarks exist.
-      if (items.length === 0 && data.items.length > 0) continue;
-      if (items.length === 0) continue;
-
       const collapsed = data.collapsedGroupIds.includes(group.id);
       const section = document.createElement("section");
       section.className = "inimark-bookmarks-group";
@@ -87,6 +86,7 @@ export function createBookmarksPanel(
       header.addEventListener("click", () => {
         setBookmarkGroupCollapsed(libraryId, group.id, !collapsed);
         render(libraryId, activePath);
+        handlers.onCollapseChange?.();
       });
       header.addEventListener("contextmenu", (event) => {
         event.preventDefault();
@@ -151,7 +151,7 @@ export function createBookmarksPanel(
       return;
     }
     const data = getLibraryBookmarks(libraryId);
-    if (data.items.length === 0) {
+    if (data.groups.length === 0) {
       renderEmpty();
       return;
     }
@@ -161,6 +161,14 @@ export function createBookmarksPanel(
   return {
     el,
     render,
+    scrollToPath(path: string): boolean {
+      const row = el.querySelector<HTMLElement>(
+        `[data-path="${CSS.escape(path)}"]`,
+      );
+      if (!row) return false;
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      return true;
+    },
     destroy() {
       el.replaceChildren();
       el.remove();

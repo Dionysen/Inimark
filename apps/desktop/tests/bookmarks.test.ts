@@ -15,6 +15,8 @@ import {
   removeBookmark,
   removeBookmarksUnder,
   renameBookmarkGroup,
+  setAllBookmarkGroupsCollapsed,
+  setBookmarkGroupCollapsed,
 } from "../src/bookmarks/store.ts";
 
 describe("bookmarks store", () => {
@@ -196,5 +198,20 @@ describe("bookmarks store", () => {
     expect(data.groups).toHaveLength(1);
     expect(data.groups[0]?.name).toBe("默认分组");
     expect(getLibraryBookmarks("lib-a").groups[0]?.name).toBe("默认分组");
+  });
+
+  test("collapses and expands all groups", () => {
+    addBookmark("lib-a", { path: "a.md" });
+    const extra = createBookmarkGroup("lib-a", "Extra");
+    setAllBookmarkGroupsCollapsed("lib-a", true);
+    expect(getLibraryBookmarks("lib-a").collapsedGroupIds.sort()).toEqual(
+      [DEFAULT_BOOKMARK_GROUP_ID, extra.id].sort(),
+    );
+    setBookmarkGroupCollapsed("lib-a", extra.id, false);
+    expect(getLibraryBookmarks("lib-a").collapsedGroupIds).toEqual([
+      DEFAULT_BOOKMARK_GROUP_ID,
+    ]);
+    setAllBookmarkGroupsCollapsed("lib-a", false);
+    expect(getLibraryBookmarks("lib-a").collapsedGroupIds).toEqual([]);
   });
 });
