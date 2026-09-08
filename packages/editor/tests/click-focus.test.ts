@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
-import { focusEditorAtPoint, focusPosFromClick, handleEditorSurfaceMouseDown } from "../src/click-focus.ts";
+import { focusEditorAtPoint, focusPosFromClick, handleEditorSurfaceMouseDown, needsClickRedirect } from "../src/click-focus.ts";
 import { createEditor } from "../src/lib.ts";
 import { setup } from "./utils.ts";
 
@@ -128,6 +128,66 @@ describe("click focus", () => {
     } finally {
       view.destroy();
       mount.remove();
+    }
+  });
+
+  test("needsClickRedirect is false when clicking the trailing sentinel paragraph", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
+
+    try {
+      const view = editor.view;
+      const sentinel = view.dom.lastElementChild as HTMLElement;
+      expect(sentinel?.tagName).toBe("P");
+      const rect = sentinel.getBoundingClientRect();
+      expect(
+        needsClickRedirect(view, rect.left + 4, rect.top + 4, sentinel),
+      ).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("redirected mousedown from host padding starts nearest-pos drag tracking", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    host.style.height = "480px";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
+
+    try {
+      const view = editor.view;
+      const hostRect = host.getBoundingClientRect();
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: hostRect.left + 40,
+        clientY: hostRect.bottom - 12,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: host });
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      expect(view.hasFocus()).toBe(true);
+      expect(view.state.selection.empty).toBe(true);
+
+      // End the drag session started by focusEditorAtPoint.
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: hostRect.left + 40,
+          clientY: hostRect.bottom - 12,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
     }
   });
 });

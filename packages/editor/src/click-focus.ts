@@ -309,14 +309,60 @@ export function needsClickRedirect(
 
   const first = blocks[0]!;
   const last = blocks[blocks.length - 1]!;
-  if (shouldFocusTrailingSentinel(view, clientY, blocks, target)) return true;
-  if (clientY < first.top - 2 || clientY > last.bottom + 2) return true;
-
   const hit = view.posAtCoords({ left: clientX, top: clientY });
+
+  // Sentinel zone: only redirect when native handling would miss (host padding /
+  // below-content / end-of-previous-line). Clicks on the sentinel <p> itself —
+  // or coords that already resolve inside it — must keep drag-select alive.
+  if (shouldFocusTrailingSentinel(view, clientY, blocks, target)) {
+    if (clickTargetIsSentinelParagraph(view, target)) return false;
+    if (hit && posInTrailingSentinel(view.state.doc, hit.pos)) return false;
+    return true;
+  }
+
+  if (clientY < first.top - 2 || clientY > last.bottom + 2) return true;
   if (hit && hitIsInsideOpaqueBlock(view, hit.pos)) return true;
   return hit == null;
 }
 
+type SelectionDrag = {
+  view: EditorView;
+  anchor: number;
+  moved: boolean;
+  onMove: (event: MouseEvent) => void;
+  onUp: (event: MouseEvent) => void;
+};
+
+let activeDrag: SelectionDrag | null = null;
+
+function clearSelectionDrag(): void {
+  if (!activeDrag) return;
+  window.removeEventListener("mousemove", activeDrag.onMove, true);
+  window.removeEventListener("mouseup", activeDrag.onUp, true);
+  activeDrag = null;
+}
+
+function applyNearestSelection(view: EditorView, anchor: number, clientX: number, clientY: number): void {
+  if (!view.editable || view.isDestroyed) return;
+  const el = document.elementFromPoint(clientX, clientY);
+  // Only pass in-editor targets. Host/chrome hits must use Y-based nearest
+  // mapping — otherwise focusPosFromClick forces the trailing sentinel.
+  const target = el && view.dom.contains(el) ? el : null;
+  const head = focusPosFromClick(view, clientX, clientY, target) ?? anchor;
+  if (head === anchor) {
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, anchor)).scrollIntoView(),
+    );
+    return;
+  }
+  const sel = TextSelection.create(view.state.doc, anchor, head);
+  view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+}
+
+/**
+ * Place the caret via nearest-pos mapping and, on drag, extend the selection
+ * with the same mapping so editor-chrome / sentinel clicks can select text.
+ */
 export function focusEditorAtPoint(
   view: EditorView,
   clientX: number,
@@ -324,18 +370,46 @@ export function focusEditorAtPoint(
   event?: Event,
 ): boolean {
   if (!view.editable) return false;
-  const pos = focusPosFromClick(
-    view,
-    clientX,
-    clientY,
-    event?.target instanceof Element ? event.target : null,
-  );
+  const target = event?.target instanceof Element ? event.target : null;
+  const pos = focusPosFromClick(view, clientX, clientY, target);
   if (pos == null) return false;
-  event?.preventDefault();
-  if (event instanceof MouseEvent) event.stopPropagation();
+
+  event?.preventDefault?.();
+  if (event && "stopPropagation" in event) {
+    (event as MouseEvent).stopPropagation?.();
+  }
+
   const tr = view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)).scrollIntoView();
   view.dispatch(tr);
   view.focus();
+
+  const mouse = event as MouseEvent | undefined;
+  if (mouse && mouse.type === "mousedown" && mouse.button === 0) {
+    clearSelectionDrag();
+    const drag: SelectionDrag = {
+      view,
+      anchor: pos,
+      moved: false,
+      onMove: (moveEvent: MouseEvent) => {
+        if (!(moveEvent.buttons & 1)) {
+          clearSelectionDrag();
+          return;
+        }
+        drag.moved = true;
+        applyNearestSelection(view, drag.anchor, moveEvent.clientX, moveEvent.clientY);
+      },
+      onUp: (upEvent: MouseEvent) => {
+        if (drag.moved) {
+          applyNearestSelection(view, drag.anchor, upEvent.clientX, upEvent.clientY);
+        }
+        clearSelectionDrag();
+      },
+    };
+    activeDrag = drag;
+    window.addEventListener("mousemove", drag.onMove, true);
+    window.addEventListener("mouseup", drag.onUp, true);
+  }
+
   return true;
 }
 
