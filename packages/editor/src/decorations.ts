@@ -13,18 +13,8 @@ import { Plugin, PluginKey, type EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 import { getDelims, getExtras, getWidgets, type WidgetDecoration } from "./normalize.ts";
+import { bindWikiModClick } from "./link-navigation.ts";
 import { renderMathToHtml } from "./renderers/math.ts";
-import { getWikiLinkBridge } from "./wiki-link-bridge.ts";
-
-function bindWikiOpen(el: HTMLElement, note: string | undefined, heading?: string): void {
-  if (!note) return;
-  el.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    getWikiLinkBridge()?.openNote(note, heading || undefined);
-  });
-}
-
 // Widget builders — keyed by `kind`. A widget renders as a DOM element
 // at a specific position; decorations.ts decides whether to emit it based
 // on the cursor's relation to the parent span.
@@ -56,7 +46,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     if (attrs.unresolved) el.setAttribute("data-unresolved", attrs.unresolved);
     if (attrs.len) el.setAttribute("data-len", attrs.len);
     el.title = attrs.note ?? "";
-    bindWikiOpen(el, attrs.note, attrs.heading);
+    bindWikiModClick(el, attrs.note, attrs.heading || undefined);
     return el;
   },
   "wiki-embed-image": (attrs) => {
@@ -66,7 +56,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
       el.textContent = attrs.alt || attrs.note || "image";
       if (attrs.note) el.setAttribute("data-note", attrs.note);
       el.setAttribute("data-unresolved", "1");
-      bindWikiOpen(el, attrs.note);
+      bindWikiModClick(el, attrs.note);
       return el;
     }
     const img = document.createElement("img");
@@ -74,7 +64,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     img.src = attrs.src;
     img.alt = attrs.alt ?? "";
     if (attrs.note) img.setAttribute("data-note", attrs.note);
-    bindWikiOpen(img, attrs.note);
+    bindWikiModClick(img, attrs.note);
     return img;
   },
   "wiki-embed-note": (attrs) => {
@@ -87,7 +77,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     title.className = "wiki-embed-note-title";
     title.textContent = attrs.label ?? attrs.note ?? "";
     el.append(title);
-    bindWikiOpen(el, attrs.note);
+    bindWikiModClick(el, attrs.note);
     return el;
   },
   "image-render": (attrs) => {

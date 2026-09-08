@@ -1,4 +1,4 @@
-import { createEditor, setWikiLinkBridge, type Editor } from "@inimark/editor";
+import { createEditor, setWikiLinkBridge, setLinkNavigationBridge, type Editor } from "@inimark/editor";
 import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
@@ -260,6 +260,20 @@ export function mountApp(host: HTMLElement): AppController {
     },
   });
   cleanups.push(() => setWikiLinkBridge(null));
+
+  setLinkNavigationBridge({
+    openUrl(href) {
+      void (async () => {
+        if (isTauri()) {
+          const { invoke } = await import("@tauri-apps/api/core");
+          await invoke("open_url", { url: href });
+          return;
+        }
+        window.open(href, "_blank", "noopener,noreferrer");
+      })();
+    },
+  });
+  cleanups.push(() => setLinkNavigationBridge(null));
 
   shell.graph.onOpenFile((path) => {
     void openWorkspaceFile(path);

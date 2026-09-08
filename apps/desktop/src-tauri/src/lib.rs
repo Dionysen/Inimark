@@ -11,7 +11,7 @@ use tauri::TitleBarStyle;
 
 use commands::color_commands::pick_screen_color;
 use commands::font_commands::list_system_fonts;
-use commands::shell_commands::{open_with_default_app, reveal_in_file_manager};
+use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
 use commands::window_commands::toggle_settings_window;
 
 const WINDOW_LABELS: &[&str] = &["main", "settings"];
@@ -52,6 +52,7 @@ pub fn run() {
             list_system_fonts,
             reveal_in_file_manager,
             open_with_default_app,
+            open_url,
             pick_screen_color,
             toggle_settings_window
         ])

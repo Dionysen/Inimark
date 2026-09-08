@@ -5,6 +5,7 @@ import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 import { markConsumed, type InlineSpan } from "../inline-parse.ts";
 import type { FeatureSpec, InlineFeatureSpec } from "./_types.ts";
 import { getWikiLinkBridge } from "../wiki-link-bridge.ts";
+import { isModifiedClick } from "../link-navigation.ts";
 import type { MarkdownPreviewController } from "../preview-view.ts";
 
 // Obsidian-style [[wiki]] / ![[embed]] — source stays in the doc; a widget
@@ -354,14 +355,6 @@ function wikiHoverTargetFromEvent(event: Event): HTMLElement | null {
   );
 }
 
-function openWikiFromElement(wiki: HTMLElement): boolean {
-  const note = wiki.getAttribute("data-note");
-  if (!note) return false;
-  const heading = wiki.getAttribute("data-heading") || undefined;
-  getWikiLinkBridge()?.openNote(note, heading || undefined);
-  return true;
-}
-
 function wikiInteractionPlugin(): Plugin {
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
   let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -505,10 +498,8 @@ function wikiInteractionPlugin(): Plugin {
         click(_view, event) {
           const wiki = wikiTargetFromEvent(event);
           if (!wiki) return false;
-          event.preventDefault();
-          if (!openWikiFromElement(wiki)) return false;
-          hidePreview();
-          return true;
+          if (isModifiedClick(event)) hidePreview();
+          return false;
         },
         mouseover(_view, event) {
           const wiki = wikiHoverTargetFromEvent(event);

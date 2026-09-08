@@ -38,9 +38,12 @@ function mountView(markdown: string): {
 function clickEvent(target: Element, ctrlKey: boolean): MouseEvent {
   return {
     target,
+    clientX: 0,
+    clientY: 0,
     ctrlKey,
     metaKey: false,
     preventDefault() {},
+    stopPropagation() {},
   } as unknown as MouseEvent;
 }
 
@@ -66,14 +69,16 @@ describe("core editor behavior", () => {
       const link = host.querySelector<HTMLAnchorElement>("a");
       expect(link).not.toBeNull();
 
-      view.someProp("handleClick", (handler) =>
-        handler(view, 1, clickEvent(link!, false)),
-      );
+      view.someProp("handleDOMEvents", (handlers) => {
+        handlers?.click?.(view, clickEvent(link!, false));
+        return false;
+      });
       expect(calls).toEqual([]);
 
-      view.someProp("handleClick", (handler) =>
-        handler(view, 1, clickEvent(link!, true)),
-      );
+      view.someProp("handleDOMEvents", (handlers) => {
+        handlers?.click?.(view, clickEvent(link!, true));
+        return false;
+      });
 
       expect(calls).toEqual([["https://example.com", "_blank", "noopener,noreferrer"]]);
     } finally {

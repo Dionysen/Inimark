@@ -4,10 +4,10 @@ import { EditorView } from "prosemirror-view";
 import { documentMetadataPlugin } from "./document-metadata.ts";
 import { syntaxHintsPlugin } from "./decorations.ts";
 import { collectPlugins } from "./features/index.ts";
+import { tryNavigateFromClick } from "./link-navigation.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
 import { parse } from "./parser.ts";
 import { schema } from "./schema.ts";
-import { getWikiLinkBridge } from "./wiki-link-bridge.ts";
 
 const PREVIEW_MAX_CHARS = 24_000;
 
@@ -63,21 +63,10 @@ export function mountReadonlyMarkdownPreview(
       class: "wiki-link-preview-prose",
       spellcheck: "false",
     },
-    handleClick(_v, _pos, event) {
-      const node = event.target as Node | null;
-      const el = node instanceof Element ? node : node?.parentElement ?? null;
-      const wiki = el?.closest(
-        ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
-      ) as HTMLElement | null;
-      if (!wiki) return false;
-      const note = wiki.getAttribute("data-note");
-      if (!note || wiki.getAttribute("data-unresolved") === "1") return false;
-      event.preventDefault();
-      event.stopPropagation();
-      const heading = wiki.getAttribute("data-heading") || undefined;
-      getWikiLinkBridge()?.openNote(note, heading || undefined);
-      options.onOpenNote?.(note, heading);
-      return true;
+    handleClick(view, _pos, event) {
+      return tryNavigateFromClick(view, event, {
+        onWikiOpen: options.onOpenNote,
+      });
     },
     handleDOMEvents: {
       // Keep selection stable; allow scrolling / click-to-open.
@@ -85,22 +74,10 @@ export function mountReadonlyMarkdownPreview(
         if (event.button === 2) return true;
         return false;
       },
-      // DOM click is more reliable on widgets (target may be a text node).
-      click(_v, event) {
-        const node = event.target as Node | null;
-        const el = node instanceof Element ? node : node?.parentElement ?? null;
-        const wiki = el?.closest(
-          ".wiki-link-widget, .wiki-embed-note, .wiki-embed-image",
-        ) as HTMLElement | null;
-        if (!wiki) return false;
-        const note = wiki.getAttribute("data-note");
-        if (!note || wiki.getAttribute("data-unresolved") === "1") return false;
-        event.preventDefault();
-        event.stopPropagation();
-        const heading = wiki.getAttribute("data-heading") || undefined;
-        getWikiLinkBridge()?.openNote(note, heading || undefined);
-        options.onOpenNote?.(note, heading);
-        return true;
+      click(view, event) {
+        return tryNavigateFromClick(view, event, {
+          onWikiOpen: options.onOpenNote,
+        });
       },
     },
   });
