@@ -3,8 +3,8 @@ import { t } from "../i18n/index.ts";
 import {
   DEFAULT_BOOKMARK_GROUP_ID,
   createBookmarkGroup,
+  ensureLibraryBookmarks,
   getLibraryBookmarks,
-  groupDisplayName,
   type BookmarkGroup,
 } from "../bookmarks/store.ts";
 import { createSelect } from "./widgets/select.ts";
@@ -37,14 +37,15 @@ export function promptAddBookmark(
   const title = options.title ?? t("sidebar.bookmarks.addTitle");
   const confirmLabel = options.confirmLabel ?? t("sidebar.bookmarks.addConfirm");
   const cancelLabel = options.cancelLabel ?? t("common.cancel");
-  const defaultGroupLabel = t("sidebar.bookmarks.defaultGroup");
 
   return new Promise((resolve) => {
+    ensureLibraryBookmarks(options.libraryId, t("sidebar.bookmarks.defaultGroup"));
     let groups = getLibraryBookmarks(options.libraryId).groups;
-    let selectedGroupId =
-      groups.find((g) => g.id === DEFAULT_BOOKMARK_GROUP_ID)?.id ??
-      groups[0]?.id ??
-      DEFAULT_BOOKMARK_GROUP_ID;
+    if (groups.length === 0) {
+      createBookmarkGroup(options.libraryId, t("sidebar.bookmarks.defaultGroup"));
+      groups = getLibraryBookmarks(options.libraryId).groups;
+    }
+    let selectedGroupId = groups[0]?.id ?? DEFAULT_BOOKMARK_GROUP_ID;
 
     const overlay = document.createElement("div");
     overlay.className = "inimark-confirm-dialog inimark-bookmark-dialog";
@@ -101,7 +102,7 @@ export function promptAddBookmark(
     function groupOptions() {
       return groups.map((group) => ({
         value: group.id,
-        label: groupDisplayName(group, defaultGroupLabel),
+        label: group.name,
       }));
     }
 

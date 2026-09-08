@@ -28,13 +28,13 @@ export interface BookmarksConfig {
   libraries: Record<string, LibraryBookmarks>;
 }
 
-function createDefaultGroup(): BookmarkGroup {
-  return { id: DEFAULT_BOOKMARK_GROUP_ID, name: "Default", order: 0 };
+function createDefaultGroup(name = "Default"): BookmarkGroup {
+  return { id: DEFAULT_BOOKMARK_GROUP_ID, name, order: 0 };
 }
 
-function createEmptyLibraryBookmarks(): LibraryBookmarks {
+function createEmptyLibraryBookmarks(initialGroupName = "Default"): LibraryBookmarks {
   return {
-    groups: [createDefaultGroup()],
+    groups: [createDefaultGroup(initialGroupName)],
     items: [],
     collapsedGroupIds: [],
   };
@@ -70,18 +70,21 @@ function normalizeLibrary(raw: Partial<LibraryBookmarks> | undefined): LibraryBo
     });
   }
 
-  if (!seenGroupIds.has(DEFAULT_BOOKMARK_GROUP_ID)) {
-    groups.unshift(createDefaultGroup());
-  }
-
   groups.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
 
-  const validGroupIds = new Set(groups.map((g) => g.id));
   const items: BookmarkItem[] = [];
-  const seenPaths = new Set<string>();
+  const seenIds = new Set<string>();
+  const rawItems = Array.isArray(raw?.items) ? raw.items : [];
 
-  if (Array.isArray(raw?.items)) {
-    for (const item of raw.items as Array<{
+  if (groups.length === 0 && rawItems.length > 0) {
+    groups.push(createDefaultGroup());
+  }
+
+  const validGroupIds = new Set(groups.map((g) => g.id));
+  const fallbackGroupId = groups[0]?.id ?? DEFAULT_BOOKMARK_GROUP_ID;
+
+  if (rawItems.length > 0) {
+    for (const item of rawItems as Array<{
       id?: string;
       path?: string;
       kind?: string;
@@ -90,16 +93,17 @@ function normalizeLibrary(raw: Partial<LibraryBookmarks> | undefined): LibraryBo
     }>) {
       if (!item || typeof item !== "object") continue;
       const path = typeof item.path === "string" ? normalizePath(item.path) : "";
-      if (!path || seenPaths.has(path.toLowerCase())) continue;
+      if (!path) continue;
       // Folders are no longer bookmarkable — drop legacy directory entries.
       if (item.kind === "directory") continue;
       const groupId =
         typeof item.groupId === "string" && validGroupIds.has(item.groupId)
           ? item.groupId
-          : DEFAULT_BOOKMARK_GROUP_ID;
+          : fallbackGroupId;
       const id =
         typeof item.id === "string" && item.id ? item.id : newId("bm");
-      seenPaths.add(path.toLowerCase());
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
       items.push({
         id,
         path,
@@ -164,6 +168,24 @@ export function getLibraryBookmarks(libraryId: string): LibraryBookmarks {
   return normalizeLibrary(config.libraries[libraryId]);
 }
 
+/** Seed bookmark storage for a library with one initial group. */
+export function ensureLibraryBookmarks(
+  libraryId: string,
+  initialGroupName: string,
+): LibraryBookmarks {
+  if (!libraryId) return createEmptyLibraryBookmarks(initialGroupName);
+  const config = loadBookmarksConfig();
+  if (config.libraries[libraryId]) {
+    return normalizeLibrary(config.libraries[libraryId]);
+  }
+  const created = createEmptyLibraryBookmarks(initialGroupName);
+  saveBookmarksConfig({
+    ...config,
+    libraries: { ...config.libraries, [libraryId]: created },
+  });
+  return created;
+}
+
 export function findBookmarkByPath(
   libraryId: string,
   path: string,
@@ -188,22 +210,21 @@ export function addBookmark(
   let created: BookmarkItem | null = null;
 
   updateLibrary(libraryId, (current) => {
-    const existing = current.items.find(
-      (item) => item.path.toLowerCase() === path.toLowerCase(),
-    );
+    const groups =
+      current.groups.length > 0 ? current.groups : [createDefaultGroup()];
     const groupId =
-      input.groupId && current.groups.some((g) => g.id === input.groupId)
+      input.groupId && groups.some((g) => g.id === input.groupId)
         ? input.groupId
-        : DEFAULT_BOOKMARK_GROUP_ID;
+        : groups[0]!.id;
+    const existingInGroup = current.items.find(
+      (item) =>
+        item.groupId === groupId &&
+        item.path.toLowerCase() === path.toLowerCase(),
+    );
 
-    if (existing) {
-      created = { ...existing, kind: "file", groupId };
-      return {
-        ...current,
-        items: current.items.map((item) =>
-          item.id === existing.id ? created! : item,
-        ),
-      };
+    if (existingInGroup) {
+      created = { ...existingInGroup, kind: "file" };
+      return current.groups.length > 0 ? current : { ...current, groups };
     }
 
     created = {
@@ -213,7 +234,11 @@ export function addBookmark(
       groupId,
       addedAt: Date.now(),
     };
-    return { ...current, items: [...current.items, created] };
+    return {
+      ...current,
+      groups,
+      items: [...current.items, created],
+    };
   });
 
   return created!;
@@ -227,6 +252,21 @@ export function removeBookmark(libraryId: string, path: string): boolean {
       const match = item.path.toLowerCase() === normalized;
       if (match) removed = true;
       return !match;
+    });
+    return removed ? { ...current, items: nextItems } : current;
+  });
+  return removed;
+}
+
+export function removeBookmarkItem(libraryId: string, itemId: string): boolean {
+  let removed = false;
+  updateLibrary(libraryId, (current) => {
+    const nextItems = current.items.filter((item) => {
+      if (item.id === itemId) {
+        removed = true;
+        return false;
+      }
+      return true;
     });
     return removed ? { ...current, items: nextItems } : current;
   });
@@ -295,7 +335,6 @@ export function createBookmarkGroup(
 }
 
 export function deleteBookmarkGroup(libraryId: string, groupId: string): boolean {
-  if (groupId === DEFAULT_BOOKMARK_GROUP_ID) return false;
   let deleted = false;
   updateLibrary(libraryId, (current) => {
     if (!current.groups.some((g) => g.id === groupId)) return current;
@@ -303,15 +342,86 @@ export function deleteBookmarkGroup(libraryId: string, groupId: string): boolean
     return {
       ...current,
       groups: current.groups.filter((g) => g.id !== groupId),
-      items: current.items.map((item) =>
-        item.groupId === groupId
-          ? { ...item, groupId: DEFAULT_BOOKMARK_GROUP_ID }
-          : item,
-      ),
+      items: current.items.filter((item) => item.groupId !== groupId),
       collapsedGroupIds: current.collapsedGroupIds.filter((id) => id !== groupId),
     };
   });
   return deleted;
+}
+
+function nextCopyGroupName(groups: BookmarkGroup[], baseName: string): string {
+  const taken = new Set(groups.map((group) => group.name.toLowerCase()));
+  let candidate = `${baseName} copy`;
+  let suffix = 2;
+  while (taken.has(candidate.toLowerCase())) {
+    candidate = `${baseName} copy ${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+export function renameBookmarkGroup(
+  libraryId: string,
+  groupId: string,
+  name: string,
+): boolean {
+  const trimmed = name.trim();
+  if (!trimmed) return false;
+  let renamed = false;
+  updateLibrary(libraryId, (current) => {
+    const group = current.groups.find((entry) => entry.id === groupId);
+    if (!group) return current;
+    if (
+      current.groups.some(
+        (entry) =>
+          entry.id !== groupId && entry.name.toLowerCase() === trimmed.toLowerCase(),
+      )
+    ) {
+      return current;
+    }
+    renamed = true;
+    return {
+      ...current,
+      groups: current.groups.map((entry) =>
+        entry.id === groupId ? { ...entry, name: trimmed } : entry,
+      ),
+    };
+  });
+  return renamed;
+}
+
+export function copyBookmarkGroup(
+  libraryId: string,
+  groupId: string,
+  options: { includeItems: boolean; displayName: string },
+): BookmarkGroup | null {
+  let created: BookmarkGroup | null = null;
+  updateLibrary(libraryId, (current) => {
+    if (!current.groups.some((group) => group.id === groupId)) return current;
+    const copyName = nextCopyGroupName(
+      current.groups,
+      options.displayName.trim() || "Group",
+    );
+    const maxOrder = current.groups.reduce((max, group) => Math.max(max, group.order), 0);
+    created = { id: newId("grp"), name: copyName, order: maxOrder + 1 };
+    const copiedItems = options.includeItems
+      ? current.items
+          .filter((item) => item.groupId === groupId)
+          .map((item) => ({
+            id: newId("bm"),
+            path: item.path,
+            kind: "file" as const,
+            groupId: created!.id,
+            addedAt: Date.now(),
+          }))
+      : [];
+    return {
+      ...current,
+      groups: [...current.groups, created],
+      items: [...current.items, ...copiedItems],
+    };
+  });
+  return created;
 }
 
 export function setBookmarkGroupCollapsed(
@@ -326,11 +436,4 @@ export function setBookmarkGroupCollapsed(
     else set.delete(groupId);
     return { ...current, collapsedGroupIds: [...set] };
   });
-}
-
-export function groupDisplayName(
-  group: BookmarkGroup,
-  defaultLabel: string,
-): string {
-  return group.id === DEFAULT_BOOKMARK_GROUP_ID ? defaultLabel : group.name;
 }

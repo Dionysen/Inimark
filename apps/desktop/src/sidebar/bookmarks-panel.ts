@@ -2,7 +2,6 @@ import "../styles/bookmark-dialog.css";
 import { t } from "../i18n/index.ts";
 import {
   getLibraryBookmarks,
-  groupDisplayName,
   setBookmarkGroupCollapsed,
   type BookmarkItem,
   type LibraryBookmarks,
@@ -46,8 +45,6 @@ export function createBookmarksPanel(
     activePath: string | null,
   ): void {
     el.replaceChildren();
-    const defaultLabel = t("sidebar.bookmarks.defaultGroup");
-
     for (const group of data.groups) {
       const items = data.items
         .filter((item) => item.groupId === group.id)
@@ -80,7 +77,7 @@ export function createBookmarksPanel(
 
       const title = document.createElement("span");
       title.className = "inimark-bookmarks-group-title";
-      title.textContent = groupDisplayName(group, defaultLabel);
+      title.textContent = group.name;
 
       const count = document.createElement("span");
       count.className = "inimark-bookmarks-group-count";

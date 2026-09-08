@@ -4,14 +4,17 @@ import {
   BOOKMARKS_STORAGE_KEY,
   DEFAULT_BOOKMARK_GROUP_ID,
   addBookmark,
+  copyBookmarkGroup,
   createBookmarkGroup,
   deleteBookmarkGroup,
+  ensureLibraryBookmarks,
   findBookmarkByPath,
   getLibraryBookmarks,
   isBookmarked,
   remapBookmarkPath,
   removeBookmark,
   removeBookmarksUnder,
+  renameBookmarkGroup,
 } from "../src/bookmarks/store.ts";
 
 describe("bookmarks store", () => {
@@ -110,21 +113,88 @@ describe("bookmarks store", () => {
     expect(items[0]?.path).toBe("a.md");
   });
 
-  test("deleting a custom group moves items to default", () => {
+  test("deleting a group removes its bookmarks", () => {
     const group = createBookmarkGroup("lib-a", "Temp");
     addBookmark("lib-a", {
       path: "x.md",
       groupId: group.id,
     });
     expect(deleteBookmarkGroup("lib-a", group.id)).toBe(true);
-    expect(findBookmarkByPath("lib-a", "x.md")?.groupId).toBe(
-      DEFAULT_BOOKMARK_GROUP_ID,
+    expect(getLibraryBookmarks("lib-a").items).toHaveLength(0);
+    expect(getLibraryBookmarks("lib-a").groups.some((entry) => entry.id === group.id)).toBe(
+      false,
     );
-    expect(deleteBookmarkGroup("lib-a", DEFAULT_BOOKMARK_GROUP_ID)).toBe(false);
+  });
+
+  test("can delete the initial default group", () => {
+    addBookmark("lib-a", { path: "x.md" });
+    expect(deleteBookmarkGroup("lib-a", DEFAULT_BOOKMARK_GROUP_ID)).toBe(true);
+    expect(getLibraryBookmarks("lib-a").groups).toHaveLength(0);
+    expect(getLibraryBookmarks("lib-a").items).toHaveLength(0);
+  });
+
+  test("renames a custom group", () => {
+    addBookmark("lib-a", { path: "seed.md" });
+    const group = createBookmarkGroup("lib-a", "Work");
+    expect(renameBookmarkGroup("lib-a", group.id, "Projects")).toBe(true);
+    expect(
+      getLibraryBookmarks("lib-a").groups.find((entry) => entry.id === group.id)?.name,
+    ).toBe("Projects");
+    expect(renameBookmarkGroup("lib-a", DEFAULT_BOOKMARK_GROUP_ID, "Starter")).toBe(
+      true,
+    );
+    expect(
+      getLibraryBookmarks("lib-a").groups.find((entry) => entry.id === DEFAULT_BOOKMARK_GROUP_ID)
+        ?.name,
+    ).toBe("Starter");
+  });
+
+  test("copies a group with or without items", () => {
+    const group = createBookmarkGroup("lib-a", "Work");
+    addBookmark("lib-a", { path: "a.md", groupId: group.id });
+    addBookmark("lib-a", { path: "b.md", groupId: group.id });
+
+    const emptyCopy = copyBookmarkGroup("lib-a", group.id, {
+      includeItems: false,
+      displayName: "Work",
+    });
+    expect(emptyCopy?.name).toBe("Work copy");
+    expect(
+      getLibraryBookmarks("lib-a").items.filter((item) => item.groupId === emptyCopy!.id),
+    ).toHaveLength(0);
+
+    const fullCopy = copyBookmarkGroup("lib-a", group.id, {
+      includeItems: true,
+      displayName: "Work",
+    });
+    expect(fullCopy?.name).toBe("Work copy 2");
+    const copiedItems = getLibraryBookmarks("lib-a").items.filter(
+      (item) => item.groupId === fullCopy!.id,
+    );
+    expect(copiedItems).toHaveLength(2);
+    expect(copiedItems.map((item) => item.path).sort()).toEqual(["a.md", "b.md"]);
+  });
+
+  test("allows the same path in different groups", () => {
+    const work = createBookmarkGroup("lib-a", "Work");
+    const personal = createBookmarkGroup("lib-a", "Personal");
+    addBookmark("lib-a", { path: "shared.md", groupId: work.id });
+    addBookmark("lib-a", { path: "shared.md", groupId: personal.id });
+    const items = getLibraryBookmarks("lib-a").items.filter(
+      (item) => item.path === "shared.md",
+    );
+    expect(items).toHaveLength(2);
   });
 
   test("scopes bookmarks per library", () => {
     addBookmark("lib-a", { path: "a.md" });
     expect(isBookmarked("lib-b", "a.md")).toBe(false);
+  });
+
+  test("seeds a localized initial group for new libraries", () => {
+    const data = ensureLibraryBookmarks("lib-a", "默认分组");
+    expect(data.groups).toHaveLength(1);
+    expect(data.groups[0]?.name).toBe("默认分组");
+    expect(getLibraryBookmarks("lib-a").groups[0]?.name).toBe("默认分组");
   });
 });

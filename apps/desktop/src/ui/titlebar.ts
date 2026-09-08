@@ -50,6 +50,8 @@ export interface TitleBarMoreMenuActions {
   onCopyFileName: () => void;
   onCopyRelativePath: () => void;
   onCopyAbsolutePath: () => void;
+  canAddBookmark: () => boolean;
+  onAddBookmark: () => void;
   isSourceMode: () => boolean;
   onToggleSourceMode: () => void;
 }
@@ -345,6 +347,15 @@ export function mountTitleBar(
             },
           },
         ],
+      });
+      moreMenu.addItem({
+        label: t("titlebar.more.addBookmark"),
+        icon: menuIcons.bookmark,
+        disabled: !moreActions.canAddBookmark(),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onAddBookmark();
+        },
       });
       moreMenu.addDivider();
       moreMenu.addItem({

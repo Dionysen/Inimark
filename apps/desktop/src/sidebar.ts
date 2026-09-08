@@ -52,13 +52,20 @@ import {
 import { createBookmarksPanel } from "./sidebar/bookmarks-panel.ts";
 import { promptAddBookmark } from "./ui/bookmark-dialog.ts";
 import {
-  DEFAULT_BOOKMARK_GROUP_ID,
+  promptCopyBookmarkGroup,
+  promptRenameBookmarkGroup,
+} from "./ui/bookmark-group-dialog.ts";
+import {
   addBookmark,
+  copyBookmarkGroup,
   deleteBookmarkGroup,
-  isBookmarked,
+  ensureLibraryBookmarks,
+  getLibraryBookmarks,
   remapBookmarkPath,
   removeBookmark,
+  removeBookmarkItem,
   removeBookmarksUnder,
+  renameBookmarkGroup,
   type BookmarkItem,
 } from "./bookmarks/store.ts";
 import { libraryIdFromPath } from "./libraries/store.ts";
@@ -126,6 +133,8 @@ export interface SidebarController {
   renameSelection(): void;
   /** Rename the currently open file (expands tree + inline rename). */
   renameActiveFile(): void;
+  /** Open the add-bookmark dialog for the currently open file. */
+  bookmarkActiveFile(): Promise<void>;
   deleteSelection(): Promise<void>;
   /** True when explorer shortcuts should run (selection + recent tree interaction). */
   isTreeShortcutContext(): boolean;
@@ -1576,7 +1585,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   }
 
   function refreshBookmarksPanel(): void {
-    bookmarksList.render(currentLibraryId(), activePath);
+    const libraryId = currentLibraryId();
+    if (libraryId) {
+      ensureLibraryBookmarks(libraryId, t("sidebar.bookmarks.defaultGroup"));
+    }
+    bookmarksList.render(libraryId, activePath);
   }
 
   function openBookmarkItem(item: BookmarkItem): void {
@@ -1594,15 +1607,29 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (!result.confirmed) return;
     addBookmark(libraryId, {
       path: node.path,
-      groupId: result.groupId || DEFAULT_BOOKMARK_GROUP_ID,
+      groupId: result.groupId || getLibraryBookmarks(libraryId).groups[0]?.id,
     });
     refreshBookmarksPanel();
   }
 
-  function removeNodeBookmark(path: string): void {
+  async function bookmarkActiveFile(): Promise<void> {
+    if (!activePath || !currentWorkspace) return;
     const libraryId = currentLibraryId();
     if (!libraryId) return;
-    removeBookmark(libraryId, path);
+    const path = activePath;
+    const result = await promptAddBookmark({ libraryId, path });
+    if (!result.confirmed) return;
+    addBookmark(libraryId, {
+      path,
+      groupId: result.groupId || getLibraryBookmarks(libraryId).groups[0]?.id,
+    });
+    refreshBookmarksPanel();
+  }
+
+  function removeNodeBookmark(item: BookmarkItem): void {
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    removeBookmarkItem(libraryId, item.id);
     refreshBookmarksPanel();
   }
 
@@ -1654,7 +1681,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       danger: true,
       onClick() {
         closeContextMenu();
-        removeNodeBookmark(item.path);
+        removeNodeBookmark(item);
       },
     });
     contextMenu.setOpen(true);
@@ -1663,11 +1690,54 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     );
   }
 
+  async function renameBookmarkGroupFlow(groupId: string): Promise<void> {
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    const group = getLibraryBookmarks(libraryId).groups.find((entry) => entry.id === groupId);
+    if (!group) return;
+    const nextName = await promptRenameBookmarkGroup(group.name);
+    if (!nextName || nextName === group.name) return;
+    renameBookmarkGroup(libraryId, groupId, nextName);
+    refreshBookmarksPanel();
+  }
+
+  async function deleteBookmarkGroupFlow(groupId: string): Promise<void> {
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    const group = getLibraryBookmarks(libraryId).groups.find((entry) => entry.id === groupId);
+    if (!group) return;
+    const confirmed = await promptConfirm({
+      title: t("sidebar.bookmarks.deleteGroupTitle"),
+      message: t("sidebar.bookmarks.deleteGroupMessage", { name: group.name }),
+      confirmLabel: t("common.delete"),
+      cancelLabel: t("common.cancel"),
+      danger: true,
+    });
+    if (!confirmed) return;
+    deleteBookmarkGroup(libraryId, groupId);
+    refreshBookmarksPanel();
+  }
+
+  async function copyBookmarkGroupFlow(groupId: string): Promise<void> {
+    const libraryId = currentLibraryId();
+    if (!libraryId) return;
+    const data = getLibraryBookmarks(libraryId);
+    const group = data.groups.find((entry) => entry.id === groupId);
+    if (!group) return;
+    const displayName = group.name;
+    const choice = await promptCopyBookmarkGroup(displayName);
+    if (choice === "cancel") return;
+    copyBookmarkGroup(libraryId, groupId, {
+      includeItems: choice === "with-items",
+      displayName,
+    });
+    refreshBookmarksPanel();
+  }
+
   function openBookmarkGroupContextMenu(
     event: MouseEvent,
     groupId: string,
   ): void {
-    if (groupId === DEFAULT_BOOKMARK_GROUP_ID) return;
     const libraryId = currentLibraryId();
     if (!libraryId) return;
     closeMenu();
@@ -1675,13 +1745,28 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     contextMenu.clear();
     contextMenu.setPath("");
     contextMenu.addItem({
+      label: t("sidebar.ctx.rename"),
+      icon: menuIcons.rename,
+      onClick() {
+        closeContextMenu();
+        void renameBookmarkGroupFlow(groupId);
+      },
+    });
+    contextMenu.addItem({
       label: t("sidebar.bookmarks.deleteGroup"),
       icon: menuIcons.trash,
       danger: true,
       onClick() {
         closeContextMenu();
-        deleteBookmarkGroup(libraryId, groupId);
-        refreshBookmarksPanel();
+        void deleteBookmarkGroupFlow(groupId);
+      },
+    });
+    contextMenu.addItem({
+      label: t("sidebar.bookmarks.copyGroup"),
+      icon: menuIcons.copy,
+      onClick() {
+        closeContextMenu();
+        void copyBookmarkGroupFlow(groupId);
       },
     });
     contextMenu.setOpen(true);
@@ -1750,28 +1835,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     });
 
     const libraryId = currentLibraryId();
-    if (node.kind === "file") {
-      const bookmarked = libraryId ? isBookmarked(libraryId, node.path) : false;
+    if (node.kind === "file" && libraryId) {
       contextMenu.addDivider();
-      if (bookmarked) {
-        contextMenu.addItem({
-          label: t("sidebar.ctx.removeBookmark"),
-          icon: menuIcons.bookmark,
-          onClick() {
-            closeContextMenu();
-            removeNodeBookmark(node.path);
-          },
-        });
-      } else {
-        contextMenu.addItem({
-          label: t("sidebar.ctx.addBookmark"),
-          icon: menuIcons.bookmark,
-          onClick() {
-            closeContextMenu();
-            void addNodeBookmark(node);
-          },
-        });
-      }
+      contextMenu.addItem({
+        label: t("sidebar.ctx.addBookmark"),
+        icon: menuIcons.bookmark,
+        onClick() {
+          closeContextMenu();
+          void addNodeBookmark(node);
+        },
+      });
     }
 
     contextMenu.addDivider();
@@ -2466,6 +2539,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     pasteClipboard,
     renameSelection,
     renameActiveFile,
+    bookmarkActiveFile,
     deleteSelection,
     isTreeShortcutContext,
     onToggleSidebar(handler) {
