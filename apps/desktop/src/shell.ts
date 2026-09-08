@@ -203,6 +203,9 @@ export function mountShell(
     }
   }
 
+  const titlebarZone = document.createElement("div");
+  titlebarZone.className = "inimark-titlebar-zone";
+
   const titlebarHost = document.createElement("header");
   titlebar = mountTitleBar(titlebarHost, {
     title: "Untitled",
@@ -227,7 +230,8 @@ export function mountShell(
   editorPane.append(editorHost);
   graph.setEditorHost(editorPane);
 
-  mainColumn.append(titlebarHost, editorPane);
+  titlebarZone.append(titlebarHost);
+  mainColumn.append(titlebarZone, editorPane);
   host.append(sidebarHost, mainColumn, rightSidebarHost);
   applySidebarWidth();
   applyRightSidebarWidth();

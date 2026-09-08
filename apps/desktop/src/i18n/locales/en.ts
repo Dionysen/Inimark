@@ -244,9 +244,12 @@ export const en: Dictionary = {
     editor: {
       typewriter: "Typewriter mode",
       typewriterDesc: "Keep the caret line vertically centered while writing.",
-      immersiveEditing: "Immersive editing",
-      immersiveEditingDesc:
-        "Hide the bottom-right shortcuts until the pointer enters that area.",
+      autoHideStatusbar: "Auto-hide status bar tools",
+      autoHideStatusbarDesc:
+        "Hide the bottom-right status bar tools until the pointer enters that area.",
+      autoHideTitlebar: "Auto-hide title bar",
+      autoHideTitlebarDesc:
+        "Collapse the editor title bar until the pointer enters the top edge.",
       editorFont: "Editor font",
       editorFontDesc: "Font family for the writing surface.",
       codeFont: "Code font",

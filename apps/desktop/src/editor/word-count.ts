@@ -228,9 +228,9 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   }
 
   function updateRevealState(): void {
-    const immersive = getSettings().immersiveEditing;
-    root.classList.toggle("inimark-statusbar--immersive", immersive);
-    if (!immersive) {
+    const autoHide = getSettings().autoHideStatusbar;
+    root.classList.toggle("inimark-statusbar--auto-hide", autoHide);
+    if (!autoHide) {
       zone.classList.remove("is-revealed");
       return;
     }
@@ -247,12 +247,12 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   }
 
   zone.addEventListener("pointerenter", () => {
-    if (!getSettings().immersiveEditing) return;
+    if (!getSettings().autoHideStatusbar) return;
     zone.classList.add("is-revealed");
   });
 
   zone.addEventListener("pointerleave", () => {
-    if (!getSettings().immersiveEditing || open) return;
+    if (!getSettings().autoHideStatusbar || open) return;
     zone.classList.remove("is-revealed");
   });
 

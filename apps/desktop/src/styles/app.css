@@ -29,6 +29,80 @@
   position: relative;
 }
 
+.inimark-titlebar-zone {
+  position: relative;
+  min-height: 0;
+  z-index: 15;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-main {
+  grid-template-rows: 1fr;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--inimark-titlebar-height) + var(--inimark-space-2));
+  pointer-events: auto;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone > .inimark-titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-leading,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-btn,
+html[data-auto-hide-titlebar="true"] .inimark-right-sidebar-titlebar-toggle {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+/* Keep viewport-fixed caption buttons out of a transformed ancestor. */
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-controls--native {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover > .inimark-titlebar,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within > .inimark-titlebar {
+  background: var(--inimark-content-bg);
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-leading,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-more-btn,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-right-sidebar-titlebar-toggle,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-leading,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-more-btn,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-right-sidebar-titlebar-toggle {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-controls--native,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-controls--native {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-font-size-indicator {
+  top: 10px;
+}
+
 .inimark-sidebar {
   display: flex;
   flex-direction: column;
@@ -929,12 +1003,12 @@ body.is-editor-width-resizing * {
   transition: opacity 180ms ease;
 }
 
-.inimark-statusbar--immersive .inimark-statusbar-chrome {
+.inimark-statusbar--auto-hide .inimark-statusbar-chrome {
   opacity: 0;
   pointer-events: none;
 }
 
-.inimark-statusbar--immersive .inimark-statusbar-zone.is-revealed .inimark-statusbar-chrome {
+.inimark-statusbar--auto-hide .inimark-statusbar-zone.is-revealed .inimark-statusbar-chrome {
   opacity: 1;
   pointer-events: auto;
 }

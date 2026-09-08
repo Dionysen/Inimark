@@ -86,9 +86,8 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "autosave",
     "format",
     "typewriter",
-    "immersive",
-    "focus",
-    "width",
+    "statusbar",
+    "titlebar",
     "line height",
   ],
   appearance: [
@@ -539,18 +538,33 @@ export function mountSettingsView(
       ),
     );
 
-    const immersiveEditing = createToggle({
-      checked: settings.immersiveEditing,
-      title: t("settings.editor.immersiveEditing"),
+    const autoHideStatusbar = createToggle({
+      checked: settings.autoHideStatusbar,
+      title: t("settings.editor.autoHideStatusbar"),
       onChange(checked) {
-        update({ immersiveEditing: checked });
+        update({ autoHideStatusbar: checked });
       },
     });
     body.append(
       createRow(
-        t("settings.editor.immersiveEditing"),
-        t("settings.editor.immersiveEditingDesc"),
-        immersiveEditing.el,
+        t("settings.editor.autoHideStatusbar"),
+        t("settings.editor.autoHideStatusbarDesc"),
+        autoHideStatusbar.el,
+      ),
+    );
+
+    const autoHideTitlebar = createToggle({
+      checked: settings.autoHideTitlebar,
+      title: t("settings.editor.autoHideTitlebar"),
+      onChange(checked) {
+        update({ autoHideTitlebar: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.autoHideTitlebar"),
+        t("settings.editor.autoHideTitlebarDesc"),
+        autoHideTitlebar.el,
       ),
     );
 

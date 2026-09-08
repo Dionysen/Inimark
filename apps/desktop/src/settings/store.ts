@@ -90,8 +90,10 @@ export interface AppSettings {
   paragraphSpacing: number;
   codeLineHeight: number;
   typewriterMode: boolean;
-  /** Hide bottom-right editor chrome until the pointer enters that corner. */
-  immersiveEditing: boolean;
+  /** Hide bottom-right status bar tools until the pointer enters that corner. */
+  autoHideStatusbar: boolean;
+  /** Collapse the editor titlebar until the pointer enters the top edge. */
+  autoHideTitlebar: boolean;
   autoSave: boolean;
   /** When notes are moved/renamed and other files link to them. */
   linkUpdateOnMove: LinkUpdateMode;
@@ -158,7 +160,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paragraphSpacing: 1.05,
   codeLineHeight: 1.5,
   typewriterMode: false,
-  immersiveEditing: false,
+  autoHideStatusbar: false,
+  autoHideTitlebar: false,
   autoSave: false,
   linkUpdateOnMove: "ask",
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
@@ -269,6 +272,8 @@ export function applySettings(settings: AppSettings): void {
   root.style.setProperty("--tree-item-padding-y", density.treeItemPaddingY);
 
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
+  root.dataset.autoHideStatusbar = settings.autoHideStatusbar ? "true" : "false";
+  root.dataset.autoHideTitlebar = settings.autoHideTitlebar ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
   root.dataset.menuDensity = settings.menuDensity;
   root.dataset.glass = settings.glassEffect ? "true" : "false";
@@ -352,8 +357,13 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       2.4,
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
-    immersiveEditing: Boolean(
-      parsed.immersiveEditing ?? DEFAULT_SETTINGS.immersiveEditing,
+    autoHideStatusbar: Boolean(
+      parsed.autoHideStatusbar ??
+        (parsed as { immersiveEditing?: boolean }).immersiveEditing ??
+        DEFAULT_SETTINGS.autoHideStatusbar,
+    ),
+    autoHideTitlebar: Boolean(
+      parsed.autoHideTitlebar ?? DEFAULT_SETTINGS.autoHideTitlebar,
     ),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
     linkUpdateOnMove: isLinkUpdateMode(parsed.linkUpdateOnMove)
