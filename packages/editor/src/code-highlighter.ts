@@ -89,6 +89,44 @@ export const CODE_LANGUAGE_OPTIONS: readonly CodeLanguageOption[] = codeMirrorLa
   }))
   .sort((a, b) => a.name.localeCompare(b.name, "en"));
 
+function scoreLanguageMatch(option: CodeLanguageOption, query: string): number {
+  const name = option.name.toLowerCase();
+  const aliases = option.aliases?.map((alias) => alias.toLowerCase()) ?? [];
+  const extensions = option.extensions?.map((ext) => ext.toLowerCase()) ?? [];
+
+  if (name === query) return 1000;
+  if (aliases.includes(query)) return 950;
+  if (extensions.includes(query)) return 900;
+  if (name.startsWith(query)) return 800;
+  if (aliases.some((alias) => alias.startsWith(query))) return 750;
+  if (extensions.some((ext) => ext.startsWith(query))) return 700;
+
+  // Single-character queries should not match arbitrary substrings
+  // (e.g. "r" inside "csharp" or "angular").
+  if (query.length === 1) return 0;
+
+  if (name.includes(query)) return 100;
+  if (aliases.some((alias) => alias.includes(query))) return 50;
+  if (extensions.some((ext) => ext.includes(query))) return 25;
+  return 0;
+}
+
+export function filterLanguageOptions(
+  query: string,
+  options: readonly CodeLanguageOption[] = CODE_LANGUAGE_OPTIONS,
+): CodeLanguageOption[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [...options];
+  return options
+    .map((option) => ({ option, score: scoreLanguageMatch(option, q) }))
+    .filter((row) => row.score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score || a.option.name.localeCompare(b.option.name, "en"),
+    )
+    .map((row) => row.option);
+}
+
 function normalizeLanguageInfo(info: string): string {
   const first = info.trim().split(/\s+/, 1)[0] ?? "";
   return first

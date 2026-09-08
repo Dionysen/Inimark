@@ -16,8 +16,8 @@ import { keymap, type EditorView as CodeMirrorView } from "@codemirror/view";
 
 import { leaveLineDraft } from "../block-draft.ts";
 import {
-  CODE_LANGUAGE_OPTIONS,
   createEmbeddedCodeMirrorEditor,
+  filterLanguageOptions,
   type EmbeddedCodeMirrorEditor,
 } from "../code-highlighter.ts";
 import { createLatestTaskScheduler } from "../renderers/latest-task.ts";
@@ -247,6 +247,8 @@ class CodeBlockView implements NodeView {
   private pendingDiagramKey = "";
   private pendingDiagramCode = "";
   private syncingFromProseMirror = false;
+  private menuHighlightIndex = -1;
+  private menuSuppressedUntilInput = false;
 
   constructor(
     node: PMNode,
@@ -522,7 +524,7 @@ class CodeBlockView implements NodeView {
   };
 
   private openLanguageMenu(): void {
-    this.renderLanguageMenu();
+    if (!this.inputEl.value.trim()) return;
     this.menuEl.hidden = false;
     this.menuEl.scrollTop = 0;
     this.positionLanguageMenu();
@@ -532,7 +534,70 @@ class CodeBlockView implements NodeView {
   private hideLanguageMenu(): void {
     if (this.menuEl.hidden) return;
     this.menuEl.hidden = true;
+    this.menuHighlightIndex = -1;
     document.removeEventListener("focusin", this.dismissMenuOnFocusIn, true);
+  }
+
+  private getVisibleMenuOptions(): HTMLElement[] {
+    return [...this.menuEl.querySelectorAll<HTMLElement>(".cb-lang-option")];
+  }
+
+  private isLanguageMenuInteractive(): boolean {
+    return !this.menuEl.hidden && this.getVisibleMenuOptions().length > 0;
+  }
+
+  private setMenuHighlight(index: number): void {
+    const items = this.getVisibleMenuOptions();
+    if (items.length === 0) {
+      this.menuHighlightIndex = -1;
+      return;
+    }
+    const clamped = Math.max(0, Math.min(index, items.length - 1));
+    this.menuHighlightIndex = clamped;
+    for (const [i, item] of items.entries()) {
+      item.classList.toggle("is-active", i === clamped);
+      item.setAttribute("aria-selected", i === clamped ? "true" : "false");
+    }
+    items[clamped]?.scrollIntoView({ block: "nearest" });
+  }
+
+  private refreshLanguageMenu(): void {
+    const query = this.inputEl.value;
+    if (!query.trim()) {
+      this.menuHighlightIndex = -1;
+      this.hideLanguageMenu();
+      return;
+    }
+    const options = filterLanguageOptions(query);
+    const frag = document.createDocumentFragment();
+    for (const option of options) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "cb-lang-option";
+      item.dataset.langName = option.name;
+      item.setAttribute("role", "option");
+      item.textContent = option.name;
+      item.addEventListener("mouseenter", () => {
+        const items = this.getVisibleMenuOptions();
+        const idx = items.indexOf(item);
+        if (idx >= 0) this.setMenuHighlight(idx);
+      });
+      frag.appendChild(item);
+    }
+    if (options.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "cb-lang-empty";
+      empty.textContent = "No matches";
+      frag.appendChild(empty);
+    }
+    this.menuEl.replaceChildren(frag);
+    if (options.length === 0) {
+      this.menuHighlightIndex = -1;
+      this.menuEl.hidden = true;
+      return;
+    }
+    this.openLanguageMenu();
+    this.setMenuHighlight(this.menuHighlightIndex >= 0 ? this.menuHighlightIndex : 0);
   }
 
   private onViewportChange = (): void => {
@@ -581,17 +646,17 @@ class CodeBlockView implements NodeView {
   }
 
   private renderLanguageMenu(): void {
-    const frag = document.createDocumentFragment();
-    for (const option of CODE_LANGUAGE_OPTIONS) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "cb-lang-option";
-      item.dataset.langName = option.name;
-      item.setAttribute("role", "option");
-      item.textContent = option.name;
-      frag.appendChild(item);
-    }
-    this.menuEl.replaceChildren(frag);
+    this.refreshLanguageMenu();
+  }
+
+  private confirmMenuSelection(): void {
+    const items = this.getVisibleMenuOptions();
+    const item = items[this.menuHighlightIndex];
+    if (!item?.dataset.langName) return;
+    this.setLanguageValue(item.dataset.langName);
+    this.menuSuppressedUntilInput = true;
+    this.hideLanguageMenu();
+    try { this.inputEl.focus(); } catch { /* ignore */ }
   }
 
   private setLanguageValue(newLang: string): void {
@@ -605,7 +670,10 @@ class CodeBlockView implements NodeView {
   }
 
   private onInputFocus = (): void => {
-    this.openLanguageMenu();
+    if (this.menuSuppressedUntilInput) return;
+    if (this.inputEl.value.trim()) {
+      this.refreshLanguageMenu();
+    }
   };
 
   private onInputBlur = (): void => {
@@ -624,6 +692,7 @@ class CodeBlockView implements NodeView {
     const item = target?.closest<HTMLElement>(".cb-lang-option");
     if (!item?.dataset.langName) return;
     this.setLanguageValue(item.dataset.langName);
+    this.menuSuppressedUntilInput = true;
     this.hideLanguageMenu();
     try { this.inputEl.focus(); } catch { /* ignore */ }
   };
@@ -660,8 +729,10 @@ class CodeBlockView implements NodeView {
   };
 
   private onInput = (): void => {
+    this.menuSuppressedUntilInput = false;
+    this.menuHighlightIndex = 0;
     this.setLanguageValue(this.inputEl.value);
-    this.renderLanguageMenu();
+    this.refreshLanguageMenu();
   };
 
   private onInputKeyDown = (e: KeyboardEvent): void => {
@@ -675,14 +746,46 @@ class CodeBlockView implements NodeView {
       }
       return;
     }
-    if (e.key === "ArrowUp" || (e.key === "Enter" && !e.shiftKey)) {
+
+    if (e.key === "ArrowUp") {
+      if (this.isLanguageMenuInteractive() && this.menuHighlightIndex > 0) {
+        e.preventDefault();
+        this.setMenuHighlight(this.menuHighlightIndex - 1);
+        return;
+      }
       e.preventDefault();
+      this.hideLanguageMenu();
       this.returnToCodeBody();
-    } else if (e.key === "ArrowDown") {
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      if (
+        this.isLanguageMenuInteractive() &&
+        this.menuHighlightIndex < this.getVisibleMenuOptions().length - 1
+      ) {
+        e.preventDefault();
+        this.setMenuHighlight(this.menuHighlightIndex + 1);
+        return;
+      }
       e.preventDefault();
       this.hideLanguageMenu();
       exitCodeBlockDown(this.view, ctx.blockPos, ctx.node);
-    } else if (e.key === "Escape") {
+      return;
+    }
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      if (this.isLanguageMenuInteractive()) {
+        e.preventDefault();
+        this.confirmMenuSelection();
+        return;
+      }
+      e.preventDefault();
+      this.returnToCodeBody();
+      return;
+    }
+
+    if (e.key === "Escape") {
       e.preventDefault();
       this.hideLanguageMenu();
     }

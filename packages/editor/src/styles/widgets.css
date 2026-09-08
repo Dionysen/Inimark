@@ -469,8 +469,14 @@
   font: 13px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   cursor: pointer;
 }
-.cb-lang-option:hover {
+.cb-lang-option:hover,
+.cb-lang-option.is-active {
   background: #f0f0f0;
+}
+.cb-lang-empty {
+  padding: 6px 8px;
+  color: #888;
+  font: 13px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
 .ProseMirror .code-block-node.cb-lang-focus .play-caret { display: none; }
 .ProseMirror .code-block-node .diagram-panel {
@@ -742,8 +748,12 @@ html[data-glass="true"] .table-resize-popup.inimark-glass {
 :root[data-appearance="dark"] .cb-lang-option {
   color: #e4ded4;
 }
-:root[data-appearance="dark"] .cb-lang-option:hover {
+:root[data-appearance="dark"] .cb-lang-option:hover,
+:root[data-appearance="dark"] .cb-lang-option.is-active {
   background: #303339;
+}
+:root[data-appearance="dark"] .cb-lang-empty {
+  color: #9e9e9e;
 }
 :root[data-appearance="dark"] .ProseMirror .code-block-node .diagram-panel {
   background: rgba(232, 225, 214, 0.07);

@@ -66,7 +66,9 @@ describe("fenced code node view", () => {
       const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(input).not.toBeNull();
 
-      input!.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      input!.focus();
+      input!.value = "Py";
+      input!.dispatchEvent(new InputEvent("input", { bubbles: true }));
       const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
       const python = menu?.querySelector<HTMLElement>("[data-lang-name='Python']");
       expect(menu?.hidden).toBe(false);
@@ -88,6 +90,48 @@ describe("fenced code node view", () => {
     }
   });
 
+  test("language input filters options and supports keyboard selection", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```\nplain\n```" });
+
+    try {
+      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      expect(input).not.toBeNull();
+
+      input!.focus();
+      input!.value = "py";
+      input!.dispatchEvent(new InputEvent("input", { bubbles: true }));
+
+      const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
+      const options = [...menu!.querySelectorAll<HTMLElement>(".cb-lang-option")];
+      expect(menu?.hidden).toBe(false);
+      expect(options.length).toBeGreaterThan(1);
+      expect(options.some((item) => item.dataset.langName === "Python")).toBe(true);
+      expect(options[0]?.classList.contains("is-active")).toBe(true);
+
+      input!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+      );
+      expect(options[0]?.classList.contains("is-active")).toBe(false);
+      expect(options[1]?.classList.contains("is-active")).toBe(true);
+
+      input!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+      );
+      expect(menu?.hidden).toBe(true);
+      expect(input!.value).toBe(options[1]!.dataset.langName);
+      expect(editor.getMarkdown()).toBe(`\`\`\`${options[1]!.dataset.langName}\nplain\n\`\`\``);
+
+      input!.value = "ts";
+      input!.dispatchEvent(new InputEvent("input", { bubbles: true }));
+      expect(menu?.hidden).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+    }
+  });
+
   test("language menu closes when the language input blurs", async () => {
     const host = createHost();
     const editor = createEditor(host, { initialContent: "```\nplain\n```" });
@@ -97,6 +141,8 @@ describe("fenced code node view", () => {
       expect(input).not.toBeNull();
 
       input!.focus();
+      input!.value = "py";
+      input!.dispatchEvent(new InputEvent("input", { bubbles: true }));
       const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
       expect(menu?.hidden).toBe(false);
 
@@ -180,6 +226,13 @@ describe("fenced code node view", () => {
         .toBe(true);
 
       const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
+      const optionCount = menu?.querySelectorAll(".cb-lang-option").length ?? 0;
+      for (let i = 0; i < optionCount - 1; i++) {
+        input!.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+        );
+      }
       input!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
       );
@@ -284,6 +337,9 @@ describe("fenced code node view", () => {
       expect(input).not.toBeNull();
 
       input!.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      input!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      );
       input!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
       );

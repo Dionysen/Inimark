@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   CODE_LANGUAGE_OPTIONS,
+  filterLanguageOptions,
   OFFICIAL_CODEMIRROR_LANGUAGE_PACKAGES,
   loadCodeLanguage,
   resolveCodeLanguage,
@@ -30,6 +31,19 @@ describe("CodeMirror 6 code editing and highlighting", () => {
     expect(resolveCodeLanguage("ts")?.name).toBe("TypeScript");
     expect(resolveCodeLanguage("py")?.name).toBe("Python");
     expect(resolveCodeLanguage("not-a-real-language")).toBeNull();
+  });
+
+  test("ranks language filter results by match quality", () => {
+    const rMatches = filterLanguageOptions("R");
+    expect(rMatches[0]?.name).toBe("R");
+    expect(rMatches.some((option) => option.name === "Angular Template")).toBe(false);
+    expect(filterLanguageOptions("cpp")[0]?.name).toBe("C++");
+    expect(filterLanguageOptions("py")[0]?.name).toBe("Python");
+    expect(filterLanguageOptions("js")[0]?.name).toBe("JavaScript");
+    expect(filterLanguageOptions("ts").slice(0, 2).map((option) => option.name)).toEqual([
+      "TypeScript",
+      "TSX",
+    ]);
   });
 
   test("loads language support asynchronously for highlighted code blocks", async () => {
@@ -68,8 +82,11 @@ describe("CodeMirror 6 code editing and highlighting", () => {
       expect(host.querySelector(".cb-lang-menu")).toBeNull();
       expect(menu).not.toBeNull();
       expect(menu?.hidden).toBe(false);
-      expect(menu?.querySelector("[data-lang-name='Python']")?.textContent).toBe("Python");
+      expect(menu?.querySelector("[data-lang-name='JavaScript']")?.textContent).toBe("JavaScript");
       expect(menu?.textContent).not.toContain("ecmascript");
+      expect(menu?.querySelectorAll(".cb-lang-option").length).toBeLessThan(
+        CODE_LANGUAGE_OPTIONS.length,
+      );
     } finally {
       editor.destroy();
       host.remove();
