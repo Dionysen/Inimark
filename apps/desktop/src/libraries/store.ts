@@ -1,4 +1,9 @@
 import { fileNameFromPath } from "../platform/env.ts";
+import { libraryIdFromPath } from "./id.ts";
+import {
+  getWorkspaceSession,
+  setWorkspaceSession,
+} from "../workspace/runtime.ts";
 
 export const LIBRARIES_STORAGE_KEY = "inimark:libraries";
 const LEGACY_LAST_WORKSPACE_KEY = "inimark:lastWorkspace";
@@ -38,9 +43,7 @@ const DEFAULT_SESSION: LibrarySessionState = {
   fileViews: {},
 };
 
-export function libraryIdFromPath(rootPath: string): string {
-  return rootPath.replace(/\\/g, "/").toLowerCase();
-}
+export { libraryIdFromPath } from "./id.ts";
 
 export function loadLibrariesConfig(): LibrariesConfig {
   migrateLegacyLastWorkspace();
@@ -56,6 +59,19 @@ export function loadLibrariesConfig(): LibrariesConfig {
 
 export function saveLibrariesConfig(config: LibrariesConfig): void {
   localStorage.setItem(LIBRARIES_STORAGE_KEY, JSON.stringify(config));
+}
+
+function saveLibrariesRegistry(config: LibrariesConfig): void {
+  const existing = loadLibrariesConfigUncached();
+  localStorage.setItem(
+    LIBRARIES_STORAGE_KEY,
+    JSON.stringify({
+      version: config.version,
+      libraries: config.libraries,
+      lastLibraryId: config.lastLibraryId,
+      sessions: existing.sessions,
+    }),
+  );
 }
 
 export function listLibraries(): LibraryRecord[] {
@@ -98,7 +114,7 @@ export function upsertLibrary(rootPath: string, rootName?: string): LibraryRecor
     ? config.libraries.map((library) => (library.id === id ? record : library))
     : [...config.libraries, record];
 
-  saveLibrariesConfig({
+  saveLibrariesRegistry({
     ...config,
     libraries,
     lastLibraryId: id,
@@ -113,7 +129,7 @@ export function removeLibrary(id: string): void {
   const lastLibraryId =
     config.lastLibraryId === id ? (libraries[0]?.id ?? null) : config.lastLibraryId;
 
-  saveLibrariesConfig({
+  saveLibrariesRegistry({
     ...config,
     libraries,
     sessions,
@@ -123,10 +139,12 @@ export function removeLibrary(id: string): void {
 
 export function setLastLibraryId(id: string | null): void {
   const config = loadLibrariesConfig();
-  saveLibrariesConfig({ ...config, lastLibraryId: id });
+  saveLibrariesRegistry({ ...config, lastLibraryId: id });
 }
 
 export function getLibrarySession(id: string): LibrarySessionState {
+  const bound = getWorkspaceSession(id);
+  if (bound) return bound;
   const session = loadLibrariesConfig().sessions[id];
   if (!session) return { ...DEFAULT_SESSION, fileViews: {} };
   return {
@@ -140,16 +158,19 @@ export function getLibrarySession(id: string): LibrarySessionState {
 }
 
 export function saveLibrarySession(id: string, state: LibrarySessionState): void {
+  const normalized: LibrarySessionState = {
+    activeFilePath: state.activeFilePath,
+    expandedDirs: [...state.expandedDirs],
+    fileViews: normalizeFileViews(state.fileViews),
+  };
+  if (setWorkspaceSession(id, normalized)) return;
+
   const config = loadLibrariesConfig();
   saveLibrariesConfig({
     ...config,
     sessions: {
       ...config.sessions,
-      [id]: {
-        activeFilePath: state.activeFilePath,
-        expandedDirs: [...state.expandedDirs],
-        fileViews: normalizeFileViews(state.fileViews),
-      },
+      [id]: normalized,
     },
   });
 }

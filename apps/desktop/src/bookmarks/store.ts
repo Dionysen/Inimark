@@ -1,3 +1,8 @@
+import {
+  getWorkspaceBookmarks,
+  setWorkspaceBookmarks,
+} from "../workspace/runtime.ts";
+
 export const BOOKMARKS_STORAGE_KEY = "inimark:bookmarks";
 export const DEFAULT_BOOKMARK_GROUP_ID = "default";
 
@@ -152,6 +157,13 @@ function updateLibrary(
   libraryId: string,
   updater: (current: LibraryBookmarks) => LibraryBookmarks,
 ): LibraryBookmarks {
+  const bound = getWorkspaceBookmarks(libraryId);
+  if (bound) {
+    const next = normalizeLibrary(updater(bound));
+    setWorkspaceBookmarks(libraryId, next);
+    return next;
+  }
+
   const config = loadBookmarksConfig();
   const current = normalizeLibrary(config.libraries[libraryId]);
   const next = normalizeLibrary(updater(current));
@@ -164,6 +176,8 @@ function updateLibrary(
 
 export function getLibraryBookmarks(libraryId: string): LibraryBookmarks {
   if (!libraryId) return createEmptyLibraryBookmarks();
+  const bound = getWorkspaceBookmarks(libraryId);
+  if (bound) return normalizeLibrary(bound);
   const config = loadBookmarksConfig();
   return normalizeLibrary(config.libraries[libraryId]);
 }
@@ -174,6 +188,13 @@ export function ensureLibraryBookmarks(
   initialGroupName: string,
 ): LibraryBookmarks {
   if (!libraryId) return createEmptyLibraryBookmarks(initialGroupName);
+  const bound = getWorkspaceBookmarks(libraryId);
+  if (bound) {
+    if (bound.groups.length > 0) return normalizeLibrary(bound);
+    const created = createEmptyLibraryBookmarks(initialGroupName);
+    setWorkspaceBookmarks(libraryId, created);
+    return created;
+  }
   const config = loadBookmarksConfig();
   if (config.libraries[libraryId]) {
     return normalizeLibrary(config.libraries[libraryId]);

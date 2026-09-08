@@ -1,3 +1,8 @@
+import {
+  getWorkspaceRecentFiles,
+  setWorkspaceRecentFiles,
+} from "../workspace/runtime.ts";
+
 const RECENT_FILES_STORAGE_KEY = "inimark-recent-files";
 const MAX_RECENT_FILES = 20;
 
@@ -20,6 +25,8 @@ function saveStore(store: RecentFilesStore): void {
 
 export function getRecentFiles(libraryId: string | null): string[] {
   if (!libraryId) return [];
+  const bound = getWorkspaceRecentFiles(libraryId);
+  if (bound) return bound;
   return loadStore()[libraryId] ?? [];
 }
 
@@ -28,12 +35,14 @@ export function recordRecentFile(
   path: string,
 ): void {
   if (!libraryId || !path) return;
-  const store = loadStore();
-  const existing = store[libraryId] ?? [];
+  const existing = getRecentFiles(libraryId);
   const updated = [path, ...existing.filter((item) => item !== path)].slice(
     0,
     MAX_RECENT_FILES,
   );
+  if (setWorkspaceRecentFiles(libraryId, updated)) return;
+
+  const store = loadStore();
   store[libraryId] = updated;
   saveStore(store);
 }

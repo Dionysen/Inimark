@@ -64,6 +64,11 @@ import {
   buildLinkIndexForWorkspace,
   linkIndex,
 } from "./wikilink/index.ts";
+import {
+  bindWorkspace,
+  flushWorkspace,
+  unbindWorkspace,
+} from "./workspace/runtime.ts";
 
 export interface AppController {
   editor: Editor;
@@ -497,6 +502,11 @@ export function mountApp(host: HTMLElement): AppController {
     refreshLibraryList();
     navHistory.clear();
     shell.sidebar.setWorkspace(workspace);
+    try {
+      await bindWorkspace(workspace.rootPath, activeLibraryId);
+    } catch (error) {
+      console.error("Failed to load workspace metadata from .inimark", error);
+    }
     void buildLinkIndexForWorkspace(workspace);
 
     const session = getLibrarySession(activeLibraryId);
@@ -537,6 +547,7 @@ export function mountApp(host: HTMLElement): AppController {
     if (libraryId === activeLibraryId) return;
     if (!(await confirmDiscardChanges())) return;
     persistLibrarySession();
+    await flushWorkspace();
     await loadLibraryById(libraryId, { restoreSession: true });
   }
 
@@ -552,6 +563,7 @@ export function mountApp(host: HTMLElement): AppController {
 
     if (!(await confirmDiscardChanges())) return;
     persistLibrarySession();
+    await flushWorkspace();
     await activateWorkspace(picked.workspace, { restoreSession: false });
   }
 
@@ -616,6 +628,7 @@ export function mountApp(host: HTMLElement): AppController {
 
     closeInProgress = true;
     persistLibrarySession();
+    await flushWorkspace();
 
     if (isTauri()) {
       const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
@@ -843,6 +856,7 @@ export function mountApp(host: HTMLElement): AppController {
       clearAutoSaveTimer();
       clearViewStateTimer();
       persistLibrarySession();
+      void flushWorkspace().finally(() => unbindWorkspace());
       for (const cleanup of cleanups.reverse()) cleanup();
       editor.destroy();
       shell.destroy();

@@ -1,4 +1,8 @@
 import { parseWikiLinks, isImageWikiTarget } from "./parser.ts";
+import {
+  getWorkspaceLinkIndexCache,
+  setWorkspaceLinkIndexCache,
+} from "../workspace/runtime.ts";
 
 export interface LinkIndexSnapshot {
   outlinks: Map<string, string[]>;
@@ -405,6 +409,7 @@ class LinkIndexServiceImpl {
 
   persistCache(vaultId: string): void {
     try {
+      if (setWorkspaceLinkIndexCache(vaultId, this.serialize())) return;
       localStorage.setItem(CACHE_VAULT_KEY, vaultId);
       localStorage.setItem(CACHE_KEY, this.serialize());
     } catch {
@@ -414,6 +419,8 @@ class LinkIndexServiceImpl {
 
   restoreCache(vaultId: string): boolean {
     try {
+      const bound = getWorkspaceLinkIndexCache(vaultId);
+      if (bound) return this.deserialize(bound);
       if (localStorage.getItem(CACHE_VAULT_KEY) !== vaultId) return false;
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return false;

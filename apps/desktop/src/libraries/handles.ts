@@ -60,9 +60,10 @@ export async function deleteDirectoryHandle(libraryId: string): Promise<void> {
 
 export async function ensureDirectoryPermission(
   handle: FileSystemDirectoryHandle,
+  mode: "read" | "readwrite" = "read",
 ): Promise<boolean> {
-  const current = await handle.queryPermission({ mode: "read" });
+  const current = await handle.queryPermission({ mode });
   if (current === "granted") return true;
-  const requested = await handle.requestPermission({ mode: "read" });
+  const requested = await handle.requestPermission({ mode });
   return requested === "granted";
 }
