@@ -8,12 +8,35 @@ async function readInimarkFileTauri(
   fileName: string,
 ): Promise<string | null> {
   try {
-    const { readTextFile, exists } = await import("@tauri-apps/plugin-fs");
+    const { readTextFile } = await import("@tauri-apps/plugin-fs");
     const fullPath = joinWorkspacePath(rootPath, inimarkRelativePath(fileName));
-    if (!(await exists(fullPath))) return null;
     return await readTextFile(fullPath);
-  } catch {
+  } catch (error) {
+    console.warn(`Failed to read .inimark/${fileName}:`, error);
     return null;
+  }
+}
+
+export async function inimarkFileExists(
+  rootPath: string,
+  fileName: string,
+): Promise<boolean> {
+  if (isTauri()) {
+    try {
+      const { exists } = await import("@tauri-apps/plugin-fs");
+      const fullPath = joinWorkspacePath(rootPath, inimarkRelativePath(fileName));
+      return await exists(fullPath);
+    } catch {
+      return false;
+    }
+  }
+  try {
+    const dir = await getInimarkDirHandle(rootPath);
+    if (!dir) return false;
+    await dir.getFileHandle(fileName);
+    return true;
+  } catch {
+    return false;
   }
 }
 

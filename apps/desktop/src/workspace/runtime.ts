@@ -1,11 +1,12 @@
 import type { LibraryBookmarks } from "../bookmarks/store.ts";
 import type { LibrarySessionState } from "../libraries/store.ts";
-import { readInimarkFile, writeInimarkFile } from "./io.ts";
+import { readInimarkFile, inimarkFileExists, writeInimarkFile } from "./io.ts";
 import {
   WORKSPACE_BOOKMARKS_FILE,
   WORKSPACE_LINK_INDEX_FILE,
   WORKSPACE_RECENT_FILE,
   WORKSPACE_SESSION_FILE,
+  inimarkRelativePath,
 } from "./paths.ts";
 
 const BOOKMARKS_STORAGE_KEY = "inimark:bookmarks";
@@ -16,6 +17,59 @@ const LINK_INDEX_VAULT_KEY = "inimark:link-index-vault";
 
 const FLUSH_DELAY_MS = 300;
 
+export interface WorkspaceFileIo {
+  readText(relativePath: string): Promise<string | null>;
+  writeText(relativePath: string, content: string): Promise<void>;
+  exists?(relativePath: string): Promise<boolean>;
+}
+
+async function readWorkspaceDataFile(
+  rootPath: string,
+  fileName: string,
+  io?: WorkspaceFileIo,
+): Promise<string | null> {
+  const relativePath = inimarkRelativePath(fileName);
+  if (io) {
+    try {
+      return await io.readText(relativePath);
+    } catch (error) {
+      console.warn(`Failed to read ${relativePath} via workspace IO:`, error);
+      return null;
+    }
+  }
+  return readInimarkFile(rootPath, fileName);
+}
+
+async function workspaceDataFileExists(
+  rootPath: string,
+  fileName: string,
+  io?: WorkspaceFileIo,
+): Promise<boolean> {
+  const relativePath = inimarkRelativePath(fileName);
+  if (io?.exists) {
+    try {
+      return await io.exists(relativePath);
+    } catch {
+      return false;
+    }
+  }
+  return inimarkFileExists(rootPath, fileName);
+}
+
+async function writeWorkspaceDataFile(
+  rootPath: string,
+  fileName: string,
+  content: string,
+  io?: WorkspaceFileIo,
+): Promise<void> {
+  const relativePath = inimarkRelativePath(fileName);
+  if (io) {
+    await io.writeText(relativePath, content);
+    return;
+  }
+  await writeInimarkFile(rootPath, fileName, content);
+}
+
 interface WorkspaceRuntimeState {
   rootPath: string;
   libraryId: string;
@@ -24,6 +78,7 @@ interface WorkspaceRuntimeState {
   recent: string[];
   linkIndexCache: string | null;
   dirty: Set<WorkspaceDataKey>;
+  io?: WorkspaceFileIo;
 }
 
 type WorkspaceDataKey = "bookmarks" | "session" | "recent" | "linkIndex";
@@ -52,10 +107,14 @@ function markDirty(key: WorkspaceDataKey): void {
 function parseJson<T>(raw: string | null): T | null {
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as T;
+    return JSON.parse(raw.replace(/^\uFEFF/, "").trim()) as T;
   } catch {
     return null;
   }
+}
+
+function hasBookmarkContent(data: LibraryBookmarks): boolean {
+  return data.items.length > 0;
 }
 
 function migrateBookmarksFromLocalStorage(libraryId: string): LibraryBookmarks | null {
@@ -133,13 +192,15 @@ function clearMigratedLocalStorage(libraryId: string, rootPath: string): void {
 
 async function writeDirtyFiles(state: WorkspaceRuntimeState): Promise<void> {
   const writes: Promise<void>[] = [];
+  const io = state.io;
 
   if (state.dirty.has("bookmarks")) {
     writes.push(
-      writeInimarkFile(
+      writeWorkspaceDataFile(
         state.rootPath,
         WORKSPACE_BOOKMARKS_FILE,
         JSON.stringify(state.bookmarks, null, 2),
+        io,
       ).catch((error) => {
         console.error("Failed to save bookmarks.json", error);
       }),
@@ -147,10 +208,11 @@ async function writeDirtyFiles(state: WorkspaceRuntimeState): Promise<void> {
   }
   if (state.dirty.has("session")) {
     writes.push(
-      writeInimarkFile(
+      writeWorkspaceDataFile(
         state.rootPath,
         WORKSPACE_SESSION_FILE,
         JSON.stringify(state.session, null, 2),
+        io,
       ).catch((error) => {
         console.error("Failed to save session.json", error);
       }),
@@ -158,10 +220,11 @@ async function writeDirtyFiles(state: WorkspaceRuntimeState): Promise<void> {
   }
   if (state.dirty.has("recent")) {
     writes.push(
-      writeInimarkFile(
+      writeWorkspaceDataFile(
         state.rootPath,
         WORKSPACE_RECENT_FILE,
         JSON.stringify(state.recent, null, 2),
+        io,
       ).catch((error) => {
         console.error("Failed to save recent.json", error);
       }),
@@ -169,11 +232,14 @@ async function writeDirtyFiles(state: WorkspaceRuntimeState): Promise<void> {
   }
   if (state.dirty.has("linkIndex") && state.linkIndexCache != null) {
     writes.push(
-      writeInimarkFile(state.rootPath, WORKSPACE_LINK_INDEX_FILE, state.linkIndexCache).catch(
-        (error) => {
-          console.error("Failed to save link-index.json", error);
-        },
-      ),
+      writeWorkspaceDataFile(
+        state.rootPath,
+        WORKSPACE_LINK_INDEX_FILE,
+        state.linkIndexCache,
+        io,
+      ).catch((error) => {
+        console.error("Failed to save link-index.json", error);
+      }),
     );
   }
 
@@ -197,42 +263,66 @@ export function getBoundRootPath(): string | null {
 export async function bindWorkspace(
   rootPath: string,
   libraryId: string,
+  io?: WorkspaceFileIo,
 ): Promise<void> {
   if (active?.libraryId === libraryId && active.rootPath === rootPath) return;
   await flushWorkspace();
 
   let migrated = false;
 
-  let bookmarks = parseJson<LibraryBookmarks>(
-    await readInimarkFile(rootPath, WORKSPACE_BOOKMARKS_FILE),
+  const bookmarksRaw = await readWorkspaceDataFile(rootPath, WORKSPACE_BOOKMARKS_FILE, io);
+  const bookmarksFileExists = await workspaceDataFileExists(
+    rootPath,
+    WORKSPACE_BOOKMARKS_FILE,
+    io,
   );
-  if (!bookmarks) {
-    bookmarks = migrateBookmarksFromLocalStorage(libraryId);
-    if (bookmarks) migrated = true;
+  let bookmarks = parseJson<LibraryBookmarks>(bookmarksRaw);
+  if (bookmarksRaw == null && !bookmarksFileExists) {
+    const fromStorage = migrateBookmarksFromLocalStorage(libraryId);
+    if (fromStorage && hasBookmarkContent(fromStorage)) {
+      bookmarks = fromStorage;
+      migrated = true;
+    }
+  } else if (bookmarksRaw != null && !bookmarks) {
+    console.error("Invalid bookmarks.json in .inimark");
+  } else if (bookmarksRaw == null && bookmarksFileExists) {
+    console.error("Failed to read bookmarks.json from .inimark");
   }
 
-  let session = parseJson<LibrarySessionState>(
-    await readInimarkFile(rootPath, WORKSPACE_SESSION_FILE),
-  );
-  if (!session) {
-    session = migrateSessionFromLocalStorage(libraryId);
-    if (session) migrated = true;
+  const sessionRaw = await readWorkspaceDataFile(rootPath, WORKSPACE_SESSION_FILE, io);
+  let session = parseJson<LibrarySessionState>(sessionRaw);
+  if (sessionRaw == null) {
+    const fromStorage = migrateSessionFromLocalStorage(libraryId);
+    if (fromStorage) {
+      session = fromStorage;
+      migrated = true;
+    }
+  } else if (!session) {
+    console.error("Invalid session.json in .inimark");
   }
   if (!session) session = createEmptySession();
 
-  let recent = parseJson<string[]>(
-    await readInimarkFile(rootPath, WORKSPACE_RECENT_FILE),
-  );
-  if (!recent) {
-    recent = migrateRecentFromLocalStorage(libraryId);
-    if (recent) migrated = true;
+  const recentRaw = await readWorkspaceDataFile(rootPath, WORKSPACE_RECENT_FILE, io);
+  let recent = parseJson<string[]>(recentRaw);
+  if (recentRaw == null) {
+    const fromStorage = migrateRecentFromLocalStorage(libraryId);
+    if (fromStorage) {
+      recent = fromStorage;
+      migrated = true;
+    }
+  } else if (!recent) {
+    console.error("Invalid recent.json in .inimark");
   }
   if (!recent) recent = [];
 
-  let linkIndexCache = await readInimarkFile(rootPath, WORKSPACE_LINK_INDEX_FILE);
-  if (!linkIndexCache) {
-    linkIndexCache = migrateLinkIndexFromLocalStorage(rootPath);
-    if (linkIndexCache) migrated = true;
+  const linkIndexRaw = await readWorkspaceDataFile(rootPath, WORKSPACE_LINK_INDEX_FILE, io);
+  let linkIndexCache = linkIndexRaw;
+  if (linkIndexRaw == null) {
+    const fromStorage = migrateLinkIndexFromLocalStorage(rootPath);
+    if (fromStorage) {
+      linkIndexCache = fromStorage;
+      migrated = true;
+    }
   }
 
   active = {
@@ -243,6 +333,7 @@ export async function bindWorkspace(
     recent,
     linkIndexCache,
     dirty: new Set(),
+    io,
   };
 
   if (migrated) {

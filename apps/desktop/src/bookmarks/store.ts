@@ -189,12 +189,7 @@ export function ensureLibraryBookmarks(
 ): LibraryBookmarks {
   if (!libraryId) return createEmptyLibraryBookmarks(initialGroupName);
   const bound = getWorkspaceBookmarks(libraryId);
-  if (bound) {
-    if (bound.groups.length > 0) return normalizeLibrary(bound);
-    const created = createEmptyLibraryBookmarks(initialGroupName);
-    setWorkspaceBookmarks(libraryId, created);
-    return created;
-  }
+  if (bound) return normalizeLibrary(bound);
   const config = loadBookmarksConfig();
   if (config.libraries[libraryId]) {
     return normalizeLibrary(config.libraries[libraryId]);

@@ -20,6 +20,7 @@ import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts"
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
+  createWorkspaceDirectory,
   createWorkspaceFile,
   defaultExpandedDirs,
   openWorkspaceByPath,
@@ -68,6 +69,7 @@ import {
   bindWorkspace,
   flushWorkspace,
   unbindWorkspace,
+  type WorkspaceFileIo,
 } from "./workspace/runtime.ts";
 
 export interface AppController {
@@ -516,12 +518,35 @@ export function mountApp(host: HTMLElement): AppController {
     setLastLibraryId(activeLibraryId);
     refreshLibraryList();
     navHistory.clear();
-    shell.sidebar.setWorkspace(workspace);
+    const workspaceIo: WorkspaceFileIo = {
+      readText: async (relativePath) => {
+        const result = await readWorkspaceFile(next, relativePath);
+        if (result.status === "opened") return result.text;
+        if (result.status === "error") {
+          console.warn(`Failed to read ${relativePath}:`, result.message);
+        }
+        return null;
+      },
+      writeText: async (relativePath, content) => {
+        if (relativePath.startsWith(".inimark/")) {
+          await createWorkspaceDirectory(next, ".inimark");
+        }
+        const result = await writeWorkspaceFile(next, relativePath, content);
+        if (result.status === "error") {
+          throw new Error(result.message);
+        }
+      },
+      exists: async (relativePath) => {
+        const result = await readWorkspaceFile(next, relativePath);
+        return result.status === "opened";
+      },
+    };
     try {
-      await bindWorkspace(workspace.rootPath, activeLibraryId);
+      await bindWorkspace(workspace.rootPath, activeLibraryId, workspaceIo);
     } catch (error) {
       console.error("Failed to load workspace metadata from .inimark", error);
     }
+    shell.sidebar.setWorkspace(workspace);
     void buildLinkIndexForWorkspace(workspace);
 
     const session = getLibrarySession(activeLibraryId);
