@@ -1,9 +1,11 @@
 ﻿import { describe, expect, test } from "vitest";
+import { TextSelection } from "prosemirror-state";
 import type { EditorView as CodeMirrorView } from "@codemirror/view";
 
 import { runFeatureCases } from "../utils.ts";
 import { createEditor } from "../../src/lib.ts";
 import { mermaidRenderer } from "../../src/renderers/mermaid.ts";
+import { feedEvent } from "../../specs/events.ts";
 import { fencedCodeSpecs } from "../../specs/features/fenced-code.specs.ts";
 
 runFeatureCases(fencedCodeSpecs);
@@ -153,6 +155,40 @@ describe("fenced code node view", () => {
       await nextTick(0);
 
       expect(menu?.hidden).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("ArrowUp from paragraph below focuses the language input", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```ts\nbody\n```\n\nhello" });
+
+    try {
+      const doc = editor.view.state.doc;
+      let helloStart: number | null = null;
+      doc.descendants((node, pos) => {
+        if (node.type.name === "paragraph" && node.textContent === "hello") {
+          helloStart = pos + 1;
+          return false;
+        }
+      });
+      expect(helloStart).not.toBeNull();
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(TextSelection.create(doc, helloStart!)),
+      );
+      editor.view.focus();
+      feedEvent(editor.view, "<ArrowUp>");
+
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(true);
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
+      expect(input).not.toBeNull();
+      expect(document.body.querySelector<HTMLElement>(".cb-chrome")?.hidden).toBe(false);
+      expect(document.activeElement).toBe(input);
     } finally {
       editor.destroy();
       host.remove();

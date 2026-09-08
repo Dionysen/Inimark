@@ -468,9 +468,7 @@ class CodeBlockView implements NodeView {
       this.dom.removeAttribute("data-lang-focus");
       this.sourceFrameEl.removeAttribute("data-lang-focus");
     }
-    if (langFocus) {
-      try { this.inputEl.focus(); } catch { /* ignore */ }
-    } else {
+    if (!langFocus) {
       this.hideLanguageMenu();
       if (document.activeElement === this.inputEl) {
         try { this.inputEl.blur(); } catch { /* ignore */ }
@@ -491,7 +489,12 @@ class CodeBlockView implements NodeView {
     }
     this.hadLangFocus = langFocus;
     this.hadActive = active;
+    // Unhide chrome before focusing the lang input — from below-block ArrowUp
+    // the chrome starts hidden, and focus() on a hidden input is ignored.
     this.refreshChromeVisibility();
+    if (langFocus) {
+      try { this.inputEl.focus(); } catch { /* ignore */ }
+    }
   }
 
   private shouldShowChrome(): boolean {
