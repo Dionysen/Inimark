@@ -149,6 +149,11 @@ export function mountApp(host: HTMLElement): AppController {
       };
       saveSettings(settings);
     },
+    onTypewriterModeChange(enabled) {
+      settings = { ...settings, typewriterMode: enabled };
+      saveSettings(settings);
+      applySettings(settings);
+    },
   });
   cleanups.push(() => wordCount?.destroy());
 
@@ -764,6 +769,7 @@ export function mountApp(host: HTMLElement): AppController {
     editor.setTypewriterMode(settings.typewriterMode);
     shell.applySidebarTabLayout(settings);
     shell.graph.applyGraphSettings(settings.graph);
+    wordCount?.syncChrome();
   };
 
   const onStorage = (event: StorageEvent) => {

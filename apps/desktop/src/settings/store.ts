@@ -87,6 +87,8 @@ export interface AppSettings {
   paragraphSpacing: number;
   codeLineHeight: number;
   typewriterMode: boolean;
+  /** Hide bottom-right editor chrome until the pointer enters that corner. */
+  immersiveEditing: boolean;
   autoSave: boolean;
   /** When notes are moved/renamed and other files link to them. */
   linkUpdateOnMove: LinkUpdateMode;
@@ -153,6 +155,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paragraphSpacing: 1.05,
   codeLineHeight: 1.5,
   typewriterMode: false,
+  immersiveEditing: false,
   autoSave: false,
   linkUpdateOnMove: "ask",
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
@@ -361,6 +364,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       2.4,
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
+    immersiveEditing: Boolean(
+      parsed.immersiveEditing ?? DEFAULT_SETTINGS.immersiveEditing,
+    ),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
     linkUpdateOnMove: isLinkUpdateMode(parsed.linkUpdateOnMove)
       ? parsed.linkUpdateOnMove

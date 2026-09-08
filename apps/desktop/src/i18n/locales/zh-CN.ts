@@ -244,6 +244,8 @@ export const zhCN: Dictionary = {
     editor: {
       typewriter: "打字机模式",
       typewriterDesc: "写作时将光标行垂直居中。",
+      immersiveEditing: "沉浸编辑",
+      immersiveEditingDesc: "自动隐藏右下角快捷按钮，鼠标移入该区域时再显示。",
       editorFont: "编辑器字体",
       editorFontDesc: "正文编辑区域使用的字体。",
       codeFont: "代码字体",

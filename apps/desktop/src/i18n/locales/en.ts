@@ -244,6 +244,9 @@ export const en: Dictionary = {
     editor: {
       typewriter: "Typewriter mode",
       typewriterDesc: "Keep the caret line vertically centered while writing.",
+      immersiveEditing: "Immersive editing",
+      immersiveEditingDesc:
+        "Hide the bottom-right shortcuts until the pointer enters that area.",
       editorFont: "Editor font",
       editorFontDesc: "Font family for the writing surface.",
       codeFont: "Code font",

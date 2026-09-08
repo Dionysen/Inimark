@@ -15,6 +15,7 @@ const LAYER_ID = Symbol("word-count-panel");
 
 export interface WordCountController {
   scheduleUpdate(): void;
+  syncChrome(): void;
   destroy(): void;
 }
 
@@ -23,6 +24,7 @@ export interface WordCountOptions {
   editor: Editor;
   getSettings: () => AppSettings;
   onWordCountChange: (partial: Partial<WordCountSettings>) => void;
+  onTypewriterModeChange?: (enabled: boolean) => void;
 }
 
 /** Strip common Markdown syntax for plain-text character counts (source mode). */
@@ -73,12 +75,20 @@ const SCROLL_TOP_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m18 15-6-6-6 6"/></svg>`;
 const SCROLL_BOTTOM_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>`;
+const TYPEWRITER_ICON =
+  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 8h12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 8v8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 16h12"/></svg>`;
 
 export function mountWordCount(options: WordCountOptions): WordCountController {
-  const { host, editor, getSettings, onWordCountChange } = options;
+  const { host, editor, getSettings, onWordCountChange, onTypewriterModeChange } = options;
 
   const root = document.createElement("div");
   root.className = "inimark-statusbar";
+
+  const zone = document.createElement("div");
+  zone.className = "inimark-statusbar-zone";
+
+  const chrome = document.createElement("div");
+  chrome.className = "inimark-statusbar-chrome";
 
   const scrollRow = document.createElement("div");
   scrollRow.className = "inimark-statusbar-scroll";
@@ -94,6 +104,11 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   scrollBottomBtn.innerHTML = SCROLL_BOTTOM_ICON;
 
   scrollRow.append(scrollTopBtn, scrollBottomBtn);
+
+  const typewriterBtn = document.createElement("button");
+  typewriterBtn.type = "button";
+  typewriterBtn.className = "inimark-statusbar-scroll-btn";
+  typewriterBtn.innerHTML = TYPEWRITER_ICON;
 
   const countBtn = document.createElement("button");
   countBtn.type = "button";
@@ -141,9 +156,11 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
 
   const footer = document.createElement("div");
   footer.className = "inimark-statusbar-footer";
-  footer.append(countBtn, panel);
+  footer.append(typewriterBtn, countBtn, panel);
 
-  root.append(scrollRow, footer);
+  chrome.append(scrollRow, footer);
+  zone.append(chrome);
+  root.append(zone);
   host.append(root);
 
   let open = false;
@@ -155,6 +172,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     root.classList.remove("is-open");
     countBtn.classList.remove("is-active");
     releaseExclusiveLayer(LAYER_ID);
+    updateRevealState();
   }
 
   function openPanel(): void {
@@ -163,6 +181,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     root.classList.add("is-open");
     countBtn.classList.add("is-active");
     acquireExclusiveLayer(LAYER_ID, closePanel);
+    updateRevealState();
   }
 
   function refreshToggle(): void {
@@ -174,6 +193,8 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     scrollTopBtn.setAttribute("aria-label", t("editor.scrollToTop"));
     scrollBottomBtn.title = t("editor.scrollToBottom");
     scrollBottomBtn.setAttribute("aria-label", t("editor.scrollToBottom"));
+    typewriterBtn.title = t("settings.editor.typewriter");
+    typewriterBtn.setAttribute("aria-label", t("settings.editor.typewriter"));
     countBtn.title = t("wordCount.toggle");
     countBtn.setAttribute("aria-label", t("wordCount.toggle"));
     title.textContent = t("wordCount.panelTitle");
@@ -200,6 +221,41 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     else openPanel();
   });
 
+  function syncTypewriterButton(): void {
+    const on = editor.isTypewriterMode();
+    typewriterBtn.classList.toggle("is-active", on);
+    typewriterBtn.setAttribute("aria-pressed", String(on));
+  }
+
+  function updateRevealState(): void {
+    const immersive = getSettings().immersiveEditing;
+    root.classList.toggle("inimark-statusbar--immersive", immersive);
+    if (!immersive) {
+      zone.classList.remove("is-revealed");
+      return;
+    }
+    if (open || zone.matches(":hover")) {
+      zone.classList.add("is-revealed");
+    } else {
+      zone.classList.remove("is-revealed");
+    }
+  }
+
+  function syncChrome(): void {
+    syncTypewriterButton();
+    updateRevealState();
+  }
+
+  zone.addEventListener("pointerenter", () => {
+    if (!getSettings().immersiveEditing) return;
+    zone.classList.add("is-revealed");
+  });
+
+  zone.addEventListener("pointerleave", () => {
+    if (!getSettings().immersiveEditing || open) return;
+    zone.classList.remove("is-revealed");
+  });
+
   scrollTopBtn.addEventListener("click", (event) => {
     event.stopPropagation();
     editor.scrollToTop();
@@ -208,6 +264,14 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   scrollBottomBtn.addEventListener("click", (event) => {
     event.stopPropagation();
     editor.scrollToBottom();
+  });
+
+  typewriterBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const next = !editor.isTypewriterMode();
+    editor.setTypewriterMode(next);
+    onTypewriterModeChange?.(next);
+    syncTypewriterButton();
   });
 
   const onDocumentPointerDown = (event: PointerEvent) => {
@@ -238,9 +302,11 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   refreshLabels();
   refreshToggle();
   renderCount();
+  syncChrome();
 
   return {
     scheduleUpdate,
+    syncChrome,
     destroy() {
       if (updateTimer != null) clearTimeout(updateTimer);
       document.removeEventListener("pointerdown", onDocumentPointerDown, true);

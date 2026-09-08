@@ -86,6 +86,8 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "autosave",
     "format",
     "typewriter",
+    "immersive",
+    "focus",
     "line height",
   ],
   appearance: [
@@ -371,6 +373,21 @@ export function mountSettingsView(
         t("settings.editor.typewriter"),
         t("settings.editor.typewriterDesc"),
         typewriter.el,
+      ),
+    );
+
+    const immersiveEditing = createToggle({
+      checked: settings.immersiveEditing,
+      title: t("settings.editor.immersiveEditing"),
+      onChange(checked) {
+        update({ immersiveEditing: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.immersiveEditing"),
+        t("settings.editor.immersiveEditingDesc"),
+        immersiveEditing.el,
       ),
     );
 

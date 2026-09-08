@@ -879,11 +879,31 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   right: var(--inimark-space-3);
   bottom: var(--inimark-space-3);
   z-index: 12;
+  pointer-events: none;
+}
+
+.inimark-statusbar-zone {
+  padding: var(--inimark-space-2);
+  pointer-events: auto;
+}
+
+.inimark-statusbar-chrome {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: var(--inimark-space-2);
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.inimark-statusbar--immersive .inimark-statusbar-chrome {
+  opacity: 0;
   pointer-events: none;
+}
+
+.inimark-statusbar--immersive .inimark-statusbar-zone.is-revealed .inimark-statusbar-chrome {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .inimark-statusbar > * {
@@ -903,6 +923,9 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 
 .inimark-statusbar-footer {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-1);
 }
 
 .inimark-statusbar-scroll-btn {
@@ -931,6 +954,14 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   border-color: var(--inimark-border);
   background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.inimark-statusbar-scroll-btn.is-active {
+  color: var(--inimark-accent);
+}
+
+.inimark-statusbar-scroll-btn.is-active:hover {
+  color: var(--inimark-fg);
 }
 
 .inimark-statusbar-scroll-btn svg {
