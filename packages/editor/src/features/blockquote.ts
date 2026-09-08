@@ -5,6 +5,7 @@ import { canJoin, findWrapping } from "prosemirror-transform";
 
 import {
   calloutAttrsFromSource,
+  calloutAutoFoldPlugin,
   convertCurrentBlockquoteCallout,
 } from "../callouts.ts";
 import type { FeatureSpec } from "./_types.ts";
@@ -31,7 +32,7 @@ const BLOCKQUOTE_WRAP_META = "blockquote-wrap";
 // So this feature does not contribute a keymap.
 
 const calloutInputRule = new InputRule(
-  /^\[!(NOTE|TIP|IMPORTANT|WARNING|DANGER)\]$/i,
+  /^\[!(NOTE|TIP|IMPORTANT|WARNING|WARN|DANGER|CAUTION)\]$/i,
   (state, match, start, end) => {
     const attrs = calloutAttrsFromSource(match[1]);
     if (!attrs) return null;
@@ -147,7 +148,7 @@ export const blockquote: FeatureSpec = {
     calloutInputRule,
   ],
 
-  plugins: (schema) => [blockquoteWrapPlugin(schema)],
+  plugins: (schema) => [blockquoteWrapPlugin(schema), calloutAutoFoldPlugin()],
 
   keymap: () => ({ Enter: calloutEnter }),
 

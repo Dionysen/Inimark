@@ -1,5 +1,5 @@
 import type { Node as PMNode } from "prosemirror-model";
-import { TextSelection, type Command } from "prosemirror-state";
+import { Plugin, TextSelection, type Command } from "prosemirror-state";
 
 export type CalloutKind =
   | "note"
@@ -13,13 +13,26 @@ export type CalloutAttrs = {
   alertSource: string;
 };
 
-const CALLOUT_MARKER_RE =
-  /^\[!(NOTE|TIP|IMPORTANT|WARNING|DANGER)\][ \t]*(?:\n|$)/i;
-const CALLOUT_MARKER_LINE_RE =
-  /^\[!(NOTE|TIP|IMPORTANT|WARNING|DANGER)\][ \t]*$/i;
+const CALLOUT_KIND_PATTERN = "NOTE|TIP|IMPORTANT|WARNING|WARN|DANGER|CAUTION";
+const CALLOUT_MARKER_RE = new RegExp(
+  `^\\[!(${CALLOUT_KIND_PATTERN})\\](?:[ \\t]*(?:\\n|$)|[ \\t]+)`,
+  "i",
+);
+const CALLOUT_MARKER_LINE_RE = new RegExp(
+  `^\\[!(${CALLOUT_KIND_PATTERN})\\][ \\t]*$`,
+  "i",
+);
+
+const CALLOUT_SOURCE_LABEL: Record<CalloutKind, string> = {
+  note: "NOTE",
+  tip: "TIP",
+  important: "IMPORTANT",
+  warning: "WARNING",
+  danger: "DANGER",
+};
 
 export function normalizeCalloutKind(value: string | null | undefined): CalloutKind | null {
-  switch ((value ?? "").toLowerCase()) {
+  switch ((value ?? "").trim().toLowerCase()) {
     case "note":
       return "note";
     case "tip":
@@ -27,6 +40,9 @@ export function normalizeCalloutKind(value: string | null | undefined): CalloutK
     case "important":
       return "important";
     case "warning":
+    case "warn":
+      return "warning";
+    case "caution":
       return "warning";
     case "danger":
       return "danger";
@@ -38,10 +54,9 @@ export function normalizeCalloutKind(value: string | null | undefined): CalloutK
 export function calloutAttrsFromSource(
   value: string | null | undefined,
 ): CalloutAttrs | null {
-  const source = (value ?? "").trim();
-  const kind = normalizeCalloutKind(source);
+  const kind = normalizeCalloutKind(value);
   if (!kind) return null;
-  return { alert: kind, alertSource: source.toUpperCase() };
+  return { alert: kind, alertSource: CALLOUT_SOURCE_LABEL[kind] };
 }
 
 export function getCalloutAttrsFromElement(el: HTMLElement): CalloutAttrs | null {
@@ -144,6 +159,35 @@ function transformBlock(node: PMNode): PMNode {
 
 export function foldMarkdownCallouts(doc: PMNode): PMNode {
   return transformBlock(doc);
+}
+
+/** Fold a single blockquote when its first line carries a callout marker. */
+export function foldBlockquoteCallout(node: PMNode): PMNode {
+  return foldBlockquote(node);
+}
+
+const CALLOUT_FOLD_META = "callout-auto-fold";
+
+/** Live-edit: turn `> [!TIP]` text inside a plain blockquote into a callout. */
+export function calloutAutoFoldPlugin(): Plugin {
+  return new Plugin({
+    appendTransaction(transactions, _oldState, newState) {
+      if (!transactions.some((t) => t.docChanged)) return null;
+      if (transactions.some((t) => t.getMeta(CALLOUT_FOLD_META))) return null;
+
+      const tr = newState.tr;
+      let changed = false;
+      newState.doc.descendants((node, pos) => {
+        if (node.type.name !== "blockquote" || node.attrs.alert) return;
+        const folded = foldBlockquote(node);
+        if (folded === node) return;
+        tr.replaceWith(pos, pos + node.nodeSize, folded);
+        changed = true;
+      });
+      if (!changed) return null;
+      return tr.setMeta(CALLOUT_FOLD_META, true);
+    },
+  });
 }
 
 export const convertCurrentBlockquoteCallout: Command = (state, dispatch) => {

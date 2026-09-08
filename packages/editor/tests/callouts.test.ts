@@ -1,8 +1,11 @@
 ﻿import { describe, expect, test } from "vitest";
 import { DOMParser as PMDOMParser, DOMSerializer } from "prosemirror-model";
 
+import { EditorState } from "prosemirror-state";
+
 import {
   calloutAttrsFromSource,
+  calloutAutoFoldPlugin,
   convertCurrentBlockquoteCallout,
   foldMarkdownCallouts,
   getCalloutAttrsFromElement,
@@ -43,17 +46,46 @@ describe("callouts", () => {
     expect(bq.textContent).toBe("body");
   });
 
-  test("rejects CAUTION as an unsupported callout marker", () => {
-    expect(normalizeCalloutKind("CAUTION")).toBeNull();
-    expect(calloutAttrsFromSource("caution")).toBeNull();
-
-    const doc = parse("> [!CAUTION]\n> body");
+  test("parses marker and body on the same blockquote line", () => {
+    const doc = parse("> [!TIP] Use the Command Palette");
     const bq = doc.child(0);
 
-    expect(bq.attrs.alert).toBeNull();
-    expect(bq.attrs.alertSource).toBeNull();
-    expect(bq.textContent).toBe("[!CAUTION]\nbody");
-    expect(serialize(doc)).toBe("> \\[!CAUTION\\]\n> body");
+    expect(bq.attrs.alert).toBe("tip");
+    expect(bq.attrs.alertSource).toBe("TIP");
+    expect(bq.textContent).toBe("Use the Command Palette");
+    expect(serialize(doc)).toBe("> [!TIP]\n> Use the Command Palette");
+  });
+
+  test("accepts WARN and CAUTION as warning aliases", () => {
+    expect(parse("> [!WARN]\n> body").child(0).attrs).toMatchObject({
+      alert: "warning",
+      alertSource: "WARNING",
+    });
+    expect(parse("> [!CAUTION]\n> body").child(0).attrs).toMatchObject({
+      alert: "warning",
+      alertSource: "WARNING",
+    });
+    expect(parse("> [!WARN] body text").child(0).textContent).toBe("body text");
+  });
+
+  test("auto-folds a marker typed into an existing blockquote", () => {
+    const doc = schema.nodes.doc.create(null, [
+      schema.nodes.blockquote.create(null, [
+        schema.nodes.paragraph.create(null, schema.text("[!WARN")),
+      ]),
+    ]);
+    const state = EditorState.create({
+      schema,
+      doc,
+      plugins: [calloutAutoFoldPlugin()],
+    });
+    const markerEnd = 2 + "[!WARN".length;
+    const next = state.apply(state.tr.insertText("]", markerEnd));
+    const bq = next.doc.child(0);
+
+    expect(bq.attrs.alert).toBe("warning");
+    expect(bq.attrs.alertSource).toBe("WARNING");
+    expect(bq.textContent).toBe("");
   });
 
   test("serializes callout marker before blockquote content", () => {
