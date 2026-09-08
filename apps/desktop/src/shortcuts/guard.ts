@@ -111,6 +111,8 @@ export function shouldBlockNativeShortcut(event: KeyboardEvent): boolean {
   if (inEditor) return false;
 
   if (isEditableTarget(event.target)) {
+    // Allow normal typing and cursor keys; only intercept modifier shortcuts.
+    if (!event.ctrlKey && !event.metaKey && !event.altKey) return false;
     return !isTextEditingShortcut(event);
   }
 
