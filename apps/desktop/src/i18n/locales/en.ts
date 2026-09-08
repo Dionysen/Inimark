@@ -167,6 +167,8 @@ export const en: Dictionary = {
   editor: {
     welcome: "# Welcome\n\nStart writing…",
     fontZoom: "{{size}}px",
+    scrollToTop: "Scroll to top",
+    scrollToBottom: "Scroll to bottom",
     ctx: {
       cut: "Cut",
       copy: "Copy",

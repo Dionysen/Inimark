@@ -60,6 +60,8 @@ export interface EditorOptions {
   initialContent?: string;
   /** Fired on every document-changing transaction; arg is the current markdown. Raw, no debounce. */
   onChange?: (md: string) => void;
+  /** Fired when content is replaced programmatically (`setMarkdown`, source toggle, …). */
+  onContentReplaced?: () => void;
   /** Fired when the editor surface (rendered or source) gains focus. */
   onFocus?: () => void;
   /** Fired when the editor surface loses focus. */
@@ -102,6 +104,10 @@ export interface Editor {
   getViewState(): EditorViewState;
   /** Restore cursor + scroll after `setMarkdown` (waits for layout). */
   restoreViewState(state: EditorViewState): void;
+  /** Smooth-scroll the editor surface to the top. */
+  scrollToTop(): void;
+  /** Smooth-scroll the editor surface to the bottom. */
+  scrollToBottom(): void;
   /** Run a named format/insert command (context menu, toolbar, …). */
   executeCommand(name: EditorCommandName | string): boolean;
   /** Focus whichever surface is active. */
@@ -517,10 +523,12 @@ export function createEditor(
       } else {
         rebuild(md);
       }
+      options.onContentReplaced?.();
     },
     toggleSource(): void {
       if (inSource) exitSource();
       else enterSource();
+      options.onContentReplaced?.();
     },
     isSourceMode(): boolean {
       return inSource;
@@ -751,6 +759,13 @@ export function createEditor(
       requestAnimationFrame(() => {
         requestAnimationFrame(apply);
       });
+    },
+    scrollToTop(): void {
+      findScrollContainer().scrollTo({ top: 0, behavior: "smooth" });
+    },
+    scrollToBottom(): void {
+      const scrollHost = findScrollContainer();
+      scrollHost.scrollTo({ top: scrollHost.scrollHeight, behavior: "smooth" });
     },
     executeCommand(name) {
       if (inSource) exitSource();

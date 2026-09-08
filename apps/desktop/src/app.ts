@@ -132,6 +132,9 @@ export function mountApp(host: HTMLElement): AppController {
         linkIndex.addFileLinks(activeFilePath, md);
       }
     },
+    onContentReplaced: () => {
+      wordCount?.scheduleUpdate();
+    },
   });
   editor.setTypewriterMode(settings.typewriterMode);
 

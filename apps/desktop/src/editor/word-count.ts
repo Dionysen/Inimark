@@ -69,11 +69,31 @@ function getCountText(editor: Editor, settings: WordCountSettings): string {
   return t("wordCount.label", { count: formatCount(count) });
 }
 
+const SCROLL_TOP_ICON =
+  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m18 15-6-6-6 6"/></svg>`;
+const SCROLL_BOTTOM_ICON =
+  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>`;
+
 export function mountWordCount(options: WordCountOptions): WordCountController {
   const { host, editor, getSettings, onWordCountChange } = options;
 
   const root = document.createElement("div");
   root.className = "inimark-statusbar";
+
+  const scrollRow = document.createElement("div");
+  scrollRow.className = "inimark-statusbar-scroll";
+
+  const scrollTopBtn = document.createElement("button");
+  scrollTopBtn.type = "button";
+  scrollTopBtn.className = "inimark-statusbar-scroll-btn";
+  scrollTopBtn.innerHTML = SCROLL_TOP_ICON;
+
+  const scrollBottomBtn = document.createElement("button");
+  scrollBottomBtn.type = "button";
+  scrollBottomBtn.className = "inimark-statusbar-scroll-btn";
+  scrollBottomBtn.innerHTML = SCROLL_BOTTOM_ICON;
+
+  scrollRow.append(scrollTopBtn, scrollBottomBtn);
 
   const countBtn = document.createElement("button");
   countBtn.type = "button";
@@ -118,7 +138,12 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   body.append(row);
   header.append(title);
   panel.append(header, body);
-  root.append(countBtn, panel);
+
+  const footer = document.createElement("div");
+  footer.className = "inimark-statusbar-footer";
+  footer.append(countBtn, panel);
+
+  root.append(scrollRow, footer);
   host.append(root);
 
   let open = false;
@@ -145,6 +170,10 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   }
 
   function refreshLabels(): void {
+    scrollTopBtn.title = t("editor.scrollToTop");
+    scrollTopBtn.setAttribute("aria-label", t("editor.scrollToTop"));
+    scrollBottomBtn.title = t("editor.scrollToBottom");
+    scrollBottomBtn.setAttribute("aria-label", t("editor.scrollToBottom"));
     countBtn.title = t("wordCount.toggle");
     countBtn.setAttribute("aria-label", t("wordCount.toggle"));
     title.textContent = t("wordCount.panelTitle");
@@ -169,6 +198,16 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     event.stopPropagation();
     if (open) closePanel();
     else openPanel();
+  });
+
+  scrollTopBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    editor.scrollToTop();
+  });
+
+  scrollBottomBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    editor.scrollToBottom();
   });
 
   const onDocumentPointerDown = (event: PointerEvent) => {

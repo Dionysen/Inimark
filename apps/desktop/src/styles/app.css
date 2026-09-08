@@ -879,11 +879,63 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   right: var(--inimark-space-3);
   bottom: var(--inimark-space-3);
   z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--inimark-space-2);
   pointer-events: none;
 }
 
 .inimark-statusbar > * {
   pointer-events: auto;
+}
+
+.inimark-statusbar-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1);
+}
+
+.inimark-statusbar.is-open .inimark-statusbar-scroll {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.inimark-statusbar-footer {
+  position: relative;
+}
+
+.inimark-statusbar-scroll-btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--inimark-chrome-btn-size, 26px);
+  height: var(--inimark-chrome-btn-size, 26px);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--inimark-radius-sm);
+  background: transparent;
+  color: var(--inimark-fg-muted);
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.inimark-statusbar-scroll-btn:hover {
+  color: var(--inimark-fg);
+  border-color: var(--inimark-border);
+  background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.inimark-statusbar-scroll-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .inimark-statusbar-count {
@@ -892,23 +944,27 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   box-sizing: border-box;
   min-height: var(--inimark-chrome-btn-size, 26px);
   padding: 0 10px;
-  border: 1px solid var(--inimark-border);
+  border: 1px solid transparent;
   border-radius: var(--inimark-radius-sm);
-  background: color-mix(in srgb, var(--inimark-bg) 94%, transparent);
+  background: transparent;
   color: var(--inimark-fg-muted);
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: none;
   transition:
     color 120ms ease,
     border-color 120ms ease,
-    background 120ms ease;
+    background 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.inimark-statusbar-count:hover {
+.inimark-statusbar-count:hover,
+.inimark-statusbar-count.is-active {
   color: var(--inimark-fg);
+  border-color: var(--inimark-border);
   background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .inimark-statusbar-count.is-active {
@@ -920,6 +976,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   position: absolute;
   right: 0;
   bottom: calc(100% + var(--inimark-space-2));
+  z-index: 2;
   display: none;
   flex-direction: column;
   width: 220px;

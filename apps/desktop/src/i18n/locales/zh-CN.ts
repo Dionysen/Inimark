@@ -167,6 +167,8 @@ export const zhCN: Dictionary = {
   editor: {
     welcome: "# 欢迎\n\n开始写作…",
     fontZoom: "{{size}}px",
+    scrollToTop: "到最上方",
+    scrollToBottom: "到最下方",
     ctx: {
       cut: "剪切",
       copy: "复制",
