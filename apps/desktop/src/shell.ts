@@ -43,6 +43,7 @@ export interface ShellController {
   isDirty(): boolean;
   toggleSidebar(): void;
   toggleRightSidebar(): void;
+  focusSearch(): void;
   applySidebarTabLayout(settings?: AppSettings): void;
   destroy(): void;
 }
@@ -175,6 +176,32 @@ export function mountShell(
     applyRightSidebarState();
   }
 
+  function ensureSidebarOpen(side: "left" | "right"): void {
+    if (side === "left") {
+      if (sidebarOpen) return;
+      sidebarOpen = true;
+      localStorage.setItem(SIDEBAR_OPEN_KEY, "1");
+      applySidebarState();
+      return;
+    }
+    if (rightSidebarOpen) return;
+    rightSidebarOpen = true;
+    localStorage.setItem(RIGHT_SIDEBAR_OPEN_KEY, "1");
+    applyRightSidebarState();
+  }
+
+  function focusSearch(): void {
+    if (sidebar.hasTab("search")) {
+      ensureSidebarOpen("left");
+      sidebar.activatePanel("search");
+      return;
+    }
+    if (rightSidebar.hasTab("search")) {
+      ensureSidebarOpen("right");
+      rightSidebar.activatePanel("search");
+    }
+  }
+
   const titlebarHost = document.createElement("header");
   titlebar = mountTitleBar(titlebarHost, {
     title: "Untitled",
@@ -259,6 +286,7 @@ export function mountShell(
     },
     toggleSidebar,
     toggleRightSidebar,
+    focusSearch,
     applySidebarTabLayout,
     destroy() {
       unsubscribeLocale();

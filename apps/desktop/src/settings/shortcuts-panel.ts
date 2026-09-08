@@ -17,6 +17,8 @@ function shortcutGroupLabel(group: string): string {
       return t("settings.shortcuts.groupFile");
     case "View":
       return t("settings.shortcuts.groupView");
+    case "Explorer":
+      return t("settings.shortcuts.groupExplorer");
     case "App":
       return t("settings.shortcuts.groupApp");
     default:
@@ -40,6 +42,18 @@ function shortcutActionLabel(id: string, fallback: string): string {
       return t("settings.shortcuts.close");
     case "toggle-sidebar":
       return t("settings.shortcuts.toggleSidebar");
+    case "focus-search":
+      return t("settings.shortcuts.focusSearch");
+    case "tree-cut":
+      return t("settings.shortcuts.treeCut");
+    case "tree-copy":
+      return t("settings.shortcuts.treeCopy");
+    case "tree-paste":
+      return t("settings.shortcuts.treePaste");
+    case "tree-rename":
+      return t("settings.shortcuts.treeRename");
+    case "tree-delete":
+      return t("settings.shortcuts.treeDelete");
     case "open-settings":
       return t("settings.shortcuts.openSettings");
     default:

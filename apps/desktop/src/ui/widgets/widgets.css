@@ -917,6 +917,10 @@ html[data-glass="true"] .inimark-select-panel {
   background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
 }
 
+.inimark-tree-item.is-cut {
+  opacity: 0.45;
+}
+
 .inimark-tree.is-dnd {
   cursor: grabbing;
 }

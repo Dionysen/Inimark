@@ -617,16 +617,27 @@ export function mountApp(host: HTMLElement): AppController {
     refreshLibraryList();
   });
   cleanups.push(
-    mountShortcutHandler({
-      save: () => void saveCurrentFile(),
-      "save-as": () => void saveFileAs(),
-      new: () => void newFile(),
-      open: () => void openQuickOpen(),
-      "open-folder": () => void openFolder(),
-      close: () => void closeCurrent(),
-      "toggle-sidebar": () => shell.toggleSidebar(),
-      "open-settings": () => void openSettings(),
-    }),
+    mountShortcutHandler(
+      {
+        save: () => void saveCurrentFile(),
+        "save-as": () => void saveFileAs(),
+        new: () => void newFile(),
+        open: () => void openQuickOpen(),
+        "open-folder": () => void openFolder(),
+        close: () => void closeCurrent(),
+        "toggle-sidebar": () => shell.toggleSidebar(),
+        "focus-search": () => shell.focusSearch(),
+        "tree-cut": () => shell.sidebar.cutSelection(),
+        "tree-copy": () => shell.sidebar.copySelection(),
+        "tree-paste": () => void shell.sidebar.pasteClipboard(),
+        "tree-rename": () => shell.sidebar.renameSelection(),
+        "tree-delete": () => void shell.sidebar.deleteSelection(),
+        "open-settings": () => void openSettings(),
+      },
+      {
+        isTreeShortcutContext: () => shell.sidebar.isTreeShortcutContext(),
+      },
+    ),
   );
 
   const applyIncomingSettings = (next: AppSettings) => {

@@ -1,4 +1,5 @@
 import type { AppShortcutId } from "./defaults.ts";
+import { TREE_SCOPED_SHORTCUT_IDS } from "./defaults.ts";
 import {
   blockNativeShortcut,
   isShortcutRecordingActive,
@@ -14,6 +15,11 @@ export type ShortcutCommandHandler = () => void | Promise<void>;
 
 export type ShortcutCommandMap = Partial<Record<AppShortcutId, ShortcutCommandHandler>>;
 
+export interface ShortcutHandlerOptions {
+  /** Extra gate for explorer shortcuts when DOM focus left the tree after rerender. */
+  isTreeShortcutContext?: () => boolean;
+}
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -21,8 +27,23 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
+/** True when focus is inside the files panel tree (not outline/search trees). */
+export function isFileTreeFocused(target: EventTarget | null = document.activeElement): boolean {
+  const el =
+    target instanceof Element
+      ? target
+      : target instanceof Node
+        ? target.parentElement
+        : null;
+  if (!el) return false;
+  return Boolean(
+    el.closest('.inimark-sidebar-panel[data-panel="files"] .inimark-tree'),
+  );
+}
+
 export function mountShortcutHandler(
   commands: ShortcutCommandMap,
+  options: ShortcutHandlerOptions = {},
 ): () => void {
   let shortcuts = loadShortcuts();
 
@@ -48,10 +69,18 @@ export function mountShortcutHandler(
     for (const binding of shortcuts) {
       const keys = getShortcutKeys(shortcuts, binding.id);
       if (!matchShortcut(event, keys)) continue;
-      const handler = commands[binding.id as AppShortcutId];
+      const id = binding.id as AppShortcutId;
+      const handler = commands[id];
       if (!handler) continue;
 
-      // Allow save/close/settings even inside editor; block navigation shortcuts in inputs.
+      if (TREE_SCOPED_SHORTCUT_IDS.has(id)) {
+        const inTree =
+          isFileTreeFocused(event.target) ||
+          Boolean(options.isTreeShortcutContext?.());
+        if (!inTree) continue;
+      }
+
+      // Allow save/close/settings/search even inside editor; block navigation shortcuts in inputs.
       const alwaysAllowed: AppShortcutId[] = [
         "save",
         "save-as",
@@ -60,8 +89,9 @@ export function mountShortcutHandler(
         "new",
         "open",
         "open-folder",
+        "focus-search",
       ];
-      if (inEditor && !alwaysAllowed.includes(binding.id as AppShortcutId)) {
+      if (inEditor && !alwaysAllowed.includes(id)) {
         continue;
       }
 

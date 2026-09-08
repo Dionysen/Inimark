@@ -25,6 +25,8 @@ export interface RightSidebarController {
   setContent(markdown: string): void;
   setSidebarOpen(open: boolean): void;
   setTabs(ids: SidebarTabId[], panels: Partial<Record<SidebarTabId, HTMLElement>>): void;
+  activatePanel(id: SidebarTabId): void;
+  hasTab(id: SidebarTabId): boolean;
   onToggleSidebar(handler: () => void): void;
   onSelectHeading(handler: OutlineSelectHandler): void;
   onActivateTab(handler: (id: SidebarTabId) => void): void;
@@ -260,6 +262,13 @@ export function mountRightSidebar(
     },
     setTabs(ids, panels) {
       applyTabs(ids, panels);
+    },
+    activatePanel(id) {
+      if (!tabIds.includes(id)) return;
+      setActivePanel(id);
+    },
+    hasTab(id) {
+      return tabIds.includes(id);
     },
     onToggleSidebar(handler) {
       handlers.toggleSidebar = handler;

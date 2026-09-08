@@ -87,6 +87,7 @@ export function matchShortcut(event: KeyboardEvent, keys: string[]): boolean {
   const keyLower = event.key.toLowerCase();
   if (keyLower === mainKey) return true;
   if (event.code.toLowerCase() === `key${mainKey}`) return true;
+  if (event.code.toLowerCase() === mainKey) return true;
 
   const codeMap: Record<string, string> = {
     ",": "Comma",
