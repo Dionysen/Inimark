@@ -199,6 +199,21 @@ function exitCodeBlockDown(view: EditorView, blockPos: number, node: PMNode): vo
   view.focus();
 }
 
+/** Empty code_block → plain paragraph (Typora-style lift). */
+function liftEmptyCodeBlock(view: EditorView, blockPos: number): boolean {
+  const node = view.state.doc.nodeAt(blockPos);
+  if (!node || node.type.name !== "code_block" || node.content.size > 0) return false;
+  const para = view.state.schema.nodes.paragraph?.createAndFill();
+  if (!para) return false;
+  let tr = view.state.tr.replaceWith(blockPos, blockPos + node.nodeSize, para);
+  tr = tr
+    .setMeta(langFocusKey, null)
+    .setSelection(TextSelection.create(tr.doc, blockPos + 1));
+  view.dispatch(tr);
+  view.focus();
+  return true;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // NodeView: outer <pre data-lang><code/></pre> plus a chrome overlay with
 // a <input class="cb-lang-input">. The input mutates code_block.attrs.lang
@@ -328,6 +343,14 @@ class CodeBlockView implements NodeView {
           key: "ArrowRight",
           run: (cmView) => this.tryExitRightFromCodeMirror(cmView),
         },
+        {
+          key: "Backspace",
+          run: (cmView) => this.tryLiftEmptyCodeBlock(cmView),
+        },
+        {
+          key: "Delete",
+          run: (cmView) => this.tryLiftEmptyCodeBlock(cmView),
+        },
       ]),
     );
   }
@@ -374,6 +397,13 @@ class CodeBlockView implements NodeView {
     if (!ctx) return true;
     exitCodeBlockDown(this.view, ctx.blockPos, ctx.node);
     return true;
+  }
+
+  private tryLiftEmptyCodeBlock(cmView: CodeMirrorView): boolean {
+    if (cmView.state.doc.length > 0) return false;
+    const ctx = this.blockContext();
+    if (!ctx) return true;
+    return liftEmptyCodeBlock(this.view, ctx.blockPos);
   }
 
   private hadLangFocus = false;
@@ -1047,9 +1077,7 @@ export const fencedCode: FeatureSpec = {
       return true;
     },
 
-    // Empty code_block + Backspace → delete the entire code_block (not
-    // just clear one char). Typora: once main content is empty, a single
-    // Backspace removes the block.
+    // Empty code_block + Backspace → lift to a plain paragraph.
     Backspace: (state, dispatch) => {
       const sel = state.selection;
       if (!sel.empty) return false;
@@ -1058,14 +1086,12 @@ export const fencedCode: FeatureSpec = {
       if ($from.parent.content.size > 0) return false;
       if (dispatch) {
         const pos = $from.before();
-        const size = $from.parent.nodeSize;
-        const tr = state.tr.delete(pos, pos + size);
-        // If the doc became empty, re-insert a paragraph so the caret
-        // has somewhere to land (schema requires at least one block).
-        if (tr.doc.content.size === 0) {
-          const p = schema.nodes.paragraph.createAndFill();
-          if (p) tr.insert(0, p);
-        }
+        const node = $from.parent;
+        const para = schema.nodes.paragraph.createAndFill();
+        if (!para) return false;
+        const tr = state.tr
+          .replaceWith(pos, pos + node.nodeSize, para)
+          .setSelection(TextSelection.create(tr.doc, pos + 1));
         dispatch(tr);
       }
       return true;

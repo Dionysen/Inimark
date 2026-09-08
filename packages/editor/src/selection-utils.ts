@@ -33,14 +33,16 @@ export function caretInsideTextblock(tr: Transaction, blockName: string): number
     }
   }
 
-  let nearest: { pos: number; dist: number } | null = null;
+  const candidates: { pos: number; dist: number }[] = [];
   tr.doc.descendants((node, pos) => {
     if (node.type.name !== blockName) return;
     const inside = pos + 1 + node.content.size;
-    const dist = Math.abs(from - inside);
-    if (!nearest || dist < nearest.dist) nearest = { pos: inside, dist };
+    candidates.push({ pos: inside, dist: Math.abs(from - inside) });
   });
-  if (nearest) return nearest.pos;
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => a.dist - b.dist);
+    return candidates[0]!.pos;
+  }
 
   return from;
 }
