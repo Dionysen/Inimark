@@ -74,6 +74,7 @@ export interface ShellMountOptions {
   onCloseRequest?: () => void | Promise<void>;
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
+  onConfigureSidebarTabs?: () => void;
 }
 
 export function mountShell(
@@ -214,6 +215,7 @@ export function mountShell(
     onClose: options.onCloseRequest,
     moreMenuActions: options.moreMenuActions,
     immersiveMenuActions: options.immersiveMenuActions,
+    onConfigureSidebarTabs: options.onConfigureSidebarTabs,
     sidebarToggle: {
       open: sidebarOpen,
       onToggle: toggleSidebar,

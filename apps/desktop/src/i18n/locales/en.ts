@@ -44,6 +44,7 @@ export const en: Dictionary = {
       autoHideTitlebar: "Auto-hide title bar",
       autoHideStatusbar: "Auto-hide status bar",
       themeSettings: "Theme",
+      sidebarTabs: "Sidebar tabs",
     },
   },
   sidebar: {

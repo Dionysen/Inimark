@@ -44,6 +44,7 @@ export const zhCN: Dictionary = {
       autoHideTitlebar: "自动隐藏顶栏",
       autoHideStatusbar: "自动隐藏状态栏",
       themeSettings: "主题设置",
+      sidebarTabs: "侧栏标签",
     },
   },
   sidebar: {

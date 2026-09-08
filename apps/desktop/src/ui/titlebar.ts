@@ -76,6 +76,8 @@ export interface TitleBarOptions {
   showMoreMenu?: boolean;
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
+  /** Open sidebar tab layout configuration. */
+  onConfigureSidebarTabs?: () => void;
   onClose?: () => void | Promise<void>;
 }
 
@@ -419,6 +421,17 @@ export function mountTitleBar(
             },
           },
         ],
+      });
+    }
+
+    if (options.onConfigureSidebarTabs) {
+      moreMenu.addItem({
+        label: t("titlebar.more.sidebarTabs"),
+        icon: menuIcons.sidebarTabs,
+        onClick() {
+          closeMoreMenu();
+          options.onConfigureSidebarTabs?.();
+        },
       });
     }
 

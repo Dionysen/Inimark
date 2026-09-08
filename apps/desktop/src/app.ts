@@ -54,6 +54,8 @@ import { mountShell } from "./shell.ts";
 import { FileNavigationHistory } from "./navigation-history.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 import { showQuickOpenDialog } from "./ui/quick-open-dialog.ts";
+import { showSidebarTabsDialog } from "./ui/sidebar-tabs-dialog.ts";
+import { normalizeSidebarTabLayout } from "./sidebar/tab-layout.ts";
 import {
   flattenWorkspaceFiles,
 } from "./quick-open/search.ts";
@@ -132,6 +134,24 @@ export function mountApp(host: HTMLElement): AppController {
         applySettings(settings);
         wordCount?.syncChrome();
       },
+    },
+    onConfigureSidebarTabs() {
+      const layout = normalizeSidebarTabLayout(
+        settings.leftSidebarTabs,
+        settings.rightSidebarTabs,
+      );
+      showSidebarTabsDialog({
+        layout,
+        onChange(next) {
+          settings = {
+            ...settings,
+            leftSidebarTabs: next.left,
+            rightSidebarTabs: next.right,
+          };
+          saveSettings(settings);
+          shell.applySidebarTabLayout(settings);
+        },
+      });
     },
   });
   let workspace: Workspace | null = null;

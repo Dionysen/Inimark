@@ -1,0 +1,12 @@
+.inimark-sidebar-tabs-dialog .inimark-confirm-dialog-panel {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.inimark-sidebar-tabs-dialog-panel .inimark-settings-sidebar-tabs {
+  border-bottom: none;
+  padding: 0;
+}
+
+.inimark-sidebar-tabs-dialog-panel .inimark-confirm-dialog-actions {
+  margin-top: var(--inimark-space-3, 12px);
+}
