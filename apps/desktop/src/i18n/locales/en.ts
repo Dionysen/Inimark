@@ -43,6 +43,7 @@ export const en: Dictionary = {
       immersiveEditing: "Immersive editing",
       autoHideTitlebar: "Auto-hide title bar",
       autoHideStatusbar: "Auto-hide status bar",
+      themeSettings: "Theme",
     },
   },
   sidebar: {

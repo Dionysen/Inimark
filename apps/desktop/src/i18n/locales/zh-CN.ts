@@ -43,6 +43,7 @@ export const zhCN: Dictionary = {
       immersiveEditing: "沉浸编辑",
       autoHideTitlebar: "自动隐藏顶栏",
       autoHideStatusbar: "自动隐藏状态栏",
+      themeSettings: "主题设置",
     },
   },
   sidebar: {

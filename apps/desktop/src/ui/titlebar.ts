@@ -10,6 +10,9 @@ import {
 } from "../platform/window-chrome.ts";
 import { getThemeManager } from "../themes/manager.ts";
 import type { AppearanceMode } from "../themes/appearance.ts";
+import { BUILTIN_THEMES } from "../themes/builtin.ts";
+import { builtinThemeLabel } from "../themes/labels.ts";
+import type { ThemeManifest } from "../themes/custom-theme-manager.ts";
 import {
   createIconButton,
   moreIcon,
@@ -78,6 +81,18 @@ export interface TitleBarOptions {
 }
 
 const APPEARANCE_MODES: AppearanceMode[] = ["system", "light", "dark"];
+
+function appThemeLabel(themeId: string, customThemes: ThemeManifest[]): string {
+  if ((BUILTIN_THEMES as readonly string[]).includes(themeId)) {
+    return builtinThemeLabel(themeId);
+  }
+  if (themeId.startsWith("custom-")) {
+    const manifestId = themeId.slice("custom-".length);
+    const manifest = customThemes.find((entry) => entry.id === manifestId);
+    if (manifest) return manifest.name;
+  }
+  return themeId;
+}
 
 function markNoDrag(el: HTMLElement): void {
   el.setAttribute("data-tauri-drag-region", "false");
@@ -409,6 +424,34 @@ export function mountTitleBar(
         ],
       });
     }
+
+    const { theme, customThemes } = themeManager.getSnapshot();
+    moreMenu.addSubmenuItem({
+      label: t("titlebar.more.themeSettings"),
+      icon: menuIcons.theme,
+      meta: appThemeLabel(theme, customThemes),
+      items: [
+        ...BUILTIN_THEMES.map((themeId) => ({
+          label: builtinThemeLabel(themeId),
+          checked: theme === themeId,
+          onClick() {
+            themeManager.setTheme(themeId);
+            renderMoreMenu();
+          },
+        })),
+        ...customThemes.map((manifest) => {
+          const themeId = `custom-${manifest.id}`;
+          return {
+            label: manifest.name,
+            checked: theme === themeId,
+            onClick() {
+              themeManager.setTheme(themeId);
+              renderMoreMenu();
+            },
+          };
+        }),
+      ],
+    });
 
     moreMenu.addSubmenuItem({
       label: t("settings.theme.appearanceMode"),
