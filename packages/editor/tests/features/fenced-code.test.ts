@@ -55,6 +55,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -63,7 +64,7 @@ describe("fenced code node view", () => {
     const editor = createEditor(host, { initialContent: "```\nplain\n```" });
 
     try {
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(input).not.toBeNull();
 
       input!.focus();
@@ -87,6 +88,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -95,7 +97,7 @@ describe("fenced code node view", () => {
     const editor = createEditor(host, { initialContent: "```\nplain\n```" });
 
     try {
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(input).not.toBeNull();
 
       input!.focus();
@@ -129,6 +131,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -137,7 +140,7 @@ describe("fenced code node view", () => {
     const editor = createEditor(host, { initialContent: "```\nplain\n```" });
 
     try {
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(input).not.toBeNull();
 
       input!.focus();
@@ -154,6 +157,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -172,7 +176,7 @@ describe("fenced code node view", () => {
       expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
         .toBe(true);
 
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       input!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }),
       );
@@ -185,6 +189,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -206,6 +211,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -225,7 +231,7 @@ describe("fenced code node view", () => {
       expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
         .toBe(true);
 
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
       const optionCount = menu?.querySelectorAll(".cb-lang-option").length ?? 0;
       for (let i = 0; i < optionCount - 1; i++) {
@@ -239,12 +245,14 @@ describe("fenced code node view", () => {
 
       expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
         .toBe(false);
+      expect(document.body.querySelector<HTMLElement>(".cb-chrome")?.hidden).toBe(true);
       expect(editor.view.state.doc.childCount).toBe(2);
       expect(editor.view.state.selection.$from.parent.type.name).toBe("paragraph");
     } finally {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -278,6 +286,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -303,6 +312,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -325,6 +335,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -333,7 +344,7 @@ describe("fenced code node view", () => {
     const editor = createEditor(host, { initialContent: "```ts\nbody\n```" });
 
     try {
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(input).not.toBeNull();
 
       input!.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
@@ -352,6 +363,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -374,7 +386,7 @@ describe("fenced code node view", () => {
       expect(wrapper?.classList.contains("diagram-success")).toBe(true);
       expect(panel?.dataset.diagramState).toBe("success");
 
-      const input = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       input!.value = "js";
       input!.dispatchEvent(new Event("input", { bubbles: true }));
 
@@ -390,6 +402,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 
@@ -498,6 +511,7 @@ describe("fenced code node view", () => {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 });

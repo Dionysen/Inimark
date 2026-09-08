@@ -287,18 +287,19 @@ class CodeBlockView implements NodeView {
     chrome.className = "cb-chrome";
     chrome.setAttribute("contenteditable", "false");
     const input = document.createElement("input");
-    input.className = "cb-lang-input";
+    input.className = "cb-lang-input inimark-glass";
     input.placeholder = "lang";
     input.value = lang;
     input.spellcheck = false;
-    chrome.appendChild(input);
     const menu = document.createElement("div");
-    menu.className = "cb-lang-menu";
+    menu.className = "cb-lang-menu inimark-glass";
     menu.hidden = true;
     menu.setAttribute("role", "listbox");
-    pre.appendChild(chrome);
+    chrome.appendChild(input);
     root.append(pre, diagram);
+    document.body.appendChild(chrome);
     document.body.appendChild(menu);
+    chrome.hidden = true;
 
     this.dom = root;
     this.contentDOM = code;
@@ -321,7 +322,6 @@ class CodeBlockView implements NodeView {
     codeMount.addEventListener("focusout", this.onFocusOut);
     diagram.addEventListener("click", this.onDiagramClick);
     input.addEventListener("focus", this.onInputFocus);
-    input.addEventListener("click", this.onInputFocus);
     input.addEventListener("blur", this.onInputBlur);
     input.addEventListener("input", this.onInput);
     input.addEventListener("keydown", this.onInputKeyDown);
@@ -472,6 +472,9 @@ class CodeBlockView implements NodeView {
       try { this.inputEl.focus(); } catch { /* ignore */ }
     } else {
       this.hideLanguageMenu();
+      if (document.activeElement === this.inputEl) {
+        try { this.inputEl.blur(); } catch { /* ignore */ }
+      }
       if (this.hadLangFocus && active) {
         try {
           const cmView = this.cm.view;
@@ -488,18 +491,57 @@ class CodeBlockView implements NodeView {
     }
     this.hadLangFocus = langFocus;
     this.hadActive = active;
+    this.refreshChromeVisibility();
+  }
+
+  private shouldShowChrome(): boolean {
+    if (this.dom.classList.contains("cb-lang-focus")) return true;
+    const active = document.activeElement;
+    return Boolean(
+      active &&
+        (this.codeMountEl.contains(active) ||
+          this.chromeEl.contains(active) ||
+          this.menuEl.contains(active)),
+    );
+  }
+
+  private refreshChromeVisibility(): void {
+    const visible = this.shouldShowChrome();
+    this.chromeEl.hidden = !visible;
+    if (visible) this.positionLangChrome();
+  }
+
+  private positionLangChrome(): void {
+    const rect = this.dom.getBoundingClientRect();
+    const margin = 8;
+    const gap = 6;
+    const inputWidth = 160;
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth || inputWidth + margin * 2;
+    const maxLeft = Math.max(margin, viewportWidth - inputWidth - margin);
+    const left = Math.min(Math.max(margin, rect.right - inputWidth), maxLeft);
+    const top = rect.bottom + gap;
+
+    this.chromeEl.style.left = `${left}px`;
+    this.chromeEl.style.top = `${top}px`;
   }
 
   private onFocusIn = (): void => {
     this.dom.classList.add("cb-active");
+    this.refreshChromeVisibility();
   };
 
   private onFocusOut = (event: FocusEvent): void => {
     const next = event.relatedTarget as Node | null;
-    if (!next || !this.dom.contains(next)) {
-      this.dom.classList.remove("cb-active");
-      this.sourceFrameEl.classList.remove("cb-active");
+    if (
+      next &&
+      (this.dom.contains(next) || this.chromeEl.contains(next) || this.menuEl.contains(next))
+    ) {
+      return;
     }
+    this.dom.classList.remove("cb-active");
+    this.sourceFrameEl.classList.remove("cb-active");
+    this.refreshChromeVisibility();
   };
 
   private onDiagramClick = (): void => {
@@ -509,6 +551,7 @@ class CodeBlockView implements NodeView {
     this.sourceFrameEl.classList.add("diagram-source-open");
     this.dom.classList.add("cb-active");
     this.sourceFrameEl.classList.add("cb-active");
+    this.refreshChromeVisibility();
     try { this.cm.view.focus(); } catch { /* ignore */ }
   };
 
@@ -601,6 +644,7 @@ class CodeBlockView implements NodeView {
   }
 
   private onViewportChange = (): void => {
+    if (!this.chromeEl.hidden) this.positionLangChrome();
     if (!this.menuEl.hidden) this.positionLanguageMenu();
   };
 
@@ -670,10 +714,18 @@ class CodeBlockView implements NodeView {
   }
 
   private onInputFocus = (): void => {
-    if (this.menuSuppressedUntilInput) return;
-    if (this.inputEl.value.trim()) {
-      this.refreshLanguageMenu();
-    }
+    this.menuSuppressedUntilInput = true;
+    this.hideLanguageMenu();
+    const value = this.inputEl.value;
+    if (!value) return;
+    requestAnimationFrame(() => {
+      if (document.activeElement !== this.inputEl) return;
+      try {
+        this.inputEl.select();
+      } catch {
+        /* ignore */
+      }
+    });
   };
 
   private onInputBlur = (): void => {
@@ -682,6 +734,7 @@ class CodeBlockView implements NodeView {
       const active = document.activeElement;
       if (active === this.inputEl || this.menuEl.contains(active)) return;
       this.hideLanguageMenu();
+      this.refreshChromeVisibility();
     }, 0);
   };
 
@@ -700,8 +753,11 @@ class CodeBlockView implements NodeView {
   private onDocumentMouseDown = (event: MouseEvent): void => {
     const target = event.target as Node | null;
     if (target && this.menuEl.contains(target)) return;
-    if (target && this.dom.contains(target)) {
-      if (!this.inputEl.contains(target)) this.hideLanguageMenu();
+    if (
+      target &&
+      (this.dom.contains(target) || this.chromeEl.contains(target) || this.menuEl.contains(target))
+    ) {
+      if (!this.inputEl.contains(target as Node)) this.hideLanguageMenu();
       if (!this.dom.classList.contains("diagram-error")) {
         this.dom.classList.remove("diagram-source-open");
         this.sourceFrameEl.classList.remove("diagram-source-open");
@@ -950,7 +1006,6 @@ class CodeBlockView implements NodeView {
     this.codeMountEl.removeEventListener("focusout", this.onFocusOut);
     this.diagramEl.removeEventListener("click", this.onDiagramClick);
     this.inputEl.removeEventListener("focus", this.onInputFocus);
-    this.inputEl.removeEventListener("click", this.onInputFocus);
     this.inputEl.removeEventListener("blur", this.onInputBlur);
     this.inputEl.removeEventListener("input", this.onInput);
     this.inputEl.removeEventListener("keydown", this.onInputKeyDown);
@@ -960,6 +1015,7 @@ class CodeBlockView implements NodeView {
     window.removeEventListener("resize", this.onViewportChange);
     window.removeEventListener("scroll", this.onViewportChange, true);
     window.removeEventListener("typora-web:appearancechange", this.onAppearanceChange);
+    this.chromeEl.remove();
     this.menuEl.remove();
   }
 }

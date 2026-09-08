@@ -70,7 +70,7 @@ describe("CodeMirror 6 code editing and highlighting", () => {
       await Promise.resolve();
       const codeEditor = host.querySelector(".typora-web-code-editor .cm-editor");
       const content = host.querySelector(".typora-web-code-editor .cm-content");
-      const languageInput = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const languageInput = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
 
       expect(codeEditor).not.toBeNull();
       expect(content?.textContent).toContain('const value = "typora";');
@@ -81,6 +81,10 @@ describe("CodeMirror 6 code editing and highlighting", () => {
       expect(host.querySelector("datalist.cb-lang-options")).toBeNull();
       expect(host.querySelector(".cb-lang-menu")).toBeNull();
       expect(menu).not.toBeNull();
+      expect(menu?.hidden).toBe(true);
+
+      languageInput!.dispatchEvent(new InputEvent("input", { bubbles: true }));
+
       expect(menu?.hidden).toBe(false);
       expect(menu?.querySelector("[data-lang-name='JavaScript']")?.textContent).toBe("JavaScript");
       expect(menu?.textContent).not.toContain("ecmascript");
@@ -104,7 +108,7 @@ describe("CodeMirror 6 code editing and highlighting", () => {
       await Promise.resolve();
       Object.defineProperty(window, "innerHeight", { configurable: true, value: 600 });
       Object.defineProperty(window, "innerWidth", { configurable: true, value: 320 });
-      const languageInput = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const languageInput = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(languageInput).not.toBeNull();
       languageInput!.getBoundingClientRect = () => ({
         x: 176,
@@ -119,6 +123,9 @@ describe("CodeMirror 6 code editing and highlighting", () => {
       });
 
       languageInput!.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      expect(document.body.querySelector<HTMLElement>(".cb-lang-menu")?.hidden).toBe(true);
+
+      languageInput!.dispatchEvent(new InputEvent("input", { bubbles: true }));
 
       const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
       expect(menu).not.toBeNull();
@@ -144,15 +151,17 @@ describe("CodeMirror 6 code editing and highlighting", () => {
 
     try {
       await Promise.resolve();
-      const languageInput = host.querySelector<HTMLInputElement>(".cb-lang-input");
+      const languageInput = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
       expect(languageInput).not.toBeNull();
 
       languageInput!.dispatchEvent(new FocusEvent("focus", { bubbles: true }));
+      languageInput!.dispatchEvent(new InputEvent("input", { bubbles: true }));
       const menu = document.body.querySelector<HTMLElement>(".cb-lang-menu");
       expect(menu).not.toBeNull();
       menu!.scrollTop = 96;
 
-      languageInput!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      languageInput!.value = "j";
+      languageInput!.dispatchEvent(new InputEvent("input", { bubbles: true }));
 
       expect(menu!.scrollTop).toBe(0);
     } finally {
