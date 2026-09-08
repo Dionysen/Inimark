@@ -449,6 +449,14 @@ class CodeBlockView implements NodeView {
     }
   }
 
+  private clearLangFocusIfActive(): void {
+    const pos = this.getPos();
+    if (pos == null) return;
+    const lf = getLangFocus(this.view.state);
+    if (lf?.pos !== pos) return;
+    this.view.dispatch(this.view.state.tr.setMeta(langFocusKey, null));
+  }
+
   private applyDecorations(decorations: readonly Decoration[]): void {
     let active = false;
     let langFocus = false;
@@ -487,12 +495,13 @@ class CodeBlockView implements NodeView {
         try { this.cm.view.focus(); } catch { /* ignore */ }
       }
     }
+    const enteringLangFocus = langFocus && !this.hadLangFocus;
     this.hadLangFocus = langFocus;
     this.hadActive = active;
     // Unhide chrome before focusing the lang input — from below-block ArrowUp
     // the chrome starts hidden, and focus() on a hidden input is ignored.
     this.refreshChromeVisibility();
-    if (langFocus) {
+    if (enteringLangFocus) {
       try { this.inputEl.focus(); } catch { /* ignore */ }
     }
   }
@@ -532,6 +541,7 @@ class CodeBlockView implements NodeView {
   private onFocusIn = (): void => {
     this.dom.classList.add("cb-active");
     this.refreshChromeVisibility();
+    this.clearLangFocusIfActive();
   };
 
   private onFocusOut = (event: FocusEvent): void => {
@@ -555,6 +565,7 @@ class CodeBlockView implements NodeView {
     this.dom.classList.add("cb-active");
     this.sourceFrameEl.classList.add("cb-active");
     this.refreshChromeVisibility();
+    this.clearLangFocusIfActive();
     try { this.cm.view.focus(); } catch { /* ignore */ }
   };
 
@@ -784,6 +795,8 @@ class CodeBlockView implements NodeView {
     const content = code ? this.view.state.schema.text(code) : null;
     const next = node.type.create(node.attrs, content ? [content] : null);
     const tr = this.view.state.tr.replaceWith(pos, pos + node.nodeSize, next);
+    const lf = getLangFocus(this.view.state);
+    if (lf?.pos === pos) tr.setMeta(langFocusKey, null);
     this.view.dispatch(tr);
   };
 

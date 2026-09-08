@@ -403,6 +403,59 @@ describe("fenced code node view", () => {
     }
   });
 
+  test("typing in a Mermaid CodeMirror block keeps focus out of the language input", async () => {
+    const originalRender = mermaidRenderer.render;
+    (mermaidRenderer as unknown as {
+      render: typeof originalRender;
+    }).render = async () => ({ state: "success", svg: "<svg><text>ok</text></svg>" });
+
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "```mermaid\ngraph TD\n  A --> B\n```\n\nbelow",
+    });
+
+    try {
+      await nextTick(180);
+
+      const doc = editor.view.state.doc;
+      let belowStart: number | null = null;
+      doc.descendants((node, pos) => {
+        if (node.type.name === "paragraph" && node.textContent === "below") {
+          belowStart = pos + 1;
+          return false;
+        }
+      });
+      expect(belowStart).not.toBeNull();
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(TextSelection.create(doc, belowStart!)),
+      );
+      feedEvent(editor.view, "<ArrowUp>");
+
+      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
+      expect(document.activeElement).toBe(input);
+
+      const panel = host.querySelector<HTMLElement>(".diagram-panel");
+      panel!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+      const cm = codeMirrorView(host);
+      expect(document.activeElement).toBe(cm.contentDOM);
+
+      cm.dispatch({ changes: { from: cm.state.doc.length, insert: "\n  C --> D" } });
+
+      expect(document.activeElement).toBe(cm.contentDOM);
+      expect(host.querySelector(".code-block-node")?.hasAttribute("data-lang-focus"))
+        .toBe(false);
+    } finally {
+      (mermaidRenderer as unknown as {
+        render: typeof originalRender;
+      }).render = originalRender;
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
   test("changing a Mermaid block to a normal language clears diagram state", async () => {
     const originalRender = mermaidRenderer.render;
     (mermaidRenderer as unknown as {
