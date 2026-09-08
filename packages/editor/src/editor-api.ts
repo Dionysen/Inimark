@@ -16,6 +16,7 @@
 import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
+import { renderedPosToMdOffset } from "./selection-md-map.ts";
 import {
   createEmbeddedCodeMirrorEditor,
   type EmbeddedCodeMirrorEditor,
@@ -369,8 +370,8 @@ export function createEditor(
     }
     const sel = view.state.selection;
     try {
-      const anchor = serialize(view.state.doc.cut(0, sel.from)).length;
-      const head = serialize(view.state.doc.cut(0, sel.to)).length;
+      const anchor = renderedPosToMdOffset(view.state.doc, sel.from);
+      const head = renderedPosToMdOffset(view.state.doc, sel.to);
       return { anchor, head };
     } catch {
       const len = serialize(view.state.doc).length;

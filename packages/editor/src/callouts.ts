@@ -1,6 +1,8 @@
 import type { Node as PMNode } from "prosemirror-model";
 import { Plugin, TextSelection, type Command } from "prosemirror-state";
 
+import { caretInsideContainer } from "./selection-utils.ts";
+
 export type CalloutKind =
   | "note"
   | "tip"
@@ -119,7 +121,6 @@ function stripCalloutMarker(paragraph: PMNode): {
 }
 
 function foldBlockquote(node: PMNode): PMNode {
-  if (node.attrs.alert) return node;
   const first = node.firstChild;
   if (!first || first.type.name !== "paragraph") return node;
 
@@ -168,6 +169,19 @@ export function foldBlockquoteCallout(node: PMNode): PMNode {
 
 const CALLOUT_FOLD_META = "callout-auto-fold";
 
+function stripOrphanCloseBracket(
+  tr: import("prosemirror-state").Transaction,
+  blockPos: number,
+  node: PMNode,
+): boolean {
+  if (!node.attrs.alert) return false;
+  const first = node.firstChild;
+  if (first?.type.name !== "paragraph" || first.textContent !== "]") return false;
+  const textPos = blockPos + 2;
+  tr.delete(textPos, textPos + 1);
+  return true;
+}
+
 /** Live-edit: turn `> [!TIP]` text inside a plain blockquote into a callout. */
 export function calloutAutoFoldPlugin(): Plugin {
   return new Plugin({
@@ -177,14 +191,39 @@ export function calloutAutoFoldPlugin(): Plugin {
 
       const tr = newState.tr;
       let changed = false;
+      let caret: number | null = null;
+      const selFrom = newState.selection.from;
+      const folds: { pos: number; node: PMNode; folded: PMNode; containsSelection: boolean }[] = [];
       newState.doc.descendants((node, pos) => {
-        if (node.type.name !== "blockquote" || node.attrs.alert) return;
+        if (node.type.name !== "blockquote") return;
         const folded = foldBlockquote(node);
-        if (folded === node) return;
-        tr.replaceWith(pos, pos + node.nodeSize, folded);
-        changed = true;
+        if (folded !== node) {
+          folds.push({
+            pos,
+            node,
+            folded,
+            containsSelection: selFrom >= pos && selFrom <= pos + node.nodeSize,
+          });
+          return;
+        }
+        if (stripOrphanCloseBracket(tr, pos, node)) {
+          if (selFrom >= pos && selFrom <= pos + node.nodeSize) {
+            caret = caretInsideContainer(tr, pos, node, selFrom);
+          }
+          changed = true;
+        }
       });
+      for (const fold of folds.sort((a, b) => b.pos - a.pos)) {
+        tr.replaceWith(fold.pos, fold.pos + fold.node.nodeSize, fold.folded);
+        if (fold.containsSelection) {
+          caret = caretInsideContainer(tr, fold.pos, fold.folded, selFrom);
+        }
+        changed = true;
+      }
       if (!changed) return null;
+      if (caret !== null) {
+        tr.setSelection(TextSelection.create(tr.doc, caret));
+      }
       return tr.setMeta(CALLOUT_FOLD_META, true);
     },
   });

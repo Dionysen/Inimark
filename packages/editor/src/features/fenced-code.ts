@@ -25,6 +25,7 @@ import {
   getMermaidRenderAppearance,
   mermaidRenderer,
 } from "../renderers/mermaid.ts";
+import { setCaretInTextblock } from "../selection-utils.ts";
 import type { FeatureSpec } from "./_types.ts";
 
 // Fenced code block feature.
@@ -98,6 +99,71 @@ function codeBlockPosAt(state: EditorState, pos: number): number | null {
     if (node.type.name === "code_block") return $.before(d);
   }
   return null;
+}
+
+export const FOCUS_CODE_BLOCK_META = "focus-code-block";
+
+/** Insert an empty code block and park the caret inside its body. */
+export function insertCodeBlockTransaction(
+  state: EditorState,
+  schema: Schema,
+): import("prosemirror-state").Transaction {
+  const node = schema.nodes.code_block.create({ lang: "" });
+  const { selection } = state;
+  const { $from } = selection;
+
+  let tr: import("prosemirror-state").Transaction;
+
+  if (!selection.empty) {
+    tr = setCaretInTextblock(state.tr.replaceSelectionWith(node), "code_block");
+  } else if ($from.parent.type.name === "paragraph") {
+    const paraPos = $from.before();
+    const para = $from.parent;
+    if (para.content.size === 0) {
+      tr = state.tr.replaceWith(paraPos, paraPos + para.nodeSize, node);
+      tr = tr.setSelection(TextSelection.create(tr.doc, paraPos + 1));
+    } else {
+      const insertPos = paraPos + para.nodeSize;
+      tr = state.tr.insert(insertPos, node);
+      tr = tr.setSelection(TextSelection.create(tr.doc, insertPos + 1));
+    }
+  } else {
+    tr = setCaretInTextblock(state.tr.replaceSelectionWith(node), "code_block");
+  }
+
+  return tr.setMeta(FOCUS_CODE_BLOCK_META, true).scrollIntoView();
+}
+
+function focusCodeMirrorAt(view: EditorView, blockPos: number): void {
+  const dom = view.nodeDOM(blockPos);
+  if (!(dom instanceof HTMLElement)) return;
+  const content = dom.querySelector<HTMLElement>(".typora-web-code-editor .cm-content");
+  if (!content) return;
+  requestAnimationFrame(() => {
+    try {
+      content.focus();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+function codeBlockFocusPlugin(): Plugin {
+  return new Plugin({
+    view() {
+      return {
+        update(view, prevState) {
+          if (langFocusKey.getState(view.state)) return;
+          const from = view.state.selection.from;
+          const cbPos = codeBlockPosAt(view.state, from);
+          if (cbPos === null) return;
+          const prevCb = codeBlockPosAt(prevState, prevState.selection.from);
+          if (cbPos === prevCb && prevState.selection.eq(view.state.selection)) return;
+          focusCodeMirrorAt(view, cbPos);
+        },
+      };
+    },
+  });
 }
 
 function exitCodeBlockUp(view: EditorView, blockPos: number): void {
@@ -311,6 +377,7 @@ class CodeBlockView implements NodeView {
   }
 
   private hadLangFocus = false;
+  private hadActive = false;
 
   private returnToCodeBody(): void {
     const ctx = this.blockContext();
@@ -362,11 +429,14 @@ class CodeBlockView implements NodeView {
         } catch {
           /* ignore */
         }
+      } else if (active && !this.hadActive) {
+        try { this.cm.view.focus(); } catch { /* ignore */ }
       } else if (active && !this.dom.contains(document.activeElement)) {
         try { this.cm.view.focus(); } catch { /* ignore */ }
       }
     }
     this.hadLangFocus = langFocus;
+    this.hadActive = active;
   }
 
   private onFocusIn = (): void => {
@@ -927,6 +997,7 @@ export const fencedCode: FeatureSpec = {
   plugins: (schema) => [
     makeFencedPlugin(schema).plugin,
     fencedCodeChromePlugin(),
+    codeBlockFocusPlugin(),
   ],
 
   // test-pretty renderCase for <pre>. Overrides the core switch branch

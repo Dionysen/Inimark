@@ -5,6 +5,7 @@ import type { EditorView } from "prosemirror-view";
 import { wrapInList } from "prosemirror-schema-list";
 
 import { insertMathBlockCommand } from "./features/math.ts";
+import { insertCodeBlockTransaction } from "./features/fenced-code.ts";
 import { insertTaskListCommand } from "./features/task.ts";
 import { schema } from "./schema.ts";
 import { wrapSelection } from "./shortcuts.ts";
@@ -51,12 +52,7 @@ function setHeading(level: number): Command {
 
 function insertCodeBlock(s: Schema): Command {
   return (state, dispatch) => {
-    const node = s.nodes.code_block.create({ lang: "" });
-    if (dispatch) {
-      const tr = state.tr.replaceSelectionWith(node);
-      tr.setSelection(TextSelection.create(tr.doc, tr.selection.from - 1));
-      dispatch(tr.scrollIntoView());
-    }
+    if (dispatch) dispatch(insertCodeBlockTransaction(state, s));
     return true;
   };
 }

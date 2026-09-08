@@ -1,10 +1,9 @@
-import { InputRule, wrappingInputRule } from "prosemirror-inputrules";
+import { wrappingInputRule } from "prosemirror-inputrules";
 import type { Schema } from "prosemirror-model";
 import { Plugin, TextSelection, type Command, type Transaction } from "prosemirror-state";
 import { canJoin, findWrapping } from "prosemirror-transform";
 
 import {
-  calloutAttrsFromSource,
   calloutAutoFoldPlugin,
   convertCurrentBlockquoteCallout,
 } from "../callouts.ts";
@@ -30,33 +29,6 @@ const BLOCKQUOTE_WRAP_META = "blockquote-wrap";
 //   - empty line     → liftEmptyBlock lifts the empty paragraph out of
 //                      the blockquote, landing the cursor after it
 // So this feature does not contribute a keymap.
-
-const calloutInputRule = new InputRule(
-  /^\[!(NOTE|TIP|IMPORTANT|WARNING|WARN|DANGER|CAUTION)\]$/i,
-  (state, match, start, end) => {
-    const attrs = calloutAttrsFromSource(match[1]);
-    if (!attrs) return null;
-
-    const $start = state.doc.resolve(start);
-    if ($start.parent.type.name !== "paragraph") return null;
-    const blockquoteDepth = $start.depth - 1;
-    if (blockquoteDepth < 1) return null;
-    const blockquote = $start.node(blockquoteDepth);
-    if (blockquote.type.name !== "blockquote") return null;
-    if ($start.index(blockquoteDepth) !== 0) return null;
-
-    const tr = state.tr.setNodeMarkup($start.before(blockquoteDepth), undefined, {
-      ...blockquote.attrs,
-      ...attrs,
-    });
-    const nextChar = $start.parent.textBetween(
-      $start.parentOffset + match[0].length - 1,
-      $start.parentOffset + match[0].length,
-    );
-    tr.delete(start, nextChar === "]" ? end + 1 : end);
-    return tr.setSelection(TextSelection.create(tr.doc, start));
-  },
-);
 
 function wrapTriggerParagraph(
   tr: Transaction,
@@ -145,7 +117,6 @@ export const blockquote: FeatureSpec = {
     // Fires when the paragraph text becomes exactly `>` + one whitespace
     // (ASCII or IME full-width). `\s` covers both; the trigger char is space.
     wrappingInputRule(BLOCKQUOTE_TRIGGER, schema.nodes.blockquote),
-    calloutInputRule,
   ],
 
   plugins: (schema) => [blockquoteWrapPlugin(schema), calloutAutoFoldPlugin()],

@@ -5,6 +5,7 @@ import { TextSelection } from "prosemirror-state";
 import { wrapInList } from "prosemirror-schema-list";
 
 import { convertCurrentBlockquoteCallout } from "./callouts.ts";
+import { insertCodeBlockTransaction } from "./features/fenced-code.ts";
 import { insertMathBlockCommand } from "./features/math.ts";
 import { insertTaskListCommand } from "./features/task.ts";
 
@@ -44,12 +45,7 @@ function setHeading(schema: Schema, level: number): Command {
 
 function insertCodeBlockCommand(schema: Schema): Command {
   return (state, dispatch) => {
-    const node = schema.nodes.code_block.create({ lang: "" });
-    if (dispatch) {
-      const tr = state.tr.replaceSelectionWith(node);
-      tr.setSelection(TextSelection.create(tr.doc, tr.selection.from - 1));
-      dispatch(tr);
-    }
+    if (dispatch) dispatch(insertCodeBlockTransaction(state, schema));
     return true;
   };
 }

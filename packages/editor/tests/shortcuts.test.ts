@@ -70,6 +70,13 @@ describe("common editing shortcuts", () => {
   test("Mod-Shift-K inserts an empty fenced code block shell", () => {
     const next = apply(setup(""), ["<Mod-Shift-K>"]);
     expect(serialize(next.doc)).toBe("```\n\n```");
+    expect(next.doc.resolve(next.selection.from).parent.type.name).toBe("code_block");
+  });
+
+  test("Mod-Shift-K places the caret inside a code block inserted after text", () => {
+    const next = apply(setup("hello"), ["<Mod-Shift-K>"]);
+    expect(serialize(next.doc)).toBe("hello\n\n```\n\n```");
+    expect(next.doc.resolve(next.selection.from).parent.type.name).toBe("code_block");
   });
 
   test("Mod-Shift-Q wraps the current paragraph in a blockquote", () => {

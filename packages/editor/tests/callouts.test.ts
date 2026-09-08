@@ -86,6 +86,8 @@ describe("callouts", () => {
     expect(bq.attrs.alert).toBe("warning");
     expect(bq.attrs.alertSource).toBe("WARNING");
     expect(bq.textContent).toBe("");
+    expect(next.doc.resolve(next.selection.from).parent.type.name).toBe("paragraph");
+    expect(next.selection.$from.index(1)).toBe(0);
   });
 
   test("serializes callout marker before blockquote content", () => {

@@ -6,6 +6,7 @@ import { Decoration, DecorationSet, type NodeView } from "prosemirror-view";
 
 import { markConsumed, type InlineSpan } from "../inline-parse.ts";
 import { renderMathToHtml } from "../renderers/math.ts";
+import { setCaretInTextblock } from "../selection-utils.ts";
 import type { FeatureSpec, InlineFeatureSpec } from "./_types.ts";
 
 const MATH_DRAFT_RE = /^\$\$$/;
@@ -177,8 +178,7 @@ export function insertMathBlockCommand(schema: Schema) {
   ): boolean => {
     const node = schema.nodes.math_block.create();
     if (dispatch) {
-      const tr = state.tr.replaceSelectionWith(node);
-      tr.setSelection(TextSelection.create(tr.doc, tr.selection.from - 1));
+      const tr = setCaretInTextblock(state.tr.replaceSelectionWith(node), "math_block");
       dispatch(tr);
     }
     return true;
