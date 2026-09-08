@@ -263,7 +263,12 @@ export function initAutoHideScrollbars(): () => void {
       if (!inst.drag) flash(inst);
     };
 
+    const onWheel = () => {
+      if (!inst.drag) flash(inst);
+    };
+
     host.addEventListener("scroll", onScroll, { passive: true, signal });
+    host.addEventListener("wheel", onWheel, { passive: true, signal });
     inst.ro.observe(host);
     inst.contentMo.observe(host, { childList: true, subtree: true });
 

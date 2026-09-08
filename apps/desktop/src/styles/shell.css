@@ -309,6 +309,7 @@ html.platform-windows .inimark-titlebar-btn {
 .inimark-scrollbar,
 .cm-editor .cm-scroller {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .inimark-scrollbar::-webkit-scrollbar,
@@ -321,7 +322,8 @@ html.platform-windows .inimark-titlebar-btn {
 .inimark-scrollbar-layer {
   position: fixed;
   inset: 0;
-  z-index: 10020;
+  /* Below floating menus (30+) and popovers; above normal document chrome. */
+  z-index: 25;
   pointer-events: none;
   overflow: hidden;
 }
@@ -331,12 +333,13 @@ html.platform-windows .inimark-titlebar-btn {
   box-sizing: border-box;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease;
   background: var(--inimark-scrollbar-track);
+  transition: opacity 0.15s ease;
 }
 
 .inimark-scrollbar-rail.is-visible {
   opacity: 1;
+  transition: none;
 }
 
 .inimark-scrollbar-rail.is-interactive {

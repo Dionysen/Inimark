@@ -105,6 +105,25 @@ describe("custom overlay scrollbars", () => {
     expect(isPointerInScrollbarGutter(host, 80, 50, 8)).toBe(false);
   });
 
+  test("flashes on wheel before scroll event", () => {
+    vi.useFakeTimers();
+    const host = document.createElement("div");
+    host.className = SCROLLBAR_CLASS;
+    host.style.overflow = "auto";
+    document.body.append(host);
+    mockScrollMetrics(host, { scrollHeight: 400, clientHeight: 100 });
+
+    const teardown = initAutoHideScrollbars();
+    const rail = document.querySelector(".inimark-scrollbar-rail--y");
+
+    host.dispatchEvent(new WheelEvent("wheel", { deltaY: 40, bubbles: true }));
+    expect(rail?.classList.contains("is-visible")).toBe(true);
+
+    teardown();
+    host.remove();
+    vi.useRealTimers();
+  });
+
   test("shows rail when pointer enters the gutter", () => {
     const host = document.createElement("div");
     host.className = SCROLLBAR_CLASS;
