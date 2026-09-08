@@ -43,6 +43,18 @@ import { flashHeadingAtPos } from "./heading-flash.ts";
 import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 
+/** Scroll/cursor snapshot for restoring where the user left off in a file. */
+export interface EditorViewState {
+  /** Markdown character offset for selection anchor. */
+  anchor: number;
+  /** Markdown character offset for selection head (omit when equal to anchor). */
+  head?: number;
+  /** scrollTop of the editor scroll container. */
+  scrollTop: number;
+  /** Whether the editor was in raw source mode. */
+  sourceMode?: boolean;
+}
+
 export interface EditorOptions {
   /** Initial markdown the editor opens with. Defaults to empty. */
   initialContent?: string;
@@ -86,6 +98,10 @@ export interface Editor {
   scrollToHeading(text: string, line?: number): boolean;
   /** Clear vault-search highlight decorations. */
   clearSearchHighlight(): void;
+  /** Capture cursor + scroll position for the current document. */
+  getViewState(): EditorViewState;
+  /** Restore cursor + scroll after `setMarkdown` (waits for layout). */
+  restoreViewState(state: EditorViewState): void;
   /** Run a named format/insert command (context menu, toolbar, …). */
   executeCommand(name: EditorCommandName | string): boolean;
   /** Focus whichever surface is active. */
@@ -300,6 +316,48 @@ export function createEditor(
       return parse(md.slice(0, Math.max(0, offset))).content.size;
     } catch {
       return 0;
+    }
+  }
+
+  function currentMdSelection(): { anchor: number; head: number } {
+    if (inSource && sourceView) {
+      const sel = sourceView.view.state.selection.main;
+      return { anchor: sel.anchor, head: sel.head };
+    }
+    const sel = view.state.selection;
+    try {
+      const anchor = serialize(view.state.doc.cut(0, sel.from)).length;
+      const head = serialize(view.state.doc.cut(0, sel.to)).length;
+      return { anchor, head };
+    } catch {
+      const len = serialize(view.state.doc).length;
+      return { anchor: len, head: len };
+    }
+  }
+
+  function setRenderedSelectionFromMdOffsets(md: string, anchor: number, head: number): void {
+    const from = Math.min(mdOffsetToRenderedPos(md, anchor), view.state.doc.content.size);
+    const to = Math.min(mdOffsetToRenderedPos(md, head), view.state.doc.content.size);
+    try {
+      const sel = TextSelection.create(view.state.doc, from, to);
+      view.dispatch(view.state.tr.setSelection(sel));
+      return;
+    } catch {
+      /* fall through */
+    }
+    try {
+      const sel = TextSelection.near(view.state.doc.resolve(from));
+      view.dispatch(view.state.tr.setSelection(sel));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function suppressTypewriterScroll(): void {
+    suppressTypewriterUntil = performance.now() + 800;
+    if (typewriterRaf != null) {
+      cancelAnimationFrame(typewriterRaf);
+      typewriterRaf = null;
     }
   }
 
@@ -603,6 +661,46 @@ export function createEditor(
     },
     clearSearchHighlight() {
       clearSearchRevealInView(view);
+    },
+    getViewState(): EditorViewState {
+      const { anchor, head } = currentMdSelection();
+      return {
+        anchor,
+        head: head !== anchor ? head : undefined,
+        scrollTop: findScrollContainer().scrollTop,
+        sourceMode: inSource || undefined,
+      };
+    },
+    restoreViewState(state: EditorViewState): void {
+      const apply = (): void => {
+        suppressTypewriterScroll();
+        const anchor = Math.max(0, state.anchor);
+        const head = Math.max(0, state.head ?? state.anchor);
+
+        if (state.sourceMode) {
+          const md = serialize(view.state.doc);
+          const clampedAnchor = Math.min(anchor, md.length);
+          const clampedHead = Math.min(head, md.length);
+          setRenderedSelectionFromMdOffsets(md, clampedAnchor, clampedHead);
+          if (!inSource) enterSource();
+          const mdNow = getSourceMarkdown();
+          const a = Math.min(clampedAnchor, mdNow.length);
+          const h = Math.min(clampedHead, mdNow.length);
+          sourceView?.view.dispatch({ selection: { anchor: a, head: h } });
+        } else {
+          if (inSource) exitSource();
+          const md = serialize(view.state.doc);
+          const clampedAnchor = Math.min(anchor, md.length);
+          const clampedHead = Math.min(head, md.length);
+          setRenderedSelectionFromMdOffsets(md, clampedAnchor, clampedHead);
+        }
+
+        findScrollContainer().scrollTop = Math.max(0, state.scrollTop);
+      };
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(apply);
+      });
     },
     executeCommand(name) {
       if (inSource) exitSource();

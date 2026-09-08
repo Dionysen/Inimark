@@ -23,6 +23,9 @@
   background: color-mix(in srgb, var(--accent) 12%, var(--bg-surface));
   font-weight: 600;
 }
+.appearance-mode-status {
+  margin-top: 12px;
+}
 
 .theme-kind-tabs {
   display: flex; gap: 4px; padding: 4px;

@@ -14,6 +14,7 @@ import {
   saveLibrarySession,
   setLastLibraryId,
   upsertLibrary,
+  type FileViewState,
 } from "./libraries/store.ts";
 import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
@@ -28,6 +29,12 @@ import {
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
+import {
+  captureFileViewState,
+  remapFileViews,
+  removeFileView,
+  toEditorViewState,
+} from "./editor/view-state.ts";
 import { mountWordCount } from "./editor/word-count.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
@@ -103,8 +110,10 @@ export function mountApp(host: HTMLElement): AppController {
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
   let activeLibraryId: string | null = null;
+  let sessionFileViews: Record<string, FileViewState> = {};
   let closeInProgress = false;
   let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  let viewStateTimer: ReturnType<typeof setTimeout> | null = null;
   const cleanups: Array<() => void> = [];
   let wordCount: ReturnType<typeof mountWordCount> | null = null;
 
@@ -181,7 +190,7 @@ export function mountApp(host: HTMLElement): AppController {
           linkIndex.addFileLinks(rel, `# ${noteName.split("/").pop()}\n`);
           path = rel;
         }
-        await openWorkspaceFile(path);
+        await openWorkspaceFile(path, heading ? { skipViewRestore: true } : undefined);
         if (heading) {
           editor.scrollToHeading(heading);
         }
@@ -276,11 +285,35 @@ export function mountApp(host: HTMLElement): AppController {
     shell.sidebar.setSavedLibraries(listLibraries(), activeLibraryId);
   }
 
-  function persistLibrarySession(): void {
+  function clearViewStateTimer(): void {
+    if (viewStateTimer != null) {
+      clearTimeout(viewStateTimer);
+      viewStateTimer = null;
+    }
+  }
+
+  function captureActiveFileViewState(): void {
+    sessionFileViews = captureFileViewState(editor, sessionFileViews, activeFilePath);
+  }
+
+  function scheduleCaptureViewState(): void {
+    if (!activeFilePath) return;
+    clearViewStateTimer();
+    viewStateTimer = setTimeout(() => {
+      viewStateTimer = null;
+      captureActiveFileViewState();
+    }, 400);
+  }
+
+  function persistLibrarySession(options?: { capture?: boolean }): void {
     if (!workspace || !activeLibraryId) return;
+    if (options?.capture !== false) {
+      captureActiveFileViewState();
+    }
     saveLibrarySession(activeLibraryId, {
       activeFilePath,
       expandedDirs: shell.sidebar.getExpandedDirs(),
+      fileViews: sessionFileViews,
     });
   }
 
@@ -360,6 +393,7 @@ export function mountApp(host: HTMLElement): AppController {
     path: string,
     options?: {
       skipConfirm?: boolean;
+      skipViewRestore?: boolean;
       line?: number;
       query?: string;
       snippet?: string;
@@ -370,6 +404,7 @@ export function mountApp(host: HTMLElement): AppController {
 
     const sameFile = activeFilePath === path;
     if (!sameFile) {
+      captureActiveFileViewState();
       const result = await readWorkspaceFile(workspace, path);
       if (result.status !== "opened") {
         if (result.status === "error") {
@@ -384,7 +419,6 @@ export function mountApp(host: HTMLElement): AppController {
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
       shell.setDirty(false);
-      persistLibrarySession();
       scheduleOutlineSync(result.text);
       recordRecentFile(activeLibraryId, path);
       navHistory.record(path);
@@ -400,8 +434,17 @@ export function mountApp(host: HTMLElement): AppController {
         line: options?.line,
         snippet: options?.snippet,
       });
+      persistLibrarySession({ capture: false });
+    } else if (!options?.skipViewRestore) {
+      editor.clearSearchHighlight();
+      const saved = sessionFileViews[path];
+      if (saved) {
+        editor.restoreViewState(toEditorViewState(saved));
+      }
+      persistLibrarySession({ capture: false });
     } else {
       editor.clearSearchHighlight();
+      persistLibrarySession({ capture: false });
     }
   }
 
@@ -431,6 +474,7 @@ export function mountApp(host: HTMLElement): AppController {
     void buildLinkIndexForWorkspace(workspace);
 
     const session = getLibrarySession(activeLibraryId);
+    sessionFileViews = session.fileViews ?? {};
     const expandedDirs =
       options?.restoreSession && session.expandedDirs.length > 0
         ? session.expandedDirs
@@ -613,6 +657,7 @@ export function mountApp(host: HTMLElement): AppController {
       linkIndex.persistCache(workspace!.rootPath);
 
       navHistory.remap(pairs);
+      sessionFileViews = remapFileViews(sessionFileViews, pairs);
 
       const activeMoved = pairs.find(
         (p) =>
@@ -634,6 +679,10 @@ export function mountApp(host: HTMLElement): AppController {
           editor.setMarkdown(opened.text);
           shell.setDirty(false);
           scheduleOutlineSync(opened.text);
+          const saved = sessionFileViews[activeFilePath];
+          if (saved) {
+            editor.restoreViewState(toEditorViewState(saved));
+          }
         }
         persistLibrarySession();
       } else {
@@ -643,6 +692,7 @@ export function mountApp(host: HTMLElement): AppController {
   });
   shell.sidebar.onFileDeleted((path) => {
     linkIndex.removeFile(path);
+    sessionFileViews = removeFileView(sessionFileViews, path);
     if (workspace) linkIndex.persistCache(workspace.rootPath);
     if (
       activeFilePath === path ||
@@ -659,6 +709,7 @@ export function mountApp(host: HTMLElement): AppController {
     workspace = null;
     activeFilePath = null;
     activeLibraryId = null;
+    sessionFileViews = {};
     navHistory.clear();
     shell.sidebar.setWorkspace(null);
     linkIndex.clear();
@@ -688,6 +739,17 @@ export function mountApp(host: HTMLElement): AppController {
       },
     ),
   );
+
+  shell.editorHost.addEventListener("scroll", scheduleCaptureViewState, { passive: true });
+  cleanups.push(() => shell.editorHost.removeEventListener("scroll", scheduleCaptureViewState));
+
+  const onSelectionChange = (): void => {
+    const sel = document.getSelection();
+    if (!sel?.anchorNode || !shell.editorHost.contains(sel.anchorNode)) return;
+    scheduleCaptureViewState();
+  };
+  document.addEventListener("selectionchange", onSelectionChange);
+  cleanups.push(() => document.removeEventListener("selectionchange", onSelectionChange));
 
   const applyIncomingSettings = (next: AppSettings) => {
     settings = next;
@@ -752,6 +814,7 @@ export function mountApp(host: HTMLElement): AppController {
     editor,
     destroy() {
       clearAutoSaveTimer();
+      clearViewStateTimer();
       persistLibrarySession();
       for (const cleanup of cleanups.reverse()) cleanup();
       editor.destroy();

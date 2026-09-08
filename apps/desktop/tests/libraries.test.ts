@@ -33,11 +33,23 @@ describe("libraries store", () => {
     saveLibrarySession(library.id, {
       activeFilePath: "notes/intro.md",
       expandedDirs: ["notes", "archive"],
+      fileViews: {
+        "notes/intro.md": {
+          anchor: 120,
+          scrollTop: 480,
+          updatedAt: 1,
+        },
+      },
     });
 
     const session = getLibrarySession(library.id);
     expect(session.activeFilePath).toBe("notes/intro.md");
     expect(session.expandedDirs).toEqual(["notes", "archive"]);
+    expect(session.fileViews?.["notes/intro.md"]).toEqual({
+      anchor: 120,
+      scrollTop: 480,
+      updatedAt: 1,
+    });
   });
 
   test("removes libraries and their session state", () => {

@@ -11,9 +11,18 @@ export interface LibraryRecord {
   lastOpenedAt: number;
 }
 
+export interface FileViewState {
+  anchor: number;
+  head?: number;
+  scrollTop: number;
+  sourceMode?: boolean;
+  updatedAt?: number;
+}
+
 export interface LibrarySessionState {
   activeFilePath: string | null;
   expandedDirs: string[];
+  fileViews?: Record<string, FileViewState>;
 }
 
 export interface LibrariesConfig {
@@ -26,6 +35,7 @@ export interface LibrariesConfig {
 const DEFAULT_SESSION: LibrarySessionState = {
   activeFilePath: null,
   expandedDirs: [],
+  fileViews: {},
 };
 
 export function libraryIdFromPath(rootPath: string): string {
@@ -118,13 +128,14 @@ export function setLastLibraryId(id: string | null): void {
 
 export function getLibrarySession(id: string): LibrarySessionState {
   const session = loadLibrariesConfig().sessions[id];
-  if (!session) return { ...DEFAULT_SESSION };
+  if (!session) return { ...DEFAULT_SESSION, fileViews: {} };
   return {
     activeFilePath:
       typeof session.activeFilePath === "string" ? session.activeFilePath : null,
     expandedDirs: Array.isArray(session.expandedDirs)
       ? session.expandedDirs.filter((value): value is string => typeof value === "string")
       : [],
+    fileViews: normalizeFileViews(session.fileViews),
   };
 }
 
@@ -137,6 +148,7 @@ export function saveLibrarySession(id: string, state: LibrarySessionState): void
       [id]: {
         activeFilePath: state.activeFilePath,
         expandedDirs: [...state.expandedDirs],
+        fileViews: normalizeFileViews(state.fileViews),
       },
     },
   });
@@ -181,6 +193,7 @@ function normalizeConfig(parsed: Partial<LibrariesConfig>): LibrariesConfig {
         expandedDirs: Array.isArray(session.expandedDirs)
           ? session.expandedDirs.filter((value): value is string => typeof value === "string")
           : [],
+        fileViews: normalizeFileViews(session.fileViews),
       };
     }
   }
@@ -197,6 +210,30 @@ function normalizeConfig(parsed: Partial<LibrariesConfig>): LibrariesConfig {
     lastLibraryId,
     sessions,
   };
+}
+
+function normalizeFileViews(
+  fileViews: LibrarySessionState["fileViews"] | undefined,
+): Record<string, FileViewState> {
+  if (!fileViews || typeof fileViews !== "object") return {};
+  const next: Record<string, FileViewState> = {};
+  for (const [path, state] of Object.entries(fileViews)) {
+    if (!path || !state || typeof state !== "object") continue;
+    if (typeof state.anchor !== "number" || !Number.isFinite(state.anchor)) continue;
+    if (typeof state.scrollTop !== "number" || !Number.isFinite(state.scrollTop)) continue;
+    next[path] = {
+      anchor: state.anchor,
+      head:
+        typeof state.head === "number" && Number.isFinite(state.head) ? state.head : undefined,
+      scrollTop: Math.max(0, state.scrollTop),
+      sourceMode: state.sourceMode === true ? true : undefined,
+      updatedAt:
+        typeof state.updatedAt === "number" && Number.isFinite(state.updatedAt)
+          ? state.updatedAt
+          : undefined,
+    };
+  }
+  return next;
 }
 
 function migrateLegacyLastWorkspace(): void {
