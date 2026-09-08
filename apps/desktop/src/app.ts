@@ -116,6 +116,21 @@ export function mountApp(host: HTMLElement): AppController {
       isSourceMode: () => editor.isSourceMode(),
       onToggleSourceMode: () => editor.toggleSource(),
     },
+    immersiveMenuActions: {
+      getAutoHideTitlebar: () => settings.autoHideTitlebar,
+      getAutoHideStatusbar: () => settings.autoHideStatusbar,
+      onAutoHideTitlebarChange(enabled) {
+        settings = { ...settings, autoHideTitlebar: enabled };
+        saveSettings(settings);
+        applySettings(settings);
+      },
+      onAutoHideStatusbarChange(enabled) {
+        settings = { ...settings, autoHideStatusbar: enabled };
+        saveSettings(settings);
+        applySettings(settings);
+        wordCount?.syncChrome();
+      },
+    },
   });
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;

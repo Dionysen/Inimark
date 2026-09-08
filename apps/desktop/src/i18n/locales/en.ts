@@ -40,6 +40,9 @@ export const en: Dictionary = {
       addBookmark: "Add bookmark",
       wysiwygMode: "WYSIWYG",
       sourceMode: "Source",
+      immersiveEditing: "Immersive editing",
+      autoHideTitlebar: "Auto-hide title bar",
+      autoHideStatusbar: "Auto-hide status bar",
     },
   },
   sidebar: {

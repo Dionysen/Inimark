@@ -56,6 +56,13 @@ export interface TitleBarMoreMenuActions {
   onToggleSourceMode: () => void;
 }
 
+export interface TitleBarImmersiveMenuActions {
+  getAutoHideTitlebar: () => boolean;
+  getAutoHideStatusbar: () => boolean;
+  onAutoHideTitlebarChange: (enabled: boolean) => void;
+  onAutoHideStatusbarChange: (enabled: boolean) => void;
+}
+
 export interface TitleBarOptions {
   title?: string;
   /** When omitted, shows custom controls in Tauri on non-macOS platforms. */
@@ -66,6 +73,7 @@ export interface TitleBarOptions {
   /** Editor chrome: overflow menu with appearance controls. */
   showMoreMenu?: boolean;
   moreMenuActions?: TitleBarMoreMenuActions;
+  immersiveMenuActions?: TitleBarImmersiveMenuActions;
   onClose?: () => void | Promise<void>;
 }
 
@@ -93,6 +101,7 @@ export function mountTitleBar(
     (options.showWindowControls ?? supportsWindowChrome());
   const showMoreMenu = options.showMoreMenu ?? Boolean(options.rightSidebarToggle);
   const moreActions = options.moreMenuActions;
+  const immersiveActions = options.immersiveMenuActions;
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
   let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
@@ -370,6 +379,35 @@ export function mountTitleBar(
         },
       });
       moreMenu.addDivider();
+    }
+
+    if (immersiveActions) {
+      moreMenu.addSubmenuItem({
+        label: t("titlebar.more.immersiveEditing"),
+        icon: menuIcons.immersive,
+        items: [
+          {
+            label: t("titlebar.more.autoHideTitlebar"),
+            checked: immersiveActions.getAutoHideTitlebar(),
+            onClick() {
+              immersiveActions.onAutoHideTitlebarChange(
+                !immersiveActions.getAutoHideTitlebar(),
+              );
+              renderMoreMenu();
+            },
+          },
+          {
+            label: t("titlebar.more.autoHideStatusbar"),
+            checked: immersiveActions.getAutoHideStatusbar(),
+            onClick() {
+              immersiveActions.onAutoHideStatusbarChange(
+                !immersiveActions.getAutoHideStatusbar(),
+              );
+              renderMoreMenu();
+            },
+          },
+        ],
+      });
     }
 
     moreMenu.addSubmenuItem({

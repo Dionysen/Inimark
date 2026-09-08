@@ -40,6 +40,9 @@ export const zhCN: Dictionary = {
       addBookmark: "添加收藏",
       wysiwygMode: "所见即所得",
       sourceMode: "源码模式",
+      immersiveEditing: "沉浸编辑",
+      autoHideTitlebar: "自动隐藏顶栏",
+      autoHideStatusbar: "自动隐藏状态栏",
     },
   },
   sidebar: {

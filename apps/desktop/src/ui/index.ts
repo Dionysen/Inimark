@@ -57,6 +57,7 @@ export {
   type TitleBarController,
   type TitleBarOptions,
   type TitleBarMoreMenuActions,
+  type TitleBarImmersiveMenuActions,
   type WindowControlMode,
   type SidebarToggleOptions,
 } from "./titlebar.ts";
