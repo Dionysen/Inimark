@@ -37,6 +37,8 @@ export const zhCN: Dictionary = {
       copyFileName: "文件名",
       copyRelativePath: "相对路径",
       copyAbsolutePath: "绝对路径",
+      wysiwygMode: "所见即所得",
+      sourceMode: "源码模式",
     },
   },
   sidebar: {

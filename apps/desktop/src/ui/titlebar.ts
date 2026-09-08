@@ -1,4 +1,5 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
+import { formatShortcutDisplay } from "../shortcuts/store.ts";
 import { usesNativeWindowControls } from "../platform/platform.ts";
 import {
   closeWindow,
@@ -49,6 +50,8 @@ export interface TitleBarMoreMenuActions {
   onCopyFileName: () => void;
   onCopyRelativePath: () => void;
   onCopyAbsolutePath: () => void;
+  isSourceMode: () => boolean;
+  onToggleSourceMode: () => void;
 }
 
 export interface TitleBarOptions {
@@ -342,6 +345,18 @@ export function mountTitleBar(
             },
           },
         ],
+      });
+      moreMenu.addDivider();
+      moreMenu.addItem({
+        label: moreActions.isSourceMode()
+          ? t("titlebar.more.wysiwygMode")
+          : t("titlebar.more.sourceMode"),
+        icon: menuIcons.sourceMode,
+        meta: formatShortcutDisplay(["Ctrl", "/"]),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onToggleSourceMode();
+        },
       });
       moreMenu.addDivider();
     }

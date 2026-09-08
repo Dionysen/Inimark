@@ -1,5 +1,6 @@
 ﻿import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
+import { TextSelection } from "prosemirror-state";
 
 import { createEditor } from "../src/lib.ts";
 
@@ -263,6 +264,21 @@ describe("source ⇄ preview mode pollution", () => {
       for (let i = 0; i < 6; i++) editor.toggleSource();
       expect(editor.isSourceMode()).toBe(false);
       expect(editor.getMarkdown().trim()).toBe("");
+    });
+  });
+
+  test("toggle source preserves markdown selection offsets", () => {
+    withEditor("alpha\n\nbeta", (editor) => {
+      const { view } = editor;
+      const pos = view.state.doc.content.size - 2;
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)));
+      const before = editor.getViewState();
+      editor.toggleSource();
+      expect(editor.isSourceMode()).toBe(true);
+      expect(editor.getViewState().anchor).toBe(before.anchor);
+      editor.toggleSource();
+      expect(editor.isSourceMode()).toBe(false);
+      expect(editor.getViewState().anchor).toBe(before.anchor);
     });
   });
 

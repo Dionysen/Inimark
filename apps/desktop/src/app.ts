@@ -105,6 +105,8 @@ export function mountApp(host: HTMLElement): AppController {
         if (!workspace || !activeFilePath) return;
         void copyToClipboard(joinWorkspacePath(workspace.rootPath, activeFilePath));
       },
+      isSourceMode: () => editor.isSourceMode(),
+      onToggleSourceMode: () => editor.toggleSource(),
     },
   });
   let workspace: Workspace | null = null;

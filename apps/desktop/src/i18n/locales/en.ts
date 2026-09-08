@@ -37,6 +37,8 @@ export const en: Dictionary = {
       copyFileName: "File name",
       copyRelativePath: "Relative path",
       copyAbsolutePath: "Absolute path",
+      wysiwygMode: "WYSIWYG",
+      sourceMode: "Source",
     },
   },
   sidebar: {

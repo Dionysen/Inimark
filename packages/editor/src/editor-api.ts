@@ -150,6 +150,66 @@ export function createEditor(
     return host;
   }
 
+  interface ScrollSnapshot {
+    scrollTop: number;
+    cursorTopInViewport: number | null;
+  }
+
+  function captureScrollSnapshot(fromSource: boolean): ScrollSnapshot {
+    const scrollHost = findScrollContainer();
+    const snapshot: ScrollSnapshot = {
+      scrollTop: scrollHost.scrollTop,
+      cursorTopInViewport: null,
+    };
+    try {
+      const rect = scrollHost.getBoundingClientRect();
+      if (fromSource && sourceView) {
+        const head = sourceView.view.state.selection.main.head;
+        const coords = sourceView.view.coordsAtPos(head);
+        snapshot.cursorTopInViewport = coords.top - rect.top;
+      } else {
+        const head = view.state.selection.head;
+        const coords = view.coordsAtPos(head);
+        snapshot.cursorTopInViewport = coords.top - rect.top;
+      }
+    } catch {
+      /* layout not ready */
+    }
+    return snapshot;
+  }
+
+  function restoreScrollSnapshot(
+    snapshot: ScrollSnapshot,
+    getCoords: () => { top: number } | null,
+  ): void {
+    const scrollHost = findScrollContainer();
+    try {
+      const coords = getCoords();
+      if (coords && snapshot.cursorTopInViewport != null) {
+        const rect = scrollHost.getBoundingClientRect();
+        const topInContent = coords.top - rect.top + scrollHost.scrollTop;
+        scrollHost.scrollTop = Math.max(0, topInContent - snapshot.cursorTopInViewport);
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    scrollHost.scrollTop = snapshot.scrollTop;
+  }
+
+  function scheduleScrollRestore(
+    snapshot: ScrollSnapshot,
+    getCoords: () => { top: number } | null,
+    onDone?: () => void,
+  ): void {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        restoreScrollSnapshot(snapshot, getCoords);
+        onDone?.();
+      });
+    });
+  }
+
   function applyTypewriterPad(): void {
     if (!typewriterMode) {
       wrap.style.removeProperty("--typewriter-pad");
@@ -274,21 +334,6 @@ export function createEditor(
     wrap.classList.toggle("tw-typewriter-mode", typewriterMode);
   }
 
-  function restorePageScroll(top: number): void {
-    try {
-      window.scrollTo({ top, behavior: "instant" as ScrollBehavior });
-    } catch {
-      try { window.scrollTo(0, top); } catch {}
-    }
-  }
-
-  function preservePageScroll<T>(fn: () => T): T {
-    const top = window.scrollY;
-    const result = fn();
-    restorePageScroll(top);
-    return result;
-  }
-
   function getSourceMarkdown(): string {
     return sourceView?.view.state.doc.toString() ?? "";
   }
@@ -303,14 +348,6 @@ export function createEditor(
   // the position. Mid-syntax cursors (e.g. between `*` and `bold` in
   // an unclosed `*bold`) may land a few chars off, but plain prose and
   // line boundaries are spot-on.
-  function renderedCursorToMdOffset(): number {
-    const sel = view.state.selection;
-    try {
-      return serialize(view.state.doc.cut(0, sel.from)).length;
-    } catch {
-      return serialize(view.state.doc).length;
-    }
-  }
   function mdOffsetToRenderedPos(md: string, offset: number): number {
     try {
       return parse(md.slice(0, Math.max(0, offset))).content.size;
@@ -362,45 +399,58 @@ export function createEditor(
   }
 
   function enterSource(): void {
-    preservePageScroll(() => {
-      const md = serialize(view.state.doc);
-      const mdCursor = renderedCursorToMdOffset();
-      sourceHost.replaceChildren();
-      sourceView = createEmbeddedCodeMirrorEditor({
-        parent: sourceHost,
-        doc: md,
-        markdownSource: true,
-        className: "typora-web-cm-source",
-        onChange: (next) => options.onChange?.(next),
-      });
-      editorHost.hidden = true;
-      sourceHost.hidden = false;
-      const clamped = Math.min(mdCursor, md.length);
-      sourceView.view.dispatch({ selection: { anchor: clamped } });
-      sourceView.view.focus();
-      inSource = true;
+    suppressTypewriterScroll();
+    const snapshot = captureScrollSnapshot(false);
+    const { anchor, head } = currentMdSelection();
+    const md = serialize(view.state.doc);
+    sourceHost.replaceChildren();
+    sourceView = createEmbeddedCodeMirrorEditor({
+      parent: sourceHost,
+      doc: md,
+      markdownSource: true,
+      className: "typora-web-cm-source",
+      onChange: (next) => options.onChange?.(next),
     });
+    editorHost.hidden = true;
+    sourceHost.hidden = false;
+    const clampedAnchor = Math.min(anchor, md.length);
+    const clampedHead = Math.min(head, md.length);
+    sourceView.view.dispatch({
+      selection: { anchor: clampedAnchor, head: clampedHead },
+    });
+    inSource = true;
+    scheduleScrollRestore(snapshot, () => {
+      try {
+        const pos = sourceView!.view.state.selection.main.head;
+        return sourceView!.view.coordsAtPos(pos);
+      } catch {
+        return null;
+      }
+    }, () => sourceView?.view.focus());
   }
 
   function exitSource(): void {
-    preservePageScroll(() => {
-      const md = getSourceMarkdown();
-      const mdCursor = sourceView?.view.state.selection.main.head ?? md.length;
-      const targetRaw = mdOffsetToRenderedPos(md, mdCursor);
-      rebuild(md);
-      const target = Math.min(targetRaw, view.state.doc.content.size);
+    suppressTypewriterScroll();
+    const snapshot = captureScrollSnapshot(true);
+    const md = getSourceMarkdown();
+    const sel = sourceView?.view.state.selection.main;
+    const anchor = Math.min(sel?.anchor ?? md.length, md.length);
+    const head = Math.min(sel?.head ?? md.length, md.length);
+    sourceView?.destroy();
+    sourceView = null;
+    sourceHost.replaceChildren();
+    sourceHost.hidden = true;
+    editorHost.hidden = false;
+    rebuild(md);
+    setRenderedSelectionFromMdOffsets(md, anchor, head);
+    inSource = false;
+    scheduleScrollRestore(snapshot, () => {
       try {
-        const sel = TextSelection.near(view.state.doc.resolve(target));
-        view.dispatch(view.state.tr.setSelection(sel));
-      } catch {}
-      sourceView?.destroy();
-      sourceView = null;
-      sourceHost.replaceChildren();
-      sourceHost.hidden = true;
-      editorHost.hidden = false;
-      view.focus();
-      inSource = false;
-    });
+        return view.coordsAtPos(view.state.selection.head);
+      } catch {
+        return null;
+      }
+    }, () => view.focus());
   }
 
   // ⌘/ on Mac, Ctrl+/ elsewhere. Window-level keydown so it works
