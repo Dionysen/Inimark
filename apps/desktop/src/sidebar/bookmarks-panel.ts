@@ -7,9 +7,19 @@ import {
   type LibraryBookmarks,
 } from "../bookmarks/store.ts";
 import { fileNameFromPath } from "../platform/env.ts";
+import {
+  compareByName,
+  type BookmarkGroupSortMode,
+  type BookmarkItemSortMode,
+} from "./sort-menu.ts";
 
 const CHEVRON = `<svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const FILE_ICON = `<svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/></svg>`;
+
+export interface BookmarksPanelSort {
+  groups: BookmarkGroupSortMode;
+  items: BookmarkItemSortMode;
+}
 
 export interface BookmarksPanelHandlers {
   onOpenItem(item: BookmarkItem): void;
@@ -20,10 +30,50 @@ export interface BookmarksPanelHandlers {
 
 export interface BookmarksPanelController {
   el: HTMLElement;
-  render(libraryId: string | null, activePath: string | null): void;
+  render(
+    libraryId: string | null,
+    activePath: string | null,
+    sort?: BookmarksPanelSort,
+  ): void;
   /** Scroll the first matching bookmark row into view. Returns false if not found. */
   scrollToPath(path: string): boolean;
   destroy(): void;
+}
+
+function sortBookmarkGroups(
+  groups: LibraryBookmarks["groups"],
+  mode: BookmarkGroupSortMode,
+): LibraryBookmarks["groups"] {
+  const copy = [...groups];
+  copy.sort((a, b) => {
+    if (mode === "order") {
+      const byOrder = a.order - b.order;
+      if (byOrder !== 0) return byOrder;
+      return compareByName(a.name, b.name);
+    }
+    return compareByName(a.name, b.name, mode === "name-desc");
+  });
+  return copy;
+}
+
+function sortBookmarkItems(
+  items: BookmarkItem[],
+  mode: BookmarkItemSortMode,
+): BookmarkItem[] {
+  const copy = [...items];
+  copy.sort((a, b) => {
+    if (mode === "added-asc" || mode === "added-desc") {
+      const cmp = a.addedAt - b.addedAt;
+      if (cmp !== 0) return mode === "added-asc" ? cmp : -cmp;
+      return compareByName(fileNameFromPath(a.path), fileNameFromPath(b.path));
+    }
+    return compareByName(
+      fileNameFromPath(a.path),
+      fileNameFromPath(b.path),
+      mode === "name-desc",
+    );
+  });
+  return copy;
 }
 
 export function createBookmarksPanel(
@@ -33,6 +83,11 @@ export function createBookmarksPanel(
   el.className = "inimark-bookmarks-host inimark-scrollbar";
   el.setAttribute("role", "navigation");
   el.setAttribute("aria-label", t("sidebar.tabs.bookmarks"));
+
+  let currentSort: BookmarksPanelSort = {
+    groups: "order",
+    items: "name-asc",
+  };
 
   function renderEmpty(): void {
     el.replaceChildren();
@@ -48,16 +103,11 @@ export function createBookmarksPanel(
     activePath: string | null,
   ): void {
     el.replaceChildren();
-    for (const group of data.groups) {
-      const items = data.items
-        .filter((item) => item.groupId === group.id)
-        .sort((a, b) =>
-          fileNameFromPath(a.path).localeCompare(
-            fileNameFromPath(b.path),
-            undefined,
-            { sensitivity: "base" },
-          ),
-        );
+    for (const group of sortBookmarkGroups(data.groups, currentSort.groups)) {
+      const items = sortBookmarkItems(
+        data.items.filter((item) => item.groupId === group.id),
+        currentSort.items,
+      );
 
       const collapsed = data.collapsedGroupIds.includes(group.id);
       const section = document.createElement("section");
@@ -144,7 +194,12 @@ export function createBookmarksPanel(
     if (el.childElementCount === 0) renderEmpty();
   }
 
-  function render(libraryId: string | null, activePath: string | null): void {
+  function render(
+    libraryId: string | null,
+    activePath: string | null,
+    sort?: BookmarksPanelSort,
+  ): void {
+    if (sort) currentSort = sort;
     el.setAttribute("aria-label", t("sidebar.tabs.bookmarks"));
     if (!libraryId) {
       renderEmpty();
@@ -175,3 +230,4 @@ export function createBookmarksPanel(
     },
   };
 }
+

@@ -50,6 +50,20 @@ import {
   type VaultSearchResult,
 } from "./sidebar/vault-search.ts";
 import { createBookmarksPanel } from "./sidebar/bookmarks-panel.ts";
+import {
+  BOOKMARK_GROUP_SORT_OPTIONS,
+  BOOKMARK_ITEM_SORT_OPTIONS,
+  BOOKMARKS_GROUP_SORT_KEY,
+  BOOKMARKS_ITEM_SORT_KEY,
+  checkedSortMenuItems,
+  fillCheckedSortMenu,
+  loadSortMode,
+  positionMenuBelowAnchor,
+  saveSortMode,
+  sortOptionLabel,
+  type BookmarkGroupSortMode,
+  type BookmarkItemSortMode,
+} from "./sidebar/sort-menu.ts";
 import { promptAddBookmark } from "./ui/bookmark-dialog.ts";
 import {
   promptCopyBookmarkGroup,
@@ -107,8 +121,7 @@ const FILES_SORT_OPTIONS: Array<{
 ];
 
 function sortLabel(mode: FilesSortMode): string {
-  const option = FILES_SORT_OPTIONS.find((opt) => opt.mode === mode);
-  return option ? t(option.labelKey) : t("sidebar.toolbar.sort");
+  return sortOptionLabel(FILES_SORT_OPTIONS, mode);
 }
 
 export type FileSelectOptions = {
@@ -174,15 +187,7 @@ function loadActivePanel(available: SidebarTabId[]): SidebarTabId {
 }
 
 function loadFilesSortMode(): FilesSortMode {
-  try {
-    const saved = localStorage.getItem(FILES_SORT_KEY);
-    if (FILES_SORT_OPTIONS.some((opt) => opt.mode === saved)) {
-      return saved as FilesSortMode;
-    }
-  } catch {
-    /* ignore */
-  }
-  return "name-asc";
+  return loadSortMode(FILES_SORT_KEY, FILES_SORT_OPTIONS, "name-asc");
 }
 
 function markNoDrag(el: HTMLElement): void {
@@ -296,10 +301,12 @@ function sortTreeNodes(
     }
     if (mode === "mtime-asc" || mode === "mtime-desc") {
       const cmp = timeValue(a, "mtimeMs") - timeValue(b, "mtimeMs");
-      return mode === "mtime-asc" ? cmp : -cmp;
+      if (cmp !== 0) return mode === "mtime-asc" ? cmp : -cmp;
+    } else {
+      const cmp = timeValue(a, "birthtimeMs") - timeValue(b, "birthtimeMs");
+      if (cmp !== 0) return mode === "birthtime-asc" ? cmp : -cmp;
     }
-    const cmp = timeValue(a, "birthtimeMs") - timeValue(b, "birthtimeMs");
-    return mode === "birthtime-asc" ? cmp : -cmp;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
   });
   return copy;
 }
@@ -368,6 +375,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   markNoDrag(treeHost);
 
   let filesSortMode = loadFilesSortMode();
+  let bookmarkGroupSortMode = loadSortMode(
+    BOOKMARKS_GROUP_SORT_KEY,
+    BOOKMARK_GROUP_SORT_OPTIONS,
+    "order",
+  );
+  let bookmarkItemSortMode = loadSortMode(
+    BOOKMARKS_ITEM_SORT_KEY,
+    BOOKMARK_ITEM_SORT_OPTIONS,
+    "name-asc",
+  );
 
   const filesToolbar = createPanelToolbar([
     {
@@ -461,6 +478,15 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       },
     },
     {
+      label: t("sidebar.toolbar.sort"),
+      title: t("sidebar.toolbar.sort"),
+      icon: sortIcon,
+      onClick(event) {
+        event.stopPropagation();
+        toggleBookmarksSortMenu();
+      },
+    },
+    {
       label: t("sidebar.toolbar.locateFile"),
       title: t("sidebar.toolbar.locateFile"),
       icon: locateFileIcon,
@@ -478,8 +504,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
   ]);
   const newGroupBtn = bookmarksToolbar.buttons[0]!;
-  const locateBookmarkBtn = bookmarksToolbar.buttons[1]!;
-  const collapseBookmarksBtn = bookmarksToolbar.buttons[2]!;
+  const bookmarksSortBtn = bookmarksToolbar.buttons[1]!;
+  const locateBookmarkBtn = bookmarksToolbar.buttons[2]!;
+  const collapseBookmarksBtn = bookmarksToolbar.buttons[3]!;
+  bookmarksSortBtn.setAttribute("aria-haspopup", "menu");
+  bookmarksSortBtn.setAttribute("aria-expanded", "false");
 
   const bookmarksList = createBookmarksPanel({
     onOpenItem(item) {
@@ -546,6 +575,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   sortMenu.el.classList.add("inimark-sort-menu");
   sortMenu.setPath("");
   host.append(sortMenu.el);
+  let sortMenuAnchor: HTMLElement = sortBtn;
 
   const contextMenu = createMenu();
   contextMenu.el.classList.add("inimark-context-menu");
@@ -611,6 +641,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function closeSortMenu(): void {
     sortMenu.setOpen(false);
     sortBtn.setAttribute("aria-expanded", "false");
+    bookmarksSortBtn.setAttribute("aria-expanded", "false");
   }
 
   function closeContextMenu(): void {
@@ -630,44 +661,75 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   }
 
   function positionSortMenu(): void {
-    const rect = sortBtn.getBoundingClientRect();
-    const menuWidth = Math.max(184, sortMenu.el.offsetWidth || 184);
-    const left = Math.min(
-      Math.max(8, rect.left),
-      window.innerWidth - menuWidth - 8,
-    );
-    sortMenu.el.style.top = `${rect.bottom + 4}px`;
-    sortMenu.el.style.left = `${left}px`;
+    positionMenuBelowAnchor(sortMenuAnchor, sortMenu.el);
   }
 
-  function renderSortMenu(): void {
+  function renderFilesSortMenu(): void {
+    fillCheckedSortMenu(
+      sortMenu,
+      FILES_SORT_OPTIONS,
+      filesSortMode,
+      (mode) => {
+        setFilesSortMode(mode);
+        closeSortMenu();
+      },
+      [2, 4],
+    );
+  }
+
+  function renderBookmarksSortMenu(): void {
     sortMenu.clear();
     sortMenu.setPath("");
-    FILES_SORT_OPTIONS.forEach((option, index) => {
-      if (index === 2 || index === 4) sortMenu.addDivider();
-      sortMenu.addItem({
-        label: t(option.labelKey),
-        checked: filesSortMode === option.mode,
-        onClick() {
-          setFilesSortMode(option.mode);
+    sortMenu.addSubmenuItem({
+      label: t("sidebar.bookmarks.sort.groups"),
+      meta: sortOptionLabel(BOOKMARK_GROUP_SORT_OPTIONS, bookmarkGroupSortMode),
+      items: checkedSortMenuItems(
+        BOOKMARK_GROUP_SORT_OPTIONS,
+        bookmarkGroupSortMode,
+        (mode) => {
+          setBookmarkGroupSortMode(mode);
           closeSortMenu();
         },
-      });
+      ),
+    });
+    sortMenu.addSubmenuItem({
+      label: t("sidebar.bookmarks.sort.items"),
+      meta: sortOptionLabel(BOOKMARK_ITEM_SORT_OPTIONS, bookmarkItemSortMode),
+      items: checkedSortMenuItems(
+        BOOKMARK_ITEM_SORT_OPTIONS,
+        bookmarkItemSortMode,
+        (mode) => {
+          setBookmarkItemSortMode(mode);
+          closeSortMenu();
+        },
+      ),
     });
   }
 
-  function toggleSortMenu(): void {
+  function openSortMenu(anchor: HTMLElement, render: () => void): void {
     closeMenu();
     closeContextMenu();
-    if (sortMenu.isOpen()) {
+    if (sortMenu.isOpen() && sortMenuAnchor === anchor) {
       closeSortMenu();
       return;
     }
-    renderSortMenu();
+    sortMenuAnchor = anchor;
+    render();
     sortMenu.setOpen(true);
-    sortBtn.setAttribute("aria-expanded", "true");
-    // Measure after open so width is available for clamping.
+    sortBtn.setAttribute("aria-expanded", String(anchor === sortBtn));
+    bookmarksSortBtn.setAttribute(
+      "aria-expanded",
+      String(anchor === bookmarksSortBtn),
+    );
     requestAnimationFrame(() => positionSortMenu());
+  }
+
+  function toggleSortMenu(): void {
+    openSortMenu(sortBtn, renderFilesSortMenu);
+  }
+
+  function toggleBookmarksSortMenu(): void {
+    openSortMenu(bookmarksSortBtn, renderBookmarksSortMenu);
   }
 
   function renderLibraryList(): void {
@@ -726,7 +788,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     }
     if (
       sortMenu.isOpen() &&
-      !(target && (sortMenu.el.contains(target) || sortBtn.contains(target)))
+      !(
+        target &&
+        (sortMenu.contains(target) ||
+          sortBtn.contains(target) ||
+          bookmarksSortBtn.contains(target))
+      )
     ) {
       closeSortMenu();
     }
@@ -1232,13 +1299,23 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function setFilesSortMode(mode: FilesSortMode): void {
     if (filesSortMode === mode) return;
     filesSortMode = mode;
-    try {
-      localStorage.setItem(FILES_SORT_KEY, filesSortMode);
-    } catch {
-      /* ignore */
-    }
+    saveSortMode(FILES_SORT_KEY, filesSortMode);
     updateFilesToolbarState();
     rerender();
+  }
+
+  function setBookmarkGroupSortMode(mode: BookmarkGroupSortMode): void {
+    if (bookmarkGroupSortMode === mode) return;
+    bookmarkGroupSortMode = mode;
+    saveSortMode(BOOKMARKS_GROUP_SORT_KEY, bookmarkGroupSortMode);
+    refreshBookmarksPanel();
+  }
+
+  function setBookmarkItemSortMode(mode: BookmarkItemSortMode): void {
+    if (bookmarkItemSortMode === mode) return;
+    bookmarkItemSortMode = mode;
+    saveSortMode(BOOKMARKS_ITEM_SORT_KEY, bookmarkItemSortMode);
+    refreshBookmarksPanel();
   }
 
   function collectDirectoryPaths(
@@ -1624,7 +1701,10 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (libraryId) {
       ensureLibraryBookmarks(libraryId, t("sidebar.bookmarks.defaultGroup"));
     }
-    bookmarksList.render(libraryId, activePath);
+    bookmarksList.render(libraryId, activePath, {
+      groups: bookmarkGroupSortMode,
+      items: bookmarkItemSortMode,
+    });
     syncBookmarksCollapseExpandButton();
   }
 
@@ -1689,7 +1769,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       }
     }
     if (expandedAny) refreshBookmarksPanel();
-    else bookmarksList.render(libraryId, activePath);
+    else {
+      bookmarksList.render(libraryId, activePath, {
+        groups: bookmarkGroupSortMode,
+        items: bookmarkItemSortMode,
+      });
+    }
 
     queueMicrotask(() => {
       bookmarksList.scrollToPath(matches[0]!.path);
@@ -2682,6 +2767,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     locateBtn.setAttribute("aria-label", t("sidebar.toolbar.locateFile"));
     newGroupBtn.title = t("sidebar.toolbar.newGroup");
     newGroupBtn.setAttribute("aria-label", t("sidebar.toolbar.newGroup"));
+    bookmarksSortBtn.title = t("sidebar.toolbar.sort");
+    bookmarksSortBtn.setAttribute("aria-label", t("sidebar.toolbar.sort"));
     locateBookmarkBtn.title = t("sidebar.toolbar.locateFile");
     locateBookmarkBtn.setAttribute("aria-label", t("sidebar.toolbar.locateFile"));
     updateFilesToolbarState();
@@ -2702,7 +2789,10 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       }
     }
     if (menu.isOpen()) renderLibraryList();
-    if (sortMenu.isOpen()) renderSortMenu();
+    if (sortMenu.isOpen()) {
+      if (sortMenuAnchor === bookmarksSortBtn) renderBookmarksSortMenu();
+      else renderFilesSortMenu();
+    }
     if (activePanel === "search" && searchQuery.trim()) renderSearchResults();
     else if (currentTree.length === 0 && currentWorkspace) {
       renderEmptyHint(t("sidebar.empty.noMarkdown"));

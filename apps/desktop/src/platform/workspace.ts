@@ -201,12 +201,13 @@ async function openWorkspaceByPathTauri(rootPath: string): Promise<WorkspacePick
 }
 
 async function buildTauriTree(rootPath: string): Promise<WorkspaceTreeNode[]> {
-  const { readDir } = await import("@tauri-apps/plugin-fs");
-  return readTauriDirectory(readDir, rootPath, rootPath);
+  const { readDir, stat } = await import("@tauri-apps/plugin-fs");
+  return readTauriDirectory(readDir, stat, rootPath, rootPath);
 }
 
 async function readTauriDirectory(
   readDir: (path: string) => Promise<Array<{ name: string; isDirectory: boolean }>>,
+  stat: (path: string) => Promise<{ mtime: Date | null; birthtime: Date | null }>,
   rootPath: string,
   currentPath: string,
 ): Promise<WorkspaceTreeNode[]> {
@@ -219,13 +220,25 @@ async function readTauriDirectory(
         const fullPath = joinPath(currentPath, entry.name);
         const relativePath = toRelativePath(rootPath, fullPath);
 
+        let mtimeMs: number | undefined;
+        let birthtimeMs: number | undefined;
+        try {
+          const info = await stat(fullPath);
+          mtimeMs = info.mtime?.getTime();
+          birthtimeMs = info.birthtime?.getTime();
+        } catch {
+          /* ignore missing metadata */
+        }
+
         if (entry.isDirectory) {
-          const children = await readTauriDirectory(readDir, rootPath, fullPath);
+          const children = await readTauriDirectory(readDir, stat, rootPath, fullPath);
           return {
             name: entry.name,
             path: relativePath,
             kind: "directory",
             children,
+            mtimeMs,
+            birthtimeMs,
           };
         }
 
@@ -234,6 +247,8 @@ async function readTauriDirectory(
             name: entry.name,
             path: relativePath,
             kind: "file",
+            mtimeMs,
+            birthtimeMs,
           };
         }
 
