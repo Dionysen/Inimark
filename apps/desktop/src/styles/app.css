@@ -983,14 +983,14 @@ body.is-editor-width-resizing * {
 
 .inimark-statusbar {
   position: absolute;
-  right: var(--inimark-space-3);
-  bottom: var(--inimark-space-3);
+  right: var(--inimark-space-1);
+  bottom: var(--inimark-space-1);
   z-index: 12;
   pointer-events: none;
 }
 
 .inimark-statusbar-zone {
-  padding: var(--inimark-space-2);
+  padding: var(--inimark-space-1);
   pointer-events: auto;
 }
 
