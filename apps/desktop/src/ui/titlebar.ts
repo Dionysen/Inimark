@@ -9,7 +9,6 @@ import {
   toggleMaximizeWindow,
 } from "../platform/window-chrome.ts";
 import { getThemeManager } from "../themes/manager.ts";
-import type { AppearanceMode } from "../themes/appearance.ts";
 import { BUILTIN_THEMES } from "../themes/builtin.ts";
 import { builtinThemeLabel } from "../themes/labels.ts";
 import type { ThemeManifest } from "../themes/custom-theme-manager.ts";
@@ -79,8 +78,6 @@ export interface TitleBarOptions {
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
   onClose?: () => void | Promise<void>;
 }
-
-const APPEARANCE_MODES: AppearanceMode[] = ["system", "light", "dark"];
 
 function appThemeLabel(themeId: string, customThemes: ThemeManifest[]): string {
   if ((BUILTIN_THEMES as readonly string[]).includes(themeId)) {
@@ -309,7 +306,7 @@ export function mountTitleBar(
   function renderMoreMenu(): void {
     if (!moreMenu) return;
     const themeManager = getThemeManager();
-    const { appearanceMode } = themeManager.getSnapshot();
+    const { resolvedMode } = themeManager.getSnapshot();
     moreMenu.clear();
     moreMenu.setPath("");
 
@@ -453,18 +450,14 @@ export function mountTitleBar(
       ],
     });
 
-    moreMenu.addSubmenuItem({
+    moreMenu.addItem({
       label: t("settings.theme.appearanceMode"),
       icon: menuIcons.appearance,
-      meta: t(`settings.theme.${appearanceMode}`),
-      items: APPEARANCE_MODES.map((mode) => ({
-        label: t(`settings.theme.${mode}`),
-        checked: appearanceMode === mode,
-        onClick() {
-          themeManager.setAppearanceMode(mode);
-          closeMoreMenu();
-        },
-      })),
+      meta: t(`settings.theme.${resolvedMode}`),
+      onClick() {
+        const { resolvedMode: current } = themeManager.getSnapshot();
+        themeManager.setAppearanceMode(current === "light" ? "dark" : "light");
+      },
     });
   }
 

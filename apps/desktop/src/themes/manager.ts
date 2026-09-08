@@ -5,6 +5,7 @@ import {
   type ResolvedAppearance,
   type ThemePair,
   APPEARANCE_SYNC_EVENT,
+  THEME_CATALOG_SYNC_EVENT,
   DEFAULT_APP_THEME_PAIR,
   DEFAULT_CODE_THEME_PAIR,
   getSystemIsDark,
@@ -85,6 +86,7 @@ class ThemeManager {
   private listeners = new Set<Listener>();
   private mediaQuery: MediaQueryList | null = null;
   private unlistenAppearance: (() => void) | undefined;
+  private unlistenCatalog: (() => void) | undefined;
   private unlistenCss: (() => void) | undefined;
   private unlistenCodeCss: (() => void) | undefined;
   private initialized = false;
@@ -114,6 +116,17 @@ class ThemeManager {
 
   private notify(): void {
     for (const listener of this.listeners) listener();
+  }
+
+  private emitCatalogSync(): void {
+    emit(THEME_CATALOG_SYNC_EVENT, null).catch(() => {});
+  }
+
+  private async refreshCatalogFromDisk(): Promise<void> {
+    await this.refreshCustomThemes();
+    await this.refreshCustomCodeThemes();
+    await this.ensureCustomStylesForActive();
+    this.applyThemes();
   }
 
   private patchState(patch: Partial<AppearanceState>): void {
@@ -151,6 +164,10 @@ class ThemeManager {
       this.notify();
     });
 
+    this.unlistenCatalog = await listen(THEME_CATALOG_SYNC_EVENT, async () => {
+      await this.refreshCatalogFromDisk();
+    });
+
     this.unlistenCss = await listen<ThemeCssPayload>(THEME_CSS_EVENT, (event) => {
       const { id, css, enable } = event.payload;
       this.injectOrUpdateStyle(id, css, enable);
@@ -173,6 +190,7 @@ class ThemeManager {
   destroy(): void {
     this.mediaQuery?.removeEventListener("change", () => {});
     this.unlistenAppearance?.();
+    this.unlistenCatalog?.();
     this.unlistenCss?.();
     this.unlistenCodeCss?.();
     this.listeners.clear();
@@ -262,6 +280,13 @@ class ThemeManager {
         }
       }
       this.customThemes = enriched;
+      const activeIds = new Set(enriched.map((m) => m.id));
+      for (const [id, style] of this.styleElements) {
+        if (!activeIds.has(id)) {
+          style.remove();
+          this.styleElements.delete(id);
+        }
+      }
       this.notify();
     } catch {
       /* ignore */
@@ -310,6 +335,7 @@ class ThemeManager {
     this.injectOrUpdateStyle(manifest.id, css, false);
     emit(THEME_CSS_EVENT, { id: manifest.id, css, enable: false }).catch(() => {});
     this.customThemes = [...this.customThemes, manifest];
+    this.emitCatalogSync();
     this.notify();
     return manifest;
   }
@@ -322,6 +348,7 @@ class ThemeManager {
       this.styleElements.delete(id);
     }
     this.customThemes = this.customThemes.filter((m) => m.id !== id);
+    this.emitCatalogSync();
     const fullId = `custom-${id}`;
     const next = { ...this.state.preferredAppTheme };
     if (next.light === fullId) next.light = DEFAULT_APP_THEME_PAIR.light;
@@ -365,6 +392,7 @@ class ThemeManager {
     const manifest = await renameThemeFs(id, name);
     if (manifest) {
       this.customThemes = this.customThemes.map((m) => (m.id === id ? manifest : m));
+      this.emitCatalogSync();
       this.notify();
     }
   }
@@ -378,6 +406,7 @@ class ThemeManager {
       emit(CODE_THEME_CSS_EVENT, { id: manifest.id, css: expanded, enable: false }).catch(() => {});
     }
     this.customCodeThemes = [...this.customCodeThemes, manifest];
+    this.emitCatalogSync();
     this.notify();
     return manifest;
   }
@@ -386,6 +415,7 @@ class ThemeManager {
     await deleteCodeThemeFile(id);
     document.getElementById(`code-theme-${id}`)?.remove();
     this.customCodeThemes = this.customCodeThemes.filter((m) => m.id !== id);
+    this.emitCatalogSync();
     const next = { ...this.state.preferredCodeTheme };
     if (next.light === id) next.light = DEFAULT_CODE_THEME_PAIR.light;
     if (next.dark === id) next.dark = DEFAULT_CODE_THEME_PAIR.dark;
@@ -425,6 +455,7 @@ class ThemeManager {
       emit(CODE_THEME_CSS_EVENT, { id: manifest.id, css: expanded, enable: false }).catch(() => {});
     }
     this.customCodeThemes = [...this.customCodeThemes, manifest];
+    this.emitCatalogSync();
     this.notify();
     return manifest;
   }
@@ -433,6 +464,7 @@ class ThemeManager {
     const manifest = await renameCodeThemeFs(id, name);
     if (manifest) {
       this.customCodeThemes = this.customCodeThemes.map((m) => (m.id === id ? manifest : m));
+      this.emitCatalogSync();
       this.notify();
     }
   }
@@ -479,6 +511,7 @@ class ThemeManager {
 
     await this.refreshCustomThemes();
     await this.refreshCustomCodeThemes();
+    this.emitCatalogSync();
     this.patchState({
       preferredAppTheme: result.preferredAppTheme,
       preferredCodeTheme: result.preferredCodeTheme,
@@ -505,6 +538,7 @@ class ThemeManager {
     this.injectOrUpdateStyle(manifest.id, css, false);
     emit(THEME_CSS_EVENT, { id: manifest.id, css, enable: false }).catch(() => {});
     this.customThemes = [...this.customThemes, manifest];
+    this.emitCatalogSync();
     this.notify();
     return manifest;
   }

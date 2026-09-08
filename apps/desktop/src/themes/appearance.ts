@@ -44,6 +44,7 @@ export const LEGACY_THEME_KEY = "inimark-theme";
 export const LEGACY_CODE_THEME_KEY = "inimark-code-theme";
 
 export const APPEARANCE_SYNC_EVENT = "appearance-state-changed";
+export const THEME_CATALOG_SYNC_EVENT = "theme-catalog-changed";
 
 export function getSystemIsDark(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
