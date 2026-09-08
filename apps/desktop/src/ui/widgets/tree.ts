@@ -1,3 +1,9 @@
+import {
+  treeFileIcon,
+  treeFolderIcon,
+  treeFolderOpenIcon,
+} from "./icon-button.ts";
+
 export type TreeItemKind = "file" | "directory";
 
 export interface TreeItemOptions {
@@ -8,10 +14,29 @@ export interface TreeItemOptions {
   active?: boolean;
   selected?: boolean;
   expanded?: boolean;
+  /** Show folder/file icon before the label. */
+  showIcons?: boolean;
   /** Marks the row as movable (pointer DnD). Does not enable HTML5 drag. */
   draggable?: boolean;
   onClick?: (event: MouseEvent) => void;
   onContextMenu?: (event: MouseEvent) => void;
+}
+
+function appendKindIcon(
+  row: HTMLElement,
+  kind: TreeItemKind,
+  expanded?: boolean,
+): void {
+  const icon = document.createElement("span");
+  icon.className = "inimark-tree-kind-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML =
+    kind === "directory"
+      ? expanded
+        ? treeFolderOpenIcon()
+        : treeFolderIcon()
+      : treeFileIcon();
+  row.append(icon);
 }
 
 export function createTreeHost(ariaLabel = "Files"): HTMLElement {
@@ -65,7 +90,9 @@ export function createTreeItem(options: TreeItemOptions): HTMLElement {
     const label = document.createElement("span");
     label.className = "inimark-tree-label";
     label.textContent = options.label;
-    row.append(chevron, label);
+    row.append(chevron);
+    if (options.showIcons) appendKindIcon(row, "directory", options.expanded);
+    row.append(label);
   } else {
     const spacer = document.createElement("span");
     spacer.className = "inimark-tree-icon-spacer";
@@ -73,7 +100,9 @@ export function createTreeItem(options: TreeItemOptions): HTMLElement {
     const label = document.createElement("span");
     label.className = "inimark-tree-label";
     label.textContent = options.label;
-    row.append(spacer, label);
+    row.append(spacer);
+    if (options.showIcons) appendKindIcon(row, "file");
+    row.append(label);
   }
 
   if (options.draggable) {

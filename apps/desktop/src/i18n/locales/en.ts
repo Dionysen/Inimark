@@ -298,6 +298,9 @@ export const en: Dictionary = {
       autoHideLibraryBar: "Auto-hide library bar",
       autoHideLibraryBarDesc:
         "Show the floating library chrome only while hovering the sidebar.",
+      showFileTreeIcons: "File tree icons",
+      showFileTreeIconsDesc:
+        "Show folder and file icons before names in the explorer tree.",
       sidebarTabs: "Sidebar tabs",
       sidebarTabsDesc:
         "Drag icons to reorder tabs or move them between the left and right sidebars.",

@@ -93,7 +93,7 @@ import {
   sidebarTabLabel,
   type SidebarTabId,
 } from "./sidebar/tab-layout.ts";
-import { loadSettings } from "./settings/store.ts";
+import { loadSettings, type AppSettings } from "./settings/store.ts";
 
 export type SidebarPanelId = SidebarTabId;
 
@@ -141,6 +141,8 @@ export interface SidebarController {
   setSidebarOpen(open: boolean): void;
   getPanels(): Partial<Record<SidebarTabId, HTMLElement>>;
   setTabs(ids: SidebarTabId[], panels: Partial<Record<SidebarTabId, HTMLElement>>): void;
+  /** Apply explorer-related settings (e.g. file tree icons). */
+  applyExplorerSettings(settings: Pick<AppSettings, "showFileTreeIcons">): void;
   activatePanel(id: SidebarTabId): void;
   hasTab(id: SidebarTabId): boolean;
   notifyPanelShown(id: SidebarTabId): void;
@@ -375,6 +377,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   markNoDrag(treeHost);
 
   let filesSortMode = loadFilesSortMode();
+  let showFileTreeIcons = loadSettings().showFileTreeIcons;
   let bookmarkGroupSortMode = loadSortMode(
     BOOKMARKS_GROUP_SORT_KEY,
     BOOKMARK_GROUP_SORT_OPTIONS,
@@ -1240,6 +1243,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           depth,
           expanded: isOpen,
           selected,
+          showIcons: showFileTreeIcons,
           draggable: true,
           onClick(event) {
             handleTreeClick(event, node);
@@ -1268,6 +1272,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         depth,
         active: node.path === activePath,
         selected,
+        showIcons: showFileTreeIcons,
         draggable: true,
         onClick(event) {
           handleTreeClick(event, node);
@@ -2841,6 +2846,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     setTabs(ids, panels) {
       applyTabs(ids, panels);
+    },
+    applyExplorerSettings(next) {
+      if (showFileTreeIcons === next.showFileTreeIcons) return;
+      showFileTreeIcons = next.showFileTreeIcons;
+      if (currentTree.length > 0) rerender();
     },
     activatePanel(id) {
       if (!tabIds.includes(id)) return;

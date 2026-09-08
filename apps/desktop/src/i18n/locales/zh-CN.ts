@@ -293,6 +293,8 @@ export const zhCN: Dictionary = {
       menuDensityDesc: "列表与菜单的内边距和控制尺寸。",
       autoHideLibraryBar: "自动隐藏文库栏",
       autoHideLibraryBarDesc: "仅在鼠标悬停侧栏时显示浮动文库栏。",
+      showFileTreeIcons: "文件树图标",
+      showFileTreeIconsDesc: "在文件树中为文件夹和文件名称前显示图标。",
       sidebarTabs: "侧栏标签",
       sidebarTabsDesc: "拖动图标调整左右侧栏中的标签顺序与位置。",
       sidebarTabsLeft: "左侧",

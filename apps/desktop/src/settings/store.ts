@@ -104,6 +104,8 @@ export interface AppSettings {
   leftSidebarTabs: SidebarTabId[];
   /** Ordered tabs shown in the right sidebar. */
   rightSidebarTabs: SidebarTabId[];
+  /** Show folder/file icons before names in the explorer tree. */
+  showFileTreeIcons: boolean;
   /** Frosted glass for menus. Floating library chrome is always frosted. */
   glassEffect: boolean;
   image: ImageSettings;
@@ -169,6 +171,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoHideLibraryBar: false,
   leftSidebarTabs: [...DEFAULT_LEFT_SIDEBAR_TABS],
   rightSidebarTabs: [...DEFAULT_RIGHT_SIDEBAR_TABS],
+  showFileTreeIcons: false,
   glassEffect: false,
   image: { ...DEFAULT_IMAGE_SETTINGS },
   graph: { ...DEFAULT_GRAPH_SETTINGS },
@@ -384,6 +387,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     leftSidebarTabs: tabLayout.left,
     rightSidebarTabs: tabLayout.right,
+    showFileTreeIcons: Boolean(
+      parsed.showFileTreeIcons ?? DEFAULT_SETTINGS.showFileTreeIcons,
+    ),
     glassEffect: Boolean(parsed.glassEffect ?? DEFAULT_SETTINGS.glassEffect),
     image: {
       storageMode: isImageStorageMode(image.storageMode)

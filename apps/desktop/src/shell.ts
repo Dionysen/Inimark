@@ -120,6 +120,7 @@ export function mountShell(
     const panels = collectPanels();
     sidebar.setTabs(next.leftSidebarTabs, panels);
     rightSidebar.setTabs(next.rightSidebarTabs, panels);
+    sidebar.applyExplorerSettings(next);
   }
 
   rightSidebar.onActivateTab((id) => {

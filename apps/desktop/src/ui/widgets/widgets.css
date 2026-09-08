@@ -1028,6 +1028,25 @@ html[data-glass="true"] .inimark-select-panel {
   flex-shrink: 0;
 }
 
+.inimark-tree-kind-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  color: var(--inimark-muted-fg);
+  opacity: 0.85;
+}
+
+.inimark-tree-kind-icon svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.inimark-tree-item--file .inimark-tree-kind-icon {
+  opacity: 0.75;
+}
+
 .inimark-tree-label {
   overflow: hidden;
   text-overflow: ellipsis;

@@ -101,6 +101,9 @@ const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
     "locale",
     "sidebar",
     "tabs",
+    "file tree",
+    "icon",
+    "explorer",
   ],
   theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight", "menu"],
   shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
@@ -749,6 +752,20 @@ export function mountSettingsView(
         t("settings.appearance.autoHideLibraryBar"),
         t("settings.appearance.autoHideLibraryBarDesc"),
         autoHide.el,
+      ),
+    );
+
+    const fileTreeIcons = createToggle({
+      checked: settings.showFileTreeIcons,
+      onChange(checked) {
+        update({ showFileTreeIcons: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.appearance.showFileTreeIcons"),
+        t("settings.appearance.showFileTreeIconsDesc"),
+        fileTreeIcons.el,
       ),
     );
 
