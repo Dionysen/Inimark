@@ -117,14 +117,6 @@
   border-left: 0.25em solid var(--md-alert-color);
   border-radius: 6px;
 }
-.ProseMirror blockquote.md-alert::before {
-  content: attr(data-alert-source);
-  display: block;
-  margin: 0 0 8px;
-  color: var(--md-alert-color);
-  font-weight: 600;
-  line-height: 1.5;
-}
 .ProseMirror blockquote.md-alert-note {
   --md-alert-color: #59636e;
   --md-alert-bg: rgba(175, 184, 193, 0.12);

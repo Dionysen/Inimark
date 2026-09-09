@@ -155,13 +155,9 @@
   border-left: 4px solid var(--md-alert-color);
   border-radius: var(--radius-code-block, 4px);
 }
-.ProseMirror blockquote.md-alert::before {
-  content: attr(data-alert-source);
-  display: block;
-  margin: 0 0 0.35em;
-  color: var(--md-alert-color);
+
+.ProseMirror blockquote.md-alert::after {
   font-size: 0.9em;
-  font-weight: 600;
   line-height: 1.35;
 }
 .ProseMirror blockquote.md-alert > :first-child { margin-top: 0; }

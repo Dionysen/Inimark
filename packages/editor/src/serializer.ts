@@ -7,6 +7,7 @@ import {
   collectMarkDelims,
 } from "./features/index.ts";
 import { schema } from "./schema.ts";
+import { calloutMarkerPrefixLength } from "./callouts.ts";
 import { stripTrailingEmptyParagraphs } from "./trailing-sentinel.ts";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,6 +71,8 @@ export class SerializerState {
   pmPos = 0;
   markers: InternalMarker[];
   config: SerializerConfig;
+  /** Leading chars in the next textblock that must not be backslash-escaped. */
+  inlineNoEscapePrefix = 0;
 
   constructor(config: SerializerConfig, markers: readonly PosMarker[] = []) {
     this.config = config;
@@ -252,6 +255,9 @@ export class SerializerState {
         } else if (insideEmStrong(blockOffset)) {
           this.out += ch; // raw — char already encodes md source
           sawNonNewline = true;
+        } else if (blockOffset < this.inlineNoEscapePrefix) {
+          this.out += ch; // callout marker — keep `[!TYPE]` literal in source
+          sawNonNewline = true;
         } else {
           const needBlockEsc = atBlockStart && !sawNonNewline;
           this.out += needBlockEsc
@@ -276,6 +282,7 @@ export type BlockHandler = (state: SerializerState, node: PMNode) => void;
 const coreBlockHandlers: Record<string, BlockHandler> = {
   paragraph: (state, node) => {
     state.renderInline(node);
+    state.inlineNoEscapePrefix = 0;
     state.closeBlock(node);
   },
 
@@ -299,8 +306,18 @@ const coreBlockHandlers: Record<string, BlockHandler> = {
   blockquote: (state, node) => {
     const source = node.attrs.alertSource as string | null;
     state.wrapBlock("> ", null, node, () => {
-      if (node.attrs.alert && source) state.write(`[!${source}]\n`);
+      if (node.attrs.alert && source) {
+        state.write(`[!${source}]\n`);
+        state.renderBlockChildren(node);
+        return;
+      }
+      const first = node.firstChild;
+      if (first?.type.name === "paragraph") {
+        const prefix = calloutMarkerPrefixLength(first.textContent);
+        if (prefix > 0) state.inlineNoEscapePrefix = prefix;
+      }
       state.renderBlockChildren(node);
+      state.inlineNoEscapePrefix = 0;
     });
   },
 

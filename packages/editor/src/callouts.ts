@@ -25,6 +25,12 @@ const CALLOUT_MARKER_LINE_RE = new RegExp(
   "i",
 );
 
+/** Char length of a leading `[!TYPE]` marker in blockquote text (0 if none). */
+export function calloutMarkerPrefixLength(text: string): number {
+  const match = CALLOUT_MARKER_RE.exec(text);
+  return match ? match[0].length : 0;
+}
+
 const CALLOUT_SOURCE_LABEL: Record<CalloutKind, string> = {
   note: "NOTE",
   tip: "TIP",

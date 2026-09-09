@@ -105,6 +105,26 @@ describe("callouts", () => {
     expect(serialize(doc)).toBe("> \\[not a callout\\]\n> body");
   });
 
+  test("pending callout marker in blockquote is not backslash-escaped on serialize", () => {
+    const doc = schema.nodes.doc.create(null, [
+      schema.nodes.blockquote.create(null, [
+        schema.nodes.paragraph.create(null, schema.text("[!WARNING]")),
+      ]),
+    ]);
+
+    expect(serialize(doc)).toBe("> [!WARNING]");
+  });
+
+  test("wrong-order image brackets in blockquote are still escaped", () => {
+    const doc = schema.nodes.doc.create(null, [
+      schema.nodes.blockquote.create(null, [
+        schema.nodes.paragraph.create(null, schema.text("![WARNING]")),
+      ]),
+    ]);
+
+    expect(serialize(doc)).toBe("> !\\[WARNING\\]");
+  });
+
   test("DOM serializer exposes stable callout attributes", () => {
     const fragment = DOMSerializer.fromSchema(schema).serializeFragment(
       parse("> [!TIP]\n> body").content,
