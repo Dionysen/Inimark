@@ -1,8 +1,11 @@
+import { showLibraryAddedToast } from "./added-toast.ts";
 import { upsertLibrary } from "./store.ts";
 import { isTauri } from "../platform/env.ts";
 
 export interface LibraryDropTargetOptions {
   onAdded?: (rootPath: string) => void;
+  /** Toast anchor (e.g. main column or settings main wrap). */
+  toastHost?: HTMLElement;
 }
 
 interface RegisteredTarget {
@@ -58,8 +61,11 @@ async function addLibraryFromPath(
 ): Promise<boolean> {
   const dir = await firstDirectoryFromPaths([rootPath]);
   if (!dir) return false;
-  upsertLibrary(dir);
+  const { record, created } = upsertLibrary(dir);
   options?.onAdded?.(dir);
+  if (created && options?.toastHost) {
+    showLibraryAddedToast(options.toastHost, record.rootName);
+  }
   return true;
 }
 

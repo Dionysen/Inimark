@@ -90,11 +90,15 @@ export function getLastLibraryId(): string | null {
   return loadLibrariesConfig().lastLibraryId;
 }
 
-export function upsertLibrary(rootPath: string, rootName?: string): LibraryRecord {
+export function upsertLibrary(
+  rootPath: string,
+  rootName?: string,
+): { record: LibraryRecord; created: boolean } {
   const config = loadLibrariesConfig();
   const id = libraryIdFromPath(rootPath);
   const now = Date.now();
   const existing = config.libraries.find((library) => library.id === id);
+  const created = !existing;
   const record: LibraryRecord = existing
     ? {
         ...existing,
@@ -118,7 +122,7 @@ export function upsertLibrary(rootPath: string, rootName?: string): LibraryRecor
     libraries,
     lastLibraryId: id,
   });
-  return record;
+  return { record, created };
 }
 
 export function renameLibrary(id: string, rootName: string): LibraryRecord | null {

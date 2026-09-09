@@ -18,7 +18,7 @@ export type Workspace = {
 };
 
 export type WorkspacePickResult =
-  | { status: "picked"; workspace: Workspace }
+  | { status: "picked"; workspace: Workspace; libraryCreated: boolean }
   | { status: "cancelled" }
   | { status: "unsupported" }
   | { status: "error"; message: string };

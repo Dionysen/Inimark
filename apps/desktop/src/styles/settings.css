@@ -1,3 +1,5 @@
+@import "./status-toast.css";
+
 .inimark-settings-shell {
   display: flex;
   flex-direction: column;
@@ -190,6 +192,7 @@ html.platform-windows .inimark-settings-nav-topbar {
 /* ── Right column ────────────────────────────────────────────────── */
 
 .inimark-settings-main-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -563,22 +566,6 @@ html.platform-windows .inimark-settings-nav-topbar {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.inimark-settings-library-rename-input {
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 0.1rem 0.35rem;
-  border: 1px solid var(--inimark-accent);
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
-  background: var(--inimark-input-bg, var(--inimark-content-bg));
-  color: var(--inimark-fg);
-  font: inherit;
-  font-size: var(--inimark-control-font-size, 13px);
-  font-weight: 600;
-  line-height: 1.35;
-  outline: none;
 }
 
 .inimark-settings-library-rename-btn {

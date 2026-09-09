@@ -73,8 +73,8 @@ async function pickWorkspaceBrowser(): Promise<WorkspacePickResult> {
   };
   const libraryId = libraryIdFromPath(workspace.rootPath);
   await saveDirectoryHandle(libraryId, picked.directoryHandle);
-  upsertLibrary(workspace.rootPath, workspace.rootName);
-  return { status: "picked", workspace };
+  const { created: libraryCreated } = upsertLibrary(workspace.rootPath, workspace.rootName);
+  return { status: "picked", workspace, libraryCreated };
 }
 
 async function openWorkspaceByPathBrowser(rootPath: string): Promise<WorkspacePickResult> {
@@ -99,8 +99,8 @@ async function openWorkspaceByPathBrowser(rootPath: string): Promise<WorkspacePi
       rootName: tree.name,
       tree: toWorkspaceTree(tree.children),
     };
-    upsertLibrary(workspace.rootPath, workspace.rootName);
-    return { status: "picked", workspace };
+    const { created: libraryCreated } = upsertLibrary(workspace.rootPath, workspace.rootName);
+    return { status: "picked", workspace, libraryCreated };
   } catch (error) {
     return {
       status: "error",
@@ -190,8 +190,8 @@ async function openWorkspaceByPathTauri(rootPath: string): Promise<WorkspacePick
       rootName: fileNameFromPath(rootPath),
       tree,
     };
-    upsertLibrary(rootPath, workspace.rootName);
-    return { status: "picked", workspace };
+    const { created: libraryCreated } = upsertLibrary(rootPath, workspace.rootName);
+    return { status: "picked", workspace, libraryCreated };
   } catch (error) {
     return {
       status: "error",

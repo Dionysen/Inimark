@@ -583,6 +583,13 @@ export const en: Dictionary = {
       add: "Add library",
       empty: "No libraries saved yet. Add a folder to get started.",
       rename: "Rename library",
+      renameTitle: "Rename library",
+      renameLabel: "Library name",
+      renamePlaceholder: "Enter a display name",
+      added: 'Library "{{name}}" added',
+      removeTitle: "Remove library?",
+      removeMessage:
+        'Remove "{{name}}" from saved libraries? Files on disk will not be deleted.',
     },
     shortcuts: {
       resetAll: "Reset All",

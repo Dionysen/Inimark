@@ -570,7 +570,10 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   settingsBtn.innerHTML = settingsIcon();
 
   libraryWrap.append(libraryBar, settingsBtn);
+  const libraryToastHost =
+    host.parentElement?.querySelector<HTMLElement>(".inimark-main") ?? host;
   const unmountLibraryDrop = mountLibraryDropTarget(libraryBar, {
+    toastHost: libraryToastHost,
     onAdded: () => {
       savedLibraries = listLibraries();
       renderLibraryList();

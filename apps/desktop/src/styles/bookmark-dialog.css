@@ -8,11 +8,15 @@
   word-break: break-all;
 }
 
+.inimark-confirm-dialog-title + .inimark-bookmark-dialog-field {
+  margin-top: var(--inimark-space-2);
+}
+
 .inimark-bookmark-dialog-field {
   display: flex;
   flex-direction: column;
   gap: var(--inimark-space-2);
-  margin-bottom: var(--inimark-space-3);
+  margin-bottom: var(--inimark-space-4);
 }
 
 .inimark-bookmark-dialog-label {

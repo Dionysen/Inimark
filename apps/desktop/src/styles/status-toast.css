@@ -1,0 +1,62 @@
+/* Brief status toasts (font zoom, library added, …) */
+.inimark-status-toast,
+.inimark-font-size-indicator {
+  position: absolute;
+  top: calc(var(--inimark-titlebar-height) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: var(--bg-primary, var(--inimark-content-bg));
+  border: 1px solid var(--border, var(--inimark-border));
+  color: var(--text-primary, var(--inimark-fg));
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: inimark-status-toast-in 0.15s ease;
+}
+
+.inimark-status-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(24rem, calc(100% - 2rem));
+}
+
+.inimark-status-toast__icon-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.inimark-status-toast__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.inimark-status-toast__icon--success {
+  color: #22c55e;
+}
+
+.inimark-status-toast__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes inimark-status-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

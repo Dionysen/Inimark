@@ -11,6 +11,7 @@ import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
 import "./styles/app.css";
 import { t } from "./i18n/index.ts";
+import { showLibraryAddedToast } from "./libraries/added-toast.ts";
 import {
   getLastLibraryId,
   getLibraryById,
@@ -650,6 +651,9 @@ export function mountApp(host: HTMLElement): AppController {
     }
 
     if (!(await confirmDiscardChanges())) return;
+    if (picked.libraryCreated) {
+      showLibraryAddedToast(shell.mainColumn, picked.workspace.rootName);
+    }
     persistLibrarySession();
     await flushWorkspace();
     await activateWorkspace(picked.workspace, { restoreSession: false });

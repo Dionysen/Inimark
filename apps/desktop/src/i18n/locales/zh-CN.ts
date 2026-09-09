@@ -573,6 +573,12 @@ export const zhCN: Dictionary = {
       add: "添加文库",
       empty: "尚未保存文库。添加一个文件夹开始使用。",
       rename: "重命名文库",
+      renameTitle: "重命名文库",
+      renameLabel: "文库名称",
+      renamePlaceholder: "输入显示名称",
+      added: "已添加文库「{{name}}」",
+      removeTitle: "移除文库？",
+      removeMessage: "从已保存文库中移除「{{name}}」？磁盘上的文件不会被删除。",
     },
     shortcuts: {
       resetAll: "全部重置",

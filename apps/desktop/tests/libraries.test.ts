@@ -18,8 +18,8 @@ describe("libraries store", () => {
   });
 
   test("upserts libraries and tracks last opened", () => {
-    const first = upsertLibrary("C:/notes", "notes");
-    const second = upsertLibrary("D:/docs", "docs");
+    const first = upsertLibrary("C:/notes", "notes").record;
+    const second = upsertLibrary("D:/docs", "docs").record;
 
     expect(listLibraries().map((library) => library.rootName)).toEqual(["docs", "notes"]);
     expect(getLastLibraryId()).toBe(second.id);
@@ -30,7 +30,7 @@ describe("libraries store", () => {
   });
 
   test("persists per-library session state", () => {
-    const library = upsertLibrary("/vault", "vault");
+    const library = upsertLibrary("/vault", "vault").record;
     saveLibrarySession(library.id, {
       activeFilePath: "notes/intro.md",
       expandedDirs: ["notes", "archive"],
@@ -54,7 +54,7 @@ describe("libraries store", () => {
   });
 
   test("removes libraries and their session state", () => {
-    const library = upsertLibrary("/vault", "vault");
+    const library = upsertLibrary("/vault", "vault").record;
     saveLibrarySession(library.id, {
       activeFilePath: "readme.md",
       expandedDirs: [],
@@ -68,7 +68,8 @@ describe("libraries store", () => {
   });
 
   test("renames libraries and preserves custom names on reopen", () => {
-    const library = upsertLibrary("/vault/notes", "notes");
+    const { record: library, created } = upsertLibrary("/vault/notes", "notes");
+    expect(created).toBe(true);
     const renamed = renameLibrary(library.id, "My Notes");
     expect(renamed?.rootName).toBe("My Notes");
     expect(listLibraries().find((item) => item.id === library.id)?.rootName).toBe(

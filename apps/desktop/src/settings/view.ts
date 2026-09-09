@@ -1,13 +1,15 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
+import { showLibraryAddedToast } from "../libraries/added-toast.ts";
 import { mountLibraryDropTarget } from "../libraries/drop-target.ts";
+import { promptRenameLibrary } from "../libraries/rename-dialog.ts";
 import {
+  getLibraryById,
   listLibraries,
   removeLibrary,
   renameLibrary,
-  upsertLibrary,
-  type LibraryRecord,
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
+import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
 import {
@@ -116,55 +118,6 @@ const SETTINGS_NAV_WIDTH_MAX = 420;
 const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
 const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
 const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
-
-function startLibraryRename(library: LibraryRecord, nameEl: HTMLElement): void {
-  const input = document.createElement("input");
-  input.type = "text";
-  input.className = "inimark-settings-library-rename-input";
-  input.value = library.rootName;
-  input.setAttribute("aria-label", t("settings.libraries.rename"));
-  nameEl.replaceWith(input);
-  input.focus();
-  input.select();
-
-  let finished = false;
-
-  function restore(name: string): void {
-    nameEl.textContent = name;
-    if (input.isConnected) input.replaceWith(nameEl);
-  }
-
-  function commit(): void {
-    if (finished) return;
-    finished = true;
-    const next = input.value.trim();
-    if (!next || next === library.rootName) {
-      restore(library.rootName);
-      return;
-    }
-    const updated = renameLibrary(library.id, next);
-    restore(updated?.rootName ?? library.rootName);
-  }
-
-  function cancel(): void {
-    if (finished) return;
-    finished = true;
-    restore(library.rootName);
-  }
-
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commit();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      cancel();
-    }
-  });
-  input.addEventListener("blur", () => {
-    commit();
-  });
-}
 
 function createSectionTitle(title: string): HTMLElement {
   const el = document.createElement("h3");
@@ -1322,11 +1275,14 @@ export function mountSettingsView(
         void (async () => {
           const picked = await pickWorkspace();
           if (picked.status !== "picked") return;
-          upsertLibrary(picked.workspace.rootPath, picked.workspace.rootName);
+          if (picked.libraryCreated) {
+            showLibraryAddedToast(mainWrap, picked.workspace.rootName);
+          }
           renderContent();
         })();
       });
       libraryDropCleanup = mountLibraryDropTarget(addBtn, {
+        toastHost: mainWrap,
         onAdded: () => renderContent(),
       });
       body.append(addBtn);
@@ -1364,7 +1320,16 @@ export function mountSettingsView(
             label: t("settings.libraries.rename"),
             title: t("settings.libraries.rename"),
             html: menuIcons.rename,
-            onClick: () => startLibraryRename(library, nameEl),
+            onClick: () => {
+              void (async () => {
+                const current = getLibraryById(library.id);
+                if (!current) return;
+                const nextName = await promptRenameLibrary(current.rootName);
+                if (!nextName || nextName === current.rootName) return;
+                renameLibrary(current.id, nextName);
+                renderContent();
+              })();
+            },
           });
           renameBtn.classList.add("inimark-settings-library-rename-btn");
           actions.append(renameBtn);
@@ -1374,8 +1339,18 @@ export function mountSettingsView(
             variant: "ghost",
             onClick: () => {
               void (async () => {
-                removeLibrary(library.id);
-                await removeLibraryAccess(library.id);
+                const current = getLibraryById(library.id);
+                if (!current) return;
+                const confirmed = await promptConfirm({
+                  title: t("settings.libraries.removeTitle"),
+                  message: t("settings.libraries.removeMessage", { name: current.rootName }),
+                  confirmLabel: t("common.remove"),
+                  cancelLabel: t("common.cancel"),
+                  danger: true,
+                });
+                if (!confirmed) return;
+                removeLibrary(current.id);
+                await removeLibraryAccess(current.id);
                 renderContent();
               })();
             },
