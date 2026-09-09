@@ -950,10 +950,17 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 
 .inimark-statusbar {
   position: absolute;
-  right: var(--inimark-space-1);
   bottom: var(--inimark-space-1);
   z-index: 12;
   pointer-events: none;
+}
+
+.inimark-statusbar--right {
+  right: var(--inimark-space-1);
+}
+
+.inimark-statusbar--left {
+  left: var(--inimark-space-1);
 }
 
 .inimark-statusbar-zone {
@@ -968,6 +975,10 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   gap: var(--inimark-space-2);
   opacity: 1;
   transition: opacity 180ms ease;
+}
+
+.inimark-statusbar--left .inimark-statusbar-chrome {
+  align-items: flex-start;
 }
 
 .inimark-statusbar--auto-hide .inimark-statusbar-chrome {

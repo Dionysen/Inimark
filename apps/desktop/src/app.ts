@@ -124,7 +124,10 @@ export function mountApp(host: HTMLElement): AppController {
       canAddBookmark: () => Boolean(workspace && activeFilePath),
       onAddBookmark: () => void shell.sidebar.bookmarkActiveFile(),
       isSourceMode: () => editor.isSourceMode(),
-      onToggleSourceMode: () => editor.toggleSource(),
+      onToggleSourceMode: () => {
+        editor.toggleSource();
+        wordCount?.syncChrome();
+      },
     },
     immersiveMenuActions: {
       getAutoHideTitlebar: () => settings.autoHideTitlebar,
@@ -183,6 +186,7 @@ export function mountApp(host: HTMLElement): AppController {
     },
     onContentReplaced: () => {
       wordCount?.scheduleUpdate();
+      wordCount?.syncChrome();
     },
   });
   editor.setTypewriterMode(settings.typewriterMode);

@@ -38,8 +38,8 @@ export const zhCN: Dictionary = {
       copyRelativePath: "相对路径",
       copyAbsolutePath: "绝对路径",
       addBookmark: "添加收藏",
-      wysiwygMode: "所见即所得",
       sourceMode: "源码模式",
+      exitSourceMode: "退出源码模式",
       immersiveEditing: "沉浸编辑",
       autoHideTitlebar: "自动隐藏顶栏",
       autoHideStatusbar: "自动隐藏状态栏",
@@ -174,6 +174,8 @@ export const zhCN: Dictionary = {
     fontZoom: "{{size}}px",
     scrollToTop: "到最上方",
     scrollToBottom: "到最下方",
+    sourceMode: "源码模式",
+    exitSourceMode: "退出源码模式",
     ctx: {
       cut: "剪切",
       copy: "复制",

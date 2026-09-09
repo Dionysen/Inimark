@@ -378,7 +378,7 @@ export function mountTitleBar(
       moreMenu.addDivider();
       moreMenu.addItem({
         label: moreActions.isSourceMode()
-          ? t("titlebar.more.wysiwygMode")
+          ? t("titlebar.more.exitSourceMode")
           : t("titlebar.more.sourceMode"),
         icon: menuIcons.sourceMode,
         meta: formatShortcutDisplay(["Ctrl", "/"]),

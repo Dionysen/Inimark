@@ -77,15 +77,35 @@ const SCROLL_BOTTOM_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>`;
 const TYPEWRITER_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 8h12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 8v8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 16h12"/></svg>`;
+const SOURCE_MODE_ICON =
+  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m8 9-4 3 4 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m16 9 4 3-4 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M13 6 11 18"/></svg>`;
 
 export function mountWordCount(options: WordCountOptions): WordCountController {
   const { host, editor, getSettings, onWordCountChange, onTypewriterModeChange } = options;
 
   const root = document.createElement("div");
-  root.className = "inimark-statusbar";
+  root.className = "inimark-statusbar inimark-statusbar--right";
 
   const zone = document.createElement("div");
   zone.className = "inimark-statusbar-zone";
+
+  const leftRoot = document.createElement("div");
+  leftRoot.className = "inimark-statusbar inimark-statusbar--left";
+
+  const leftZone = document.createElement("div");
+  leftZone.className = "inimark-statusbar-zone";
+
+  const leftChrome = document.createElement("div");
+  leftChrome.className = "inimark-statusbar-chrome";
+
+  const sourceModeBtn = document.createElement("button");
+  sourceModeBtn.type = "button";
+  sourceModeBtn.className = "inimark-statusbar-scroll-btn";
+  sourceModeBtn.innerHTML = SOURCE_MODE_ICON;
+
+  leftChrome.append(sourceModeBtn);
+  leftZone.append(leftChrome);
+  leftRoot.append(leftZone);
 
   const chrome = document.createElement("div");
   chrome.className = "inimark-statusbar-chrome";
@@ -161,7 +181,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   chrome.append(scrollRow, footer);
   zone.append(chrome);
   root.append(zone);
-  host.append(root);
+  host.append(leftRoot, root);
 
   let open = false;
   let updateTimer: ReturnType<typeof setTimeout> | null = null;
@@ -197,6 +217,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     scrollBottomBtn.setAttribute("aria-label", t("editor.scrollToBottom"));
     typewriterBtn.title = t("settings.editor.typewriter");
     typewriterBtn.setAttribute("aria-label", t("settings.editor.typewriter"));
+    syncSourceModeButton();
     countBtn.title = t("wordCount.toggle");
     countBtn.setAttribute("aria-label", t("wordCount.toggle"));
     title.textContent = t("wordCount.panelTitle");
@@ -229,34 +250,52 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     typewriterBtn.setAttribute("aria-pressed", String(on));
   }
 
+  function syncSourceModeButton(): void {
+    const on = editor.isSourceMode();
+    sourceModeBtn.classList.toggle("is-active", on);
+    sourceModeBtn.setAttribute("aria-pressed", String(on));
+    const sourceLabel = on ? t("editor.exitSourceMode") : t("editor.sourceMode");
+    sourceModeBtn.title = sourceLabel;
+    sourceModeBtn.setAttribute("aria-label", sourceLabel);
+  }
+
   function updateRevealState(): void {
     const autoHide = getSettings().autoHideStatusbar;
     root.classList.toggle("inimark-statusbar--auto-hide", autoHide);
+    leftRoot.classList.toggle("inimark-statusbar--auto-hide", autoHide);
     if (!autoHide) {
       zone.classList.remove("is-revealed");
+      leftZone.classList.remove("is-revealed");
       return;
     }
-    if (open || zone.matches(":hover")) {
-      zone.classList.add("is-revealed");
-    } else {
-      zone.classList.remove("is-revealed");
-    }
+    const revealed = open || zone.matches(":hover") || leftZone.matches(":hover");
+    zone.classList.toggle("is-revealed", revealed);
+    leftZone.classList.toggle("is-revealed", revealed);
   }
 
   function syncChrome(): void {
     syncTypewriterButton();
+    syncSourceModeButton();
     updateRevealState();
   }
 
-  zone.addEventListener("pointerenter", () => {
+  function onZonePointerEnter(): void {
     if (!getSettings().autoHideStatusbar) return;
     zone.classList.add("is-revealed");
-  });
+    leftZone.classList.add("is-revealed");
+  }
 
-  zone.addEventListener("pointerleave", () => {
+  function onZonePointerLeave(): void {
     if (!getSettings().autoHideStatusbar || open) return;
+    if (zone.matches(":hover") || leftZone.matches(":hover")) return;
     zone.classList.remove("is-revealed");
-  });
+    leftZone.classList.remove("is-revealed");
+  }
+
+  zone.addEventListener("pointerenter", onZonePointerEnter);
+  zone.addEventListener("pointerleave", onZonePointerLeave);
+  leftZone.addEventListener("pointerenter", onZonePointerEnter);
+  leftZone.addEventListener("pointerleave", onZonePointerLeave);
 
   scrollTopBtn.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -274,6 +313,13 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     editor.setTypewriterMode(next);
     onTypewriterModeChange?.(next);
     syncTypewriterButton();
+  });
+
+  sourceModeBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    editor.toggleSource();
+    syncSourceModeButton();
+    scheduleUpdate();
   });
 
   const onSelectionChange = () => {
@@ -308,6 +354,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
       unsubscribeLocale();
       closePanel();
       root.remove();
+      leftRoot.remove();
     },
   };
 }
