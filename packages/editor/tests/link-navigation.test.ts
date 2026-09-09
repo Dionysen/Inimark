@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
@@ -81,6 +81,47 @@ describe("link navigation", () => {
     } finally {
       setWikiLinkBridge(null);
       cleanup();
+    }
+  });
+
+  test("unresolved wiki links show a create hint on ctrl hover", async () => {
+    vi.useFakeTimers();
+    setWikiLinkBridge({
+      resolveNote: () => null,
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote: vi.fn(),
+      createNote: vi.fn(),
+    });
+
+    const { host, view, cleanup } = mountView("See [[jqui]] here.");
+    try {
+      const wiki = host.querySelector<HTMLElement>(".wiki-link-widget.is-unresolved");
+      expect(wiki).not.toBeNull();
+
+      view.someProp("handleDOMEvents", (handlers) => {
+        handlers?.mouseover?.(
+          view,
+          {
+            target: wiki,
+            ctrlKey: true,
+            metaKey: false,
+            clientX: 0,
+            clientY: 0,
+          } as MouseEvent,
+        );
+        return false;
+      });
+
+      await vi.advanceTimersByTimeAsync(500);
+      const missing = document.querySelector(".wiki-link-preview-missing");
+      expect(missing?.textContent).toContain("jqui");
+      expect(missing?.textContent).toContain("未创建，点击以创建");
+    } finally {
+      vi.useRealTimers();
+      setWikiLinkBridge(null);
+      cleanup();
+      document.querySelector(".wiki-link-preview-missing")?.remove();
     }
   });
 

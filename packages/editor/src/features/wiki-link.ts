@@ -491,12 +491,22 @@ function wikiInteractionPlugin(): Plugin {
     }
 
     const bridge = getWikiLinkBridge();
-    if (!bridge?.previewNote) return false;
+    if (!bridge) return false;
 
     const hit = wikiNoteFromPointer(view, probe as MouseEvent);
-    if (!hit || hit.unresolved) {
+    if (!hit) {
       if (previewEl) return false;
       cancelPendingPreview();
+      return false;
+    }
+
+    if (hit.unresolved) {
+      if (!bridge.createNote && !bridge.openNote) {
+        if (previewEl) return false;
+        cancelPendingPreview();
+        return false;
+      }
+    } else if (!bridge.previewNote) {
       return false;
     }
 
@@ -518,7 +528,11 @@ function wikiInteractionPlugin(): Plugin {
             ".wiki-link-widget, .wiki-embed-note",
           ) as HTMLElement | null)
         : null;
-    showPreview(note, previewAnchorFromProbe(view, probe, wiki));
+    showPreview(
+      note,
+      previewAnchorFromProbe(view, probe, wiki),
+      hit.unresolved,
+    );
     return false;
   }
 
@@ -540,11 +554,55 @@ function wikiInteractionPlugin(): Plugin {
     });
   }
 
-  function showPreview(note: string, anchor: HTMLElement): void {
+  function wikiNoteDisplayName(note: string): string {
+    return note.split("/").pop() || note;
+  }
+
+  function mountMissingPreview(note: string, anchor: HTMLElement): void {
     const bridge = getWikiLinkBridge();
-    if (!bridge?.previewNote) return;
+    if (!bridge) return;
+
+    previewView?.destroy();
+    previewView = null;
+    previewEl?.remove();
+    previewEl = document.createElement("div");
+    previewEl.className = "wiki-link-preview wiki-link-preview-missing";
+    previewEl.setAttribute("role", "dialog");
+
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "wiki-link-preview-missing-action";
+    const label = wikiNoteDisplayName(note);
+    action.textContent = `“${label}” 未创建，点击以创建。`;
+    action.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (bridge.openNote) bridge.openNote(note);
+      else bridge.createNote?.(note);
+      hidePreview();
+    });
+    previewEl.append(action);
+    document.body.append(previewEl);
+    activeNote = note;
+    positionPreview(anchor);
+    requestAnimationFrame(() => positionPreview(anchor));
+  }
+
+  function showPreview(
+    note: string,
+    anchor: HTMLElement,
+    unresolved = false,
+  ): void {
+    const bridge = getWikiLinkBridge();
+    if (!bridge) return;
     clearHoverTimer();
     hoverTimer = setTimeout(() => {
+      if (activeNote !== note) return;
+      if (unresolved) {
+        mountMissingPreview(note, anchor);
+        return;
+      }
+      if (!bridge.previewNote) return;
       void (async () => {
         try {
           const text = await bridge.previewNote!(note);

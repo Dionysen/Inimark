@@ -1019,6 +1019,33 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   outline: none;
 }
 
+.wiki-link-preview-missing {
+  width: auto;
+  max-width: min(24rem, calc(100vw - 1.5rem));
+  max-height: none;
+  padding: 0.55rem 0.8rem;
+  cursor: default;
+}
+
+.wiki-link-preview-missing-action {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wiki-link-preview-missing-action:hover {
+  color: var(--accent, #3b82f6);
+}
+
 /* ─── callout title icons ─────────────────────────────────────────── */
 /* GitHub Octicons (MIT) — icon + label row for md-alert blockquotes. */
 
