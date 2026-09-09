@@ -20,7 +20,11 @@ import {
 import { isTauri } from "./platform/env.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
-import { openSettingsWindow } from "./settings/window.ts";
+import { isSettingsSection } from "./settings/search-index.ts";
+import {
+  openSettingsWindow,
+  SETTINGS_NAVIGATE_SECTION_KEY,
+} from "./settings/window.ts";
 
 initPlatform();
 const bootSettings = loadSettings();
@@ -49,6 +53,22 @@ void initThemeManager().then(() => {
     },
   });
 
+  function applyPendingSettingsSection(): void {
+    const hashSection = location.hash.replace(/^#/, "");
+    if (isSettingsSection(hashSection)) {
+      view.navigateToSection(hashSection);
+      history.replaceState(null, "", location.pathname + location.search);
+      return;
+    }
+
+    const stored = localStorage.getItem(SETTINGS_NAVIGATE_SECTION_KEY);
+    if (!stored || !isSettingsSection(stored)) return;
+    localStorage.removeItem(SETTINGS_NAVIGATE_SECTION_KEY);
+    view.navigateToSection(stored);
+  }
+
+  applyPendingSettingsSection();
+
   function syncSettingsFromExternal(): void {
     applySettings(loadSettings());
     view.refresh();
@@ -60,6 +80,12 @@ void initThemeManager().then(() => {
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       view.refresh();
+    }
+    if (event.key === SETTINGS_NAVIGATE_SECTION_KEY && event.newValue) {
+      if (isSettingsSection(event.newValue)) {
+        view.navigateToSection(event.newValue);
+        localStorage.removeItem(SETTINGS_NAVIGATE_SECTION_KEY);
+      }
     }
   });
 

@@ -118,6 +118,7 @@ export const en: Dictionary = {
     library: {
       add: "Add library",
       close: "Close library",
+      manage: "Manage libraries",
       noneSaved: "No saved libraries",
       heading: "Libraries",
     },

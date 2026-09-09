@@ -3,6 +3,18 @@ use tauri::{AppHandle, Manager};
 const SETTINGS_WINDOW_LABEL: &str = "settings";
 const MAIN_WINDOW_LABEL: &str = "main";
 
+/// Show and focus the settings window without hiding it when already visible.
+#[tauri::command]
+pub fn show_settings_window(app: AppHandle) -> Result<(), String> {
+    let settings = app
+        .get_webview_window(SETTINGS_WINDOW_LABEL)
+        .ok_or_else(|| "Settings window is not configured".to_string())?;
+
+    settings.show().map_err(|e| e.to_string())?;
+    settings.set_focus().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// Show the settings window when hidden, otherwise hide it and refocus main.
 #[tauri::command]
 pub fn toggle_settings_window(app: AppHandle) -> Result<(), String> {

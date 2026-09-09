@@ -118,6 +118,7 @@ export const zhCN: Dictionary = {
     library: {
       add: "添加文库",
       close: "关闭文库",
+      manage: "管理文库",
       noneSaved: "暂无已保存文库",
       heading: "文库",
     },

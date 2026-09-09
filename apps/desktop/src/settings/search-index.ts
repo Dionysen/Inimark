@@ -13,6 +13,21 @@ export type SettingsSection =
   | "graph"
   | "about";
 
+const SETTINGS_SECTIONS: SettingsSection[] = [
+  "editor",
+  "appearance",
+  "theme",
+  "shortcuts",
+  "libraries",
+  "image",
+  "graph",
+  "about",
+];
+
+export function isSettingsSection(value: string): value is SettingsSection {
+  return (SETTINGS_SECTIONS as string[]).includes(value);
+}
+
 export interface SettingSearchItem {
   id: string;
   section: SettingsSection;

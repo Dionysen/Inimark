@@ -1350,6 +1350,21 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   transform: scale(0.98);
 }
 
+.inimark-library-menu .inimark-menu__section {
+  min-height: 0;
+}
+
+.inimark-library-menu__scroll {
+  flex: 0 1 auto;
+  max-height: 50vh;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.inimark-library-menu__actions {
+  flex-shrink: 0;
+}
+
 .inimark-sidebar-dock .inimark-menu {
   left: 0;
   right: 0;

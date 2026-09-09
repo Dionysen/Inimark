@@ -81,6 +81,7 @@ const FOCUS_SEARCH_KEYS = ["Ctrl", "F"];
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
+  navigateToSection(section: SettingsSection): void;
   refresh(): void;
   destroy(): void;
 }
@@ -349,6 +350,15 @@ export function mountSettingsView(
       row.classList.add("is-search-highlight");
       window.setTimeout(() => row.classList.remove("is-search-highlight"), 2200);
     });
+  }
+
+  function navigateToSection(section: SettingsSection): void {
+    searchQuery = "";
+    search.setValue("");
+    activeSection = section;
+    pendingHighlightId = null;
+    renderNav();
+    renderContent();
   }
 
   function navigateToSetting(item: SettingSearchItem): void {
@@ -1410,6 +1420,7 @@ export function mountSettingsView(
     onChange(handler) {
       onChangeHandler = handler;
     },
+    navigateToSection,
     refresh() {
       settings = loadSettings();
       search.input.placeholder = t("settings.searchPlaceholder");

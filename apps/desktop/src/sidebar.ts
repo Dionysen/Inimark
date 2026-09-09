@@ -162,6 +162,7 @@ export interface SidebarController {
   onFileSelect(handler: (path: string, options?: FileSelectOptions) => void | Promise<void>): void;
   onOpenFolder(handler: () => void | Promise<void>): void;
   onOpenSettings(handler: () => void): void;
+  onManageLibraries(handler: () => void): void;
   onCloseLibrary(handler: () => void): void;
   onSwitchLibrary(handler: (libraryId: string) => void | Promise<void>): void;
   onExpandedDirsChange(handler: (dirs: string[]) => void): void;
@@ -582,6 +583,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   dock.append(libraryWrap);
 
   const menu = createMenu();
+  menu.el.classList.add("inimark-library-menu");
   menu.setDismissAnchors([libraryBar]);
   dock.append(menu.el);
 
@@ -615,6 +617,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     fileSelect: (_path: string, _options?: FileSelectOptions): void | Promise<void> => {},
     openFolder: (): void | Promise<void> => {},
     openSettings: (): void => {},
+    manageLibraries: (): void => {},
     closeLibrary: (): void => {},
     switchLibrary: (_libraryId: string): void | Promise<void> => {},
     expandedDirsChange: (_dirs: string[]): void => {},
@@ -752,11 +755,16 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     menu.clear();
     menu.setPath("");
 
+    const listGroup = menu.appendGroup(
+      "inimark-library-menu__scroll inimark-scrollbar",
+    );
+    const actionsGroup = menu.appendGroup("inimark-library-menu__actions");
+
     if (savedLibraries.length === 0) {
-      menu.setEmpty(t("sidebar.library.noneSaved"));
+      menu.setEmptyIn(listGroup, t("sidebar.library.noneSaved"));
     } else {
       for (const library of savedLibraries) {
-        menu.addItem({
+        menu.addItemTo(listGroup, {
           label: library.rootName,
           icon: menuIcons.library,
           meta: library.rootPath,
@@ -770,8 +778,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       }
     }
 
-    menu.addDivider();
-    menu.addItem({
+    menu.addDividerTo(actionsGroup);
+    menu.addItemTo(actionsGroup, {
       label: t("sidebar.library.add"),
       icon: menuIcons.folderPlus,
       onClick() {
@@ -779,12 +787,20 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         void handlers.openFolder();
       },
     });
-    menu.addItem({
+    menu.addItemTo(actionsGroup, {
       label: t("sidebar.library.close"),
       icon: menuIcons.close,
       onClick() {
         closeMenu();
         handlers.closeLibrary();
+      },
+    });
+    menu.addItemTo(actionsGroup, {
+      label: t("sidebar.library.manage"),
+      icon: menuIcons.settings,
+      onClick() {
+        closeMenu();
+        handlers.manageLibraries();
       },
     });
   }
@@ -2894,6 +2910,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     onOpenSettings(handler) {
       handlers.openSettings = handler;
+    },
+    onManageLibraries(handler) {
+      handlers.manageLibraries = handler;
     },
     onCloseLibrary(handler) {
       handlers.closeLibrary = handler;

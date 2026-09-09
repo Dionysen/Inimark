@@ -48,6 +48,11 @@ export interface MenuController {
   addSubmenuItem(options: MenuSubmenuOptions): HTMLElement;
   addDivider(): void;
   setEmpty(text: string): void;
+  /** Append a grouped block inside the menu body (e.g. scrollable library list). */
+  appendGroup(className: string): HTMLElement;
+  addItemTo(target: HTMLElement, options: MenuItemOptions): HTMLButtonElement;
+  addDividerTo(target: HTMLElement): void;
+  setEmptyIn(target: HTMLElement, text: string): void;
   destroy(): void;
 }
 
@@ -376,6 +381,28 @@ export function createMenu(): MenuController {
       empty.textContent = text;
       body.append(empty);
     },
+    appendGroup(className) {
+      const group = document.createElement("div");
+      group.className = className;
+      body.append(group);
+      return group;
+    },
+    addItemTo(target, options) {
+      const btn = buildMenuItemButton(options);
+      target.append(btn);
+      return btn;
+    },
+    addDividerTo(target) {
+      const divider = document.createElement("div");
+      divider.className = "inimark-menu__divider";
+      target.append(divider);
+    },
+    setEmptyIn(target, text) {
+      const empty = document.createElement("p");
+      empty.className = "inimark-menu__empty";
+      empty.textContent = text;
+      target.append(empty);
+    },
     destroy() {
       if (open) setOpen(false);
       destroyFlyouts();
@@ -397,6 +424,7 @@ export const menuIcons = {
   bookmark: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
   library: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 4.5h3.25v15H5.25A1.25 1.25 0 0 1 4 18.25V4.5z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7.25 4.5H11v15H7.25"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11.75 5.75 20 4v14.5l-8.25 1.75V5.75z"/></svg>`,
   close: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 6 6 18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m6 6 12 12"/></svg>`,
+  settings: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/></svg>`,
   back: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7"/></svg>`,
   forward: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m12 5 7 7-7 7"/></svg>`,
   appearance: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77"/></svg>`,

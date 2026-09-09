@@ -751,6 +751,9 @@ export function mountApp(host: HTMLElement): AppController {
   shell.sidebar.onFileSelect((path, options) => void openWorkspaceFile(path, options));
   shell.sidebar.onOpenFolder(() => void openFolder());
   shell.sidebar.onOpenSettings(() => void openSettings());
+  shell.sidebar.onManageLibraries(() => {
+    void openSettingsWindow({ section: "libraries" });
+  });
   shell.sidebar.onSwitchLibrary((libraryId) => void switchLibrary(libraryId));
   shell.sidebar.onExpandedDirsChange(() => persistLibrarySession());
   shell.sidebar.onEntriesMoved((pairs) => {
