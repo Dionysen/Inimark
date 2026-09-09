@@ -26,7 +26,7 @@ function shortcutGroupLabel(group: string): string {
   }
 }
 
-function shortcutActionLabel(id: string, fallback: string): string {
+export function shortcutActionLabel(id: string, fallback: string): string {
   switch (id) {
     case "save":
       return t("settings.shortcuts.save");
@@ -106,6 +106,7 @@ export function renderShortcutsPanel(host: HTMLElement): () => void {
       for (const item of items) {
         const row = document.createElement("div");
         row.className = "inimark-settings-shortcut-item";
+        row.dataset.settingId = `shortcut.${item.id}`;
 
         const label = document.createElement("span");
         label.className = "inimark-settings-shortcut-label";

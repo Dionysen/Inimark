@@ -210,6 +210,7 @@ export const zhCN: Dictionary = {
   settings: {
     searchPlaceholder: "搜索设置…",
     noMatch: "未找到匹配的设置",
+    focusSearchHint: "聚焦搜索",
     language: {
       title: "语言",
       desc: "菜单、设置与对话框的界面语言。",

@@ -795,6 +795,9 @@ export function renderThemePanel(
     const root = document.createElement("div");
     root.className = "settings-section";
 
+    const modeBlock = document.createElement("div");
+    modeBlock.dataset.settingId = "theme.appearanceMode";
+
     const modeTitle = document.createElement("h3");
     modeTitle.className = "settings-section-title";
     modeTitle.textContent = t("settings.theme.appearanceMode");
@@ -824,6 +827,8 @@ export function renderThemePanel(
       modeToggle.append(btn);
     }
 
+    modeBlock.append(modeTitle, modeHint, modeToggle);
+
     const modeStatus = document.createElement("p");
     modeStatus.className = "settings-hint appearance-mode-status";
     const resolvedLabel =
@@ -833,10 +838,12 @@ export function renderThemePanel(
       app: resolveAppDisplayName(theme, customThemes),
       code: resolveCodeDisplayName(codeTheme, customCodeThemes),
     });
+    modeBlock.append(modeStatus);
 
     const glassRow = document.createElement("div");
     glassRow.className = "inimark-settings-row";
     glassRow.style.margin = "4px 0 16px";
+    glassRow.dataset.settingId = "theme.glassEffect";
     const glassMeta = document.createElement("div");
     glassMeta.className = "inimark-settings-row-meta";
     const glassTitle = document.createElement("div");
@@ -861,6 +868,7 @@ export function renderThemePanel(
     kindTabs.className = "theme-kind-tabs";
     kindTabs.setAttribute("role", "tablist");
     kindTabs.setAttribute("aria-label", t("settings.theme.themeKind"));
+    kindTabs.dataset.settingId = "theme.appTheme";
 
     for (const [tab, labelKey] of [
       ["app", "settings.theme.appTheme"],
@@ -870,6 +878,7 @@ export function renderThemePanel(
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.setAttribute("aria-selected", String(themeKindTab === tab));
+      btn.dataset.themeKindTab = tab;
       btn.className = `theme-kind-tab${themeKindTab === tab ? " active" : ""}`;
       btn.textContent = t(labelKey);
       btn.addEventListener("click", () => {
@@ -884,7 +893,7 @@ export function renderThemePanel(
     slotHint.style.cssText = "margin-top: 8px; margin-bottom: 12px";
     slotHint.textContent = t("settings.theme.slotHint", { mode: resolvedLabel });
 
-    root.append(modeTitle, modeHint, modeToggle, modeStatus, glassRow, kindTabs, slotHint);
+    root.append(modeBlock, glassRow, kindTabs, slotHint);
 
     if (themeKindTab === "app") {
       const grid = document.createElement("div");

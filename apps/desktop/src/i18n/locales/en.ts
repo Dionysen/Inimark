@@ -210,6 +210,7 @@ export const en: Dictionary = {
   settings: {
     searchPlaceholder: "Search settings…",
     noMatch: "No matching settings",
+    focusSearchHint: "Focus Search",
     language: {
       title: "Language",
       desc: "Interface language for menus, settings, and dialogs.",

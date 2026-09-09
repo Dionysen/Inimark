@@ -63,6 +63,41 @@ html.platform-windows .inimark-settings-nav-topbar {
   flex-shrink: 0;
 }
 
+.inimark-settings-nav-footer {
+  flex-shrink: 0;
+  padding: var(--inimark-space-2) var(--inimark-space-3) var(--inimark-space-3);
+  border-top: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-nav-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--inimark-muted-fg);
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.inimark-settings-nav-hint kbd {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 0.12rem 0.38rem;
+  border: 1px solid var(--inimark-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--inimark-fg) 6%, transparent);
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-mono);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.inimark-settings-nav-hint-label {
+  min-width: 0;
+}
+
 .inimark-settings-nav-empty {
   display: flex;
   flex-direction: column;
@@ -76,6 +111,79 @@ html.platform-windows .inimark-settings-nav-topbar {
 
 .inimark-settings-nav-empty[hidden] {
   display: none;
+}
+
+.inimark-settings-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1);
+  max-width: 42rem;
+}
+
+.inimark-settings-search-empty {
+  margin: 0;
+  padding: var(--inimark-space-6) 0;
+  color: var(--inimark-muted-fg);
+  text-align: center;
+}
+
+.inimark-settings-search-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  margin: 0;
+  padding: var(--inimark-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--inimark-radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-settings-search-result:hover,
+.inimark-settings-search-result:focus-visible {
+  border-color: var(--inimark-border);
+  background: var(--inimark-bg-hover, color-mix(in srgb, var(--inimark-fg) 4%, transparent));
+  outline: none;
+}
+
+.inimark-settings-search-result-title {
+  font-weight: 500;
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.inimark-settings-search-result-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-search-result-section {
+  margin-top: 0.15rem;
+  font-size: 11px;
+  color: var(--inimark-muted-fg);
+  opacity: 0.85;
+}
+
+.inimark-settings-row.is-search-highlight,
+.inimark-settings-shortcut-item.is-search-highlight,
+[data-setting-id].is-search-highlight {
+  animation: inimark-settings-search-highlight 2.2s ease-out;
+}
+
+@keyframes inimark-settings-search-highlight {
+  0%,
+  15% {
+    background: color-mix(in srgb, var(--inimark-accent) 18%, transparent);
+  }
+
+  100% {
+    background: transparent;
+  }
 }
 
 /* ── Right column ────────────────────────────────────────────────── */

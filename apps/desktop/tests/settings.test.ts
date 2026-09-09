@@ -82,6 +82,48 @@ describe("settings view", () => {
     expect(visible.length).toBe(1);
     expect(visible[0]?.dataset.section).toBe("theme");
 
+    expect(host.querySelector(".inimark-settings-search-results")).not.toBeNull();
+
+    const firstResult = host.querySelector<HTMLButtonElement>(
+      ".inimark-settings-search-result",
+    );
+    expect(firstResult).not.toBeNull();
+    firstResult!.click();
+
+    expect(search!.value).toBe("");
+    expect(host.querySelector(".inimark-settings-search-results")).toBeNull();
+    expect(
+      host.querySelector<HTMLButtonElement>('.inimark-nav-item[data-section="theme"]')
+        ?.classList.contains("is-active"),
+    ).toBe(true);
+
+    view.destroy();
+    host.remove();
+  });
+
+  test("shows search shortcut hint and focuses search on Ctrl+F", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+
+    const view = mountSettingsView(host);
+    const hint = host.querySelector(".inimark-settings-nav-hint");
+    expect(hint).not.toBeNull();
+    expect(hint?.querySelector("kbd")?.textContent).toContain("F");
+
+    const search = host.querySelector<HTMLInputElement>(".inimark-search .inimark-field__input");
+    search?.blur();
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "f",
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    expect(document.activeElement).toBe(search);
+
     view.destroy();
     host.remove();
   });

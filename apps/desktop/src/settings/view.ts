@@ -55,6 +55,16 @@ import { createSidebarTabsControl } from "./sidebar-tabs-control.ts";
 import {
   normalizeSidebarTabLayout,
 } from "../sidebar/tab-layout.ts";
+import {
+  type SettingsSection,
+  type SettingSearchItem,
+  searchSettings,
+  sectionHasSearchMatch,
+} from "./search-index.ts";
+import { isShortcutRecordingActive } from "../shortcuts/guard.ts";
+import { formatShortcutDisplay, matchShortcut } from "../shortcuts/store.ts";
+
+const FOCUS_SEARCH_KEYS = ["Ctrl", "F"];
 
 export interface SettingsViewController {
   onChange(handler: (settings: AppSettings) => void): void;
@@ -65,63 +75,6 @@ export interface SettingsViewController {
 export interface SettingsViewOptions {
   onChange?: (settings: AppSettings) => void;
 }
-
-type SettingsSection =
-  | "editor"
-  | "appearance"
-  | "theme"
-  | "shortcuts"
-  | "libraries"
-  | "image"
-  | "graph"
-  | "about";
-
-const SECTION_SEARCH_TERMS: Record<SettingsSection, string[]> = {
-  editor: [
-    "font",
-    "size",
-    "width",
-    "layout",
-    "typography",
-    "autosave",
-    "format",
-    "typewriter",
-    "statusbar",
-    "titlebar",
-    "line height",
-  ],
-  appearance: [
-    "density",
-    "ui font",
-    "library bar",
-    "interface",
-    "chrome",
-    "menu",
-    "language",
-    "locale",
-    "sidebar",
-    "tabs",
-    "file tree",
-    "icon",
-    "explorer",
-  ],
-  theme: ["theme", "color", "dark", "light", "style", "syntax", "highlight", "menu"],
-  shortcuts: ["keyboard", "hotkey", "keymap", "binding"],
-  libraries: ["folder", "vault", "workspace", "files"],
-  image: ["image", "assets", "paste", "filename", "upload"],
-  graph: [
-    "graph",
-    "force",
-    "repulsion",
-    "node",
-    "link",
-    "arrow",
-    "图谱",
-    "排斥",
-    "向心力",
-  ],
-  about: ["version", "license", "info", "github", "update", "upgrade"],
-};
 
 const SECTION_ICONS: Record<SettingsSection, () => string> = {
   editor: settingsEditorIcon,
@@ -137,12 +90,10 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
 function sectionMeta(id: SettingsSection): {
   title: string;
   subtitle: string;
-  searchTerms: string[];
 } {
   return {
     title: t(`settings.nav.${id}`),
     subtitle: t(`settings.subtitle.${id}`),
-    searchTerms: SECTION_SEARCH_TERMS[id],
   };
 }
 
@@ -155,15 +106,6 @@ const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
 const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
 const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
 
-function sectionMatches(id: SettingsSection, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const meta = sectionMeta(id);
-  if (meta.title.toLowerCase().includes(q)) return true;
-  if (meta.subtitle.toLowerCase().includes(q)) return true;
-  return meta.searchTerms.some((term) => term.includes(q) || q.includes(term));
-}
-
 function createSectionTitle(title: string): HTMLElement {
   const el = document.createElement("h3");
   el.className = "inimark-settings-section-title";
@@ -175,9 +117,11 @@ function createRow(
   title: string,
   description: string,
   control: HTMLElement,
+  settingId?: string,
 ): HTMLElement {
   const row = document.createElement("div");
   row.className = "inimark-settings-row";
+  if (settingId) row.dataset.settingId = settingId;
   const meta = document.createElement("div");
   meta.className = "inimark-settings-row-meta";
   const h = document.createElement("div");
@@ -204,6 +148,7 @@ export function mountSettingsView(
   let settings = loadSettings();
   let activeSection: SettingsSection = "editor";
   let searchQuery = "";
+  let pendingHighlightId: string | null = null;
   let onChangeHandler: (settings: AppSettings) => void =
     options?.onChange ?? (() => {});
   let navWidth = loadPersistedWidth(
@@ -235,17 +180,19 @@ export function mountSettingsView(
     onInput(value) {
       searchQuery = value;
       renderNav();
+      renderContent();
     },
   });
 
-  const navList = createNavList();
+  search.input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const first = searchSettings(searchQuery)[0];
+    if (!first) return;
+    event.preventDefault();
+    navigateToSetting(first.item);
+  });
 
-  const navEmpty = document.createElement("div");
-  navEmpty.className = "inimark-settings-nav-empty";
-  navEmpty.hidden = true;
-  const navEmptyLabel = document.createElement("span");
-  navEmptyLabel.textContent = t("settings.noMatch");
-  navEmpty.append(navEmptyLabel);
+  const navList = createNavList();
 
   const sectionIds: SettingsSection[] = [
     "editor",
@@ -275,8 +222,41 @@ export function mountSettingsView(
     navList.append(btn);
   }
 
-  navBody.append(search.el, navList, navEmpty);
-  nav.append(navTopbar, navBody);
+  navBody.append(search.el, navList);
+
+  const navFooter = document.createElement("div");
+  navFooter.className = "inimark-settings-nav-footer";
+
+  const searchHint = document.createElement("p");
+  searchHint.className = "inimark-settings-nav-hint";
+
+  const searchHintKbd = document.createElement("kbd");
+  const searchHintLabel = document.createElement("span");
+  searchHintLabel.className = "inimark-settings-nav-hint-label";
+
+  function renderSearchHint(): void {
+    searchHintKbd.textContent = formatShortcutDisplay(FOCUS_SEARCH_KEYS).replace(
+      /\+/g,
+      "-",
+    );
+    searchHintLabel.textContent = t("settings.focusSearchHint");
+  }
+
+  renderSearchHint();
+  searchHint.append(searchHintKbd, searchHintLabel);
+  navFooter.append(searchHint);
+  nav.append(navTopbar, navBody, navFooter);
+
+  function onFocusSearchKeyDown(event: KeyboardEvent): void {
+    if (!matchShortcut(event, FOCUS_SEARCH_KEYS)) return;
+    if (isShortcutRecordingActive()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    search.focus();
+    search.input.select();
+  }
+
+  window.addEventListener("keydown", onFocusSearchKeyDown, true);
 
   const mainWrap = document.createElement("div");
   mainWrap.className = "inimark-settings-main-wrap";
@@ -319,16 +299,101 @@ export function mountSettingsView(
   function renderNav(): void {
     let visible = 0;
     for (const [id, btn] of navButtons) {
-      const match = sectionMatches(id, searchQuery);
+      const match = sectionHasSearchMatch(id, searchQuery);
       btn.hidden = !match;
-      btn.classList.toggle("is-active", id === activeSection);
+      btn.classList.toggle(
+        "is-active",
+        searchQuery.trim().length === 0 && id === activeSection,
+      );
       setNavItemLabel(btn, sectionMeta(id).title);
       if (match) visible += 1;
     }
     const querying = searchQuery.trim().length > 0;
     navList.hidden = querying && visible === 0;
-    navEmpty.hidden = !(querying && visible === 0);
-    navEmptyLabel.textContent = t("settings.noMatch");
+  }
+
+  function settingLabel(item: SettingSearchItem): string {
+    return item.getTitle?.() ?? (item.titleKey ? t(item.titleKey) : "");
+  }
+
+  function settingDescription(item: SettingSearchItem): string {
+    return item.getDescription?.() ?? (item.descKey ? t(item.descKey) : "");
+  }
+
+  function highlightSettingRow(id: string): void {
+    requestAnimationFrame(() => {
+      if (id === "theme.codeTheme") {
+        content.querySelector<HTMLButtonElement>('[data-theme-kind-tab="code"]')?.click();
+      }
+
+      let row = content.querySelector<HTMLElement>(`[data-setting-id="${id}"]`);
+      if (!row && id === "theme.codeTheme") {
+        row = content.querySelector<HTMLElement>(".theme-kind-tabs");
+      }
+      if (!row) return;
+
+      const graphGroup = row.closest<HTMLElement>(".inimark-graph-settings-group");
+      if (graphGroup?.classList.contains("is-collapsed")) {
+        graphGroup
+          .querySelector<HTMLButtonElement>(".inimark-graph-settings-group-header")
+          ?.click();
+      }
+
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+      row.classList.add("is-search-highlight");
+      window.setTimeout(() => row.classList.remove("is-search-highlight"), 2200);
+    });
+  }
+
+  function navigateToSetting(item: SettingSearchItem): void {
+    searchQuery = "";
+    search.setValue("");
+    activeSection = item.section;
+    pendingHighlightId = item.id;
+    renderNav();
+    renderContent();
+  }
+
+  function renderSearchResults(body: HTMLElement): void {
+    const matches = searchSettings(searchQuery);
+    const results = document.createElement("div");
+    results.className = "inimark-settings-search-results";
+
+    if (matches.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "inimark-settings-search-empty";
+      empty.textContent = t("settings.noMatch");
+      results.append(empty);
+      body.append(results);
+      return;
+    }
+
+    for (const { item } of matches) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "inimark-settings-search-result";
+
+      const title = document.createElement("div");
+      title.className = "inimark-settings-search-result-title";
+      title.textContent = settingLabel(item);
+
+      const desc = document.createElement("div");
+      desc.className = "inimark-settings-search-result-desc";
+      const description = settingDescription(item);
+      if (description) desc.textContent = description;
+
+      const section = document.createElement("div");
+      section.className = "inimark-settings-search-result-section";
+      section.textContent = sectionMeta(item.section).title;
+
+      btn.append(title);
+      if (description) btn.append(desc);
+      btn.append(section);
+      btn.addEventListener("click", () => navigateToSetting(item));
+      results.append(btn);
+    }
+
+    body.append(results);
   }
 
   function update(partial: Partial<AppSettings>): void {
@@ -378,6 +443,7 @@ export function mountSettingsView(
         t("settings.editor.editorFont"),
         t("settings.editor.editorFontDesc"),
         editorFont.el,
+        "editor.editorFont",
       ),
     );
 
@@ -395,6 +461,7 @@ export function mountSettingsView(
         t("settings.editor.codeFont"),
         t("settings.editor.codeFontDesc"),
         codeFont.el,
+        "editor.codeFont",
       ),
     );
 
@@ -416,6 +483,7 @@ export function mountSettingsView(
         t("settings.editor.fontSize"),
         t("settings.editor.fontSizeDesc"),
         fontSize.el,
+        "editor.fontSize",
       ),
     );
 
@@ -437,6 +505,7 @@ export function mountSettingsView(
         t("settings.editor.codeFontSize"),
         t("settings.editor.codeFontSizeDesc"),
         codeFontSize.el,
+        "editor.codeFontSize",
       ),
     );
 
@@ -458,6 +527,7 @@ export function mountSettingsView(
         t("settings.editor.lineHeight"),
         t("settings.editor.lineHeightDesc"),
         lineHeight.el,
+        "editor.lineHeight",
       ),
     );
 
@@ -479,6 +549,7 @@ export function mountSettingsView(
         t("settings.editor.paragraphSpacing"),
         t("settings.editor.paragraphSpacingDesc"),
         paragraphSpacing.el,
+        "editor.paragraphSpacing",
       ),
     );
 
@@ -500,6 +571,7 @@ export function mountSettingsView(
         t("settings.editor.codeLineHeight"),
         t("settings.editor.codeLineHeightDesc"),
         codeLineHeight.el,
+        "editor.codeLineHeight",
       ),
     );
 
@@ -521,6 +593,7 @@ export function mountSettingsView(
         t("settings.editor.editorWidth"),
         t("settings.editor.editorWidthDesc"),
         editorWidth.el,
+        "editor.editorWidth",
       ),
     );
 
@@ -538,6 +611,7 @@ export function mountSettingsView(
         t("settings.editor.typewriter"),
         t("settings.editor.typewriterDesc"),
         typewriter.el,
+        "editor.typewriter",
       ),
     );
 
@@ -553,6 +627,7 @@ export function mountSettingsView(
         t("settings.editor.autoHideStatusbar"),
         t("settings.editor.autoHideStatusbarDesc"),
         autoHideStatusbar.el,
+        "editor.autoHideStatusbar",
       ),
     );
 
@@ -568,6 +643,7 @@ export function mountSettingsView(
         t("settings.editor.autoHideTitlebar"),
         t("settings.editor.autoHideTitlebarDesc"),
         autoHideTitlebar.el,
+        "editor.autoHideTitlebar",
       ),
     );
 
@@ -585,6 +661,7 @@ export function mountSettingsView(
         t("settings.editor.autoSave"),
         t("settings.editor.autoSaveDesc"),
         autoSave.el,
+        "editor.autoSave",
       ),
     );
 
@@ -605,6 +682,7 @@ export function mountSettingsView(
         t("settings.editor.linkUpdateOnMove"),
         t("settings.editor.linkUpdateOnMoveDesc"),
         linkUpdate.el,
+        "editor.linkUpdateOnMove",
       ),
     );
 
@@ -620,6 +698,7 @@ export function mountSettingsView(
         t("settings.editor.formatOnSave"),
         t("settings.editor.formatOnSaveDesc"),
         formatOnSave.el,
+        "editor.formatOnSave",
       ),
     );
 
@@ -636,6 +715,7 @@ export function mountSettingsView(
         t("settings.editor.cjkSpacing"),
         t("settings.editor.cjkSpacingDesc"),
         cjk.el,
+        "editor.cjkSpacing",
       ),
     );
 
@@ -650,6 +730,7 @@ export function mountSettingsView(
         t("settings.editor.trimTrailing"),
         t("settings.editor.trimTrailingDesc"),
         trim.el,
+        "editor.trimTrailing",
       ),
     );
 
@@ -664,6 +745,7 @@ export function mountSettingsView(
         t("settings.editor.finalNewline"),
         t("settings.editor.finalNewlineDesc"),
         newline.el,
+        "editor.finalNewline",
       ),
     );
 
@@ -678,6 +760,7 @@ export function mountSettingsView(
         t("settings.editor.collapseBlank"),
         t("settings.editor.collapseBlankDesc"),
         blanks.el,
+        "editor.collapseBlank",
       ),
     );
   }
@@ -702,6 +785,7 @@ export function mountSettingsView(
         t("settings.language.title"),
         t("settings.language.desc"),
         localeSelect.el,
+        "appearance.locale",
       ),
     );
 
@@ -719,6 +803,7 @@ export function mountSettingsView(
         t("settings.appearance.uiFont"),
         t("settings.appearance.uiFontDesc"),
         uiFont.el,
+        "appearance.uiFont",
       ),
     );
 
@@ -738,6 +823,7 @@ export function mountSettingsView(
         t("settings.appearance.menuDensity"),
         t("settings.appearance.menuDensityDesc"),
         density.el,
+        "appearance.menuDensity",
       ),
     );
 
@@ -752,6 +838,7 @@ export function mountSettingsView(
         t("settings.appearance.autoHideLibraryBar"),
         t("settings.appearance.autoHideLibraryBarDesc"),
         autoHide.el,
+        "appearance.autoHideLibraryBar",
       ),
     );
 
@@ -766,6 +853,7 @@ export function mountSettingsView(
         t("settings.appearance.showFileTreeIcons"),
         t("settings.appearance.showFileTreeIconsDesc"),
         fileTreeIcons.el,
+        "appearance.showFileTreeIcons",
       ),
     );
 
@@ -782,6 +870,7 @@ export function mountSettingsView(
         });
       },
     });
+    tabsControl.el.dataset.settingId = "appearance.sidebarTabs";
     body.append(tabsControl.el);
   }
 
@@ -802,6 +891,7 @@ export function mountSettingsView(
         t("settings.image.storageMode"),
         t("settings.image.storageModeDesc"),
         mode.el,
+        "image.storageMode",
       ),
     );
 
@@ -822,6 +912,7 @@ export function mountSettingsView(
         t("settings.image.filenameFormat"),
         t("settings.image.filenameFormatDesc"),
         filename.el,
+        "image.filenameFormat",
       ),
     );
 
@@ -837,6 +928,7 @@ export function mountSettingsView(
           t("settings.image.autoCreate"),
           t("settings.image.autoCreateDesc"),
           autoCreate.el,
+          "image.autoCreate",
         ),
       );
     }
@@ -870,6 +962,7 @@ export function mountSettingsView(
           t("settings.image.storagePath"),
           t("settings.image.storagePathDesc"),
           group,
+          "image.storagePath",
         ),
       );
     }
@@ -1022,9 +1115,14 @@ export function mountSettingsView(
     const list = document.createElement("div");
     list.className = "inimark-about-list";
     list.append(
-      createRow(t("settings.about.versionInfo"), "", versionValue),
-      createRow(t("settings.about.softwareUpdate"), "", updateActions),
-      createRow(t("settings.about.openSourceLicense"), "", licenseLink),
+      createRow(t("settings.about.versionInfo"), "", versionValue, "about.version"),
+      createRow(t("settings.about.softwareUpdate"), "", updateActions, "about.updates"),
+      createRow(
+        t("settings.about.openSourceLicense"),
+        "",
+        licenseLink,
+        "about.license",
+      ),
     );
 
     const links = document.createElement("div");
@@ -1066,6 +1164,12 @@ export function mountSettingsView(
     const body = document.createElement("div");
     body.className = "inimark-settings-body";
 
+    if (searchQuery.trim().length > 0) {
+      renderSearchResults(body);
+      content.append(body);
+      return;
+    }
+
     if (activeSection === "editor") {
       renderEditor(body);
     }
@@ -1093,6 +1197,7 @@ export function mountSettingsView(
     if (activeSection === "libraries") {
       const toolbar = document.createElement("div");
       toolbar.className = "inimark-settings-libraries-toolbar";
+      toolbar.dataset.settingId = "libraries.add";
       const addBtn = createButton({
         label: t("settings.libraries.add"),
         variant: "primary",
@@ -1174,6 +1279,12 @@ export function mountSettingsView(
     }
 
     content.append(body);
+
+    if (pendingHighlightId) {
+      const id = pendingHighlightId;
+      pendingHighlightId = null;
+      highlightSettingRow(id);
+    }
   }
 
   renderNav();
@@ -1182,6 +1293,7 @@ export function mountSettingsView(
   const unsubscribeLocale = onLocaleChange(() => {
     search.input.placeholder = t("settings.searchPlaceholder");
     search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
+    renderSearchHint();
     renderNav();
     renderContent();
   });
@@ -1198,6 +1310,7 @@ export function mountSettingsView(
       renderContent();
     },
     destroy() {
+      window.removeEventListener("keydown", onFocusSearchKeyDown, true);
       unsubscribeLocale();
       resize.destroy();
       titlebar.destroy();

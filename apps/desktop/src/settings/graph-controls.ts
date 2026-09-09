@@ -143,11 +143,13 @@ function createRow(
   description: string | undefined,
   control: HTMLElement,
   compact: boolean,
+  settingId?: string,
 ): HTMLElement {
   const row = document.createElement("div");
   row.className = compact
     ? "inimark-graph-float-row"
     : "inimark-settings-row";
+  if (!compact && settingId) row.dataset.settingId = settingId;
   const meta = document.createElement("div");
   meta.className = compact
     ? "inimark-graph-float-row-meta"
@@ -252,6 +254,7 @@ export function mountGraphControls(
             field.descKey ? t(field.descKey) : undefined,
             toggle.el,
             compact,
+            `graph.${String(field.key)}`,
           ),
         );
         continue;
@@ -283,6 +286,7 @@ export function mountGraphControls(
           field.descKey ? t(field.descKey) : undefined,
           slider.el,
           compact,
+          `graph.${String(field.key)}`,
         ),
       );
     }
