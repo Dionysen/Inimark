@@ -1,8 +1,11 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
+import { mountLibraryDropTarget } from "../libraries/drop-target.ts";
 import {
   listLibraries,
   removeLibrary,
+  renameLibrary,
   upsertLibrary,
+  type LibraryRecord,
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
@@ -16,6 +19,7 @@ import { mountTitleBar } from "../ui/titlebar.ts";
 import {
   createButton,
   createFontPicker,
+  createIconButton,
   createNavItem,
   createNavList,
   createSearchField,
@@ -24,6 +28,7 @@ import {
   createToggle,
   createTextField,
   libraryIcon,
+  menuIcons,
   setNavItemLabel,
   settingsAboutIcon,
   settingsAppearanceIcon,
@@ -111,6 +116,55 @@ const SETTINGS_NAV_WIDTH_MAX = 420;
 const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
 const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
 const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
+
+function startLibraryRename(library: LibraryRecord, nameEl: HTMLElement): void {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "inimark-settings-library-rename-input";
+  input.value = library.rootName;
+  input.setAttribute("aria-label", t("settings.libraries.rename"));
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let finished = false;
+
+  function restore(name: string): void {
+    nameEl.textContent = name;
+    if (input.isConnected) input.replaceWith(nameEl);
+  }
+
+  function commit(): void {
+    if (finished) return;
+    finished = true;
+    const next = input.value.trim();
+    if (!next || next === library.rootName) {
+      restore(library.rootName);
+      return;
+    }
+    const updated = renameLibrary(library.id, next);
+    restore(updated?.rootName ?? library.rootName);
+  }
+
+  function cancel(): void {
+    if (finished) return;
+    finished = true;
+    restore(library.rootName);
+  }
+
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      commit();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      cancel();
+    }
+  });
+  input.addEventListener("blur", () => {
+    commit();
+  });
+}
 
 function createSectionTitle(title: string): HTMLElement {
   const el = document.createElement("h3");
@@ -424,6 +478,7 @@ export function mountSettingsView(
   let shortcutsCleanup: (() => void) | null = null;
   let themeCleanup: (() => void) | null = null;
   let graphControlsCleanup: (() => void) | null = null;
+  let libraryDropCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
     body.append(createSectionTitle(t("settings.group.typography")));
@@ -1217,6 +1272,8 @@ export function mountSettingsView(
     themeCleanup = null;
     graphControlsCleanup?.();
     graphControlsCleanup = null;
+    libraryDropCleanup?.();
+    libraryDropCleanup = null;
     content.replaceChildren();
 
     const body = document.createElement("div");
@@ -1253,23 +1310,26 @@ export function mountSettingsView(
     }
 
     if (activeSection === "libraries") {
-      const toolbar = document.createElement("div");
-      toolbar.className = "inimark-settings-libraries-toolbar";
-      toolbar.dataset.settingId = "libraries.add";
-      const addBtn = createButton({
-        label: t("settings.libraries.add"),
-        variant: "primary",
-        onClick: () => {
-          void (async () => {
-            const picked = await pickWorkspace();
-            if (picked.status !== "picked") return;
-            upsertLibrary(picked.workspace.rootPath, picked.workspace.rootName);
-            renderContent();
-          })();
-        },
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "inimark-control inimark-settings-library-add";
+      addBtn.dataset.settingId = "libraries.add";
+      const addLabel = document.createElement("span");
+      addLabel.className = "inimark-settings-library-add-label";
+      addLabel.innerHTML = `${libraryIcon()}<span>${t("settings.libraries.add")}</span>`;
+      addBtn.append(addLabel);
+      addBtn.addEventListener("click", () => {
+        void (async () => {
+          const picked = await pickWorkspace();
+          if (picked.status !== "picked") return;
+          upsertLibrary(picked.workspace.rootPath, picked.workspace.rootName);
+          renderContent();
+        })();
       });
-      toolbar.append(addBtn);
-      body.append(toolbar);
+      libraryDropCleanup = mountLibraryDropTarget(addBtn, {
+        onAdded: () => renderContent(),
+      });
+      body.append(addBtn);
 
       const libraries = listLibraries();
       if (libraries.length === 0) {
@@ -1286,14 +1346,28 @@ export function mountSettingsView(
 
           const meta = document.createElement("div");
           meta.className = "inimark-settings-library-meta";
+          const nameRow = document.createElement("div");
+          nameRow.className = "inimark-settings-library-name-row";
           const nameEl = document.createElement("div");
           nameEl.className = "inimark-settings-library-name";
           nameEl.textContent = library.rootName;
+          nameRow.append(nameEl);
           const path = document.createElement("div");
           path.className = "inimark-settings-library-path";
           path.textContent = library.rootPath;
           path.title = library.rootPath;
-          meta.append(nameEl, path);
+          meta.append(nameRow, path);
+
+          const actions = document.createElement("div");
+          actions.className = "inimark-settings-library-actions";
+          const renameBtn = createIconButton({
+            label: t("settings.libraries.rename"),
+            title: t("settings.libraries.rename"),
+            html: menuIcons.rename,
+            onClick: () => startLibraryRename(library, nameEl),
+          });
+          renameBtn.classList.add("inimark-settings-library-rename-btn");
+          actions.append(renameBtn);
 
           const removeBtn = createButton({
             label: t("common.remove"),
@@ -1306,8 +1380,9 @@ export function mountSettingsView(
               })();
             },
           });
+          actions.append(removeBtn);
 
-          item.append(meta, removeBtn);
+          item.append(meta, actions);
           list.append(item);
         }
         body.append(list);
@@ -1376,6 +1451,7 @@ export function mountSettingsView(
       shortcutsCleanup?.();
       themeCleanup?.();
       graphControlsCleanup?.();
+      libraryDropCleanup?.();
       host.replaceChildren();
       host.className = "";
     },

@@ -99,7 +99,6 @@ export function upsertLibrary(rootPath: string, rootName?: string): LibraryRecor
     ? {
         ...existing,
         rootPath,
-        rootName: rootName ?? existing.rootName,
         lastOpenedAt: now,
       }
     : {
@@ -118,6 +117,23 @@ export function upsertLibrary(rootPath: string, rootName?: string): LibraryRecor
     ...config,
     libraries,
     lastLibraryId: id,
+  });
+  return record;
+}
+
+export function renameLibrary(id: string, rootName: string): LibraryRecord | null {
+  const nextName = rootName.trim();
+  if (!nextName || /[/\\]/.test(nextName)) return null;
+
+  const config = loadLibrariesConfig();
+  const existing = config.libraries.find((library) => library.id === id);
+  if (!existing) return null;
+  if (existing.rootName === nextName) return existing;
+
+  const record: LibraryRecord = { ...existing, rootName: nextName };
+  saveLibrariesRegistry({
+    ...config,
+    libraries: config.libraries.map((library) => (library.id === id ? record : library)),
   });
   return record;
 }

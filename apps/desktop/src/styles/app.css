@@ -1347,6 +1347,16 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   outline-offset: 2px;
 }
 
+.inimark-library-bar.is-library-drop-target {
+  border-color: color-mix(in srgb, var(--inimark-accent) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
+    inset 0 0 10px 2px rgb(255 255 255 / calc(0.1 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.06 * var(--_o))),
+    0 8px 28px rgb(0 0 0 / calc(0.14 * var(--_o))),
+    0 0 0 2px color-mix(in srgb, var(--inimark-accent) 28%, transparent);
+}
+
 .inimark-library-bar-label {
   overflow: hidden;
   text-overflow: ellipsis;

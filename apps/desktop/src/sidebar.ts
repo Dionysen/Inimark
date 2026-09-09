@@ -27,7 +27,8 @@ import {
   sidebarToggleIcon,
   sortIcon,
 } from "./ui/widgets/index.ts";
-import type { LibraryRecord } from "./libraries/store.ts";
+import { mountLibraryDropTarget } from "./libraries/drop-target.ts";
+import { listLibraries, type LibraryRecord } from "./libraries/store.ts";
 import { detectPlatform } from "./platform/platform.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
@@ -569,6 +570,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   settingsBtn.innerHTML = settingsIcon();
 
   libraryWrap.append(libraryBar, settingsBtn);
+  const unmountLibraryDrop = mountLibraryDropTarget(libraryBar, {
+    onAdded: () => {
+      savedLibraries = listLibraries();
+      renderLibraryList();
+    },
+  });
   dock.append(libraryWrap);
 
   const menu = createMenu();
@@ -2913,6 +2920,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       contextMenu.destroy();
       sortMenu.destroy();
       menu.destroy();
+      unmountLibraryDrop();
       host.replaceChildren();
     },
   };

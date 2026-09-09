@@ -572,6 +572,7 @@ export const zhCN: Dictionary = {
     libraries: {
       add: "添加文库",
       empty: "尚未保存文库。添加一个文件夹开始使用。",
+      rename: "重命名文库",
     },
     shortcuts: {
       resetAll: "全部重置",

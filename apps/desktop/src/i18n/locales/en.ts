@@ -582,6 +582,7 @@ export const en: Dictionary = {
     libraries: {
       add: "Add library",
       empty: "No libraries saved yet. Add a folder to get started.",
+      rename: "Rename library",
     },
     shortcuts: {
       resetAll: "Reset All",

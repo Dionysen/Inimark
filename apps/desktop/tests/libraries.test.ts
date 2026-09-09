@@ -7,6 +7,7 @@ import {
   listLibraries,
   loadLibrariesConfig,
   removeLibrary,
+  renameLibrary,
   saveLibrarySession,
   upsertLibrary,
 } from "../src/libraries/store.ts";
@@ -64,6 +65,22 @@ describe("libraries store", () => {
     expect(listLibraries()).toHaveLength(0);
     expect(getLastLibraryId()).toBeNull();
     expect(loadLibrariesConfig().sessions[library.id]).toBeUndefined();
+  });
+
+  test("renames libraries and preserves custom names on reopen", () => {
+    const library = upsertLibrary("/vault/notes", "notes");
+    const renamed = renameLibrary(library.id, "My Notes");
+    expect(renamed?.rootName).toBe("My Notes");
+    expect(listLibraries().find((item) => item.id === library.id)?.rootName).toBe(
+      "My Notes",
+    );
+
+    upsertLibrary("/vault/notes", "notes");
+    expect(listLibraries().find((item) => item.id === library.id)?.rootName).toBe(
+      "My Notes",
+    );
+    expect(renameLibrary(library.id, "bad/name")).toBeNull();
+    expect(renameLibrary(library.id, "   ")).toBeNull();
   });
 
   test("creates stable ids from paths", () => {
