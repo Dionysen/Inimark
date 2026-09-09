@@ -1082,7 +1082,6 @@ export function renderThemePanel(
 
     const modeHint = document.createElement("p");
     modeHint.className = "settings-hint";
-    modeHint.style.cssText = "margin-top: -8px; margin-bottom: 12px";
     modeHint.textContent = t("settings.theme.appearanceModeDesc");
 
     const modeToggle = document.createElement("div");

@@ -2,6 +2,7 @@ import { describe, expect, test, beforeEach, afterEach } from "vitest";
 import { createSelect } from "../src/ui/widgets/select.ts";
 import { createSlider } from "../src/ui/widgets/slider.ts";
 import { createMenu } from "../src/ui/widgets/menu.ts";
+import { createFontPicker } from "../src/ui/widgets/font-picker.ts";
 
 describe("widgets/select", () => {
   let host: HTMLElement;
@@ -230,5 +231,56 @@ describe("widgets/menu", () => {
     expect(menu.isOpen()).toBe(false);
 
     menu.destroy();
+  });
+});
+
+describe("widgets/font-picker", () => {
+  let host: HTMLElement;
+
+  beforeEach(() => {
+    host = document.createElement("div");
+    document.body.append(host);
+  });
+
+  afterEach(() => {
+    host.remove();
+    document.querySelectorAll(".inimark-font-picker-panel").forEach((el) => el.remove());
+  });
+
+  test("arrow keys navigate options from the search input", async () => {
+    let value = "system";
+    const picker = createFontPicker({
+      mode: "editor",
+      value,
+      presets: ["serif", "rounded", "mono"],
+      onChange(next) {
+        value = next;
+      },
+    });
+    host.append(picker.el);
+
+    picker.el.querySelector("button")!.click();
+    const panel = document.querySelector(".inimark-font-picker-panel") as HTMLElement;
+    const search = panel.querySelector(".inimark-font-picker-search") as HTMLInputElement;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    search.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+    );
+    expect(
+      panel.querySelector(".inimark-select-option.is-active")?.textContent,
+    ).toBe("System default");
+
+    search.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }),
+    );
+    expect(panel.querySelector(".inimark-select-option.is-active")?.textContent).toBe("Serif");
+
+    search.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
+    expect(value).toBe("serif");
+
+    picker.destroy();
   });
 });

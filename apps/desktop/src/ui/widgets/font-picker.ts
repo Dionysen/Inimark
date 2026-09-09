@@ -106,6 +106,7 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
   let current = options.value;
   let open = false;
   let query = "";
+  let activeIndex = -1;
   let fonts: SystemFontInfo[] = [];
   let loading = true;
   let stopOutside: (() => void) | null = null;
@@ -185,10 +186,32 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
     trigger.title = selected.label;
   }
 
+  function scrollActiveIntoView(): void {
+    if (activeIndex < 0) return;
+    const buttons = list.querySelectorAll<HTMLButtonElement>(".inimark-select-option");
+    buttons[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }
+
+  function moveActive(delta: 1 | -1): void {
+    const count = filteredOptions().length;
+    if (count === 0) {
+      activeIndex = -1;
+      renderList();
+      return;
+    }
+    if (activeIndex < 0) {
+      activeIndex = delta > 0 ? 0 : count - 1;
+    } else {
+      activeIndex = Math.max(0, Math.min(count - 1, activeIndex + delta));
+    }
+    renderList();
+  }
+
   function close(): void {
     if (!open) return;
     open = false;
     query = "";
+    activeIndex = -1;
     search.value = "";
     root.classList.remove("is-open");
     trigger.classList.remove("is-open");
@@ -229,6 +252,7 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
     }
 
     let lastGroup: FontOption["group"] | null = null;
+    let optionIndex = 0;
     for (const opt of filtered) {
       if (opt.group !== lastGroup) {
         lastGroup = opt.group;
@@ -247,9 +271,12 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
       btn.textContent = opt.label;
       btn.style.fontFamily = opt.previewFamily;
       if (opt.value === current) btn.classList.add("is-selected");
+      if (optionIndex === activeIndex) btn.classList.add("is-active");
       btn.addEventListener("click", () => select(opt.value));
       list.append(btn);
+      optionIndex += 1;
     }
+    requestAnimationFrame(() => scrollActiveIntoView());
   }
 
   function reposition(): void {
@@ -260,6 +287,7 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
   function openPanel(): void {
     if (open || trigger.disabled) return;
     open = true;
+    activeIndex = -1;
     root.classList.add("is-open");
     trigger.classList.add("is-open");
     trigger.setAttribute("aria-expanded", "true");
@@ -288,6 +316,7 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
 
   search.addEventListener("input", () => {
     query = search.value;
+    activeIndex = -1;
     renderList();
   });
 
@@ -298,10 +327,26 @@ export function createFontPicker(options: FontPickerOptions): FontPickerControll
       trigger.focus();
       return;
     }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      moveActive(1);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (activeIndex <= 0) {
+        activeIndex = -1;
+        renderList();
+      } else {
+        moveActive(-1);
+      }
+      return;
+    }
     if (event.key === "Enter") {
       event.preventDefault();
-      const first = filteredOptions()[0];
-      if (first) select(first.value);
+      const filtered = filteredOptions();
+      const picked = activeIndex >= 0 ? filtered[activeIndex] : filtered[0];
+      if (picked) select(picked.value);
     }
   });
 

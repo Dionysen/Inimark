@@ -487,61 +487,6 @@ html.platform-windows .inimark-settings-nav-topbar {
   margin-top: 0;
 }
 
-.inimark-graph-settings-group {
-  margin-bottom: var(--inimark-space-2);
-}
-
-.inimark-graph-settings-group-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  margin: var(--inimark-space-3) 0 var(--inimark-space-2);
-  padding: 4px 0;
-  border: none;
-  background: transparent;
-  color: var(--inimark-muted-fg);
-  cursor: pointer;
-  text-align: left;
-}
-
-.inimark-graph-settings-group:first-child .inimark-graph-settings-group-header {
-  margin-top: 0;
-}
-
-.inimark-graph-settings-group-header:hover {
-  color: var(--inimark-fg);
-}
-
-.inimark-graph-settings-group-chevron {
-  display: inline-grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.inimark-graph-settings-group-chevron.is-expanded {
-  transform: rotate(90deg);
-}
-
-.inimark-graph-settings-group-chevron svg {
-  width: 14px;
-  height: 14px;
-}
-
-.inimark-graph-settings-group-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.inimark-graph-settings-group.is-collapsed .inimark-graph-settings-group-body {
-  display: none;
-}
-
 .inimark-settings-inline-controls {
   display: flex;
   align-items: center;

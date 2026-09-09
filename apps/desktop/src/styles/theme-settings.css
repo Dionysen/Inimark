@@ -2,6 +2,10 @@
 
 .settings-section { margin-bottom: 1rem; }
 .settings-section-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px; }
+.settings-section-title + .settings-hint {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
 .settings-hint { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
 
 .appearance-mode-toggle {

@@ -338,13 +338,6 @@ export function mountSettingsView(
       }
       if (!row) return;
 
-      const graphGroup = row.closest<HTMLElement>(".inimark-graph-settings-group");
-      if (graphGroup?.classList.contains("is-collapsed")) {
-        graphGroup
-          .querySelector<HTMLButtonElement>(".inimark-graph-settings-group-header")
-          ?.click();
-      }
-
       row.scrollIntoView({ block: "center", behavior: "smooth" });
       row.classList.add("is-search-highlight");
       window.setTimeout(() => row.classList.remove("is-search-highlight"), 2200);

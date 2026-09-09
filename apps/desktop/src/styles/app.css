@@ -528,57 +528,18 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   margin-bottom: 2px;
 }
 
-.inimark-graph-float-group-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
+.inimark-graph-float-group-title {
   margin: 0;
   padding: 4px 2px;
-  border: none;
-  background: transparent;
-  color: var(--inimark-muted-fg);
-  cursor: pointer;
-  border-radius: var(--inimark-radius-sm, 6px);
-  text-align: left;
-}
-
-.inimark-graph-float-group-header:hover {
-  color: var(--inimark-fg);
-  background: var(--inimark-hover);
-}
-
-.inimark-graph-float-group-chevron {
-  display: inline-grid;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.inimark-graph-float-group-chevron.is-expanded {
-  transform: rotate(90deg);
-}
-
-.inimark-graph-float-group-chevron svg {
-  width: 12px;
-  height: 12px;
-}
-
-.inimark-graph-float-group-title {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  color: var(--inimark-muted-fg);
 }
 
 .inimark-graph-float-group-body {
   padding: 2px 0 6px;
-}
-
-.inimark-graph-float-group.is-collapsed .inimark-graph-float-group-body {
-  display: none;
 }
 
 .inimark-graph-float-row {
