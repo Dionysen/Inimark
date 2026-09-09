@@ -1031,16 +1031,16 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-tree-kind-icon {
   display: inline-grid;
   place-items: center;
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 1.125rem;
+  height: 1.125rem;
   flex-shrink: 0;
   color: var(--inimark-muted-fg);
   opacity: 0.85;
 }
 
 .inimark-tree-kind-icon svg {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .inimark-tree-item--file .inimark-tree-kind-icon {
