@@ -24,6 +24,7 @@ import { link } from "./link.ts";
 import { refDef } from "./ref-def.ts";
 import { list } from "./list.ts";
 import { math } from "./math.ts";
+import { moreBreak } from "./more-break.ts";
 import { strike } from "./strike.ts";
 import { subSup } from "./sub-sup.ts";
 import { underline } from "./underline.ts";
@@ -34,6 +35,7 @@ import { wikiLink } from "./wiki-link.ts";
 
 export const ALL_FEATURES: FeatureSpec[] = [
   htmlComment,
+  moreBreak,
   emoji,
   math,
   emphasis,

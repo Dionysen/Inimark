@@ -36,6 +36,7 @@ describe("round-trip: blocks", () => {
   test("blockquote unsupported caution marker", () =>
     roundTripStable("> [!CAUTION]\n> body"));
   test("horizontal rule", () => roundTripStable("before\n\n---\n\nafter"));
+  test("more break", () => roundTripStable("before\n\n<!--more-->\n\nafter"));
   test("toc", () => roundTripStable("# Title\n\n[toc]\n\nbody"));
   test("toc uppercase normalizes", () =>
     roundTripStable("# Title\n\n[toc]\n\nbody")); // [TOC] also accepted on input; output is [toc]

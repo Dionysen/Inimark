@@ -175,6 +175,7 @@ export const zhCN: Dictionary = {
     fontZoom: "{{size}}px",
     scrollToTop: "到最上方",
     scrollToBottom: "到最下方",
+    moreBreakLabel: "更多",
     sourceMode: "源码模式",
     exitSourceMode: "退出源码模式",
     ctx: {

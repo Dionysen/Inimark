@@ -19,6 +19,7 @@ const OPAQUE_BLOCKS = new Set([
   "code_block",
   "math_block",
   "horizontal_rule",
+  "more_break",
   "html_block",
 ]);
 

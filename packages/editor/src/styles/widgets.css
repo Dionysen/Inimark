@@ -260,6 +260,41 @@
 .ProseMirror .toc-h5 { padding-left: 4.8em; }
 .ProseMirror .toc-h6 { padding-left: 6em; }
 
+/* ─── More tag (`<!--more-->`) ───────────────────────────────────── */
+
+.ProseMirror .more-break {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+.ProseMirror .more-break__rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: color-mix(in srgb, var(--fg, #1f1f1f) 18%, transparent);
+}
+
+.ProseMirror .more-break__label {
+  flex: 0 0 auto;
+  color: var(--muted-fg, #888);
+  font-size: 0.82rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.ProseMirror .more-break__label::after {
+  content: var(--more-break-label, "more");
+}
+
+.ProseMirror .more-break-draft,
+.ProseMirror mark-more-source {
+  color: var(--muted-fg, #888);
+  font-style: italic;
+}
+
 /* ─── CommonMark HTML blocks ────────────────────────────────────── */
 .ProseMirror html-block {
   display: block;
@@ -744,6 +779,12 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
 }
 :root[data-appearance="dark"] .ProseMirror .toc-item:hover {
   color: #ece7dd;
+}
+:root[data-appearance="dark"] .ProseMirror .more-break__rule {
+  background: color-mix(in srgb, var(--fg, #ece7dd) 22%, transparent);
+}
+:root[data-appearance="dark"] .ProseMirror .more-break__label {
+  color: #aaa399;
 }
 :root[data-appearance="dark"] .ProseMirror .emoji-completion {
   background: #25272b;

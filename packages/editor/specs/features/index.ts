@@ -26,6 +26,7 @@ import { imageSpecs } from "./image.specs.ts";
 import { linkSpecs } from "./link.specs.ts";
 import { listSpecs } from "./list.specs.ts";
 import { mathSpecs } from "./math.specs.ts";
+import { moreBreakSpecs } from "./more-break.specs.ts";
 import { refDefSpecs } from "./ref-def.specs.ts";
 import { strikeSpecs } from "./strike.specs.ts";
 import { subSupSpecs } from "./sub-sup.specs.ts";
@@ -36,6 +37,7 @@ import { tocSpecs } from "./toc.specs.ts";
 
 export const ALL_SPECS: FeatureSpecs[] = [
   htmlCommentSpecs,
+  moreBreakSpecs,
   emojiSpecs,
   emphasisSpecs,
   codeSpecs,

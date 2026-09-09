@@ -175,6 +175,7 @@ export const en: Dictionary = {
     fontZoom: "{{size}}px",
     scrollToTop: "Scroll to top",
     scrollToBottom: "Scroll to bottom",
+    moreBreakLabel: "more",
     sourceMode: "Source mode",
     exitSourceMode: "Exit source mode",
     ctx: {

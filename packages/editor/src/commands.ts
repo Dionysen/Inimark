@@ -4,6 +4,7 @@ import { TextSelection, type Command } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import { insertCallout } from "./callouts.ts";
+import { insertMoreBreak } from "./features/more-break.ts";
 import {
   toggleBlockquote,
   toggleBulletList,
@@ -165,7 +166,7 @@ export function executeEditorCommand(
     case "hr":
       return run(view, insertHorizontalRule(schema));
     case "more":
-      return run(view, insertText("<!--more-->"));
+      return run(view, insertMoreBreak(schema));
     case "table":
       return run(view, insertTable(schema));
     case "code":

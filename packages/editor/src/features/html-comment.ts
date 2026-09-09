@@ -29,6 +29,7 @@ const scan: InlineFeatureSpec["scan"] = (text, consumed) => {
       }
     }
     if (blocked) continue;
+    if (m[0] === "<!--more-->") continue;
     markConsumed(consumed, fullStart, fullEnd);
     // Mark covers the WHOLE span. open/close ranges collapse to zero
     // length so normalize doesn't emit delim decorations — the chars

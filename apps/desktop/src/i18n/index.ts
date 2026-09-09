@@ -58,6 +58,11 @@ function emitLocaleChange(): void {
   }
 }
 
+function applyLocaleCssVars(): void {
+  const label = t("editor.moreBreakLabel");
+  document.documentElement.style.setProperty("--more-break-label", `"${label}"`);
+}
+
 /** Resolve preferred locale: explicit → storage → system → en. */
 export function resolveLocale(preferred?: string | null): LocaleId {
   if (isLocaleId(preferred)) return preferred;
@@ -69,6 +74,7 @@ export function initI18n(preferred?: string | null): LocaleId {
   currentLocale = resolveLocale(preferred);
   writeStoredLocale(currentLocale);
   initialized = true;
+  applyLocaleCssVars();
   return currentLocale;
 }
 
@@ -85,6 +91,7 @@ export function setLocale(locale: LocaleId): void {
   currentLocale = locale;
   initialized = true;
   writeStoredLocale(locale);
+  applyLocaleCssVars();
   emitLocaleChange();
 }
 
