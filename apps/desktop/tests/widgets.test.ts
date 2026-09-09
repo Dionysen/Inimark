@@ -137,6 +137,21 @@ describe("widgets/menu", () => {
     menu.destroy();
   });
 
+  test("renders meta below the label when metaPlacement is below", () => {
+    const menu = createMenu();
+    menu.addItem({
+      label: "note",
+      meta: "C:\\Users\\example\\Documents\\note",
+      metaPlacement: "below",
+    });
+    const btn = menu.el.querySelector(".inimark-menu-item") as HTMLButtonElement;
+    expect(btn.classList.contains("inimark-menu-item--meta-below")).toBe(true);
+    expect(btn.querySelector(".inimark-menu-item__meta--below")?.textContent).toBe(
+      "C:\\Users\\example\\Documents\\note",
+    );
+    menu.destroy();
+  });
+
   test("opens, lists items, and closes on outside click", () => {
     const menu = createMenu();
     document.body.append(menu.el);

@@ -697,6 +697,37 @@ html[data-glass="true"] .inimark-select-panel {
   max-width: 45%;
 }
 
+.inimark-menu-item--meta-below {
+  align-items: flex-start;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.inimark-menu-item--meta-below .inimark-menu-item__icon {
+  margin-top: 0.05rem;
+}
+
+.inimark-menu-item--meta-below .inimark-menu-item__content {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+}
+
+.inimark-menu-item--meta-below .inimark-menu-item__name-row {
+  flex: none;
+}
+
+.inimark-menu-item__meta--below {
+  margin-left: 0;
+  max-width: none;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-all;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
 .inimark-menu-item__check {
   display: inline-grid;
   place-items: center;

@@ -750,7 +750,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           label: library.rootName,
           icon: menuIcons.library,
           meta: library.rootPath,
-          title: library.rootPath,
+          metaPlacement: "below",
           selected: library.id === activeLibraryId,
           onClick() {
             closeMenu();

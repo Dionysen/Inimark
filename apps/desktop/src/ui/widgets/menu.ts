@@ -11,6 +11,8 @@ export interface MenuItemOptions {
   /** Inline HTML badge shown after the label on the same row (e.g. H1–H6). */
   badge?: string;
   meta?: string;
+  /** `inline` (default): trailing on the name row; `below`: full path on its own line. */
+  metaPlacement?: "inline" | "below";
   title?: string;
   selected?: boolean;
   /** Destructive action — red label/icon. */
@@ -69,6 +71,9 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
     btn.classList.add("is-disabled");
     btn.setAttribute("aria-disabled", "true");
   }
+  if (options.meta && options.metaPlacement === "below") {
+    btn.classList.add("inimark-menu-item--meta-below");
+  }
   if (options.checked != null) {
     btn.classList.add("inimark-menu-item--checkable");
     if (options.checked) {
@@ -110,7 +115,10 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
 
   if (options.meta) {
     const meta = document.createElement("span");
-    meta.className = "inimark-menu-item__meta";
+    meta.className =
+      options.metaPlacement === "below"
+        ? "inimark-menu-item__meta inimark-menu-item__meta--below"
+        : "inimark-menu-item__meta";
     meta.textContent = options.meta;
     content.append(meta);
   }
