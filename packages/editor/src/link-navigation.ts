@@ -2,6 +2,10 @@ import type { EditorView } from "prosemirror-view";
 
 import { parseInline } from "./inline-parse.ts";
 import { getLinkNavigationBridge } from "./link-navigation-bridge.ts";
+import {
+  inlineSpanDocRange,
+  isInlineConstructRendered,
+} from "./inline-span-range.ts";
 import { getWikiLinkBridge } from "./wiki-link-bridge.ts";
 
 export function isModifiedClick(event: MouseEvent): boolean {
@@ -10,6 +14,23 @@ export function isModifiedClick(event: MouseEvent): boolean {
 
 const RELATIVE_OR_FILE_HREF =
   /^\.{0,2}\/|\.(md|markdown|mdx|txt|pdf|png|jpe?g|gif|webp|svg|html?|css|js|ts|tsx|json|zip)(?:[#?].*)?$/i;
+
+/** Obsidian-compatible external URL detection (obsidian-dev-utils `isUrl`). */
+const SCHEME_REG_EXP = /^[A-Za-z][A-Za-z0-9+\-.]*:\S+$/;
+
+export function isExternalHref(href: string): boolean {
+  const trimmed = href.trim();
+  if (!trimmed || /\s/.test(trimmed)) return false;
+  if (trimmed.includes("://")) {
+    try {
+      new URL(trimmed);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  return SCHEME_REG_EXP.test(trimmed);
+}
 
 /** Ensure scheme-less web URLs open in the browser instead of as local paths. */
 export function normalizeExternalHref(href: string): string {
@@ -89,6 +110,47 @@ function spanAtTextOffset(
   return null;
 }
 
+/** Markdown `[text](url)` only navigates from the bracketed label, not `](url)`. */
+function isNavigableLinkOffset(
+  span: ReturnType<typeof parseInline>[number],
+  offset: number,
+): boolean {
+  if (span.type === "link" || span.type === "autolink") {
+    return offset >= span.from && offset < span.to;
+  }
+  return offset >= span.openFrom && offset <= span.closeTo;
+}
+
+function navigableSpanAtTextOffset(
+  spans: ReturnType<typeof parseInline>,
+  offset: number,
+): (ReturnType<typeof parseInline>[number] & { attrs?: Record<string, unknown> }) | null {
+  for (const span of spans) {
+    if (isNavigableLinkOffset(span, offset)) return span;
+  }
+  return null;
+}
+
+function renderedLinkSpanAtDocPos(
+  view: EditorView,
+  pos: number,
+): (ReturnType<typeof parseInline>[number] & { attrs?: Record<string, unknown> }) | null {
+  const $pos = view.state.doc.resolve(pos);
+  const block = $pos.parent;
+  if (!block.isTextblock || block.type.spec.code) return null;
+
+  const blockStart = $pos.start();
+  const textOffset = pos - blockStart;
+  const spans = parseInline(block.textContent, block, { state: view.state });
+  const span = navigableSpanAtTextOffset(spans, textOffset);
+  if (!span || (span.type !== "link" && span.type !== "autolink")) return null;
+
+  const { spanFrom, spanTo } = inlineSpanDocRange(block, blockStart, span);
+  if (!isInlineConstructRendered(view.state, spanFrom, spanTo)) return null;
+
+  return span;
+}
+
 function navigateAtDocPos(
   view: EditorView,
   pos: number,
@@ -100,7 +162,7 @@ function navigateAtDocPos(
 
   const textOffset = pos - $pos.start();
   const spans = parseInline(block.textContent, block, { state: view.state });
-  const span = spanAtTextOffset(spans, textOffset);
+  const span = navigableSpanAtTextOffset(spans, textOffset);
   if (!span) return false;
 
   if (span.type === "wiki_link") {
@@ -112,14 +174,13 @@ function navigateAtDocPos(
     return true;
   }
 
-  if (span.type === "link" || span.type === "autolink") {
-    const href = span.attrs?.href;
-    if (typeof href !== "string" || !href) return false;
-    openExternalHref(href);
-    return true;
-  }
+  const rendered = renderedLinkSpanAtDocPos(view, pos);
+  if (!rendered) return false;
 
-  return false;
+  const href = rendered.attrs?.href;
+  if (typeof href !== "string" || !href) return false;
+  openExternalHref(href);
+  return true;
 }
 
 export type WikiPointerHit = {
@@ -166,7 +227,103 @@ export function wikiNoteFromPointer(
   return { note, heading: heading || undefined, unresolved };
 }
 
-/** Wiki links open on plain click; http(s) links still use Cmd/Ctrl+click. */
+function pointerCoords(
+  event: MouseEvent,
+  target: Element | null,
+): { left: number; top: number } {
+  if (event.clientX !== 0 || event.clientY !== 0) {
+    return { left: event.clientX, top: event.clientY };
+  }
+  const probe = target?.closest("a") ?? target;
+  if (probe) {
+    const rect = probe.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) {
+      return { left: rect.left + rect.width / 2, top: rect.top + rect.height / 2 };
+    }
+  }
+  return { left: event.clientX, top: event.clientY };
+}
+
+function hrefAtDocPos(view: EditorView, pos: number): string | null {
+  const span = renderedLinkSpanAtDocPos(view, pos);
+  if (!span) return null;
+  const href = span.attrs?.href;
+  return typeof href === "string" && href ? href : null;
+}
+
+/** Bracketed link marks render `<a>` around the label only — not `](url)` promotions. */
+function hrefFromLinkAnchor(view: EditorView, anchor: HTMLAnchorElement): string | null {
+  const href = anchor.getAttribute("href");
+  if (!href) return null;
+  const label = anchor.textContent ?? "";
+  if (!label) return null;
+
+  let matched: string | null = null;
+  view.state.doc.descendants((node, pos) => {
+    if (!node.isTextblock || node.type.spec.code) return;
+    const spans = parseInline(node.textContent, node, { state: view.state });
+    for (const span of spans) {
+      if (span.type !== "link") continue;
+      const spanLabel = node.textContent.slice(span.from, span.to);
+      if (spanLabel === label && span.attrs?.href === href) {
+        const blockStart = pos + 1;
+        const { spanFrom, spanTo } = inlineSpanDocRange(node, blockStart, span);
+        if (isInlineConstructRendered(view.state, spanFrom, spanTo)) {
+          matched = href;
+        }
+        return false;
+      }
+    }
+  });
+  return matched;
+}
+
+function hrefAtPointer(view: EditorView, event: MouseEvent): string | null {
+  const target = event.target instanceof Element ? event.target : null;
+  const { left, top } = pointerCoords(event, target);
+  const coords = view.posAtCoords({ left, top });
+  if (coords) {
+    const href = hrefAtDocPos(view, coords.pos);
+    if (href) return href;
+  }
+
+  const anchor = target?.closest("a");
+  if (anchor instanceof HTMLAnchorElement) {
+    if (anchor.hasAttribute("data-autolink")) {
+      if (coords) {
+        const href = hrefAtDocPos(view, coords.pos);
+        if (href) return href;
+      }
+      return null;
+    }
+    return hrefFromLinkAnchor(view, anchor);
+  }
+
+  return null;
+}
+
+/**
+ * True when the pointer is on a rendered link that should navigate instead of
+ * placing the caret (evaluated before mousedown moves the selection).
+ */
+export function isRenderedNavigablePointer(
+  view: EditorView,
+  event: MouseEvent,
+): boolean {
+  const target = event.target instanceof Element ? event.target : null;
+
+  const wiki = wikiElementFromTarget(target);
+  if (wiki) return !isModifiedClick(event);
+
+  const href = hrefAtPointer(view, event);
+  if (!href) return false;
+
+  const external = isExternalHref(href);
+  if (external) return !isModifiedClick(event);
+  return isModifiedClick(event);
+}
+
+/** Wiki links and external URLs open on plain click; internal markdown links use Cmd/Ctrl+click. */
 export function tryNavigateFromClick(
   view: EditorView,
   event: MouseEvent,
@@ -174,9 +331,17 @@ export function tryNavigateFromClick(
 ): boolean {
   const target = event.target instanceof Element ? event.target : null;
 
+  const anchor = target?.closest("a");
+  if (anchor instanceof HTMLAnchorElement && !anchor.hasAttribute("data-autolink")) {
+    // Always suppress the browser's native <a> navigation; only our
+    // rendered-mode handler opens the destination.
+    event.preventDefault();
+  }
+
+  if (!isRenderedNavigablePointer(view, event)) return false;
+
   const wiki = wikiElementFromTarget(target);
   if (wiki) {
-    if (isModifiedClick(event)) return false;
     const note = wiki.getAttribute("data-note");
     const heading = wiki.getAttribute("data-heading") || undefined;
     if (!openWikiFromElement(wiki)) return false;
@@ -186,22 +351,18 @@ export function tryNavigateFromClick(
     return true;
   }
 
-  if (!isModifiedClick(event)) return false;
+  const href = hrefAtPointer(view, event);
+  if (!href) return false;
 
-  const anchor = target?.closest("a");
-  if (anchor) {
-    const href = anchor.getAttribute("href");
-    if (!href) return false;
-    event.preventDefault();
-    event.stopPropagation?.();
+  event.preventDefault();
+  event.stopPropagation?.();
+  if (isExternalHref(href)) {
     openExternalHref(href);
     return true;
   }
 
-  const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
-  if (!coords) return false;
-  if (!navigateAtDocPos(view, coords.pos, options)) return false;
-  event.preventDefault();
-  event.stopPropagation?.();
+  if (!isModifiedClick(event)) return false;
+
+  openExternalHref(href);
   return true;
 }

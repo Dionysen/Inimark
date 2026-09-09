@@ -7,6 +7,7 @@ import { defaultPlugins } from "../src/editor.ts";
 import { createEditor } from "../src/lib.ts";
 import { parse } from "../src/parser.ts";
 import { schema } from "../src/schema.ts";
+import { ensureTrailingSentinel } from "../src/trailing-sentinel.ts";
 import { mdConfig, serializeWith } from "../src/serializer.ts";
 import { feedEvent } from "../specs/events.ts";
 import { fakeView } from "../specs/sim.ts";
@@ -21,7 +22,7 @@ function mountView(markdown: string): {
   const view = new EditorView(host, {
     state: EditorState.create({
       schema,
-      doc: parse(markdown),
+      doc: ensureTrailingSentinel(parse(markdown)),
       plugins: defaultPlugins({ cursorWidget: false }),
     }),
   });
@@ -40,11 +41,20 @@ function clickEvent(target: Element, ctrlKey: boolean): MouseEvent {
     target,
     clientX: 0,
     clientY: 0,
+    button: 0,
     ctrlKey,
     metaKey: false,
     preventDefault() {},
     stopPropagation() {},
   } as unknown as MouseEvent;
+}
+
+function fireLinkPointer(view: EditorView, event: MouseEvent): void {
+  view.someProp("handleDOMEvents", (handlers) => {
+    handlers?.mousedown?.(view, event);
+    handlers?.click?.(view, event);
+    return false;
+  });
 }
 
 describe("core editor behavior", () => {
@@ -56,8 +66,7 @@ describe("core editor behavior", () => {
     expect(withCursor.at(-1)).not.toBe(withoutCursor.at(-1));
   });
 
-  test("modified clicks open rendered links while plain clicks stay editable", () => {
-    const { host, view, cleanup } = mountView("[site](https://example.com)");
+  test("external links open on plain click; internal links need a modified click", () => {
     const originalOpen = window.open;
     const calls: unknown[] = [];
     window.open = ((...args: unknown[]) => {
@@ -66,24 +75,41 @@ describe("core editor behavior", () => {
     }) as typeof window.open;
 
     try {
-      const link = host.querySelector<HTMLAnchorElement>("a");
-      expect(link).not.toBeNull();
+      const { host, view, cleanup } = mountView("[site](https://example.com)");
+      try {
+        const link = host.querySelector<HTMLAnchorElement>("a");
+        expect(link).not.toBeNull();
 
-      view.someProp("handleDOMEvents", (handlers) => {
-        handlers?.click?.(view, clickEvent(link!, false));
-        return false;
-      });
-      expect(calls).toEqual([]);
+        view.dispatch(
+          view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)),
+        );
 
-      view.someProp("handleDOMEvents", (handlers) => {
-        handlers?.click?.(view, clickEvent(link!, true));
-        return false;
-      });
+        fireLinkPointer(view, clickEvent(link!, false));
+        expect(calls).toEqual([["https://example.com", "_blank", "noopener,noreferrer"]]);
+      } finally {
+        cleanup();
+      }
 
-      expect(calls).toEqual([["https://example.com", "_blank", "noopener,noreferrer"]]);
+      const { host: host2, view: view2, cleanup: cleanup2 } = mountView("[note](note.md)");
+      try {
+        const internal = host2.querySelector<HTMLAnchorElement>("a");
+        expect(internal).not.toBeNull();
+        calls.length = 0;
+
+        view2.dispatch(
+          view2.state.tr.setSelection(TextSelection.atEnd(view2.state.doc)),
+        );
+
+        fireLinkPointer(view2, clickEvent(internal!, false));
+        expect(calls).toEqual([]);
+
+        fireLinkPointer(view2, clickEvent(internal!, true));
+        expect(calls).toEqual([["note.md", "_blank", "noopener,noreferrer"]]);
+      } finally {
+        cleanup2();
+      }
     } finally {
       window.open = originalOpen;
-      cleanup();
     }
   });
 

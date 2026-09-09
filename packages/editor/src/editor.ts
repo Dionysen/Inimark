@@ -22,16 +22,26 @@ import {
   trailingSentinelPlugin,
 } from "./trailing-sentinel.ts";
 import { clickFocusPlugin } from "./click-focus.ts";
-import { tryNavigateFromClick } from "./link-navigation.ts";
+import { isRenderedNavigablePointer, tryNavigateFromClick } from "./link-navigation.ts";
 
-// Wiki links open on plain click; Cmd/Ctrl+hover shows a preview card.
-// http(s) links still open on Cmd/Ctrl+click.
+// Wiki links and external URLs open on plain click; Cmd/Ctrl+hover shows a preview card.
+// Internal markdown links still open on Cmd/Ctrl+click.
 function linkNavigationPlugin(): Plugin {
   return new Plugin({
     props: {
       handleDOMEvents: {
-        click(view, event) {
+        mousedown(view, event) {
+          if (event.button !== 0) return false;
           return tryNavigateFromClick(view, event);
+        },
+        click(view, event) {
+          // Navigation runs on mousedown (before the caret moves). Swallow
+          // the follow-up click so we don't open twice or re-enter edit mode.
+          if (isRenderedNavigablePointer(view, event)) {
+            event.preventDefault();
+            return true;
+          }
+          return false;
         },
       },
     },

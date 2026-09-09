@@ -2,7 +2,7 @@ import type { Node as PMNode } from "prosemirror-model";
 import { Plugin, TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
-import { isModifiedClick } from "./link-navigation.ts";
+import { isModifiedClick, isRenderedNavigablePointer } from "./link-navigation.ts";
 import { isEmptyParagraph, trailingSentinelStart } from "./trailing-sentinel.ts";
 
 type BlockRect = {
@@ -522,6 +522,7 @@ export function handleEditorSurfaceMouseDown(
   if (target.closest(".typora-web-source-editor:not([hidden])")) return false;
   if (isInteractiveEditorTarget(target)) return false;
   if (shouldPreserveSelectionOnClick(target)) return false;
+  if (isRenderedNavigablePointer(view, event)) return false;
 
   if (shouldNeutralizeModifiedClick(view, event)) {
     return startPreciseSelectionAtClick(view, event);
@@ -549,6 +550,7 @@ export function clickFocusPlugin(): Plugin {
     props: {
       handleDOMEvents: {
         mousedown(view, event) {
+          if (isRenderedNavigablePointer(view, event)) return false;
           if (shouldNeutralizeModifiedClick(view, event)) {
             return startPreciseSelectionAtClick(view, event);
           }
