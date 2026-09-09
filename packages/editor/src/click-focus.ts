@@ -48,6 +48,15 @@ function isOpaqueChromeClick(target: Element): boolean {
   return false;
 }
 
+/** Non-editable rendered previews — clicks must not move the caret. */
+function shouldPreserveSelectionOnClick(target: Element): boolean {
+  if (target.closest("math-block math-preview")) return true;
+  if (target.closest(".html-block-node .html-block-preview")) return true;
+  if (target.closest("toc-block")) return true;
+  if (target.closest(".diagram-panel")) return true;
+  return false;
+}
+
 function blockRect(
   view: EditorView,
   nodePos: number,
@@ -512,6 +521,7 @@ export function handleEditorSurfaceMouseDown(
   if (!root.contains(target)) return false;
   if (target.closest(".typora-web-source-editor:not([hidden])")) return false;
   if (isInteractiveEditorTarget(target)) return false;
+  if (shouldPreserveSelectionOnClick(target)) return false;
 
   if (shouldNeutralizeModifiedClick(view, event)) {
     return startPreciseSelectionAtClick(view, event);
@@ -530,6 +540,7 @@ function shouldCaptureClick(view: EditorView, event: MouseEvent): boolean {
   if (!(target instanceof Element)) return false;
   if (!view.dom.contains(target)) return false;
   if (isInteractiveEditorTarget(target)) return false;
+  if (shouldPreserveSelectionOnClick(target)) return false;
   return needsClickRedirect(view, event.clientX, event.clientY, target);
 }
 

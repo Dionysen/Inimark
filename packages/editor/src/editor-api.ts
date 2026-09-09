@@ -17,6 +17,7 @@ import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { renderedPosToMdOffset } from "./selection-md-map.ts";
+import { safeTextSelection } from "./selection-utils.ts";
 import {
   createEmbeddedCodeMirrorEditor,
   type EmbeddedCodeMirrorEditor,
@@ -357,7 +358,11 @@ export function createEditor(
   // line boundaries are spot-on.
   function mdOffsetToRenderedPos(md: string, offset: number): number {
     try {
-      return parse(md.slice(0, Math.max(0, offset))).content.size;
+      const partial = parse(md.slice(0, Math.max(0, offset)));
+      const pos = partial.content.size;
+      const $pos = partial.resolve(pos);
+      if ($pos.parent.inlineContent) return pos;
+      return TextSelection.near($pos, -1).from;
     } catch {
       return 0;
     }
@@ -383,17 +388,10 @@ export function createEditor(
     const from = Math.min(mdOffsetToRenderedPos(md, anchor), view.state.doc.content.size);
     const to = Math.min(mdOffsetToRenderedPos(md, head), view.state.doc.content.size);
     try {
-      const sel = TextSelection.create(view.state.doc, from, to);
-      view.dispatch(view.state.tr.setSelection(sel));
-      return;
-    } catch {
-      /* fall through */
-    }
-    try {
-      const sel = TextSelection.near(view.state.doc.resolve(from));
+      const sel = safeTextSelection(view.state.doc, from, to);
       view.dispatch(view.state.tr.setSelection(sel));
     } catch {
-      /* ignore */
+      /* ignore layout races */
     }
   }
 

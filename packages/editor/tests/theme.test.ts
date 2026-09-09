@@ -21,10 +21,11 @@ describe("built-in editor themes", () => {
     }
   });
 
-  test("dark Typora theme gives code blocks a distinct panel background", () => {
+  test("Typora theme styles code blocks via theme CSS variables", () => {
     const typoraThemeCss = readFileSync("src/styles/theme-typora.css", "utf8");
 
-    expect(typoraThemeCss).toContain('[data-appearance="dark"]');
-    expect(typoraThemeCss).toContain("pre");
+    expect(typoraThemeCss).not.toContain('[data-appearance="dark"]');
+    expect(typoraThemeCss).toContain(".ProseMirror pre");
+    expect(typoraThemeCss).toContain("var(--bg-code");
   });
 });

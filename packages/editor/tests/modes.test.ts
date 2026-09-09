@@ -99,30 +99,26 @@ describe("editor modes", () => {
     }
   });
 
-  test("source mode toggle preserves the current page scroll position", () => {
+  test("source mode toggle preserves the current page scroll position", async () => {
     const host = document.createElement("div");
+    host.style.overflow = "auto";
+    host.style.height = "200px";
     document.body.appendChild(host);
     const editor = createEditor(host, {
       initialContent: Array.from({ length: 20 }, (_, i) => `paragraph ${i + 1}`).join("\n\n"),
     });
-    const oldScrollTo = window.scrollTo;
-    const oldScrollY = Object.getOwnPropertyDescriptor(window, "scrollY");
-    const calls: number[] = [];
 
     try {
-      Object.defineProperty(window, "scrollY", { configurable: true, value: 320 });
-      window.scrollTo = ((arg: ScrollToOptions | number) => {
-        calls.push(typeof arg === "number" ? arg : Number(arg.top ?? 0));
-      }) as typeof window.scrollTo;
-
+      host.scrollTop = 320;
       editor.toggleSource();
       editor.toggleSource();
 
-      expect(calls).toContain(320);
-      expect(calls[calls.length - 1]).toBe(320);
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      expect(host.scrollTop).toBe(320);
     } finally {
-      window.scrollTo = oldScrollTo;
-      if (oldScrollY) Object.defineProperty(window, "scrollY", oldScrollY);
       editor.destroy();
       host.remove();
     }

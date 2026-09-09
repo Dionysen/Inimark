@@ -149,7 +149,7 @@ export function removeLibrary(id: string): void {
   const lastLibraryId =
     config.lastLibraryId === id ? (libraries[0]?.id ?? null) : config.lastLibraryId;
 
-  saveLibrariesRegistry({
+  saveLibrariesConfig({
     ...config,
     libraries,
     sessions,

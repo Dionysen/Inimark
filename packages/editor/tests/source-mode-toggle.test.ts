@@ -1,8 +1,7 @@
 ﻿import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { TextSelection } from "prosemirror-state";
-
 import { createEditor } from "../src/lib.ts";
+import { safeTextSelection } from "../src/selection-utils.ts";
 
 /**
  * Source ⇄ preview pollution harness.
@@ -271,7 +270,7 @@ describe("source ⇄ preview mode pollution", () => {
     withEditor("alpha\n\nbeta", (editor) => {
       const { view } = editor;
       const pos = view.state.doc.content.size - 2;
-      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)));
+      view.dispatch(view.state.tr.setSelection(safeTextSelection(view.state.doc, pos)));
       const before = editor.getViewState();
       editor.toggleSource();
       expect(editor.isSourceMode()).toBe(true);

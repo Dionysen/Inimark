@@ -1,4 +1,22 @@
+import type { Node as PMNode } from "prosemirror-model";
 import { TextSelection, type Transaction } from "prosemirror-state";
+
+/** Map a possibly doc-level position into a valid text cursor/selection. */
+export function safeTextSelection(doc: PMNode, anchor: number, head = anchor): TextSelection {
+  const clamp = (pos: number) => Math.max(0, Math.min(pos, doc.content.size));
+  const a = clamp(anchor);
+  const h = clamp(head);
+  if (a === h) {
+    const $pos = doc.resolve(a);
+    if ($pos.parent.inlineContent) return TextSelection.create(doc, a);
+    return TextSelection.near($pos, -1);
+  }
+  const $anchor = doc.resolve(a);
+  const $head = doc.resolve(h);
+  const fixedAnchor = $anchor.parent.inlineContent ? $anchor : TextSelection.near($anchor, -1).$anchor;
+  const fixedHead = $head.parent.inlineContent ? $head : TextSelection.near($head, -1).$anchor;
+  return TextSelection.create(doc, fixedAnchor.pos, fixedHead.pos);
+}
 
 /** Place the caret inside a textblock after block-level insert/replace. */
 export function caretInsideTextblock(tr: Transaction, blockName: string): number {

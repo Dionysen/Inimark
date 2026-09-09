@@ -1,8 +1,7 @@
 import type { Schema } from "prosemirror-model";
 import type { Command } from "prosemirror-state";
-import { TextSelection } from "prosemirror-state";
-
 import { leaveLineDraft } from "../block-draft.ts";
+import { setCaretInTextblock } from "../selection-utils.ts";
 import type { FeatureSpec } from "./_types.ts";
 
 // horizontal_rule (HR).
@@ -62,8 +61,7 @@ function insertHorizontalRule(schema: Schema): Command {
     const para = schema.nodes.paragraph!.create();
     if (dispatch) {
       const tr = state.tr.replaceWith(from, to, [hr, para]);
-      tr.setSelection(TextSelection.create(tr.doc, from + hr.nodeSize + 1));
-      dispatch(tr.scrollIntoView());
+      dispatch(setCaretInTextblock(tr, "paragraph").scrollIntoView());
     }
     return true;
   };
