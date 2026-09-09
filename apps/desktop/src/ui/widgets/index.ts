@@ -82,6 +82,7 @@ export { createNavItem, createNavList, setNavItemLabel, type NavItemOptions } fr
 export {
   applyOverlayPosition,
   onOutsideClick,
+  onScrollDismiss,
   positionBelowOrAbove,
   type OverlayPosition,
 } from "./overlay.ts";

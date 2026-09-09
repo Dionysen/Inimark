@@ -272,7 +272,7 @@ html.platform-windows .inimark-settings-nav-topbar {
 
 .inimark-settings-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 11rem;
   gap: var(--inimark-space-4);
   align-items: center;
   padding: var(--inimark-space-3) 0;
@@ -293,13 +293,16 @@ html.platform-windows .inimark-settings-nav-topbar {
 }
 
 .inimark-settings-row-control {
-  min-width: 11rem;
+  justify-self: start;
+  width: 100%;
+  min-width: 0;
+  max-width: 11rem;
 }
 
 .inimark-settings-row-control .inimark-select,
 .inimark-settings-row-control .inimark-slider {
   width: 100%;
-  min-width: 11rem;
+  min-width: 0;
 }
 
 .inimark-about {
@@ -363,15 +366,15 @@ html.platform-windows .inimark-settings-nav-topbar {
 .inimark-about-list .inimark-settings-row-control {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   min-height: var(--inimark-control-height);
-  text-align: right;
+  text-align: left;
 }
 
 .inimark-about-value {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   min-height: var(--inimark-control-height);
   color: var(--inimark-muted-fg);
   font-size: var(--inimark-control-font-size, 13px);
@@ -543,12 +546,27 @@ html.platform-windows .inimark-settings-nav-topbar {
   display: flex;
   align-items: center;
   gap: var(--inimark-space-2);
+  width: 100%;
   min-width: 0;
 }
 
 .inimark-settings-inline-controls .inimark-field {
   flex: 1;
   min-width: 0;
+}
+
+.inimark-settings-auto-save-delay .inimark-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.inimark-settings-auto-save-delay .inimark-field__input {
+  width: 100%;
+}
+
+.inimark-settings-auto-save-delay .inimark-select {
+  flex: 0 0 4.25rem;
+  width: 4.25rem;
 }
 
 /* ── Sidebar tab layout (appearance) ─────────────────────────────── */

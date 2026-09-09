@@ -10,6 +10,7 @@ export function positionBelowOrAbove(
   trigger: DOMRect,
   preferredMax = 280,
   gap = 4,
+  minWidth = 140,
 ): OverlayPosition {
   const spaceBelow = window.innerHeight - trigger.bottom - gap - 8;
   const spaceAbove = trigger.top - gap - 8;
@@ -18,7 +19,7 @@ export function positionBelowOrAbove(
   return {
     top: openUp ? trigger.top - gap : trigger.bottom + gap,
     left: trigger.left,
-    width: Math.max(trigger.width, 140),
+    width: Math.max(trigger.width, minWidth),
     maxHeight,
     openUp,
   };
@@ -52,4 +53,18 @@ export function onOutsideClick(
   };
   document.addEventListener("mousedown", handler);
   return () => document.removeEventListener("mousedown", handler);
+}
+
+/** Close when any scrollable ancestor scrolls; ignores scroll inside `ignoreRoot`. */
+export function onScrollDismiss(
+  ignoreRoot: HTMLElement,
+  onClose: () => void,
+): () => void {
+  const handler = (event: Event) => {
+    const target = event.target as Node | null;
+    if (target && ignoreRoot.contains(target)) return;
+    onClose();
+  };
+  document.addEventListener("scroll", handler, true);
+  return () => document.removeEventListener("scroll", handler, true);
 }

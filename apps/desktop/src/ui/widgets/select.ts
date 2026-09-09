@@ -1,6 +1,7 @@
 import {
   applyOverlayPosition,
   onOutsideClick,
+  onScrollDismiss,
   positionBelowOrAbove,
 } from "./overlay.ts";
 
@@ -16,6 +17,8 @@ export interface SelectOptions {
   disabled?: boolean;
   title?: string;
   minWidth?: number | string;
+  /** Dropdown panel width matches the trigger (no global minimum). */
+  matchTriggerWidth?: boolean;
   onChange?: (value: string) => void;
 }
 
@@ -35,6 +38,7 @@ export function createSelect(options: SelectOptions): SelectController {
   let open = false;
   let activeIndex = -1;
   let stopOutside: (() => void) | null = null;
+  let stopScrollDismiss: (() => void) | null = null;
 
   const root = document.createElement("div");
   root.className = "inimark-select";
@@ -80,6 +84,8 @@ export function createSelect(options: SelectOptions): SelectController {
     panel.hidden = true;
     stopOutside?.();
     stopOutside = null;
+    stopScrollDismiss?.();
+    stopScrollDismiss = null;
   }
 
   function renderOptions(): void {
@@ -124,11 +130,21 @@ export function createSelect(options: SelectOptions): SelectController {
     trigger.classList.add("is-open");
     trigger.setAttribute("aria-expanded", "true");
     panel.hidden = false;
+    panel.classList.toggle(
+      "inimark-select-panel--match-trigger",
+      Boolean(options.matchTriggerWidth),
+    );
     document.body.append(panel);
-    const pos = positionBelowOrAbove(trigger.getBoundingClientRect());
+    const pos = positionBelowOrAbove(
+      trigger.getBoundingClientRect(),
+      280,
+      4,
+      options.matchTriggerWidth ? 0 : 140,
+    );
     applyOverlayPosition(panel, pos);
     requestAnimationFrame(() => panel.classList.add("is-open"));
     stopOutside = onOutsideClick([root, panel], close);
+    stopScrollDismiss = onScrollDismiss(panel, close);
   }
 
   function toggle(): void {

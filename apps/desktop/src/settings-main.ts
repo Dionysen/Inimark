@@ -11,8 +11,9 @@ import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
 import { mountSettingsView } from "./settings/view.ts";
 import {
   applySettings,
+  isExternalSettingsSync,
   loadSettings,
-  type AppSettings,
+  parseSettingsSyncPayload,
   SETTINGS_STORAGE_KEY,
   SETTINGS_SYNC_EVENT,
 } from "./settings/store.ts";
@@ -48,8 +49,8 @@ void initThemeManager().then(() => {
     },
   });
 
-  function syncSettingsFromExternal(next?: AppSettings): void {
-    applySettings(next ?? loadSettings());
+  function syncSettingsFromExternal(): void {
+    applySettings(loadSettings());
     view.refresh();
   }
 
@@ -65,8 +66,11 @@ void initThemeManager().then(() => {
   let unlistenSettings: (() => void) | undefined;
   if (isTauri()) {
     void import("@tauri-apps/api/event").then(async ({ listen }) => {
-      unlistenSettings = await listen<AppSettings>(SETTINGS_SYNC_EVENT, (event) => {
-        syncSettingsFromExternal(event.payload);
+      unlistenSettings = await listen(SETTINGS_SYNC_EVENT, (event) => {
+        const payload = parseSettingsSyncPayload(event.payload);
+        if (!payload || !isExternalSettingsSync(payload)) return;
+        applySettings(payload.settings);
+        view.refresh();
       });
     });
   }

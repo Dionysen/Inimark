@@ -275,7 +275,12 @@ export const en: Dictionary = {
       editorWidth: "Editor width",
       editorWidthDesc: "Maximum width of the writing column (480–1280px).",
       autoSave: "Auto save",
-      autoSaveDesc: "Save the open library file shortly after edits.",
+      autoSaveDesc: "Save the open library file after you stop editing.",
+      autoSaveDelay: "Auto save delay",
+      autoSaveDelayDesc: "How long to wait after edits before saving.",
+      autoSaveDelayUnitSeconds: "s",
+      autoSaveDelayUnitMinutes: "min",
+      autoSaveDelayUnitHours: "h",
       linkUpdateOnMove: "Update links on move",
       linkUpdateOnMoveDesc:
         "When notes are moved or renamed, update wiki links that pointed to them.",

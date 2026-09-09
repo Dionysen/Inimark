@@ -71,6 +71,11 @@
   outline: none;
 }
 
+.inimark-field .inimark-field__input:focus,
+.inimark-field .inimark-field__input:focus-visible {
+  box-shadow: none;
+}
+
 .inimark-field__input::placeholder {
   color: var(--inimark-muted-fg);
   opacity: 0.75;
@@ -413,6 +418,11 @@
 
 .inimark-select.is-open .inimark-select__chevron {
   transform: rotate(180deg);
+}
+
+.inimark-select-panel--match-trigger {
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .inimark-select-panel {

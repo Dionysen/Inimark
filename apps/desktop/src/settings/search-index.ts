@@ -50,6 +50,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "editor.autoHideStatusbar", section: "editor", titleKey: "settings.editor.autoHideStatusbar", descKey: "settings.editor.autoHideStatusbarDesc" },
   { id: "editor.autoHideTitlebar", section: "editor", titleKey: "settings.editor.autoHideTitlebar", descKey: "settings.editor.autoHideTitlebarDesc" },
   { id: "editor.autoSave", section: "editor", titleKey: "settings.editor.autoSave", descKey: "settings.editor.autoSaveDesc" },
+  { id: "editor.autoSaveDelay", section: "editor", titleKey: "settings.editor.autoSaveDelay", descKey: "settings.editor.autoSaveDelayDesc" },
   { id: "editor.linkUpdateOnMove", section: "editor", titleKey: "settings.editor.linkUpdateOnMove", descKey: "settings.editor.linkUpdateOnMoveDesc" },
   { id: "editor.formatOnSave", section: "editor", titleKey: "settings.editor.formatOnSave", descKey: "settings.editor.formatOnSaveDesc" },
   { id: "editor.cjkSpacing", section: "editor", titleKey: "settings.editor.cjkSpacing", descKey: "settings.editor.cjkSpacingDesc" },

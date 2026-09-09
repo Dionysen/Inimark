@@ -27,6 +27,12 @@ export const EDITOR_WIDTH_DEFAULT = 768;
 export const FONT_SIZE_MIN = 9;
 export const FONT_SIZE_MAX = 36;
 
+export type AutoSaveDelayUnit = "s" | "min" | "h";
+
+export const AUTO_SAVE_DELAY_MS_DEFAULT = 900;
+export const AUTO_SAVE_DELAY_MS_MIN = 500;
+export const AUTO_SAVE_DELAY_MS_MAX = 24 * 60 * 60 * 1000;
+
 export type AppearanceMode = "light" | "dark" | "system";
 export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
@@ -98,6 +104,8 @@ export interface AppSettings {
   /** Collapse the editor titlebar until the pointer enters the top edge. */
   autoHideTitlebar: boolean;
   autoSave: boolean;
+  /** Milliseconds to wait after edits before auto-saving. */
+  autoSaveDelayMs: number;
   /** When notes are moved/renamed and other files link to them. */
   linkUpdateOnMove: LinkUpdateMode;
   markdownFormat: MarkdownFormatSettings;
@@ -119,6 +127,49 @@ export interface AppSettings {
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
 /** Cross-window live sync (Tauri). Browser / same-origin popups still use `storage`. */
 export const SETTINGS_SYNC_EVENT = "settings-changed";
+
+export interface SettingsSyncPayload {
+  settings: AppSettings;
+  /** Per-window id; listeners ignore echoes from the same webview. */
+  emitterId: string;
+}
+
+const SETTINGS_EMITTER_ID =
+  typeof globalThis.crypto?.randomUUID === "function"
+    ? globalThis.crypto.randomUUID()
+    : `settings-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+export function getSettingsEmitterId(): string {
+  return SETTINGS_EMITTER_ID;
+}
+
+export function parseSettingsSyncPayload(
+  payload: SettingsSyncPayload | AppSettings,
+): SettingsSyncPayload | null {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "emitterId" in payload &&
+    "settings" in payload
+  ) {
+    const sync = payload as SettingsSyncPayload;
+    return {
+      emitterId: String(sync.emitterId),
+      settings: normalizeSettings(sync.settings),
+    };
+  }
+  if (payload && typeof payload === "object" && "fontSize" in payload) {
+    return {
+      emitterId: "",
+      settings: normalizeSettings(payload as Partial<AppSettings>),
+    };
+  }
+  return null;
+}
+
+export function isExternalSettingsSync(payload: SettingsSyncPayload): boolean {
+  return payload.emitterId !== getSettingsEmitterId();
+}
 
 export const DEFAULT_MARKDOWN_FORMAT: MarkdownFormatSettings = {
   formatOnSave: false,
@@ -168,6 +219,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoHideStatusbar: false,
   autoHideTitlebar: false,
   autoSave: false,
+  autoSaveDelayMs: AUTO_SAVE_DELAY_MS_DEFAULT,
   linkUpdateOnMove: "ask",
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
   menuDensity: "normal",
@@ -228,11 +280,15 @@ export function saveSettings(settings: AppSettings): void {
   broadcastSettings(settings);
 }
 
-let settingsBroadcaster: ((settings: AppSettings) => void) | null = null;
+let settingsBroadcaster: ((payload: SettingsSyncPayload) => void) | null = null;
 
 function broadcastSettings(settings: AppSettings): void {
+  const payload: SettingsSyncPayload = {
+    settings,
+    emitterId: getSettingsEmitterId(),
+  };
   if (settingsBroadcaster) {
-    settingsBroadcaster(settings);
+    settingsBroadcaster(payload);
     return;
   }
   // Only wire Tauri IPC when running inside a webview with internals.
@@ -248,7 +304,7 @@ function broadcastSettings(settings: AppSettings): void {
       settingsBroadcaster = (next) => {
         void emit(SETTINGS_SYNC_EVENT, next).catch(() => {});
       };
-      settingsBroadcaster(settings);
+      settingsBroadcaster(payload);
     })
     .catch(() => {
       settingsBroadcaster = () => {};
@@ -376,6 +432,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       parsed.autoHideTitlebar ?? DEFAULT_SETTINGS.autoHideTitlebar,
     ),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
+    autoSaveDelayMs: normalizeAutoSaveDelayMs(parsed.autoSaveDelayMs),
     linkUpdateOnMove: isLinkUpdateMode(parsed.linkUpdateOnMove)
       ? parsed.linkUpdateOnMove
       : DEFAULT_SETTINGS.linkUpdateOnMove,
@@ -462,6 +519,56 @@ export function patchGraphSettings(partial: Partial<GraphSettings>): GraphSettin
     listener(graph);
   }
   return graph;
+}
+
+export function normalizeAutoSaveDelayMs(ms: number | undefined): number {
+  if (ms == null || !Number.isFinite(ms)) return AUTO_SAVE_DELAY_MS_DEFAULT;
+  return Math.min(
+    AUTO_SAVE_DELAY_MS_MAX,
+    Math.max(AUTO_SAVE_DELAY_MS_MIN, Math.round(ms)),
+  );
+}
+
+export function autoSaveDelayFromParts(
+  value: number,
+  unit: AutoSaveDelayUnit,
+): number {
+  const mult = unit === "h" ? 3_600_000 : unit === "min" ? 60_000 : 1_000;
+  return value * mult;
+}
+
+export function autoSaveDelayToParts(ms: number): {
+  value: number;
+  unit: AutoSaveDelayUnit;
+} {
+  const normalized = normalizeAutoSaveDelayMs(ms);
+  const hours = normalized / 3_600_000;
+  if (hours >= 1 && Math.abs(hours - Math.round(hours)) < 1e-9) {
+    return { value: Math.round(hours), unit: "h" };
+  }
+  const minutes = normalized / 60_000;
+  if (minutes >= 1 && Math.abs(minutes - Math.round(minutes)) < 1e-9) {
+    return { value: Math.round(minutes), unit: "min" };
+  }
+  return { value: normalized / 1_000, unit: "s" };
+}
+
+export function formatAutoSaveDelayValue(value: number): string {
+  if (Number.isInteger(value)) return String(value);
+  return String(parseFloat(value.toFixed(3)));
+}
+
+export function parseAutoSaveDelayInput(
+  raw: string,
+  unit: AutoSaveDelayUnit,
+): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const value = Number(trimmed);
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const ms = Math.round(autoSaveDelayFromParts(value, unit));
+  if (ms < AUTO_SAVE_DELAY_MS_MIN || ms > AUTO_SAVE_DELAY_MS_MAX) return null;
+  return ms;
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -2,9 +2,17 @@ import { describe, expect, test, beforeEach } from "vitest";
 
 import {
   applySettings,
+  AUTO_SAVE_DELAY_MS_DEFAULT,
+  autoSaveDelayFromParts,
+  autoSaveDelayToParts,
   DEFAULT_SETTINGS,
+  formatAutoSaveDelayValue,
   loadSettings,
+  normalizeAutoSaveDelayMs,
+  parseAutoSaveDelayInput,
+  parseSettingsSyncPayload,
   saveSettings,
+  type AppSettings,
 } from "../src/settings/store.ts";
 import { mountSettingsView } from "../src/settings/view.ts";
 
@@ -50,6 +58,35 @@ describe("settings store", () => {
       "960px",
     );
     expect(document.documentElement.dataset.glass).toBe("false");
+  });
+
+  test("parses settings sync payload", () => {
+    const settings: AppSettings = { ...DEFAULT_SETTINGS, fontSize: 20 };
+    const wrapped = parseSettingsSyncPayload({
+      settings,
+      emitterId: "window-a",
+    });
+    expect(wrapped?.settings.fontSize).toBe(20);
+    expect(wrapped?.emitterId).toBe("window-a");
+
+    const legacy = parseSettingsSyncPayload({ ...DEFAULT_SETTINGS, fontSize: 22 });
+    expect(legacy?.settings.fontSize).toBe(22);
+    expect(legacy?.emitterId).toBe("");
+  });
+
+  test("normalizes auto save delay", () => {
+    expect(DEFAULT_SETTINGS.autoSaveDelayMs).toBe(AUTO_SAVE_DELAY_MS_DEFAULT);
+    expect(normalizeAutoSaveDelayMs(undefined)).toBe(900);
+    expect(normalizeAutoSaveDelayMs(50)).toBe(500);
+    expect(autoSaveDelayFromParts(2, "min")).toBe(120_000);
+    expect(autoSaveDelayToParts(900)).toEqual({ value: 0.9, unit: "s" });
+    expect(autoSaveDelayToParts(60_000)).toEqual({ value: 1, unit: "min" });
+    expect(formatAutoSaveDelayValue(0.9)).toBe("0.9");
+    expect(parseAutoSaveDelayInput("1.5", "min")).toBe(90_000);
+    expect(parseAutoSaveDelayInput("0", "s")).toBeNull();
+
+    saveSettings({ ...DEFAULT_SETTINGS, autoSaveDelayMs: 5_000 });
+    expect(loadSettings().autoSaveDelayMs).toBe(5_000);
   });
 
   test("glass effect defaults off and toggles data-glass", () => {

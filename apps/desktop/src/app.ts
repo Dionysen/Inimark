@@ -52,6 +52,8 @@ import {
   saveSettings,
   type AppSettings,
   SETTINGS_STORAGE_KEY,
+  isExternalSettingsSync,
+  parseSettingsSyncPayload,
   SETTINGS_SYNC_EVENT,
 } from "./settings/store.ts";
 import { formatMarkdown } from "./settings/markdown-format.ts";
@@ -366,7 +368,7 @@ export function mountApp(host: HTMLElement): AppController {
     autoSaveTimer = setTimeout(() => {
       autoSaveTimer = null;
       void saveCurrentFile({ quiet: true });
-    }, 900);
+    }, settings.autoSaveDelayMs);
   }
 
   function currentMarkdownForSave(): string {
@@ -917,8 +919,10 @@ export function mountApp(host: HTMLElement): AppController {
     void (async () => {
       const { listen } = await import("@tauri-apps/api/event");
       const { getCurrentWindow } = await import("@tauri-apps/api/window");
-      const unlistenSettings = await listen<AppSettings>(SETTINGS_SYNC_EVENT, (event) => {
-        applyIncomingSettings(event.payload);
+      const unlistenSettings = await listen(SETTINGS_SYNC_EVENT, (event) => {
+        const payload = parseSettingsSyncPayload(event.payload);
+        if (!payload || !isExternalSettingsSync(payload)) return;
+        applyIncomingSettings(payload.settings);
       });
       cleanups.push(unlistenSettings);
 

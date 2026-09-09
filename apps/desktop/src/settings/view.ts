@@ -36,7 +36,11 @@ import {
 import {
   type AppLocale,
   type AppSettings,
+  type AutoSaveDelayUnit,
   type FontPresetId,
+  autoSaveDelayToParts,
+  formatAutoSaveDelayValue,
+  parseAutoSaveDelayInput,
   type ImageFilenameFormat,
   type ImageStorageMode,
   type LinkUpdateMode,
@@ -664,6 +668,65 @@ export function mountSettingsView(
         t("settings.editor.autoSaveDesc"),
         autoSave.el,
         "editor.autoSave",
+      ),
+    );
+
+    const delayParts = autoSaveDelayToParts(settings.autoSaveDelayMs);
+    let delayUnit = delayParts.unit;
+
+    const delayInput = document.createElement("input");
+    delayInput.type = "number";
+    delayInput.className = "inimark-field__input";
+    delayInput.min = "0.1";
+    delayInput.step = "any";
+    delayInput.inputMode = "decimal";
+    delayInput.value = formatAutoSaveDelayValue(delayParts.value);
+    delayInput.disabled = !settings.autoSave;
+    delayInput.setAttribute("aria-label", t("settings.editor.autoSaveDelay"));
+
+    function commitAutoSaveDelay(rawValue = delayInput.value): void {
+      const ms = parseAutoSaveDelayInput(rawValue, delayUnit);
+      if (ms == null) {
+        const parts = autoSaveDelayToParts(settings.autoSaveDelayMs);
+        delayInput.value = formatAutoSaveDelayValue(parts.value);
+        return;
+      }
+      if (ms !== settings.autoSaveDelayMs) {
+        update({ autoSaveDelayMs: ms });
+      }
+    }
+
+    delayInput.addEventListener("change", () => commitAutoSaveDelay());
+    delayInput.addEventListener("blur", () => commitAutoSaveDelay());
+
+    const delayUnitSelect = createSelect({
+      value: delayParts.unit,
+      disabled: !settings.autoSave,
+      matchTriggerWidth: true,
+      options: [
+        { value: "s", label: t("settings.editor.autoSaveDelayUnitSeconds") },
+        { value: "min", label: t("settings.editor.autoSaveDelayUnitMinutes") },
+        { value: "h", label: t("settings.editor.autoSaveDelayUnitHours") },
+      ],
+      onChange(value) {
+        delayUnit = value as AutoSaveDelayUnit;
+        commitAutoSaveDelay();
+      },
+    });
+
+    const delayGroup = document.createElement("div");
+    delayGroup.className =
+      "inimark-settings-inline-controls inimark-settings-auto-save-delay";
+    const delayField = document.createElement("label");
+    delayField.className = "inimark-control inimark-field";
+    delayField.append(delayInput);
+    delayGroup.append(delayField, delayUnitSelect.el);
+    body.append(
+      createRow(
+        t("settings.editor.autoSaveDelay"),
+        t("settings.editor.autoSaveDelayDesc"),
+        delayGroup,
+        "editor.autoSaveDelay",
       ),
     );
 

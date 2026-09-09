@@ -47,6 +47,57 @@ describe("widgets/select", () => {
     select.destroy();
   });
 
+  test("closes panel when an outer scroll container scrolls", () => {
+    const scrollHost = document.createElement("div");
+    scrollHost.style.height = "100px";
+    scrollHost.style.overflow = "auto";
+    const scrollContent = document.createElement("div");
+    scrollContent.style.height = "400px";
+    scrollHost.append(scrollContent);
+    document.body.append(scrollHost);
+
+    const select = createSelect({
+      value: "a",
+      options: [
+        { value: "a", label: "Alpha" },
+        { value: "b", label: "Beta" },
+      ],
+    });
+    scrollHost.append(select.el);
+
+    const trigger = select.el.querySelector("button")!;
+    trigger.click();
+    const panel = document.querySelector(".inimark-select-panel") as HTMLElement;
+    expect(panel.hidden).toBe(false);
+
+    scrollHost.dispatchEvent(new Event("scroll", { bubbles: false }));
+    expect(panel.hidden).toBe(true);
+
+    select.destroy();
+    scrollHost.remove();
+  });
+
+  test("matchTriggerWidth sizes panel to trigger", () => {
+    const select = createSelect({
+      value: "s",
+      matchTriggerWidth: true,
+      options: [
+        { value: "s", label: "s" },
+        { value: "min", label: "min" },
+      ],
+    });
+    select.el.style.width = "72px";
+    host.append(select.el);
+
+    const trigger = select.el.querySelector("button")!;
+    trigger.click();
+    const panel = document.querySelector(".inimark-select-panel") as HTMLElement;
+    expect(panel.classList.contains("inimark-select-panel--match-trigger")).toBe(true);
+    expect(panel.style.width).toBe(`${trigger.getBoundingClientRect().width}px`);
+
+    select.destroy();
+  });
+
   test("keyboard ArrowDown opens and Enter commits active option", () => {
     let value = "a";
     const select = createSelect({
