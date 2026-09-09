@@ -378,8 +378,8 @@
  * padding so the native caret ends up visually separated from the glyph. */
 .ProseMirror .checkbox-frame {
   display: inline-block;
-  width: 1em;
-  height: 1em;
+  width: 1.2em;
+  height: 1.2em;
   line-height: 0;
   padding-right: 1.35em;
   vertical-align: middle;
@@ -388,8 +388,8 @@
 }
 .ProseMirror .checkbox {
   display: block;
-  width: 1em;
-  height: 1em;
+  width: 1.2em;
+  height: 1.2em;
   aspect-ratio: 1 / 1;
   border: max(1px, 0.085em) solid var(--border, #888);
   border-radius: 50%;
@@ -409,11 +409,10 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 0.22em;
-  height: 0.42em;
+  width: 0.36em;
+  height: 0.65em;
   border: solid #fff;
-  border-color: color-contrast(var(--accent, #4078c0) vs #fff, #111);
-  border-width: 0 0.11em 0.11em 0;
+  border-width: 0 0.17em 0.17em 0;
   transform: translate(-50%, -58%) rotate(45deg);
   box-sizing: border-box;
 }

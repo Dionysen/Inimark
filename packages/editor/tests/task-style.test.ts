@@ -12,7 +12,7 @@ describe("task list styling", () => {
     expect(widgetsCss).toContain("border-radius: 50%;");
     expect(widgetsCss).toContain("background: var(--accent");
     expect(widgetsCss).toContain("vertical-align: middle;");
-    expect(widgetsCss).toContain("width: 1em;");
+    expect(widgetsCss).toContain("width: 1.2em;");
     expect(widgetsCss).toContain("aspect-ratio: 1 / 1;");
   });
 });
