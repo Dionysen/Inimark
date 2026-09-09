@@ -190,8 +190,9 @@
 /* ─── lists ──────────────────────────────────────────────────────── */
 .ProseMirror ul,
 .ProseMirror ol {
+  --list-indent: 1.6em;
   margin: 0 0 1em;
-  padding-left: 1.6em;
+  padding-left: var(--list-indent);
 }
 .ProseMirror ul ul,
 .ProseMirror ul ol,

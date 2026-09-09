@@ -1,6 +1,6 @@
 import type { Editor, EditorCommandName } from "@inimark/editor";
 import { t } from "../i18n/index.ts";
-import { detectPlatform } from "../platform/platform.ts";
+import { formatShortcutDisplay } from "../shortcuts/store.ts";
 import {
   acquireExclusiveLayer,
   releaseExclusiveLayer,
@@ -32,14 +32,12 @@ type SubmenuRow = {
   items: SubmenuEntry[];
 };
 
-function modKey(): string {
-  return detectPlatform() === "macos" ? "⌘" : "Ctrl";
+function modShortcut(...keys: string[]): string {
+  return formatShortcutDisplay(["Ctrl", ...keys]);
 }
 
 function altModShortcut(key: string): string {
-  const m = modKey();
-  if (detectPlatform() === "macos") return `⌥ ${m} ${key}`;
-  return `Alt+${m}+${key}`;
+  return formatShortcutDisplay(["Alt", "Ctrl", key]);
 }
 
 function svg(paths: string, size = 18): string {
@@ -114,7 +112,6 @@ const ICONS = {
 };
 
 function buildIconRows(): IconAction[][] {
-  const m = modKey();
   return [
     [
       { name: "cut", label: t("editor.ctx.cut"), icon: ICONS.cut },
@@ -123,21 +120,21 @@ function buildIconRows(): IconAction[][] {
       { name: "delete", label: t("editor.ctx.delete"), icon: ICONS.trash },
     ],
     [
-      { name: "bold", label: t("editor.ctx.bold"), shortcut: `${m}B`, icon: ICONS.bold },
-      { name: "italic", label: t("editor.ctx.italic"), shortcut: `${m}I`, icon: ICONS.italic },
+      { name: "bold", label: t("editor.ctx.bold"), shortcut: modShortcut("B"), icon: ICONS.bold },
+      { name: "italic", label: t("editor.ctx.italic"), shortcut: modShortcut("I"), icon: ICONS.italic },
       {
         name: "strike",
         label: t("editor.ctx.strike"),
-        shortcut: "Alt+Shift+5",
+        shortcut: formatShortcutDisplay(["Alt", "Shift", "5"]),
         icon: ICONS.strikethrough,
       },
       {
         name: "inline-code",
         label: t("editor.ctx.inlineCode"),
-        shortcut: `${m}Shift+\``,
+        shortcut: modShortcut("Shift", "`"),
         icon: ICONS.code,
       },
-      { name: "link", label: t("editor.ctx.link"), shortcut: `${m}K`, icon: ICONS.link },
+      { name: "link", label: t("editor.ctx.link"), shortcut: modShortcut("K"), icon: ICONS.link },
     ],
     [
       {
@@ -170,7 +167,6 @@ function buildIconRows(): IconAction[][] {
 }
 
 function buildSubmenus(): SubmenuRow[] {
-  const m = modKey();
   return [
     {
       name: "heading",
@@ -181,42 +177,42 @@ function buildSubmenus(): SubmenuRow[] {
           kind: "item",
           name: "heading-1",
           label: t("editor.ctx.heading1"),
-          shortcut: `${m}1`,
+          shortcut: modShortcut("1"),
           icon: headingLevelBadgeHtml(1),
         },
         {
           kind: "item",
           name: "heading-2",
           label: t("editor.ctx.heading2"),
-          shortcut: `${m}2`,
+          shortcut: modShortcut("2"),
           icon: headingLevelBadgeHtml(2),
         },
         {
           kind: "item",
           name: "heading-3",
           label: t("editor.ctx.heading3"),
-          shortcut: `${m}3`,
+          shortcut: modShortcut("3"),
           icon: headingLevelBadgeHtml(3),
         },
         {
           kind: "item",
           name: "heading-4",
           label: t("editor.ctx.heading4"),
-          shortcut: `${m}4`,
+          shortcut: modShortcut("4"),
           icon: headingLevelBadgeHtml(4),
         },
         {
           kind: "item",
           name: "heading-5",
           label: t("editor.ctx.heading5"),
-          shortcut: `${m}5`,
+          shortcut: modShortcut("5"),
           icon: headingLevelBadgeHtml(5),
         },
         {
           kind: "item",
           name: "heading-6",
           label: t("editor.ctx.heading6"),
-          shortcut: `${m}6`,
+          shortcut: modShortcut("6"),
           icon: headingLevelBadgeHtml(6),
         },
         { kind: "divider" },
@@ -224,7 +220,7 @@ function buildSubmenus(): SubmenuRow[] {
           kind: "item",
           name: "paragraph",
           label: t("editor.ctx.paragraph"),
-          shortcut: `${m}0`,
+          shortcut: modShortcut("0"),
           icon: headingLevelBadgeHtml(0),
         },
       ],
@@ -398,10 +394,7 @@ export function mountEditorContextMenu(
       for (const action of row) {
         const wrap = document.createElement("div");
         wrap.className = "inimark-editor-context-icon-wrap";
-        bindTooltip(
-          wrap,
-          action.shortcut ? `${action.label} (${action.shortcut})` : action.label,
-        );
+        bindTooltip(wrap, action.label, action.shortcut);
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "inimark-editor-context-icon-btn";

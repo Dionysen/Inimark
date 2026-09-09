@@ -105,10 +105,10 @@ export function shouldBlockNativeShortcut(event: KeyboardEvent): boolean {
   if (event.defaultPrevented) return false;
   if (isShortcutRecordingActive()) return false;
 
-  if (isBrowserShortcut(event)) return true;
-
   const inEditor = isInMarkdownEditor(event.target);
   if (inEditor) return false;
+
+  if (isBrowserShortcut(event)) return true;
 
   if (isEditableTarget(event.target)) {
     // Allow normal typing and cursor keys; only intercept modifier shortcuts.

@@ -359,8 +359,19 @@
 }
 
 /* ─── Task-list checkbox NodeView ────────────────────────────────── */
-.ProseMirror li:has(> p > .checkbox-frame:first-child) {
+.ProseMirror li.has-task-marker {
   list-style-type: none;
+}
+
+.ProseMirror li.has-task-marker > p:first-child {
+  position: relative;
+}
+
+.ProseMirror li.has-task-marker .checkbox-frame {
+  position: absolute;
+  left: calc(-1 * var(--list-indent, 1.6em));
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Outer wrapper — extends the inline box to the right with transparent

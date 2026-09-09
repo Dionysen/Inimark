@@ -67,4 +67,22 @@ describe("shortcut guard", () => {
     expect(shouldBlockNativeShortcut(event)).toBe(false);
     button.remove();
   });
+
+  test("allows editor formatting chords that overlap browser shortcuts", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    const prose = document.createElement("div");
+    prose.className = "ProseMirror";
+    host.append(prose);
+    document.body.append(host);
+
+    for (const key of ["t", "-"]) {
+      const event = keyEvent({ key, ctrlKey: true, altKey: true });
+      Object.defineProperty(event, "target", { value: prose });
+      expect(isBrowserShortcut(event)).toBe(true);
+      expect(shouldBlockNativeShortcut(event)).toBe(false);
+    }
+
+    host.remove();
+  });
 });

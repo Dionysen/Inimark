@@ -9,6 +9,7 @@ import {
   type Selection,
   type Transaction,
 } from "prosemirror-state";
+import { Decoration, DecorationSet } from "prosemirror-view";
 import type { EditorView } from "prosemirror-view";
 
 import type { FeatureSpec } from "./_types.ts";
@@ -188,6 +189,26 @@ function buildNodeView() {
       },
     };
   };
+}
+
+function taskListItemDecorationPlugin(): Plugin {
+  return new Plugin({
+    props: {
+      decorations(state) {
+        const decos: Decoration[] = [];
+        state.doc.descendants((node, pos) => {
+          if (node.type.name !== "list_item") return;
+          const paragraph = node.firstChild;
+          if (paragraph?.type.name !== "paragraph") return;
+          if (paragraph.firstChild?.type.name !== "task_marker") return;
+          decos.push(
+            Decoration.node(pos, pos + node.nodeSize, { class: "has-task-marker" }),
+          );
+        });
+        return DecorationSet.create(state.doc, decos);
+      },
+    },
+  });
 }
 
 function nodeViewPlugin(): Plugin {
@@ -544,6 +565,11 @@ export const task: FeatureSpec = {
 
   inputRules: () => [taskInputRule],
   keymap: () => ({ Enter: taskEnter }),
-  plugins: () => [nodeViewPlugin(), cursorTrapPlugin(), propagateMarkerPlugin()],
+  plugins: () => [
+    nodeViewPlugin(),
+    cursorTrapPlugin(),
+    propagateMarkerPlugin(),
+    taskListItemDecorationPlugin(),
+  ],
 
 };
