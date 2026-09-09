@@ -27,6 +27,20 @@ describe("parseWikiLinks", () => {
 });
 
 describe("linkIndex", () => {
+  test("basename self-links appear in outlinks and backlinks", () => {
+    linkIndex.clear();
+    linkIndex.registerFile("Experience/Samsung.md");
+    linkIndex.registerFile("Inimark/InimarkTodo.md");
+    linkIndex.addFileLinks("Experience/Samsung.md", "Notes [[Samsung]]");
+    linkIndex.addFileLinks("Inimark/InimarkTodo.md", "Todo [[Samsung]]");
+
+    expect(linkIndex.getOutlinks("Experience/Samsung.md")).toEqual(["Samsung"]);
+    expect(linkIndex.getBacklinks("Experience/Samsung").sort()).toEqual(
+      ["Experience/Samsung.md", "Inimark/InimarkTodo.md"].sort(),
+    );
+    expect(linkIndex.findFileByNoteName("Samsung")).toBe("Experience/Samsung.md");
+  });
+
   test("tracks outlinks and backlinks", () => {
     linkIndex.clear();
     linkIndex.registerFile("A.md");

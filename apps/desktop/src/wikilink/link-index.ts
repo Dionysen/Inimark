@@ -172,15 +172,16 @@ class LinkIndexServiceImpl {
   }
 
   getBacklinks(noteName: string): string[] {
-    const direct = this.index.backlinks.get(noteName) || [];
-    if (direct.length > 0) return [...direct];
-
-    // Also collect by basename match of indexed keys.
     const lower = noteName.toLowerCase();
+    const lowerBase = noteName.split("/").pop()?.toLowerCase() ?? lower;
     const out = new Set<string>();
+
+    for (const source of this.index.backlinks.get(noteName) || []) {
+      out.add(source);
+    }
     for (const [key, sources] of this.index.backlinks) {
       const base = key.split("/").pop()?.toLowerCase();
-      if (key.toLowerCase() === lower || base === lower) {
+      if (key.toLowerCase() === lower || base === lowerBase) {
         for (const s of sources) out.add(s);
       }
     }

@@ -186,13 +186,17 @@ function buildLocalGraph(activePath: string | null): {
   for (const target of linkIndex.getOutlinks(centerId)) {
     const path = linkIndex.findFileByNoteName(target);
     if (!path) continue;
+    const targetId = path.replace(/\\/g, "/");
+    if (targetId === centerId) continue;
     ensure(path);
-    edges.push({ source: centerId, target: path.replace(/\\/g, "/") });
+    edges.push({ source: centerId, target: targetId });
   }
 
   for (const source of linkIndex.getBacklinks(centerName)) {
+    const sourceId = source.replace(/\\/g, "/");
+    if (sourceId === centerId) continue;
     ensure(source);
-    edges.push({ source: source.replace(/\\/g, "/"), target: centerId });
+    edges.push({ source: sourceId, target: centerId });
   }
 
   const nodes = [...nodeMap.values()];
@@ -671,6 +675,7 @@ export function mountGraphPanel(
       renderLinkList(backList, [], "back");
       return;
     }
+    const activeId = activePath.replace(/\\/g, "/");
     const outItems = linkIndex
       .getOutlinks(activePath)
       .map((name) => {
@@ -679,13 +684,14 @@ export function mountGraphPanel(
           ? { path, label: noteLabel(name) }
           : { path: "", label: `${noteLabel(name)} ✕` };
       })
-      .filter((x) => x.path);
-    const backItems = linkIndex.getBacklinks(linkIndex.toNoteName(activePath)).map(
-      (path) => ({
+      .filter((x) => x.path && x.path.replace(/\\/g, "/") !== activeId);
+    const backItems = linkIndex
+      .getBacklinks(linkIndex.toNoteName(activePath))
+      .map((path) => ({
         path,
         label: fileNameFromPath(path).replace(/\.(md|markdown|mdown)$/i, ""),
-      }),
-    );
+      }))
+      .filter((x) => x.path.replace(/\\/g, "/") !== activeId);
     renderLinkList(outList, outItems, "out");
     renderLinkList(backList, backItems, "back");
   }
