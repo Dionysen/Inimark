@@ -1,25 +1,24 @@
 import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { save, open } from "@tauri-apps/plugin-dialog";
-import { CODE_THEMES } from "./code-themes.ts";
 import {
   buildThemeCss,
   createCodeThemeFromVariables,
   createThemeFromVariables,
   getCodeThemeCss,
   getCustomThemeCss,
+  inferAppThemeIsDark,
+  inferCodeThemeIsDark,
   parseCssVariables,
+  type ThemeManifest,
   type ThemeVariable,
 } from "./custom-theme-manager.ts";
-import { getBuiltinThemeVariables } from "./theme-tokens.ts";
-import { getBuiltinCodeThemeVariables } from "./code-theme-tokens.ts";
-import type { ThemePair } from "./appearance.ts";
+import type { CustomCodeTheme } from "./code-themes.ts";
 
 export const THEME_PACK_FORMAT = "inimark-theme-pack" as const;
-export const THEME_PACK_VERSION = 1 as const;
+export const THEME_PACK_VERSION = 2 as const;
 
-export interface ThemePackSlot {
+export interface ThemePackThemeEntry {
   name: string;
-  /** CSS custom properties without selector wrapper */
   variables: Record<string, string>;
 }
 
@@ -28,19 +27,15 @@ export interface ThemePack {
   version: typeof THEME_PACK_VERSION;
   name: string;
   exportedAt: string;
-  app: {
-    light: ThemePackSlot;
-    dark: ThemePackSlot;
-  };
-  code: {
-    light: ThemePackSlot;
-    dark: ThemePackSlot;
+  themes: {
+    app: ThemePackThemeEntry[];
+    code: ThemePackThemeEntry[];
   };
 }
 
-export interface ThemePackImportResult {
-  preferredAppTheme: ThemePair;
-  preferredCodeTheme: ThemePair;
+export interface ThemePackSelectionImportResult {
+  app: ThemeManifest[];
+  code: CustomCodeTheme[];
   packName: string;
 }
 
@@ -54,85 +49,67 @@ function recordToVariables(record: Record<string, string>): ThemeVariable[] {
   return Object.entries(record).map(([name, value]) => ({
     name,
     value,
-    type: name.startsWith("--hljs-") || name.startsWith("--bg-") || name.startsWith("--text-") || name.startsWith("--accent") || name === "--border" || name === "--danger"
-      ? ("color" as const)
-      : /^\d+(\.\d+)?(px|rem|em|%)$/.test(value)
-        ? ("size" as const)
-        : ("text" as const),
+    type:
+      name.startsWith("--hljs-") ||
+      name.startsWith("--bg-") ||
+      name.startsWith("--text-") ||
+      name.startsWith("--accent") ||
+      name === "--border" ||
+      name === "--danger"
+        ? ("color" as const)
+        : /^\d+(\.\d+)?(px|rem|em|%)$/.test(value)
+          ? ("size" as const)
+          : ("text" as const),
   }));
 }
 
-export async function resolveAppThemeSlot(
-  themeId: string,
-  fallbackName: string,
-): Promise<ThemePackSlot> {
-  if (themeId.startsWith("custom-")) {
-    const id = themeId.replace("custom-", "");
-    const css = await getCustomThemeCss(id);
-    const vars = parseCssVariables(css);
-    return {
-      name: fallbackName,
-      variables: variablesToRecord(vars),
-    };
+export function allocateUniqueThemeName(baseName: string, used: Set<string>): string {
+  const base = baseName.trim() || "Theme";
+  if (!used.has(base)) {
+    used.add(base);
+    return base;
   }
-  const vars = getBuiltinThemeVariables(themeId);
-  if (!vars) {
-    throw new Error(`Unknown app theme: ${themeId}`);
-  }
+  let suffix = 2;
+  while (used.has(`${base} ${suffix}`)) suffix += 1;
+  const unique = `${base} ${suffix}`;
+  used.add(unique);
+  return unique;
+}
+
+export async function exportCustomAppTheme(manifest: ThemeManifest): Promise<ThemePackThemeEntry> {
+  const css = await getCustomThemeCss(manifest.id);
+  const vars = parseCssVariables(css);
   return {
-    name: fallbackName,
+    name: manifest.name,
     variables: variablesToRecord(vars),
   };
 }
 
-export async function resolveCodeThemeSlot(
-  themeId: string,
-  fallbackName: string,
-): Promise<ThemePackSlot> {
-  const builtin = CODE_THEMES.find((t) => t.id === themeId);
-  if (builtin) {
-    return { name: fallbackName || builtin.name, variables: { ...builtin.variables } };
-  }
-  // Custom code themes use raw ids (no `custom-` prefix), unlike app themes.
-  try {
-    const css = await getCodeThemeCss(themeId);
-    const vars = parseCssVariables(css).filter((v) => v.name.startsWith("--hljs-"));
-    if (vars.length > 0) {
-      return {
-        name: fallbackName,
-        variables: variablesToRecord(vars),
-      };
-    }
-  } catch {
-    /* fall through */
-  }
-  const vars = getBuiltinCodeThemeVariables(themeId);
-  if (!vars) throw new Error(`Unknown code theme: ${themeId}`);
-  return { name: fallbackName, variables: variablesToRecord(vars) };
+export async function exportCustomCodeTheme(
+  manifest: CustomCodeTheme,
+): Promise<ThemePackThemeEntry> {
+  const css = await getCodeThemeCss(manifest.id);
+  const vars = parseCssVariables(css).filter((v) => v.name.startsWith("--hljs-"));
+  return {
+    name: manifest.name,
+    variables: variablesToRecord(vars),
+  };
 }
 
-export async function buildThemePack(options: {
+export function buildThemePack(options: {
   name: string;
-  preferredAppTheme: ThemePair;
-  preferredCodeTheme: ThemePair;
-  resolveAppName: (id: string) => string;
-  resolveCodeName: (id: string) => string;
-}): Promise<ThemePack> {
-  const { name, preferredAppTheme, preferredCodeTheme, resolveAppName, resolveCodeName } = options;
-  const [appLight, appDark, codeLight, codeDark] = await Promise.all([
-    resolveAppThemeSlot(preferredAppTheme.light, resolveAppName(preferredAppTheme.light)),
-    resolveAppThemeSlot(preferredAppTheme.dark, resolveAppName(preferredAppTheme.dark)),
-    resolveCodeThemeSlot(preferredCodeTheme.light, resolveCodeName(preferredCodeTheme.light)),
-    resolveCodeThemeSlot(preferredCodeTheme.dark, resolveCodeName(preferredCodeTheme.dark)),
-  ]);
-
+  app: ThemePackThemeEntry[];
+  code: ThemePackThemeEntry[];
+}): ThemePack {
   return {
     format: THEME_PACK_FORMAT,
     version: THEME_PACK_VERSION,
-    name: name.trim() || "Inimark Theme",
+    name: options.name.trim() || "Inimark Theme",
     exportedAt: new Date().toISOString(),
-    app: { light: appLight, dark: appDark },
-    code: { light: codeLight, dark: codeDark },
+    themes: {
+      app: options.app,
+      code: options.code,
+    },
   };
 }
 
@@ -151,47 +128,49 @@ export function parseThemePack(raw: string): ThemePack {
   if (pack.version !== THEME_PACK_VERSION) {
     throw new Error(`Unsupported theme pack version: ${String(pack.version)}`);
   }
-  if (!pack.name || !pack.app?.light?.variables || !pack.app?.dark?.variables) {
-    throw new Error("Theme pack missing app themes");
-  }
-  if (!pack.code?.light?.variables || !pack.code?.dark?.variables) {
-    throw new Error("Theme pack missing code themes");
+  if (!pack.name || !Array.isArray(pack.themes?.app) || !Array.isArray(pack.themes?.code)) {
+    throw new Error("Theme pack missing themes");
   }
   return pack as ThemePack;
 }
 
-export async function importThemePackData(pack: ThemePack): Promise<ThemePackImportResult> {
-  const base = pack.name.trim() || "Imported Theme";
-  const lightAppVars = recordToVariables(pack.app.light.variables);
-  const darkAppVars = recordToVariables(pack.app.dark.variables);
-  const lightCodeVars = recordToVariables(pack.code.light.variables);
-  const darkCodeVars = recordToVariables(pack.code.dark.variables);
+export async function importSelectedThemes(
+  pack: ThemePack,
+  selectedAppIndices: number[],
+  selectedCodeIndices: number[],
+  options: {
+    existingAppNames: string[];
+    existingCodeNames: string[];
+  },
+): Promise<ThemePackSelectionImportResult> {
+  const usedAppNames = new Set(options.existingAppNames);
+  const usedCodeNames = new Set(options.existingCodeNames);
 
-  const [lightApp, darkApp, lightCode, darkCode] = await Promise.all([
-    createThemeFromVariables(pack.app.light.name || `${base} · Light`, lightAppVars, false),
-    createThemeFromVariables(pack.app.dark.name || `${base} · Dark`, darkAppVars, true),
-    createCodeThemeFromVariables(
-      pack.code.light.name || `${base} Code · Light`,
-      lightCodeVars,
-      false,
-    ),
-    createCodeThemeFromVariables(
-      pack.code.dark.name || `${base} Code · Dark`,
-      darkCodeVars,
-      true,
-    ),
-  ]);
+  // Import sequentially: manifest read-modify-write is not safe in parallel.
+  const app: ThemeManifest[] = [];
+  for (const index of selectedAppIndices) {
+    const entry = pack.themes.app[index];
+    if (!entry) throw new Error("Invalid app theme selection");
+    const vars = recordToVariables(entry.variables);
+    const name = allocateUniqueThemeName(entry.name, usedAppNames);
+    app.push(await createThemeFromVariables(name, vars, inferAppThemeIsDark(vars)));
+  }
+
+  const code: CustomCodeTheme[] = [];
+  for (const index of selectedCodeIndices) {
+    const entry = pack.themes.code[index];
+    if (!entry) throw new Error("Invalid code theme selection");
+    const vars = recordToVariables(entry.variables).filter((v) =>
+      v.name.startsWith("--hljs-"),
+    );
+    const name = allocateUniqueThemeName(entry.name, usedCodeNames);
+    code.push(await createCodeThemeFromVariables(name, vars, inferCodeThemeIsDark(vars)));
+  }
 
   return {
-    packName: base,
-    preferredAppTheme: {
-      light: `custom-${lightApp.id}`,
-      dark: `custom-${darkApp.id}`,
-    },
-    preferredCodeTheme: {
-      light: lightCode.id,
-      dark: darkCode.id,
-    },
+    packName: pack.name,
+    app,
+    code,
   };
 }
 
@@ -206,7 +185,10 @@ export async function exportThemePackToFile(pack: ThemePack): Promise<string | n
   return filePath;
 }
 
-export async function pickAndReadThemePackFile(): Promise<{ filePath: string; pack: ThemePack } | null> {
+export async function pickAndReadThemePackFile(): Promise<{
+  filePath: string;
+  pack: ThemePack;
+} | null> {
   const selected = await open({
     multiple: false,
     filters: [{ name: "Inimark Theme Pack", extensions: ["json"] }],
@@ -218,11 +200,8 @@ export async function pickAndReadThemePackFile(): Promise<{ filePath: string; pa
   return { filePath: selected, pack };
 }
 
-/** Build :root CSS string for preview/debug from a slot. */
-export function slotToRootCss(slot: ThemePackSlot): string {
+/** Build :root CSS string for preview/debug from a theme entry. */
+export function slotToRootCss(slot: ThemePackThemeEntry): string {
   const vars = recordToVariables(slot.variables);
-  return buildThemeCss("preview", vars).replace(
-    /\[data-theme="custom-preview"\]/,
-    ":root",
-  );
+  return buildThemeCss("preview", vars).replace(/\[data-theme="custom-preview"\]/, ":root");
 }

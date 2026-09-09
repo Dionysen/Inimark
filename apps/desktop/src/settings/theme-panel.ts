@@ -29,6 +29,10 @@ import {
   type ThemeVariable,
 } from "../themes/custom-theme-manager.ts";
 import { loadSettings, type AppSettings } from "./store.ts";
+import {
+  pickAndReadThemePackFile,
+  type ThemePack,
+} from "../themes/theme-pack.ts";
 
 export interface ThemePanelOptions {
   onAppSettingsChange?: (partial: Partial<AppSettings>) => void;
@@ -120,10 +124,31 @@ type DeleteConfirm =
 
 type NameDialogState = {
   open: boolean;
-  mode: "export-pack" | "rename-app" | "rename-code";
+  mode: "rename-app" | "rename-code";
   id: string;
   defaultName: string;
 };
+
+type PackDialogState =
+  | null
+  | {
+      mode: "export";
+      packName: string;
+      selectedApp: Set<string>;
+      selectedCode: Set<string>;
+    }
+  | {
+      mode: "import";
+      pack: ThemePack;
+      selectedApp: Set<number>;
+      selectedCode: Set<number>;
+    };
+
+function attachOverlayDismiss(overlay: HTMLElement, onDismiss: () => void): void {
+  overlay.addEventListener("mousedown", (event) => {
+    if (event.target === overlay) onDismiss();
+  });
+}
 
 type FieldDestroyable = HTMLElement & { destroy?: () => void; updateValue?: (v: string) => void };
 
@@ -148,9 +173,10 @@ export function renderThemePanel(
   let editCodeVariables: ThemeVariable[] = [];
 
   let deleteConfirm: DeleteConfirm | null = null;
+  let packDialog: PackDialogState = null;
   let nameDialog: NameDialogState = {
     open: false,
-    mode: "export-pack",
+    mode: "rename-app",
     id: "",
     defaultName: "",
   };
@@ -626,34 +652,262 @@ export function renderThemePanel(
     return root;
   }
 
+  function renderPackThemeGroup<T extends string | number>(
+    title: string,
+    items: { key: T; name: string }[],
+    selected: Set<T>,
+    onToggle: (key: T, checked: boolean) => void,
+    onSelectAll: (checked: boolean) => void,
+  ): HTMLElement | null {
+    if (items.length === 0) return null;
+
+    const group = document.createElement("section");
+    group.className = "theme-pack-select-group";
+
+    const header = document.createElement("div");
+    header.className = "theme-pack-select-group-header";
+
+    const heading = document.createElement("h4");
+    heading.className = "theme-pack-select-group-title";
+    heading.textContent = title;
+
+    const selectAllBtn = document.createElement("button");
+    selectAllBtn.type = "button";
+    selectAllBtn.className = "theme-pack-select-all";
+    const allSelected = items.every((item) => selected.has(item.key));
+    selectAllBtn.textContent = allSelected
+      ? t("settings.theme.packDeselectAll")
+      : t("settings.theme.packSelectAll");
+    selectAllBtn.addEventListener("click", () => onSelectAll(!allSelected));
+
+    header.append(heading, selectAllBtn);
+    group.append(header);
+
+    const list = document.createElement("div");
+    list.className = "theme-pack-select-list";
+
+    for (const item of items) {
+      const row = document.createElement("label");
+      row.className = "theme-pack-select-item";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selected.has(item.key);
+      checkbox.addEventListener("change", () => onToggle(item.key, checkbox.checked));
+
+      const name = document.createElement("span");
+      name.className = "theme-pack-select-name";
+      name.textContent = item.name;
+
+      row.append(checkbox, name);
+      list.append(row);
+    }
+
+    group.append(list);
+    return group;
+  }
+
+  function renderPackDialog(container: HTMLElement): void {
+    if (!packDialog) return;
+
+    const overlay = document.createElement("div");
+    overlay.className = "theme-name-dialog-overlay";
+    attachOverlayDismiss(overlay, () => {
+      packDialog = null;
+      render();
+    });
+
+    const dialog = document.createElement("div");
+    dialog.className = "theme-name-dialog theme-pack-dialog";
+
+    const title = document.createElement("h3");
+    title.className = "theme-name-dialog-title";
+    title.textContent =
+      packDialog.mode === "export"
+        ? t("settings.theme.exportSelectThemes")
+        : t("settings.theme.importSelectThemes");
+
+    dialog.append(title);
+
+    if (packDialog.mode === "export") {
+      const nameLabel = document.createElement("label");
+      nameLabel.className = "theme-pack-name-field";
+      const nameText = document.createElement("span");
+      nameText.textContent = t("settings.theme.packName");
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "theme-name-dialog-input";
+      nameInput.value = packDialog.packName;
+      nameInput.placeholder = t("settings.theme.packName");
+      nameInput.addEventListener("input", () => {
+        if (packDialog?.mode === "export") packDialog.packName = nameInput.value;
+      });
+      nameLabel.append(nameText, nameInput);
+      dialog.append(nameLabel);
+    } else {
+      const packMeta = document.createElement("p");
+      packMeta.className = "theme-pack-dialog-meta";
+      packMeta.textContent = packDialog.pack.name;
+      dialog.append(packMeta);
+    }
+
+    const body = document.createElement("div");
+    body.className = "theme-pack-select-body inimark-scrollbar";
+
+    if (packDialog.mode === "export") {
+      const snap = themeManager.getSnapshot();
+      const appGroup = renderPackThemeGroup(
+        t("settings.theme.packAppThemes"),
+        snap.customThemes.map((m) => ({
+          key: m.id,
+          name: m.name,
+        })),
+        packDialog.selectedApp,
+        (key, checked) => {
+          if (packDialog?.mode !== "export") return;
+          if (checked) packDialog.selectedApp.add(key);
+          else packDialog.selectedApp.delete(key);
+          render();
+        },
+        (checked) => {
+          if (packDialog?.mode !== "export") return;
+          packDialog.selectedApp = checked
+            ? new Set(snap.customThemes.map((m) => m.id))
+            : new Set();
+          render();
+        },
+      );
+      const codeGroup = renderPackThemeGroup(
+        t("settings.theme.packCodeThemes"),
+        snap.customCodeThemes.map((m) => ({
+          key: m.id,
+          name: m.name,
+        })),
+        packDialog.selectedCode,
+        (key, checked) => {
+          if (packDialog?.mode !== "export") return;
+          if (checked) packDialog.selectedCode.add(key);
+          else packDialog.selectedCode.delete(key);
+          render();
+        },
+        (checked) => {
+          if (packDialog?.mode !== "export") return;
+          packDialog.selectedCode = checked
+            ? new Set(snap.customCodeThemes.map((m) => m.id))
+            : new Set();
+          render();
+        },
+      );
+      if (appGroup) body.append(appGroup);
+      if (codeGroup) body.append(codeGroup);
+    } else {
+      const appGroup = renderPackThemeGroup(
+        t("settings.theme.packAppThemes"),
+        packDialog.pack.themes.app.map((entry, index) => ({
+          key: index,
+          name: entry.name,
+        })),
+        packDialog.selectedApp,
+        (key, checked) => {
+          if (packDialog?.mode !== "import") return;
+          if (checked) packDialog.selectedApp.add(key);
+          else packDialog.selectedApp.delete(key);
+          render();
+        },
+        (checked) => {
+          if (packDialog?.mode !== "import") return;
+          packDialog.selectedApp = checked
+            ? new Set(packDialog.pack.themes.app.map((_, index) => index))
+            : new Set();
+          render();
+        },
+      );
+      const codeGroup = renderPackThemeGroup(
+        t("settings.theme.packCodeThemes"),
+        packDialog.pack.themes.code.map((entry, index) => ({
+          key: index,
+          name: entry.name,
+        })),
+        packDialog.selectedCode,
+        (key, checked) => {
+          if (packDialog?.mode !== "import") return;
+          if (checked) packDialog.selectedCode.add(key);
+          else packDialog.selectedCode.delete(key);
+          render();
+        },
+        (checked) => {
+          if (packDialog?.mode !== "import") return;
+          packDialog.selectedCode = checked
+            ? new Set(packDialog.pack.themes.code.map((_, index) => index))
+            : new Set();
+          render();
+        },
+      );
+      if (appGroup) body.append(appGroup);
+      if (codeGroup) body.append(codeGroup);
+    }
+
+    dialog.append(body);
+
+    const actions = document.createElement("div");
+    actions.className = "theme-name-dialog-actions";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.className = "settings-button theme-name-dialog-cancel";
+    cancelBtn.textContent = t("settings.theme.cancel");
+    cancelBtn.addEventListener("click", () => {
+      packDialog = null;
+      render();
+    });
+
+    const confirmBtn = document.createElement("button");
+    confirmBtn.type = "button";
+    confirmBtn.className = "settings-button";
+    const selectedCount =
+      packDialog.mode === "export"
+        ? packDialog.selectedApp.size + packDialog.selectedCode.size
+        : packDialog.selectedApp.size + packDialog.selectedCode.size;
+    confirmBtn.disabled = exporting || importing || selectedCount === 0;
+    confirmBtn.textContent =
+      packDialog.mode === "export"
+        ? exporting
+          ? t("settings.theme.exporting")
+          : t("settings.theme.exportPack")
+        : importing
+          ? t("settings.theme.importing")
+          : t("settings.theme.importPack");
+    confirmBtn.addEventListener("click", () => void handleConfirmPackDialog());
+
+    actions.append(cancelBtn, confirmBtn);
+    dialog.append(actions);
+    overlay.append(dialog);
+    container.append(overlay);
+  }
+
   function renderDialogs(container: HTMLElement): void {
+    renderPackDialog(container);
+
     if (nameDialog.open) {
       const overlay = document.createElement("div");
       overlay.className = "theme-name-dialog-overlay";
-      overlay.addEventListener("click", () => {
-        nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
+      attachOverlayDismiss(overlay, () => {
+        nameDialog = { open: false, mode: "rename-app", id: "", defaultName: "" };
         render();
       });
 
       const dialog = document.createElement("div");
       dialog.className = "theme-name-dialog";
-      dialog.addEventListener("click", (e) => e.stopPropagation());
 
       const title = document.createElement("h3");
       title.className = "theme-name-dialog-title";
-      title.textContent =
-        nameDialog.mode === "export-pack"
-          ? t("settings.theme.nameThemePack")
-          : t("settings.theme.renameTheme");
+      title.textContent = t("settings.theme.renameTheme");
 
       const input = document.createElement("input");
       input.type = "text";
       input.className = "theme-name-dialog-input";
       input.value = themeName;
-      input.placeholder =
-        nameDialog.mode === "export-pack"
-          ? t("settings.theme.packName")
-          : t("settings.theme.themeName");
+      input.placeholder = t("settings.theme.themeName");
       input.addEventListener("input", () => {
         themeName = input.value;
       });
@@ -669,20 +923,14 @@ export function renderThemePanel(
       cancelBtn.className = "settings-button theme-name-dialog-cancel";
       cancelBtn.textContent = t("settings.theme.cancel");
       cancelBtn.addEventListener("click", () => {
-        nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
+        nameDialog = { open: false, mode: "rename-app", id: "", defaultName: "" };
         render();
       });
 
       const confirmBtn = document.createElement("button");
       confirmBtn.type = "button";
       confirmBtn.className = "settings-button";
-      confirmBtn.disabled = exporting;
-      confirmBtn.textContent =
-        exporting
-          ? t("settings.theme.exporting")
-          : nameDialog.mode === "export-pack"
-            ? t("settings.theme.exportPack")
-            : t("settings.theme.confirm");
+      confirmBtn.textContent = t("settings.theme.confirm");
       confirmBtn.addEventListener("click", () => void handleConfirmNameDialog());
 
       actions.append(cancelBtn, confirmBtn);
@@ -695,14 +943,13 @@ export function renderThemePanel(
     if (deleteConfirm) {
       const overlay = document.createElement("div");
       overlay.className = "theme-name-dialog-overlay";
-      overlay.addEventListener("click", () => {
+      attachOverlayDismiss(overlay, () => {
         deleteConfirm = null;
         render();
       });
 
       const dialog = document.createElement("div");
       dialog.className = "theme-name-dialog";
-      dialog.addEventListener("click", (e) => e.stopPropagation());
 
       const title = document.createElement("h3");
       title.className = "theme-name-dialog-title";
@@ -740,23 +987,31 @@ export function renderThemePanel(
     }
   }
 
-  async function handleConfirmNameDialog(): Promise<void> {
-    const name = themeName.trim() || nameDialog.defaultName;
+  async function handleConfirmPackDialog(): Promise<void> {
+    if (!packDialog) return;
     try {
-      if (nameDialog.mode === "export-pack") {
+      if (packDialog.mode === "export") {
+        if (packDialog.selectedApp.size === 0 && packDialog.selectedCode.size === 0) return;
         exporting = true;
         render();
-        await themeManager.exportCurrentThemePack(name);
-        nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
-      } else if (nameDialog.mode === "rename-app") {
-        await themeManager.renameAppTheme(nameDialog.id, name);
-        nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
-      } else if (nameDialog.mode === "rename-code") {
-        await themeManager.renameCodeTheme(nameDialog.id, name);
-        nameDialog = { open: false, mode: "export-pack", id: "", defaultName: "" };
+        await themeManager.exportSelectedThemePack(
+          packDialog.packName.trim() || "Inimark Theme",
+          [...packDialog.selectedApp],
+          [...packDialog.selectedCode],
+        );
+      } else {
+        if (packDialog.selectedApp.size === 0 && packDialog.selectedCode.size === 0) return;
+        importing = true;
+        render();
+        await themeManager.importSelectedThemePack(
+          packDialog.pack,
+          [...packDialog.selectedApp],
+          [...packDialog.selectedCode],
+        );
       }
+      packDialog = null;
     } catch (err) {
-      console.error("Rename/export failed", err);
+      console.error("Theme pack operation failed", err);
       alert(
         t("settings.theme.operationFailed", {
           error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
@@ -764,6 +1019,29 @@ export function renderThemePanel(
       );
     } finally {
       exporting = false;
+      importing = false;
+      render();
+    }
+  }
+
+  async function handleConfirmNameDialog(): Promise<void> {
+    const name = themeName.trim() || nameDialog.defaultName;
+    try {
+      if (nameDialog.mode === "rename-app") {
+        await themeManager.renameAppTheme(nameDialog.id, name);
+        nameDialog = { open: false, mode: "rename-app", id: "", defaultName: "" };
+      } else if (nameDialog.mode === "rename-code") {
+        await themeManager.renameCodeTheme(nameDialog.id, name);
+        nameDialog = { open: false, mode: "rename-app", id: "", defaultName: "" };
+      }
+    } catch (err) {
+      console.error("Rename failed", err);
+      alert(
+        t("settings.theme.operationFailed", {
+          error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
+        }),
+      );
+    } finally {
       render();
     }
   }
@@ -1213,11 +1491,16 @@ export function renderThemePanel(
     exportBtn.disabled = exporting;
     exportBtn.innerHTML = `${SVG_EXPORT}<span>${exporting ? t("settings.theme.exporting") : t("settings.theme.exportThemePack")}</span>`;
     exportBtn.addEventListener("click", () => {
-      const lightName =
-        customThemes.find((m) => `custom-${m.id}` === preferredAppTheme.light)?.name
-        || preferredAppTheme.light;
-      nameDialog = { open: true, mode: "export-pack", id: "", defaultName: lightName };
-      themeName = lightName;
+      if (customThemes.length === 0 && customCodeThemes.length === 0) {
+        alert(t("settings.theme.packNoCustomThemes"));
+        return;
+      }
+      packDialog = {
+        mode: "export",
+        packName: customThemes[0]?.name || "Inimark Theme",
+        selectedApp: new Set(customThemes.map((m) => m.id)),
+        selectedCode: new Set(customCodeThemes.map((m) => m.id)),
+      };
       render();
     });
 
@@ -1243,10 +1526,20 @@ export function renderThemePanel(
 
   async function handleImportPack(): Promise<void> {
     try {
-      importing = true;
+      const picked = await pickAndReadThemePackFile();
+      if (!picked) return;
+      const pack = picked.pack;
+      if (pack.themes.app.length === 0 && pack.themes.code.length === 0) {
+        alert(t("settings.theme.packNoThemesInFile"));
+        return;
+      }
+      packDialog = {
+        mode: "import",
+        pack,
+        selectedApp: new Set(pack.themes.app.map((_, index) => index)),
+        selectedCode: new Set(pack.themes.code.map((_, index) => index)),
+      };
       render();
-      const result = await themeManager.importThemePack();
-      if (!result) return;
     } catch (err) {
       console.error("Import pack failed", err);
       alert(
@@ -1254,9 +1547,6 @@ export function renderThemePanel(
           error: err instanceof Error ? err.message : t("settings.theme.unknownError"),
         }),
       );
-    } finally {
-      importing = false;
-      render();
     }
   }
 

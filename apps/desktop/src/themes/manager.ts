@@ -48,10 +48,12 @@ import {
 } from "./custom-theme-manager.ts";
 import {
   buildThemePack,
+  exportCustomAppTheme,
+  exportCustomCodeTheme,
   exportThemePackToFile,
-  importThemePackData,
-  pickAndReadThemePackFile,
-  type ThemePackImportResult,
+  importSelectedThemes,
+  type ThemePack,
+  type ThemePackSelectionImportResult,
 } from "./theme-pack.ts";
 import { getBuiltinThemeVariables, getTemplateVariables } from "./theme-tokens.ts";
 import { getCodeThemeVariables } from "./code-themes.ts";
@@ -469,40 +471,76 @@ class ThemeManager {
     }
   }
 
-  async exportCurrentThemePack(packName: string): Promise<string | null> {
+  async exportSelectedThemePack(
+    packName: string,
+    appIds: string[],
+    codeIds: string[],
+  ): Promise<string | null> {
     const snap = this.getSnapshot();
-    const pack = await buildThemePack({
+    const appEntries = (
+      await Promise.all(
+        appIds.map(async (id) => {
+          const manifest = snap.customThemes.find((m) => m.id === id);
+          if (!manifest) return null;
+          return exportCustomAppTheme(manifest);
+        }),
+      )
+    ).filter((entry) => entry !== null);
+    const codeEntries = (
+      await Promise.all(
+        codeIds.map(async (id) => {
+          const manifest = snap.customCodeThemes.find((m) => m.id === id);
+          if (!manifest) return null;
+          return exportCustomCodeTheme(manifest);
+        }),
+      )
+    ).filter((entry) => entry !== null);
+
+    if (appEntries.length === 0 && codeEntries.length === 0) {
+      throw new Error("No themes selected");
+    }
+
+    const pack = buildThemePack({
       name: packName,
-      preferredAppTheme: snap.preferredAppTheme,
-      preferredCodeTheme: snap.preferredCodeTheme,
-      resolveAppName: (id) => this.resolveAppDisplayName(id),
-      resolveCodeName: (id) => this.resolveCodeDisplayName(id),
+      app: appEntries,
+      code: codeEntries,
     });
     return exportThemePackToFile(pack);
   }
 
-  async importThemePack(): Promise<ThemePackImportResult | null> {
-    const picked = await pickAndReadThemePackFile();
-    if (!picked) return null;
-    const result = await importThemePackData(picked.pack);
+  async importSelectedThemePack(
+    pack: ThemePack,
+    selectedAppIndices: number[],
+    selectedCodeIndices: number[],
+  ): Promise<ThemePackSelectionImportResult | null> {
+    if (selectedAppIndices.length === 0 && selectedCodeIndices.length === 0) {
+      return null;
+    }
 
-    for (const fullId of [result.preferredAppTheme.light, result.preferredAppTheme.dark]) {
-      const id = fullId.replace("custom-", "");
+    const snap = this.getSnapshot();
+    const result = await importSelectedThemes(pack, selectedAppIndices, selectedCodeIndices, {
+      existingAppNames: snap.customThemes.map((theme) => theme.name),
+      existingCodeNames: snap.customCodeThemes.map((theme) => theme.name),
+    });
+
+    for (const manifest of result.app) {
       try {
-        const css = await getCustomThemeCss(id);
-        this.injectOrUpdateStyle(id, css, false);
-        emit(THEME_CSS_EVENT, { id, css, enable: false }).catch(() => {});
+        const css = await getCustomThemeCss(manifest.id);
+        this.injectOrUpdateStyle(manifest.id, css, false);
+        emit(THEME_CSS_EVENT, { id: manifest.id, css, enable: false }).catch(() => {});
       } catch {
         /* ignore */
       }
     }
-    for (const id of [result.preferredCodeTheme.light, result.preferredCodeTheme.dark]) {
+    for (const manifest of result.code) {
       try {
-        const css = await getCodeThemeCss(id);
+        const css = await getCodeThemeCss(manifest.id);
         if (css) {
           const expanded = expandCodeThemeCss(css);
-          this.injectOrUpdateCodeThemeStyle(id, expanded, false);
-          emit(CODE_THEME_CSS_EVENT, { id, css: expanded, enable: false }).catch(() => {});
+          this.injectOrUpdateCodeThemeStyle(manifest.id, expanded, false);
+          emit(CODE_THEME_CSS_EVENT, { id: manifest.id, css: expanded, enable: false }).catch(
+            () => {},
+          );
         }
       } catch {
         /* ignore */
@@ -512,10 +550,7 @@ class ThemeManager {
     await this.refreshCustomThemes();
     await this.refreshCustomCodeThemes();
     this.emitCatalogSync();
-    this.patchState({
-      preferredAppTheme: result.preferredAppTheme,
-      preferredCodeTheme: result.preferredCodeTheme,
-    });
+    this.notify();
     return result;
   }
 
