@@ -3,6 +3,7 @@ import type { Schema } from "prosemirror-model";
 import { TextSelection, type Command } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
+import { insertCallout } from "./callouts.ts";
 import {
   toggleBlockquote,
   toggleBulletList,
@@ -43,7 +44,12 @@ export type EditorCommandName =
   | "code"
   | "math"
   | "upload"
-  | "wiki-link";
+  | "wiki-link"
+  | "callout-note"
+  | "callout-tip"
+  | "callout-important"
+  | "callout-warning"
+  | "callout-danger";
 
 function run(view: EditorView, command: Command): boolean {
   const ok = command(view.state, view.dispatch.bind(view), view);
@@ -170,6 +176,16 @@ export function executeEditorCommand(
       return run(view, insertText("![]()"));
     case "wiki-link":
       return run(view, insertWikiLink());
+    case "callout-note":
+      return run(view, insertCallout("note"));
+    case "callout-tip":
+      return run(view, insertCallout("tip"));
+    case "callout-important":
+      return run(view, insertCallout("important"));
+    case "callout-warning":
+      return run(view, insertCallout("warning"));
+    case "callout-danger":
+      return run(view, insertCallout("danger"));
     default:
       return false;
   }

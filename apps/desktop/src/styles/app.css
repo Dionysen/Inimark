@@ -1424,6 +1424,10 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   min-width: 11.5rem;
 }
 
+.inimark-editor-context-submenu--nested {
+  z-index: 62;
+}
+
 .inimark-editor-context-icon-row {
   display: flex;
   align-items: center;

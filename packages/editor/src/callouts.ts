@@ -235,6 +235,70 @@ export function calloutAutoFoldPlugin(): Plugin {
   });
 }
 
+/** Insert a GitHub-style callout block at the selection. */
+export function insertCallout(kind: CalloutKind): Command {
+  return (state, dispatch) => {
+    const { schema } = state;
+    const attrs = calloutAttrsFromSource(kind);
+    if (!attrs) return false;
+
+    const markerPara = schema.nodes.paragraph.create(
+      null,
+      schema.text(`[!${attrs.alertSource}]`),
+    );
+    const bodyPara = schema.nodes.paragraph.create();
+    let blockquote = schema.nodes.blockquote.create(null, [markerPara, bodyPara]);
+    blockquote = foldBlockquoteCallout(blockquote);
+
+    if (dispatch) {
+      const { selection } = state;
+      const { $from } = selection;
+      let tr: import("prosemirror-state").Transaction;
+      let insertPos: number;
+
+      if (!selection.empty) {
+        insertPos = selection.from;
+        tr = state.tr.replaceSelectionWith(blockquote);
+      } else if ($from.parent.type.name === "paragraph") {
+        const paraPos = $from.before();
+        const para = $from.parent;
+        if (para.content.size === 0) {
+          insertPos = paraPos;
+          tr = state.tr.replaceWith(paraPos, paraPos + para.nodeSize, blockquote);
+        } else {
+          insertPos = paraPos + para.nodeSize;
+          tr = state.tr.insert(insertPos, blockquote);
+        }
+      } else {
+        insertPos = selection.from;
+        tr = state.tr.replaceSelectionWith(blockquote);
+      }
+
+      const mappedPos = tr.mapping.map(insertPos, -1);
+      let calloutPos: number | null = null;
+      const atInsert = tr.doc.nodeAt(mappedPos);
+      if (atInsert?.type.name === "blockquote" && atInsert.attrs.alert === kind) {
+        calloutPos = mappedPos;
+      } else {
+        tr.doc.nodesBetween(mappedPos, tr.doc.content.size, (node, pos) => {
+          if (calloutPos != null) return false;
+          if (node.type.name === "blockquote" && node.attrs.alert === kind) {
+            calloutPos = pos;
+            return false;
+          }
+        });
+      }
+      if (calloutPos != null) {
+        const calloutNode = tr.doc.nodeAt(calloutPos)!;
+        const caret = caretInsideContainer(tr, calloutPos, calloutNode, mappedPos);
+        tr = tr.setSelection(TextSelection.create(tr.doc, caret));
+      }
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
 export const convertCurrentBlockquoteCallout: Command = (state, dispatch) => {
   const sel = state.selection;
   if (!sel.empty) return false;

@@ -9,6 +9,7 @@ import {
   convertCurrentBlockquoteCallout,
   foldMarkdownCallouts,
   getCalloutAttrsFromElement,
+  insertCallout,
   normalizeCalloutKind,
 } from "../src/callouts.ts";
 import { selectionAtEditableEnd } from "../src/trailing-sentinel.ts";
@@ -251,5 +252,47 @@ describe("callouts", () => {
     expect(pretty(next)).toBe("<callout:TIP>|</callout>");
     expect(serialize(next.doc)).toBe("> [!TIP]\n");
     expect(parse(serialize(next.doc)).child(0).attrs.alert).toBe("tip");
+  });
+
+  test("insertCallout creates a live callout block at the selection", () => {
+    const doc = schema.nodes.doc.create(null, [
+      schema.nodes.paragraph.create(null, schema.text("hello")),
+    ]);
+    const base = createState(doc);
+    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    let next = state;
+
+    const handled = insertCallout("warning")(state, (tr) => {
+      next = state.apply(tr);
+    });
+
+    expect(handled).toBe(true);
+    expect(pretty(next)).toContain("<callout:WARNING>|</callout>");
+    expect(serialize(next.doc)).toBe("hello\n\n> [!WARNING]\n");
+    expect(parse(serialize(next.doc)).child(1).attrs.alert).toBe("warning");
+  });
+
+  test("insertCallout parks the caret in the newly inserted block when same kind exists", () => {
+    const existing = schema.nodes.blockquote.create(
+      { alert: "tip", alertSource: "TIP" },
+      [schema.nodes.paragraph.create(null, schema.text("first"))],
+    );
+    const doc = schema.nodes.doc.create(null, [
+      existing,
+      schema.nodes.paragraph.create(null, schema.text("between")),
+    ]);
+    const base = createState(doc);
+    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    let next = state;
+
+    const handled = insertCallout("tip")(state, (tr) => {
+      next = state.apply(tr);
+    });
+
+    expect(handled).toBe(true);
+    expect(pretty(next)).toBe(
+      "<callout:TIP>first</callout>\nbetween\n<callout:TIP>|</callout>",
+    );
+    expect(serialize(next.doc)).toBe("> [!TIP]\n> first\n\nbetween\n\n> [!TIP]\n");
   });
 });

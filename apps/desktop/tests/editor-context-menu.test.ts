@@ -47,6 +47,48 @@ describe("editor context menu", () => {
     host.remove();
   });
 
+  test("callout submenu offers five kinds at the top level", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.append(host);
+
+    const editor = createEditor(host, { initialContent: "hello" });
+    const menu = mountEditorContextMenu(host, editor);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 40,
+        clientY: 40,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    const panel = document.querySelector(".inimark-editor-context-menu") as HTMLElement;
+    const calloutRow = [...panel.querySelectorAll(".inimark-editor-context-row")].find((row) =>
+      row.textContent?.includes("Callout"),
+    ) as HTMLElement;
+    expect(calloutRow).toBeTruthy();
+
+    calloutRow.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+    const flyout = document.querySelector(".inimark-editor-context-submenu") as HTMLElement;
+    expect(flyout.hidden).toBe(false);
+    expect(flyout.querySelectorAll(".inimark-editor-context-item")).toHaveLength(5);
+
+    const tip = [...flyout.querySelectorAll(".inimark-editor-context-item")].find((btn) =>
+      btn.textContent?.includes("Tip"),
+    ) as HTMLButtonElement;
+    tip.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+
+    expect(editor.getMarkdown()).toContain("[!TIP]");
+    expect(panel.hidden).toBe(true);
+
+    menu.destroy();
+    editor.destroy();
+    host.remove();
+  });
+
   test("closes when another exclusive menu opens", () => {
     dismissExclusiveLayers();
 
