@@ -691,11 +691,22 @@ export function mountApp(host: HTMLElement): AppController {
     }
 
     if (activeFilePath) {
+      captureActiveFileViewState();
+      const previousPath = navHistory.closeCurrent();
+      if (previousPath) {
+        await navHistory.navigate(
+          (next) => openWorkspaceFile(next, { skipConfirm: true }),
+          previousPath,
+        );
+        return;
+      }
       resetToUntitled();
       return;
     }
 
-    await requestAppClose();
+    if (shell.isDirty()) {
+      resetToUntitled();
+    }
   }
 
   async function requestAppClose(): Promise<void> {

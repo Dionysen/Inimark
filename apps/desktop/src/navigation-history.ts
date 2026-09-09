@@ -39,6 +39,18 @@ export class FileNavigationHistory {
     return this.stack[this.index] ?? null;
   }
 
+  /**
+   * Drop the current entry (and any forward branch) and return the previous
+   * path to open after closing the active file.
+   */
+  closeCurrent(): string | null {
+    if (this.index < 0) return null;
+    this.stack = this.stack.slice(0, this.index);
+    this.index = this.stack.length - 1;
+    if (this.index < 0) return null;
+    return this.stack[this.index] ?? null;
+  }
+
   /** Run a history jump without recording the destination as a new entry. */
   async navigate(open: (path: string) => Promise<void>, path: string): Promise<void> {
     this.suppressing = true;

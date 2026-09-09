@@ -133,7 +133,7 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
   { name: "--radius-control", section: "chrome", labelKey: "radiusControl", min: 0, max: 16 },
   { name: "--control-height", section: "chrome", labelKey: "controlHeight", min: 24, max: 44 },
   { name: "--control-padding-x", section: "chrome", labelKey: "controlPaddingX", min: 4, max: 24 },
-  { name: "--control-font-size", section: "chrome", labelKey: "controlFontSize", min: 11, max: 18 },
+  { name: "--control-font-size", section: "chrome", labelKey: "controlFontSize", min: 9, max: 36 },
   { name: "--menu-item-padding-y", section: "chrome", labelKey: "menuItemPaddingY", min: 2, max: 16 },
   { name: "--tree-item-padding-y", section: "chrome", labelKey: "treeItemPaddingY", min: 2, max: 16 },
   { name: "--tree-indent-hint-width", section: "chrome", labelKey: "treeIndentHintWidth", min: 1, max: 4 },

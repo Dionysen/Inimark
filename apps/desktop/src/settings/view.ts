@@ -43,6 +43,8 @@ import {
   type MenuDensity,
   EDITOR_WIDTH_MAX,
   EDITOR_WIDTH_MIN,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
   loadSettings,
   menuDensityLabel,
   patchGraphSettings,
@@ -466,8 +468,8 @@ export function mountSettingsView(
     );
 
     const fontSize = createSlider({
-      min: 10,
-      max: 24,
+      min: FONT_SIZE_MIN,
+      max: FONT_SIZE_MAX,
       step: 1,
       value: settings.fontSize,
       formatValue: (value) => `${value}px`,
@@ -488,8 +490,8 @@ export function mountSettingsView(
     );
 
     const codeFontSize = createSlider({
-      min: 10,
-      max: 24,
+      min: FONT_SIZE_MIN,
+      max: FONT_SIZE_MAX,
       step: 1,
       value: settings.codeFontSize,
       formatValue: (value) => `${value}px`,

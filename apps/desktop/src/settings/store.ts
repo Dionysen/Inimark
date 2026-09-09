@@ -24,6 +24,9 @@ export const EDITOR_WIDTH_MIN = 480;
 export const EDITOR_WIDTH_MAX = 1280;
 export const EDITOR_WIDTH_DEFAULT = 768;
 
+export const FONT_SIZE_MIN = 9;
+export const FONT_SIZE_MAX = 36;
+
 export type AppearanceMode = "light" | "dark" | "system";
 export type MenuDensity = "compact" | "normal" | "comfortable";
 export type ImageStorageMode = "library-assets" | "fixed-directory";
@@ -333,8 +336,12 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
   );
   return {
     locale: isAppLocale(parsed.locale) ? parsed.locale : DEFAULT_SETTINGS.locale,
-    fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, 10, 24),
-    codeFontSize: clamp(parsed.codeFontSize ?? DEFAULT_SETTINGS.codeFontSize, 10, 24),
+    fontSize: clamp(parsed.fontSize ?? DEFAULT_SETTINGS.fontSize, FONT_SIZE_MIN, FONT_SIZE_MAX),
+    codeFontSize: clamp(
+      parsed.codeFontSize ?? DEFAULT_SETTINGS.codeFontSize,
+      FONT_SIZE_MIN,
+      FONT_SIZE_MAX,
+    ),
     editorWidth: normalizeEditorWidth(parsed.editorWidth),
     appearance: isAppearance(parsed.appearance)
       ? parsed.appearance

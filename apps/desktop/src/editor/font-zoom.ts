@@ -1,11 +1,10 @@
 import {
   applySettings,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
   saveSettings,
   type AppSettings,
 } from "../settings/store.ts";
-
-const FONT_SIZE_MIN = 10;
-const FONT_SIZE_MAX = 24;
 const TOAST_MS = 1500;
 
 export interface FontZoomOptions {

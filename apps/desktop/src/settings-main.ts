@@ -48,9 +48,14 @@ void initThemeManager().then(() => {
     },
   });
 
+  function syncSettingsFromExternal(next?: AppSettings): void {
+    applySettings(next ?? loadSettings());
+    view.refresh();
+  }
+
   window.addEventListener("storage", (event) => {
     if (event.key === SETTINGS_STORAGE_KEY) {
-      applySettings(loadSettings());
+      syncSettingsFromExternal();
     }
     if (event.key === LIBRARIES_STORAGE_KEY) {
       view.refresh();
@@ -61,7 +66,7 @@ void initThemeManager().then(() => {
   if (isTauri()) {
     void import("@tauri-apps/api/event").then(async ({ listen }) => {
       unlistenSettings = await listen<AppSettings>(SETTINGS_SYNC_EVENT, (event) => {
-        applySettings(event.payload);
+        syncSettingsFromExternal(event.payload);
       });
     });
   }

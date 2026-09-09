@@ -101,6 +101,29 @@ describe("settings view", () => {
     host.remove();
   });
 
+  test("refresh reflects font size changed elsewhere", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+
+    const view = mountSettingsView(host);
+    saveSettings({ ...DEFAULT_SETTINGS, fontSize: 16, codeFontSize: 14 });
+
+    const readFontSlider = () =>
+      host.querySelector<HTMLInputElement>(
+        '[data-setting-id="editor.fontSize"] .inimark-slider__input',
+      );
+
+    expect(readFontSlider()?.value).toBe("16");
+
+    saveSettings({ ...DEFAULT_SETTINGS, fontSize: 22, codeFontSize: 20 });
+    view.refresh();
+
+    expect(readFontSlider()?.value).toBe("22");
+
+    view.destroy();
+    host.remove();
+  });
+
   test("shows search shortcut hint and focuses search on Ctrl+F", () => {
     const host = document.createElement("div");
     document.body.append(host);
