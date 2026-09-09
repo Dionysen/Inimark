@@ -269,7 +269,7 @@ export const zhCN: Dictionary = {
       codeLineHeight: "代码行间距",
       codeLineHeightDesc: "代码块内的行高。",
       editorWidth: "编辑区宽度",
-      editorWidthDesc: "正文栏的最大宽度（480–1280px）。可在编辑器中拖拽左右边缘调整。",
+      editorWidthDesc: "正文栏的最大宽度（480–1280px）。",
       autoSave: "自动保存",
       autoSaveDesc: "编辑文库文件后稍后自动保存。",
       linkUpdateOnMove: "移动时更新链接",

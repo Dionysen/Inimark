@@ -948,39 +948,6 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   cursor: text;
 }
 
-.inimark-editor-width-resize {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 11;
-  pointer-events: none;
-}
-
-.inimark-editor-width-handle {
-  position: absolute;
-  top: 0;
-  width: 8px;
-  height: 100%;
-  cursor: col-resize;
-  pointer-events: auto;
-  -webkit-app-region: no-drag;
-  touch-action: none;
-}
-
-.inimark-editor-width-handle--left {
-  transform: translateX(-50%);
-}
-
-.inimark-editor-width-handle--right {
-  transform: translateX(-50%);
-}
-
-body.is-editor-width-resizing,
-body.is-editor-width-resizing * {
-  cursor: col-resize !important;
-  user-select: none !important;
-}
-
 .inimark-statusbar {
   position: absolute;
   right: var(--inimark-space-1);

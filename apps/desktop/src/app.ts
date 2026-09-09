@@ -37,7 +37,6 @@ import {
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
-import { mountEditorWidthResize } from "./editor/width-resize.ts";
 import {
   captureFileViewState,
   remapFileViews,
@@ -345,19 +344,6 @@ export function mountApp(host: HTMLElement): AppController {
       getSettings: () => settings,
       setSettings(next) {
         settings = next;
-      },
-    }),
-  );
-
-  cleanups.push(
-    mountEditorWidthResize({
-      editorHost: shell.editorHost,
-      overlayHost: shell.editorPane,
-      getSettings: () => settings,
-      onWidthChange(width, persist) {
-        settings = { ...settings, editorWidth: width };
-        applySettings(settings);
-        if (persist) saveSettings(settings);
       },
     }),
   );
