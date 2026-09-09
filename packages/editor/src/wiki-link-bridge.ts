@@ -7,7 +7,9 @@ export interface WikiLinkBridge {
   resolveImage(name: string): string | null;
   /** Absolute or app-usable URL for an image relative path. */
   imageUrl?(relativePath: string): string | null;
-  searchNotes(query: string): WikiNoteHit[];
+  searchNotes(query: string, limit?: number): WikiNoteHit[];
+  /** Recently opened notes (browse mode only). */
+  recentNotes?(limit?: number): WikiNoteHit[];
   openNote(noteName: string, heading?: string): void;
   createNote?(noteName: string): void;
   /** Markdown source for hover card (rendered by the editor). */

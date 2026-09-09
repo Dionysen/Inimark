@@ -19,6 +19,7 @@ export {
   setLinkNavigationBridge,
   getLinkNavigationBridge,
 } from "./link-navigation-bridge.ts";
+export { setOverlayScrollbarBridge } from "./overlay-scrollbar-bridge.ts";
 export type { LinkNavigationBridge } from "./link-navigation-bridge.ts";
 export {
   mountReadonlyMarkdownPreview,

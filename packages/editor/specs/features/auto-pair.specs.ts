@@ -35,6 +35,26 @@ export const autoPairSpecs: FeatureSpecs = {
       ],
     },
     {
+      id: "wiki-bracket-pair",
+      label: "second [ inside [|] becomes [[|]]",
+      seed: "",
+      events: ["[", "["],
+      checkpoints: [
+        { at: 1, expect: "[|]" },
+        { at: 2, expect: "[[|]]" },
+      ],
+    },
+    {
+      id: "backspace-empties-wiki-pair",
+      label: "Backspace inside empty [[|]] removes all four chars",
+      seed: "",
+      events: ["[", "[", "<Backspace>"],
+      checkpoints: [
+        { at: 2, expect: "[[|]]" },
+        { at: 3, expect: "|" },
+      ],
+    },
+    {
       id: "backspace-empties-bracket-pair",
       label: "Backspace inside empty [] removes both chars",
       seed: "",

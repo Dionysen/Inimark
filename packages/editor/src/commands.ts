@@ -96,6 +96,18 @@ function insertText(text: string): Command {
   };
 }
 
+function insertWikiLink(): Command {
+  return (state, dispatch) => {
+    const { from, to } = state.selection;
+    if (dispatch) {
+      const tr = state.tr.insertText("[[]]", from, to);
+      tr.setSelection(TextSelection.create(tr.doc, from + 2));
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
 /** Run a named editing command against a live ProseMirror view. */
 export function executeEditorCommand(
   view: EditorView,
@@ -157,7 +169,7 @@ export function executeEditorCommand(
     case "upload":
       return run(view, insertText("![]()"));
     case "wiki-link":
-      return run(view, insertText("[["));
+      return run(view, insertWikiLink());
     default:
       return false;
   }

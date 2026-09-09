@@ -41,6 +41,17 @@ function autoPairInputPlugin(): Plugin {
           view.dispatch(tr);
           return true;
         }
+        // Second '[' inside [|] → [[|]] for wiki-links.
+        if (text === "[") {
+          const before = offset > 0 ? $from.parent.textBetween(offset - 1, offset) : "";
+          if (before === "[" && nextChar === "]") {
+            const openStart = from - 1;
+            const tr = view.state.tr.insertText("[[]]", openStart, from + 1);
+            tr.setSelection(TextSelection.create(tr.doc, openStart + 2));
+            view.dispatch(tr);
+            return true;
+          }
+        }
         const close = PAIRS[text];
         if (!close) return false;
         const after = $from.parent.textBetween(offset, size);
@@ -62,6 +73,14 @@ const backspaceClearPair: Command = (state, dispatch) => {
   const offset = $from.parentOffset;
   const size = $from.parent.content.size;
   if (offset === 0 || offset === size) return false;
+  const around =
+    offset >= 2 && offset + 2 <= size
+      ? $from.parent.textBetween(offset - 2, offset + 2)
+      : "";
+  if (around === "[[]]") {
+    if (dispatch) dispatch(state.tr.delete(sel.from - 2, sel.from + 2));
+    return true;
+  }
   const before = $from.parent.textBetween(offset - 1, offset);
   const after = $from.parent.textBetween(offset, offset + 1);
   const matches =

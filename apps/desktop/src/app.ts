@@ -1,4 +1,11 @@
-import { createEditor, setWikiLinkBridge, setLinkNavigationBridge, type Editor } from "@inimark/editor";
+import {
+  createEditor,
+  setWikiLinkBridge,
+  setLinkNavigationBridge,
+  setOverlayScrollbarBridge,
+  type Editor,
+} from "@inimark/editor";
+import { requestOverlayScrollbarRefresh } from "./platform/scrollbars.ts";
 import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
@@ -223,7 +230,19 @@ export function mountApp(host: HTMLElement): AppController {
     resolveNote: (noteName) => linkIndex.findFileByNoteName(noteName) ?? null,
     resolveImage: (name) => linkIndex.findImageByBaseName(name) ?? null,
     imageUrl: (relativePath) => cachedImageUrl?.(relativePath) ?? null,
-    searchNotes: (query) => linkIndex.searchNotes(query),
+    searchNotes: (query, limit) => linkIndex.searchNotes(query, limit),
+    recentNotes(limit = 5) {
+      const paths = getRecentFiles(activeLibraryId);
+      const hits: Array<{ name: string; path: string }> = [];
+      for (const path of paths) {
+        if (path === activeFilePath) continue;
+        const name = linkIndex.toNoteName(path);
+        if (!linkIndex.findFileByNoteName(name)) continue;
+        hits.push({ name, path });
+        if (hits.length >= limit) return hits;
+      }
+      return hits;
+    },
     openNote: (noteName, heading) => {
       void (async () => {
         let path = linkIndex.findFileByNoteName(noteName);
@@ -280,6 +299,9 @@ export function mountApp(host: HTMLElement): AppController {
     },
   });
   cleanups.push(() => setWikiLinkBridge(null));
+
+  setOverlayScrollbarBridge(requestOverlayScrollbarRefresh);
+  cleanups.push(() => setOverlayScrollbarBridge(null));
 
   setLinkNavigationBridge({
     openUrl(href) {

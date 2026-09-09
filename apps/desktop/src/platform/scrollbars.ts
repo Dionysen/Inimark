@@ -144,6 +144,23 @@ function flash(inst: ScrollbarInstance): void {
   }, SCROLL_HIDE_DELAY_MS);
 }
 
+function railZIndex(host: HTMLElement): number {
+  const z = Number.parseInt(getComputedStyle(host).zIndex, 10);
+  return Number.isFinite(z) && z > 0 ? z + 1 : 26;
+}
+
+function updateLayerZIndex(
+  layer: HTMLElement,
+  instances: Iterable<ScrollbarInstance>,
+): void {
+  let max = 25;
+  for (const inst of instances) {
+    if (!document.contains(inst.host)) continue;
+    max = Math.max(max, railZIndex(inst.host));
+  }
+  layer.style.zIndex = String(max);
+}
+
 function layout(inst: ScrollbarInstance): void {
   const { host, railY, thumbY, railX, thumbX } = inst;
   if (!document.contains(host)) return;
@@ -151,6 +168,9 @@ function layout(inst: ScrollbarInstance): void {
   const rect = host.getBoundingClientRect();
   const gutter = getHoverGutterSize();
   const thumbSize = getThumbSize();
+  const z = String(railZIndex(host));
+  railY.style.zIndex = z;
+  railX.style.zIndex = z;
 
   if (isScrollableY(host)) {
     railY.hidden = false;
@@ -217,6 +237,13 @@ function scrollFromThumbPosition(
     const range = host.scrollWidth - host.clientWidth;
     host.scrollLeft = maxLeft <= 0 ? 0 : (left / maxLeft) * range;
   }
+}
+
+let refreshOverlayScrollbars: (() => void) | null = null;
+
+/** Re-scan the document for `.inimark-scrollbar` hosts (e.g. body-mounted popups). */
+export function requestOverlayScrollbarRefresh(): void {
+  refreshOverlayScrollbars?.();
 }
 
 /** Show overlay scrollbars while scrolling or when the pointer is over the gutter. */
@@ -374,6 +401,7 @@ export function initAutoHideScrollbars(): () => void {
       if (el instanceof HTMLElement) attach(el);
     }
     for (const inst of instances.values()) layout(inst);
+    updateLayerZIndex(layer, instances.values());
   };
 
   const onPointerMove = (event: PointerEvent) => {
@@ -451,6 +479,7 @@ export function initAutoHideScrollbars(): () => void {
   const mo = new MutationObserver(() => scan());
   mo.observe(document.documentElement, { childList: true, subtree: true });
   scan();
+  refreshOverlayScrollbars = scan;
 
   document.addEventListener("pointermove", onPointerMove, { passive: true });
   document.addEventListener("pointerup", onPointerUp);
@@ -460,6 +489,7 @@ export function initAutoHideScrollbars(): () => void {
   window.addEventListener("scroll", onWindowChange, true);
 
   return () => {
+    refreshOverlayScrollbars = null;
     mo.disconnect();
     document.removeEventListener("pointermove", onPointerMove);
     document.removeEventListener("pointerup", onPointerUp);

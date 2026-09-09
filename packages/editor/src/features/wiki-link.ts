@@ -1,10 +1,15 @@
-import { Plugin, PluginKey } from "prosemirror-state";
+import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type { EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 
 import { markConsumed, type InlineSpan } from "../inline-parse.ts";
 import type { FeatureSpec, InlineFeatureSpec } from "./_types.ts";
+import { notifyOverlayScrollbarRefresh } from "../overlay-scrollbar-bridge.ts";
 import { getWikiLinkBridge } from "../wiki-link-bridge.ts";
+import {
+  WikiAutocompletePopup,
+  resolveWikiAutocompleteMatches,
+} from "./wiki-link-autocomplete-popup.ts";
 import { isModifiedClick } from "../link-navigation.ts";
 import type { MarkdownPreviewController } from "../preview-view.ts";
 
@@ -15,8 +20,6 @@ import type { MarkdownPreviewController } from "../preview-view.ts";
 // features/index → wiki-link and creates a TDZ crash on ALL_FEATURES.
 
 const WIKI_RE = /(!?)\[\[([^\]]+)\]\]/g;
-const PARTIAL_RE = /(?:^|[^\]])\[\[([^\]]*)$/;
-const MAX_VISIBLE = 8;
 const HOVER_DELAY_MS = 420;
 const HIDE_DELAY_MS = 220;
 
@@ -149,6 +152,7 @@ type AutoState = {
   open: boolean;
   partial: string;
   matches: Array<{ name: string; path: string }>;
+  recentCount: number;
   selected: number;
   dismissedFor: string;
   from: number;
@@ -159,6 +163,7 @@ const CLOSED: AutoState = {
   open: false,
   partial: "",
   matches: [],
+  recentCount: 0,
   selected: 0,
   dismissedFor: "",
   from: 0,
@@ -167,16 +172,68 @@ const CLOSED: AutoState = {
 
 const autoKey = new PluginKey<AutoState>("wikiLinkAutocomplete");
 
-function detectPartial(state: EditorState): { from: number; to: number; partial: string } | null {
+function detectPartial(
+  state: EditorState,
+): { from: number; to: number; partial: string } | null {
   const { $from } = state.selection;
   if (!$from.parent.isTextblock) return null;
+
   const parentStart = $from.start();
-  const textBefore = $from.parent.textBetween(0, $from.parentOffset, "\n", "\0");
-  const m = PARTIAL_RE.exec(textBefore);
-  if (!m) return null;
-  const partial = m[1] ?? "";
-  const from = parentStart + (textBefore.length - partial.length - 2);
+  const offset = $from.parentOffset;
+  const text = $from.parent.textContent;
+  const before = text.slice(0, offset);
+  const after = text.slice(offset);
+
+  const openIdx = before.lastIndexOf("[[");
+  if (openIdx < 0) return null;
+  if (openIdx > 0 && before[openIdx - 1] === "!") return null;
+
+  const innerBefore = before.slice(openIdx + 2);
+  if (innerBefore.includes("]]")) return null;
+
+  const closeIdx = after.indexOf("]]");
+  if (closeIdx < 0) return null;
+  if (after.slice(0, closeIdx).includes("[[")) return null;
+
+  // Only complete the note-name segment (before alias / heading).
+  if (innerBefore.includes("|")) return null;
+  const hashIdx = innerBefore.indexOf("#");
+  const partial =
+    hashIdx >= 0 ? innerBefore.slice(0, hashIdx).trim() : innerBefore;
+
+  const from = parentStart + openIdx;
   return { from, to: $from.pos, partial };
+}
+
+export function detectWikiLinkPartial(
+  state: EditorState,
+): ReturnType<typeof detectPartial> {
+  return detectPartial(state);
+}
+
+const DISMISS_EMPTY = "\u0000";
+
+function dismissKey(partial: string): string {
+  return partial || DISMISS_EMPTY;
+}
+
+function listKey(auto: AutoState): string {
+  return `${auto.partial}\0${auto.recentCount}\0${auto.matches.map((m) => m.name).join("\0")}`;
+}
+
+function repositionWikiAutocomplete(
+  view: EditorView,
+  auto: AutoState,
+  el: HTMLElement,
+): void {
+  try {
+    const anchor = auto.from + 2;
+    const coords = view.coordsAtPos(anchor, -1);
+    el.style.top = `${coords.bottom + 4}px`;
+    el.style.left = `${coords.left}px`;
+  } catch {
+    /* layout not ready */
+  }
 }
 
 function wikiAutocompletePlugin(): Plugin<AutoState> {
@@ -191,16 +248,20 @@ function wikiAutocompletePlugin(): Plugin<AutoState> {
           return { ...prev, selected: meta.selected ?? prev.selected };
         }
         if (meta && "dismiss" in meta && prev.open) {
-          return { ...CLOSED, dismissedFor: prev.partial };
+          return { ...CLOSED, dismissedFor: dismissKey(prev.partial) };
         }
 
         const hit = detectPartial(state);
         if (!hit) return CLOSED;
-        if (hit.partial === prev.dismissedFor) {
+        if (prev.dismissedFor && dismissKey(hit.partial) === prev.dismissedFor) {
           return { ...CLOSED, dismissedFor: prev.dismissedFor };
         }
         const bridge = getWikiLinkBridge();
-        const matches = bridge?.searchNotes(hit.partial).slice(0, MAX_VISIBLE) ?? [];
+        if (!bridge) return CLOSED;
+        const { matches, recentCount } = resolveWikiAutocompleteMatches(
+          bridge,
+          hit.partial,
+        );
         // Keep open even with zero matches so Enter can create.
         const selected =
           prev.open && prev.partial === hit.partial
@@ -210,6 +271,7 @@ function wikiAutocompletePlugin(): Plugin<AutoState> {
           open: true,
           partial: hit.partial,
           matches,
+          recentCount,
           selected,
           dismissedFor: "",
           from: hit.from,
@@ -218,36 +280,6 @@ function wikiAutocompletePlugin(): Plugin<AutoState> {
       },
     },
     props: {
-      decorations(state) {
-        const auto = autoKey.getState(state);
-        if (!auto?.open) return DecorationSet.empty;
-        return DecorationSet.create(state.doc, [
-          Decoration.widget(auto.to, () => {
-            const box = document.createElement("div");
-            box.className = "wiki-link-autocomplete";
-            box.setAttribute("contenteditable", "false");
-            if (auto.matches.length === 0) {
-              const empty = document.createElement("div");
-              empty.className = "wiki-link-autocomplete-empty";
-              empty.textContent = auto.partial
-                ? `Create “${auto.partial}”`
-                : "Type to search notes";
-              box.append(empty);
-            } else {
-              auto.matches.forEach((hit, i) => {
-                const row = document.createElement("div");
-                row.className =
-                  "wiki-link-autocomplete-item" +
-                  (i === auto.selected ? " is-selected" : "");
-                row.textContent = hit.name;
-                row.dataset.index = String(i);
-                box.append(row);
-              });
-            }
-            return box;
-          }, { side: 1 }),
-        ]);
-      },
       handleKeyDown(view, event) {
         const auto = autoKey.getState(view.state);
         if (!auto?.open) return false;
@@ -281,34 +313,47 @@ function wikiAutocompletePlugin(): Plugin<AutoState> {
         }
         return false;
       },
-      handleDOMEvents: {
-        mousedown(view, event) {
-          const target = event.target as HTMLElement | null;
-          const item = target?.closest(".wiki-link-autocomplete-item") as HTMLElement | null;
-          if (!item) return false;
-          const auto = autoKey.getState(view.state);
-          if (!auto?.open) return false;
-          const idx = Number(item.dataset.index);
-          event.preventDefault();
-          commitAutocomplete(view, { ...auto, selected: idx });
-          return true;
-        },
-      },
     },
-    view() {
+    view(view) {
+      let popup: WikiAutocompletePopup | null = null;
+      let lastListKey = "";
+
+      const syncPopup = () => {
+        const auto = autoKey.getState(view.state);
+        if (!auto?.open) {
+          popup?.destroy();
+          popup = null;
+          lastListKey = "";
+          return;
+        }
+
+        if (!popup) {
+          popup = new WikiAutocompletePopup((idx) => {
+            const state = autoKey.getState(view.state);
+            if (!state?.open) return;
+            commitAutocomplete(view, { ...state, selected: idx });
+          });
+          document.body.append(popup.el);
+        }
+
+        const key = listKey(auto);
+        if (key !== lastListKey) {
+          popup.setItems(auto.matches, auto.recentCount, auto.partial);
+          lastListKey = key;
+        }
+        popup.setSelected(auto.selected);
+        repositionWikiAutocomplete(view, auto, popup.el);
+        notifyOverlayScrollbarRefresh();
+      };
+
+      syncPopup();
       return {
-        update(v) {
-          const auto = autoKey.getState(v.state);
-          const el = v.dom.querySelector(".wiki-link-autocomplete") as HTMLElement | null;
-          if (!auto?.open || !el) return;
-          try {
-            const coords = v.coordsAtPos(auto.to);
-            const editorRect = v.dom.getBoundingClientRect();
-            el.style.top = `${coords.bottom - editorRect.top + v.dom.scrollTop + 4}px`;
-            el.style.left = `${coords.left - editorRect.left + v.dom.scrollLeft}px`;
-          } catch {
-            /* ignore */
-          }
+        update() {
+          syncPopup();
+        },
+        destroy() {
+          popup?.destroy();
+          popup = null;
         },
       };
     },
@@ -326,9 +371,24 @@ function commitAutocomplete(view: EditorView, auto: AutoState): void {
   if (!hit && bridge?.createNote) {
     bridge.createNote(noteName);
   }
-  const insert = `[[${noteName}]]`;
-  const tr = view.state.tr
-    .insertText(insert, auto.from, auto.to)
+
+  const $from = view.state.doc.resolve(auto.to);
+  const textAfter = $from.parent.textBetween(
+    $from.parentOffset,
+    $from.parent.content.size,
+    "\n",
+    "\0",
+  );
+  const partialFrom = auto.from + 2;
+  const hasClosing = textAfter.startsWith("]]");
+
+  let tr = view.state.tr.insertText(noteName, partialFrom, auto.to);
+  const afterPartial = partialFrom + noteName.length;
+  if (!hasClosing) {
+    tr = tr.insertText("]]", afterPartial, afterPartial);
+  }
+  tr = tr
+    .setSelection(TextSelection.create(tr.doc, afterPartial + 2))
     .setMeta(autoKey, { close: true });
   view.dispatch(tr);
   view.focus();

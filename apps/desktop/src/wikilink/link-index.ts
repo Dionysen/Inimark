@@ -211,21 +211,40 @@ class LinkIndexServiceImpl {
     return this.index.imageByName.get(name.toLowerCase());
   }
 
-  searchNotes(query: string, limit = 40): NoteSearchHit[] {
-    const lowerQuery = query.toLowerCase();
-    const results: NoteSearchHit[] = [];
+  searchNotes(query: string, limit?: number): NoteSearchHit[] {
+    const q = query.trim();
+    const lowerQuery = q.toLowerCase();
+    const scored: Array<NoteSearchHit & { score: number }> = [];
+
     for (const [name, path] of this.index.fileByName) {
       const basename = name.split("/").pop() || name;
-      if (
-        !lowerQuery ||
-        name.toLowerCase().includes(lowerQuery) ||
-        basename.toLowerCase().includes(lowerQuery)
-      ) {
-        results.push({ name, path });
-        if (results.length >= limit) break;
+      const lowerName = name.toLowerCase();
+      const lowerBasename = basename.toLowerCase();
+      let score = 0;
+
+      if (!q) {
+        score = 1;
+      } else if (lowerBasename === lowerQuery) {
+        score = 100;
+      } else if (lowerBasename.startsWith(lowerQuery)) {
+        score = 80;
+      } else if (lowerBasename.includes(lowerQuery)) {
+        score = 60;
+      } else if (lowerName.includes(lowerQuery)) {
+        score = 40;
+      }
+
+      if (score > 0) {
+        scored.push({ name, path, score });
       }
     }
-    return results;
+
+    const sorted = scored.sort(
+      (a, b) =>
+        b.score - a.score || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
+    const capped = limit == null ? sorted : sorted.slice(0, limit);
+    return capped.map(({ name, path }) => ({ name, path }));
   }
 
   getAllNotes(): NoteSearchHit[] {

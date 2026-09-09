@@ -44,6 +44,34 @@ describe("linkIndex", () => {
     );
   });
 
+  test("searchNotes ranks basename prefix matches ahead of path substring", () => {
+    linkIndex.clear();
+    linkIndex.registerFile("Projects/Plan.md");
+    linkIndex.registerFile("Playground.md");
+
+    const hits = linkIndex.searchNotes("pla");
+    expect(hits[0]?.name).toBe("Playground");
+    expect(hits.some((h) => h.name === "Projects/Plan")).toBe(true);
+  });
+
+  test("searchNotes returns all notes alphabetically when query is empty", () => {
+    linkIndex.clear();
+    linkIndex.registerFile("B.md");
+    linkIndex.registerFile("A.md");
+
+    const hits = linkIndex.searchNotes("");
+    expect(hits.map((h) => h.name)).toEqual(["A", "B"]);
+  });
+
+  test("searchNotes without limit returns every match", () => {
+    linkIndex.clear();
+    for (let i = 0; i < 12; i++) {
+      linkIndex.registerFile(`notes/${i}.md`);
+    }
+    expect(linkIndex.searchNotes("")).toHaveLength(12);
+    expect(linkIndex.searchNotes("", 5)).toHaveLength(5);
+  });
+
   test("rewrites path-qualified links on move and remaps index", async () => {
     linkIndex.clear();
     linkIndex.registerFile("old/Note.md");
