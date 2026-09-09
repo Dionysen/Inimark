@@ -131,11 +131,25 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
   return btn;
 }
 
+function markMenuNoDrag(el: HTMLElement): void {
+  el.setAttribute("data-tauri-drag-region", "false");
+  el.style.setProperty("-webkit-app-region", "no-drag");
+}
+
+function blockTitlebarDoubleClickMaximize(el: HTMLElement): void {
+  el.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+}
+
 export function createMenu(): MenuController {
   const el = document.createElement("div");
   el.className = "inimark-menu inimark-glass";
   el.hidden = true;
   el.setAttribute("role", "menu");
+  markMenuNoDrag(el);
+  blockTitlebarDoubleClickMaximize(el);
 
   const path = document.createElement("p");
   path.className = "inimark-menu__path";
@@ -256,6 +270,8 @@ export function createMenu(): MenuController {
       panel.className = "inimark-menu inimark-menu--submenu inimark-glass";
       panel.hidden = true;
       panel.setAttribute("role", "menu");
+      markMenuNoDrag(panel);
+      blockTitlebarDoubleClickMaximize(panel);
 
       const panelBody = document.createElement("div");
       panelBody.className = "inimark-menu__section";

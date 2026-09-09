@@ -172,6 +172,10 @@ export function mountTitleBar(
     moreBtn.setAttribute("aria-haspopup", "menu");
     moreBtn.setAttribute("aria-expanded", "false");
     markNoDrag(moreBtn);
+    moreBtn.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
     trailing.append(moreBtn);
     moreMenu.setDismissAnchors([moreBtn]);
 

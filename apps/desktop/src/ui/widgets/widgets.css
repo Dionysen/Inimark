@@ -541,6 +541,7 @@ html[data-glass="true"] .inimark-select-panel {
   position: absolute;
   z-index: 30;
   min-width: 12rem;
+  -webkit-app-region: no-drag;
   padding: var(--inimark-menu-padding);
   border: 1px solid var(--inimark-glass-border, var(--inimark-border));
   border-radius: var(--inimark-radius-menu);

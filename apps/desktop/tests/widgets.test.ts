@@ -119,6 +119,24 @@ describe("widgets/slider", () => {
 });
 
 describe("widgets/menu", () => {
+  test("opts out of titlebar drag and blocks double-click maximize", () => {
+    const menu = createMenu();
+    expect(menu.el.getAttribute("data-tauri-drag-region")).toBe("false");
+
+    let bubbled = false;
+    const host = document.createElement("header");
+    host.addEventListener("dblclick", () => {
+      bubbled = true;
+    });
+    host.append(menu.el);
+    menu.el.dispatchEvent(
+      new MouseEvent("dblclick", { bubbles: true, cancelable: true }),
+    );
+    expect(bubbled).toBe(false);
+
+    menu.destroy();
+  });
+
   test("opens, lists items, and closes on outside click", () => {
     const menu = createMenu();
     document.body.append(menu.el);
