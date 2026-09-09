@@ -2,7 +2,8 @@ import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import type { EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 
-import { markConsumed, type InlineSpan } from "../inline-parse.ts";
+import { markConsumed, rangesOverlap, type InlineSpan } from "../inline-parse.ts";
+import { getInlineCodeRanges } from "./code.ts";
 import type { FeatureSpec, InlineFeatureSpec } from "./_types.ts";
 import { notifyOverlayScrollbarRefresh } from "../overlay-scrollbar-bridge.ts";
 import { getWikiLinkBridge } from "../wiki-link-bridge.ts";
@@ -188,11 +189,15 @@ function detectPartial(
   if (openIdx < 0) return null;
   if (openIdx > 0 && before[openIdx - 1] === "!") return null;
 
+  const codeRanges = getInlineCodeRanges(text);
+  const closeIdx = after.indexOf("]]");
+  if (closeIdx < 0) return null;
+  const wikiEnd = offset + closeIdx + 2;
+  if (rangesOverlap(codeRanges, openIdx, wikiEnd)) return null;
+
   const innerBefore = before.slice(openIdx + 2);
   if (innerBefore.includes("]]")) return null;
 
-  const closeIdx = after.indexOf("]]");
-  if (closeIdx < 0) return null;
   if (after.slice(0, closeIdx).includes("[[")) return null;
 
   // Only complete the note-name segment (before alias / heading).
@@ -629,10 +634,14 @@ export const wikiLink: FeatureSpec = {
     extRanges: (parent) => {
       const ranges: Array<[number, number]> = [];
       const text = parent.textContent;
+      const codeRanges = getInlineCodeRanges(text);
       WIKI_RE.lastIndex = 0;
       let m: RegExpExecArray | null;
       while ((m = WIKI_RE.exec(text))) {
-        ranges.push([m.index, m.index + m[0]!.length]);
+        const start = m.index;
+        const end = start + m[0]!.length;
+        if (rangesOverlap(codeRanges, start, end)) continue;
+        ranges.push([start, end]);
       }
       return ranges;
     },

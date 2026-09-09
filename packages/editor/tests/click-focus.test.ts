@@ -150,6 +150,46 @@ describe("click focus", () => {
     }
   });
 
+  test("ctrl+click places a caret instead of selecting the whole paragraph", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "Callout, Mermaid, math formulas, and other rich elements render correctly after publishing.",
+    });
+
+    try {
+      const view = editor.view;
+      const paragraph = view.dom.querySelector("p");
+      expect(paragraph).not.toBeNull();
+      const mid = Math.floor(view.state.doc.textContent.length / 2) + 1;
+      const coords = view.coordsAtPos(mid);
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: coords.left + 2,
+        clientY: coords.top + 2,
+        button: 0,
+        ctrlKey: true,
+      });
+      Object.defineProperty(down, "target", { value: paragraph });
+
+      const textLen = view.state.doc.firstChild!.content.size;
+      view.dispatch(
+        view.state.tr.setSelection(
+          TextSelection.create(view.state.doc, 1, 1 + textLen),
+        ),
+      );
+      expect(view.state.selection.empty).toBe(false);
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      expect(view.state.selection.empty).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
   test("redirected mousedown from host padding starts nearest-pos drag tracking", () => {
     const host = document.createElement("div");
     host.className = "inimark-editor-host";

@@ -104,6 +104,17 @@ export function markConsumed(consumed: Uint8Array, from: number, to: number): vo
   for (let i = from; i < to; i++) consumed[i] = 1;
 }
 
+export function rangesOverlap(
+  ranges: Array<[number, number]>,
+  from: number,
+  to: number,
+): boolean {
+  for (const [start, end] of ranges) {
+    if (from < end && to > start) return true;
+  }
+  return false;
+}
+
 // Fixed-length delim helper (code len 1, strike len 2).
 // Content must not contain the delim char itself — pilot simplification.
 export function scanFixedDelim(

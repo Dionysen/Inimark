@@ -66,6 +66,24 @@ describe("link navigation", () => {
     expect(normalizeExternalHref("./note.md")).toBe("./note.md");
   });
 
+  test("wiki links inside inline code render as plain text", () => {
+    setWikiLinkBridge({
+      resolveNote: (note) => (note === "Other Note" ? "Other Note.md" : null),
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote() {},
+    });
+
+    const { host, cleanup } = mountView("Use `[[Other Note]]` here.");
+    try {
+      expect(host.querySelector(".wiki-link-widget")).toBeNull();
+      expect(host.textContent).toContain("[[Other Note]]");
+    } finally {
+      setWikiLinkBridge(null);
+      cleanup();
+    }
+  });
+
   test("wiki links open on Ctrl+click only", () => {
     const opened: Array<{ note: string; heading?: string }> = [];
     setWikiLinkBridge({

@@ -2,7 +2,9 @@ import { Plugin, TextSelection } from "prosemirror-state";
 import type { Command } from "prosemirror-state";
 import type { Schema } from "prosemirror-model";
 
+import { rangesOverlap } from "../inline-parse.ts";
 import type { FeatureSpec } from "./_types.ts";
+import { getInlineCodeRanges } from "./code.ts";
 
 // Auto-pair: typing `[` or `(` inserts the matching close char and parks
 // the cursor between them, but only when the cursor is at end-of-line or
@@ -41,15 +43,19 @@ function autoPairInputPlugin(): Plugin {
           view.dispatch(tr);
           return true;
         }
-        // Second '[' inside [|] → [[|]] for wiki-links.
+        // Second '[' inside [|] → [[|]] for wiki-links (not inside inline code).
         if (text === "[") {
           const before = offset > 0 ? $from.parent.textBetween(offset - 1, offset) : "";
           if (before === "[" && nextChar === "]") {
-            const openStart = from - 1;
-            const tr = view.state.tr.insertText("[[]]", openStart, from + 1);
-            tr.setSelection(TextSelection.create(tr.doc, openStart + 2));
-            view.dispatch(tr);
-            return true;
+            const lineText = $from.parent.textContent;
+            const codeRanges = getInlineCodeRanges(lineText);
+            if (!rangesOverlap(codeRanges, offset - 1, offset + 1)) {
+              const openStart = from - 1;
+              const tr = view.state.tr.insertText("[[]]", openStart, from + 1);
+              tr.setSelection(TextSelection.create(tr.doc, openStart + 2));
+              view.dispatch(tr);
+              return true;
+            }
           }
         }
         const close = PAIRS[text];

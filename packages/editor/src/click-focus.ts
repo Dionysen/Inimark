@@ -2,6 +2,7 @@ import type { Node as PMNode } from "prosemirror-model";
 import { Plugin, TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
+import { isModifiedClick } from "./link-navigation.ts";
 import { isEmptyParagraph, trailingSentinelStart } from "./trailing-sentinel.ts";
 
 type BlockRect = {
@@ -414,6 +415,91 @@ export function focusEditorAtPoint(
   return true;
 }
 
+/** ProseMirror Ctrl/Cmd+click selects the whole textblock — neutralize that. */
+function shouldNeutralizeModifiedClick(view: EditorView, event: MouseEvent): boolean {
+  if (!view.editable || event.button !== 0 || !isModifiedClick(event)) return false;
+  const target = event.target;
+  if (!(target instanceof Element)) return false;
+  if (!view.dom.contains(target)) return false;
+  if (isInteractiveEditorTarget(target)) return false;
+  if (target.closest("a")) return false;
+  if (target.closest(".wiki-link-widget, .wiki-embed-note, .wiki-embed-image")) return false;
+  return true;
+}
+
+function posAtPoint(
+  view: EditorView,
+  clientX: number,
+  clientY: number,
+  target: Element | null,
+): number | null {
+  const hit = view.posAtCoords({ left: clientX, top: clientY });
+  if (hit) return hit.pos;
+  return focusPosFromClick(view, clientX, clientY, target);
+}
+
+function applyPreciseSelection(
+  view: EditorView,
+  anchor: number,
+  clientX: number,
+  clientY: number,
+  target: Element | null = null,
+): void {
+  const head = posAtPoint(view, clientX, clientY, target) ?? anchor;
+  const sel =
+    head === anchor
+      ? TextSelection.create(view.state.doc, anchor)
+      : TextSelection.create(view.state.doc, anchor, head);
+  view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+}
+
+/** Block PM's Ctrl/Cmd+click paragraph select; keep normal click + drag behavior. */
+function startPreciseSelectionAtClick(view: EditorView, event: MouseEvent): boolean {
+  const target = event.target instanceof Element ? event.target : null;
+  const head = posAtPoint(view, event.clientX, event.clientY, target);
+  if (head == null) return false;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const anchor = event.shiftKey ? view.state.selection.anchor : head;
+  applyPreciseSelection(view, anchor, event.clientX, event.clientY, target);
+  view.focus();
+
+  if (event.type === "mousedown" && event.button === 0) {
+    const dragAnchor = view.state.selection.anchor;
+    clearSelectionDrag();
+    const drag: SelectionDrag = {
+      view,
+      anchor: dragAnchor,
+      moved: false,
+      onMove: (moveEvent: MouseEvent) => {
+        if (!(moveEvent.buttons & 1)) {
+          clearSelectionDrag();
+          return;
+        }
+        drag.moved = true;
+        const el = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
+        const moveTarget = el && view.dom.contains(el) ? el : null;
+        applyPreciseSelection(view, drag.anchor, moveEvent.clientX, moveEvent.clientY, moveTarget);
+      },
+      onUp: (upEvent: MouseEvent) => {
+        if (drag.moved) {
+          const el = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+          const upTarget = el && view.dom.contains(el) ? el : null;
+          applyPreciseSelection(view, drag.anchor, upEvent.clientX, upEvent.clientY, upTarget);
+        }
+        clearSelectionDrag();
+      },
+    };
+    activeDrag = drag;
+    window.addEventListener("mousemove", drag.onMove, true);
+    window.addEventListener("mouseup", drag.onUp, true);
+  }
+
+  return true;
+}
+
 /** Focus the nearest caret for clicks anywhere on the rendered editor surface. */
 export function handleEditorSurfaceMouseDown(
   view: EditorView,
@@ -426,6 +512,10 @@ export function handleEditorSurfaceMouseDown(
   if (!root.contains(target)) return false;
   if (target.closest(".typora-web-source-editor:not([hidden])")) return false;
   if (isInteractiveEditorTarget(target)) return false;
+
+  if (shouldNeutralizeModifiedClick(view, event)) {
+    return startPreciseSelectionAtClick(view, event);
+  }
 
   if (view.dom.contains(target) && !needsClickRedirect(view, event.clientX, event.clientY, target)) {
     return false;
@@ -448,6 +538,9 @@ export function clickFocusPlugin(): Plugin {
     props: {
       handleDOMEvents: {
         mousedown(view, event) {
+          if (shouldNeutralizeModifiedClick(view, event)) {
+            return startPreciseSelectionAtClick(view, event);
+          }
           if (!shouldCaptureClick(view, event)) return false;
           return focusEditorAtPoint(view, event.clientX, event.clientY, event);
         },

@@ -13,6 +13,11 @@ import type { FeatureSpec } from "./_types.ts";
 // soft delim ranges instead — they render as plain text while the cursor
 // is inside the span (so the user can edit them) and disappear when the
 // cursor leaves (so the stable view shows only the code-styled content).
+export function getInlineCodeRanges(text: string): Array<[number, number]> {
+  const consumed = new Uint8Array(text.length);
+  return scanCodeRuns(text, consumed).map((span) => [span.openFrom, span.closeTo]);
+}
+
 function scanCodeRuns(text: string, consumed: Uint8Array): InlineSpan[] {
   const out: InlineSpan[] = [];
   type Run = { pos: number; len: number };

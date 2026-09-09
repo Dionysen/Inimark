@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { TextSelection } from "prosemirror-state";
 
 import { createEditor } from "../../src/lib.ts";
 import { executeEditorCommand } from "../../src/commands.ts";
@@ -120,6 +121,30 @@ describe("wiki-link autocomplete", () => {
           ".wiki-link-autocomplete__window .inimark-menu-item",
         ).length,
       ).toBeLessThan(12);
+    } finally {
+      editor.destroy();
+      setWikiLinkBridge(null);
+      host.remove();
+    }
+  });
+
+  test("does not open when [[...]] is inside inline code", () => {
+    const host = createHost();
+    setWikiLinkBridge(mockBridge([{ name: "Note", path: "Note.md" }]));
+    const editor = createEditor(host);
+
+    try {
+      editor.view.dispatch(
+        editor.view.state.tr.insertText("Use `[[Note]]` here"),
+      );
+      const cursor = 1 + editor.view.state.doc.textContent.indexOf("[[") + 2;
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(editor.view.state.doc, cursor),
+        ),
+      );
+      expect(detectWikiLinkPartial(editor.view.state)).toBeNull();
+      expect(document.body.querySelector(".wiki-link-autocomplete")).toBeNull();
     } finally {
       editor.destroy();
       setWikiLinkBridge(null);
