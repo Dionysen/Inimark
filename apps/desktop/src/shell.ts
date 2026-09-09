@@ -1,4 +1,5 @@
 import { onLocaleChange, t } from "./i18n/index.ts";
+import { requestOverlayScrollbarRefresh } from "./platform/scrollbars.ts";
 import { mountSidebar, type SidebarController } from "./sidebar.ts";
 import {
   mountRightSidebar,
@@ -159,6 +160,7 @@ export function mountShell(
     sidebarHost.classList.toggle("is-collapsed", !sidebarOpen);
     titlebar.setSidebarOpen(sidebarOpen);
     sidebar.setSidebarOpen(sidebarOpen);
+    requestOverlayScrollbarRefresh();
   }
 
   function applyRightSidebarState(): void {
@@ -166,6 +168,7 @@ export function mountShell(
     rightSidebarHost.classList.toggle("is-collapsed", !rightSidebarOpen);
     titlebar.setRightSidebarOpen(rightSidebarOpen);
     rightSidebar.setSidebarOpen(rightSidebarOpen);
+    requestOverlayScrollbarRefresh();
   }
 
   function toggleSidebar(): void {

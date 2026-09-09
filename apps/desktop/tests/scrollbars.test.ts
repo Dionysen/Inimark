@@ -4,6 +4,7 @@ import {
   FLOATING_MENU_MIN_Z_INDEX,
   initAutoHideScrollbars,
   isPointerInScrollbarGutter,
+  isScrollbarHostVisible,
   SCROLLBAR_CLASS,
   SCROLLBAR_LAYER_Z_INDEX,
 } from "../src/platform/scrollbars.ts";
@@ -91,8 +92,28 @@ describe("custom overlay scrollbars", () => {
     host.remove();
   });
 
+  test("ignores hidden or zero-width scroll hosts", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    mockScrollMetrics(host, {
+      scrollHeight: 200,
+      clientHeight: 100,
+      rect: { left: 0, top: 0, right: 0, bottom: 200, width: 0, height: 200 },
+    });
+    expect(isScrollbarHostVisible(host)).toBe(false);
+    expect(isPointerInScrollbarGutter(host, 0, 50, 14)).toBe(false);
+
+    mockScrollMetrics(host, { scrollHeight: 200, clientHeight: 100 });
+    host.style.visibility = "hidden";
+    expect(isScrollbarHostVisible(host)).toBe(false);
+    expect(isPointerInScrollbarGutter(host, 95, 50, 8)).toBe(false);
+
+    host.remove();
+  });
+
   test("detects pointer in vertical scrollbar gutter only", () => {
     const host = document.createElement("div");
+    document.body.append(host);
     mockScrollMetrics(host, { scrollHeight: 200, clientHeight: 100 });
     host.getBoundingClientRect = () =>
       ({
@@ -109,6 +130,8 @@ describe("custom overlay scrollbars", () => {
 
     expect(isPointerInScrollbarGutter(host, 95, 50, 8)).toBe(true);
     expect(isPointerInScrollbarGutter(host, 80, 50, 8)).toBe(false);
+
+    host.remove();
   });
 
   test("flashes on wheel before scroll event", () => {
@@ -133,6 +156,33 @@ describe("custom overlay scrollbars", () => {
     teardown();
     host.remove();
     vi.useRealTimers();
+  });
+
+  test("does not show rail for a hidden zero-width sidebar host", () => {
+    const sidebar = document.createElement("aside");
+    sidebar.className = "inimark-sidebar is-collapsed";
+    sidebar.style.visibility = "hidden";
+    const host = document.createElement("div");
+    host.className = SCROLLBAR_CLASS;
+    host.style.overflow = "auto";
+    sidebar.append(host);
+    document.body.append(sidebar);
+    mockScrollMetrics(host, {
+      scrollHeight: 300,
+      clientHeight: 100,
+      rect: { left: 0, top: 0, right: 0, bottom: 300, width: 0, height: 300 },
+    });
+
+    const teardown = initAutoHideScrollbars();
+    const rail = document.querySelector(".inimark-scrollbar-rail--y");
+
+    document.dispatchEvent(
+      new PointerEvent("pointermove", { clientX: 0, clientY: 50, bubbles: true }),
+    );
+    expect(rail?.classList.contains("is-visible")).toBe(false);
+
+    teardown();
+    sidebar.remove();
   });
 
   test("shows rail when pointer enters the gutter", () => {

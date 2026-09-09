@@ -58,6 +58,19 @@ function matchesScrollbarRoot(el: Element): boolean {
   return el.classList.contains("cm-scroller") && !!el.closest(".cm-editor");
 }
 
+/** False when the host is collapsed, hidden, or has no painted area (e.g. grid column 0). */
+export function isScrollbarHostVisible(host: HTMLElement): boolean {
+  if (!document.contains(host)) return false;
+  let el: HTMLElement | null = host;
+  while (el) {
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    el = el.parentElement;
+  }
+  const rect = host.getBoundingClientRect();
+  return rect.width >= 1 && rect.height >= 1;
+}
+
 /** True when the pointer is over the vertical/horizontal scrollbar gutter. */
 export function isPointerInScrollbarGutter(
   el: HTMLElement,
@@ -65,6 +78,8 @@ export function isPointerInScrollbarGutter(
   clientY: number,
   gutterSize = getHoverGutterSize(),
 ): boolean {
+  if (!isScrollbarHostVisible(el)) return false;
+
   const rect = el.getBoundingClientRect();
   if (
     clientX < rect.left ||
@@ -75,8 +90,12 @@ export function isPointerInScrollbarGutter(
     return false;
   }
 
-  if (isScrollableY(el) && clientX >= rect.right - gutterSize) return true;
-  if (isScrollableX(el) && clientY >= rect.bottom - gutterSize) return true;
+  if (isScrollableY(el) && rect.width >= gutterSize && clientX >= rect.right - gutterSize) {
+    return true;
+  }
+  if (isScrollableX(el) && rect.height >= gutterSize && clientY >= rect.bottom - gutterSize) {
+    return true;
+  }
   return false;
 }
 
@@ -192,6 +211,14 @@ function suppressInstances(instances: Iterable<ScrollbarInstance>): void {
 function layout(inst: ScrollbarInstance): void {
   const { host, railY, thumbY, railX, thumbX } = inst;
   if (!document.contains(host)) return;
+
+  if (!isScrollbarHostVisible(host)) {
+    inst.hover = false;
+    railY.hidden = true;
+    railX.hidden = true;
+    setVisible(inst, false);
+    return;
+  }
 
   const rect = host.getBoundingClientRect();
   const gutter = getHoverGutterSize();
@@ -464,7 +491,10 @@ export function initAutoHideScrollbars(): () => void {
     // Gutter proximity (native bars are hidden, so mousemove always reaches us).
     let matched: ScrollbarInstance | null = null;
     for (const inst of instances.values()) {
-      if (!isScrollableY(inst.host) && !isScrollableX(inst.host)) {
+      if (
+        !isScrollbarHostVisible(inst.host) ||
+        (!isScrollableY(inst.host) && !isScrollableX(inst.host))
+      ) {
         inst.hover = false;
         continue;
       }
