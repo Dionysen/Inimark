@@ -343,6 +343,10 @@ html.platform-windows .inimark-titlebar-btn {
   overflow: hidden;
 }
 
+.inimark-scrollbar-layer.is-suppressed {
+  visibility: hidden;
+}
+
 .inimark-scrollbar-rail {
   position: fixed;
   box-sizing: border-box;

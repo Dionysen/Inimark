@@ -18,6 +18,27 @@ type LayerEntry = {
 const layers = new Map<ExclusiveLayerId, LayerEntry>();
 
 let outsideListenerInstalled = false;
+let scrollListenerInstalled = false;
+
+type ActiveListener = (active: boolean) => void;
+const activeListeners = new Set<ActiveListener>();
+
+function notifyActive(): void {
+  const active = layers.size > 0;
+  for (const listener of activeListeners) listener(active);
+}
+
+/** True while any menu / floating exclusive layer is open. */
+export function hasExclusiveLayer(): boolean {
+  return layers.size > 0;
+}
+
+/** Subscribe to open/close of exclusive floating layers (menus, etc.). */
+export function onExclusiveLayerActiveChange(listener: ActiveListener): () => void {
+  activeListeners.add(listener);
+  listener(layers.size > 0);
+  return () => activeListeners.delete(listener);
+}
 
 function defaultContains(id: ExclusiveLayerId, node: Node | null): boolean {
   return node != null && id instanceof HTMLElement && id.contains(node);
@@ -38,10 +59,31 @@ function ensureOutsideListener(): void {
   document.addEventListener("pointerdown", onDocumentPointerDown, true);
 }
 
+function onDocumentScroll(event: Event): void {
+  if (layers.size === 0) return;
+  const target = event.target as Node | null;
+  for (const entry of layers.values()) {
+    if (entry.contains(target)) return;
+  }
+  dismissExclusiveLayers();
+}
+
 function removeOutsideListenerIfIdle(): void {
   if (layers.size > 0 || !outsideListenerInstalled) return;
   document.removeEventListener("pointerdown", onDocumentPointerDown, true);
   outsideListenerInstalled = false;
+}
+
+function ensureScrollListener(): void {
+  if (scrollListenerInstalled) return;
+  scrollListenerInstalled = true;
+  document.addEventListener("scroll", onDocumentScroll, true);
+}
+
+function removeScrollListenerIfIdle(): void {
+  if (layers.size > 0 || !scrollListenerInstalled) return;
+  document.removeEventListener("scroll", onDocumentScroll, true);
+  scrollListenerInstalled = false;
 }
 
 /**
@@ -65,12 +107,16 @@ export function acquireExclusiveLayer(
   const contains = options?.contains ?? ((node) => defaultContains(id, node));
   layers.set(id, { close, contains });
   ensureOutsideListener();
+  ensureScrollListener();
+  notifyActive();
 }
 
 /** Unregister when a layer closes itself (no-op if already replaced). */
 export function releaseExclusiveLayer(id: ExclusiveLayerId): void {
-  layers.delete(id);
+  if (!layers.delete(id)) return;
   removeOutsideListenerIfIdle();
+  removeScrollListenerIfIdle();
+  notifyActive();
 }
 
 /** Close and clear every registered layer. */
@@ -84,4 +130,6 @@ export function dismissExclusiveLayers(): void {
     }
   }
   removeOutsideListenerIfIdle();
+  removeScrollListenerIfIdle();
+  notifyActive();
 }

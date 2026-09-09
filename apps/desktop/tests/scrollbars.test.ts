@@ -1,10 +1,16 @@
 import { describe, expect, test, vi } from "vitest";
 
 import {
+  FLOATING_MENU_MIN_Z_INDEX,
   initAutoHideScrollbars,
   isPointerInScrollbarGutter,
   SCROLLBAR_CLASS,
+  SCROLLBAR_LAYER_Z_INDEX,
 } from "../src/platform/scrollbars.ts";
+import {
+  acquireExclusiveLayer,
+  releaseExclusiveLayer,
+} from "../src/ui/exclusive-layer.ts";
 
 function mockScrollMetrics(
   host: HTMLElement,
@@ -152,5 +158,54 @@ describe("custom overlay scrollbars", () => {
 
     teardown();
     host.remove();
+  });
+
+  test("keeps overlay layer below floating menus for normal scroll hosts", () => {
+    const host = document.createElement("div");
+    host.className = SCROLLBAR_CLASS;
+    host.style.overflow = "auto";
+    document.body.append(host);
+    mockScrollMetrics(host, { scrollHeight: 400, clientHeight: 100 });
+
+    const teardown = initAutoHideScrollbars();
+    const layer = document.getElementById("inimark-scrollbar-layer");
+    const layerZ = Number.parseInt(layer?.style.zIndex || String(SCROLLBAR_LAYER_Z_INDEX), 10);
+
+    expect(layerZ).toBeLessThan(FLOATING_MENU_MIN_Z_INDEX);
+
+    teardown();
+    host.remove();
+  });
+
+  test("hides overlay scrollbars while an exclusive floating layer is open", () => {
+    vi.useFakeTimers();
+    const layerId = Symbol("test-menu");
+    const host = document.createElement("div");
+    host.className = SCROLLBAR_CLASS;
+    host.style.overflow = "auto";
+    document.body.append(host);
+    mockScrollMetrics(host, { scrollHeight: 400, clientHeight: 100 });
+
+    const teardown = initAutoHideScrollbars();
+    const layer = document.getElementById("inimark-scrollbar-layer");
+    const rail = document.querySelector(".inimark-scrollbar-rail--y");
+
+    host.dispatchEvent(new Event("scroll", { bubbles: true }));
+    expect(rail?.classList.contains("is-visible")).toBe(true);
+    expect(layer?.classList.contains("is-suppressed")).toBe(false);
+
+    acquireExclusiveLayer(layerId, () => releaseExclusiveLayer(layerId));
+    expect(layer?.classList.contains("is-suppressed")).toBe(true);
+    expect(rail?.classList.contains("is-visible")).toBe(false);
+
+    releaseExclusiveLayer(layerId);
+    expect(layer?.classList.contains("is-suppressed")).toBe(false);
+
+    host.dispatchEvent(new Event("scroll", { bubbles: true }));
+    expect(rail?.classList.contains("is-visible")).toBe(true);
+
+    teardown();
+    host.remove();
+    vi.useRealTimers();
   });
 });

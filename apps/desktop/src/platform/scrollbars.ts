@@ -1,3 +1,5 @@
+import { onExclusiveLayerActiveChange } from "../ui/exclusive-layer.ts";
+
 /**
  * Custom overlay scrollbars — one implementation for the whole app.
  *
@@ -10,6 +12,12 @@
  */
 
 export const SCROLLBAR_CLASS = "inimark-scrollbar";
+
+/** Fixed overlay layer — must stay below floating menus (see shell.css). */
+export const SCROLLBAR_LAYER_Z_INDEX = 25;
+
+/** Lowest z-index used by body-mounted context menus (`.inimark-context-menu`). */
+export const FLOATING_MENU_MIN_Z_INDEX = 30;
 
 /** Marked roots + CodeMirror scroller (created by CM, hard to class at mount). */
 export const SCROLLBAR_SELECTOR = [
@@ -120,8 +128,14 @@ function createRail(axis: "y" | "x"): { rail: HTMLElement; thumb: HTMLElement } 
   return { rail, thumb };
 }
 
+function isScrollbarLayerSuppressed(): boolean {
+  const layer = document.getElementById(LAYER_ID);
+  return layer?.classList.contains("is-suppressed") ?? false;
+}
+
 function setVisible(inst: ScrollbarInstance, visible: boolean): void {
-  const show = visible && (isScrollableY(inst.host) || isScrollableX(inst.host));
+  const show =
+    visible && !isScrollbarLayerSuppressed() && (isScrollableY(inst.host) || isScrollableX(inst.host));
   inst.railY.classList.toggle("is-visible", show && isScrollableY(inst.host));
   inst.railX.classList.toggle("is-visible", show && isScrollableX(inst.host));
   inst.railY.classList.toggle("is-interactive", show && isScrollableY(inst.host));
@@ -135,6 +149,7 @@ function setScrolling(inst: ScrollbarInstance, scrolling: boolean): void {
 }
 
 function flash(inst: ScrollbarInstance): void {
+  if (isScrollbarLayerSuppressed()) return;
   setScrolling(inst, true);
   setVisible(inst, true);
   clearTimeout(inst.hideTimer);
@@ -146,19 +161,32 @@ function flash(inst: ScrollbarInstance): void {
 
 function railZIndex(host: HTMLElement): number {
   const z = Number.parseInt(getComputedStyle(host).zIndex, 10);
-  return Number.isFinite(z) && z > 0 ? z + 1 : 26;
+  if (!Number.isFinite(z) || z <= 0) return SCROLLBAR_LAYER_Z_INDEX;
+  // High-z popups (e.g. wiki-link autocomplete) need rails above their surface.
+  return z + 1;
 }
 
 function updateLayerZIndex(
   layer: HTMLElement,
   instances: Iterable<ScrollbarInstance>,
 ): void {
-  let max = 25;
+  let max = SCROLLBAR_LAYER_Z_INDEX;
   for (const inst of instances) {
     if (!document.contains(inst.host)) continue;
     max = Math.max(max, railZIndex(inst.host));
   }
   layer.style.zIndex = String(max);
+}
+
+function suppressInstances(instances: Iterable<ScrollbarInstance>): void {
+  for (const inst of instances) {
+    clearTimeout(inst.hideTimer);
+    inst.hideTimer = undefined;
+    inst.hover = false;
+    inst.scrolling = false;
+    inst.railY.classList.remove("is-scrolling", "is-visible", "is-interactive");
+    inst.railX.classList.remove("is-scrolling", "is-visible", "is-interactive");
+  }
 }
 
 function layout(inst: ScrollbarInstance): void {
@@ -431,6 +459,8 @@ export function initAutoHideScrollbars(): () => void {
       return;
     }
 
+    if (isScrollbarLayerSuppressed()) return;
+
     // Gutter proximity (native bars are hidden, so mousemove always reaches us).
     let matched: ScrollbarInstance | null = null;
     for (const inst of instances.values()) {
@@ -481,6 +511,11 @@ export function initAutoHideScrollbars(): () => void {
   scan();
   refreshOverlayScrollbars = scan;
 
+  const releaseExclusiveListener = onExclusiveLayerActiveChange((active) => {
+    layer.classList.toggle("is-suppressed", active);
+    if (active) suppressInstances(instances.values());
+  });
+
   document.addEventListener("pointermove", onPointerMove, { passive: true });
   document.addEventListener("pointerup", onPointerUp);
   document.addEventListener("pointercancel", onPointerUp);
@@ -489,6 +524,7 @@ export function initAutoHideScrollbars(): () => void {
   window.addEventListener("scroll", onWindowChange, true);
 
   return () => {
+    releaseExclusiveListener();
     refreshOverlayScrollbars = null;
     mo.disconnect();
     document.removeEventListener("pointermove", onPointerMove);

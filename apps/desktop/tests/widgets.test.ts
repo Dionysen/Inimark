@@ -232,6 +232,48 @@ describe("widgets/menu", () => {
 
     menu.destroy();
   });
+
+  test("closes on scroll outside the menu surface", () => {
+    const scrollHost = document.createElement("div");
+    scrollHost.className = "inimark-tree inimark-scrollbar";
+    scrollHost.style.height = "100px";
+    scrollHost.style.overflow = "auto";
+    const content = document.createElement("div");
+    content.style.height = "400px";
+    scrollHost.append(content);
+    document.body.append(scrollHost);
+
+    const menu = createMenu();
+    menu.el.classList.add("inimark-context-menu");
+    document.body.append(menu.el);
+    menu.addItem({ label: "Rename" });
+    menu.setOpen(true);
+    expect(menu.isOpen()).toBe(true);
+
+    scrollHost.dispatchEvent(new Event("scroll", { bubbles: false }));
+    expect(menu.isOpen()).toBe(false);
+
+    menu.destroy();
+    scrollHost.remove();
+  });
+
+  test("stays open when scrolling inside the menu body", () => {
+    const menu = createMenu();
+    const group = menu.appendGroup("inimark-library-menu__scroll inimark-scrollbar");
+    group.style.height = "80px";
+    group.style.overflow = "auto";
+    const inner = document.createElement("div");
+    inner.style.height = "200px";
+    group.append(inner);
+    document.body.append(menu.el);
+    menu.addItem({ label: "Item" });
+    menu.setOpen(true);
+
+    group.dispatchEvent(new Event("scroll", { bubbles: false }));
+    expect(menu.isOpen()).toBe(true);
+
+    menu.destroy();
+  });
 });
 
 describe("widgets/font-picker", () => {
