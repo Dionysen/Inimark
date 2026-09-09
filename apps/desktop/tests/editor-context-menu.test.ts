@@ -94,9 +94,60 @@ describe("editor context menu", () => {
     host.remove();
     dismissExclusiveLayers();
   });
+
+  test("closes on left-click in the editor surface outside the menu", () => {
+    dismissExclusiveLayers();
+
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.append(host);
+
+    const editor = createEditor(host, { initialContent: "hello" });
+    const editorMenu = mountEditorContextMenu(host, editor);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 40,
+        clientY: 40,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    const panel = document.querySelector(".inimark-editor-context-menu") as HTMLElement;
+    expect(panel.hidden).toBe(false);
+
+    host.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, cancelable: true }),
+    );
+    expect(panel.hidden).toBe(true);
+
+    editorMenu.destroy();
+    editor.destroy();
+    host.remove();
+    dismissExclusiveLayers();
+  });
 });
 
 describe("exclusive layer", () => {
+  test("closes on pointerdown outside the registered layer", () => {
+    dismissExclusiveLayers();
+    const layer = document.createElement("div");
+    document.body.append(layer);
+    let closed = false;
+    acquireExclusiveLayer(layer, () => {
+      closed = true;
+    }, { contains: (node) => node != null && layer.contains(node) });
+
+    document.body.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, cancelable: true }),
+    );
+    expect(closed).toBe(true);
+    layer.remove();
+    dismissExclusiveLayers();
+  });
+
   test("only one layer stays open", () => {
     dismissExclusiveLayers();
     const closed: string[] = [];

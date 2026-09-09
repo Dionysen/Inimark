@@ -180,7 +180,9 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     open = true;
     root.classList.add("is-open");
     countBtn.classList.add("is-active");
-    acquireExclusiveLayer(LAYER_ID, closePanel);
+    acquireExclusiveLayer(LAYER_ID, closePanel, {
+      contains: (node) => node != null && root.contains(node),
+    });
     updateRevealState();
   }
 
@@ -274,13 +276,6 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     syncTypewriterButton();
   });
 
-  const onDocumentPointerDown = (event: PointerEvent) => {
-    if (!open) return;
-    const target = event.target as Node | null;
-    if (target && root.contains(target)) return;
-    closePanel();
-  };
-
   const onSelectionChange = () => {
     const active = document.activeElement;
     if (!active || !host.contains(active)) return;
@@ -291,7 +286,6 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     if (event.key === "Escape" && open) closePanel();
   };
 
-  document.addEventListener("pointerdown", onDocumentPointerDown, true);
   document.addEventListener("selectionchange", onSelectionChange);
   document.addEventListener("keydown", onKeyDown);
   const unsubscribeLocale = onLocaleChange(() => {
@@ -309,7 +303,6 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
     syncChrome,
     destroy() {
       if (updateTimer != null) clearTimeout(updateTimer);
-      document.removeEventListener("pointerdown", onDocumentPointerDown, true);
       document.removeEventListener("selectionchange", onSelectionChange);
       document.removeEventListener("keydown", onKeyDown);
       unsubscribeLocale();

@@ -119,7 +119,7 @@ describe("widgets/slider", () => {
 });
 
 describe("widgets/menu", () => {
-  test("opens, lists items, and closes on outside click helper path", () => {
+  test("opens, lists items, and closes on outside click", () => {
     const menu = createMenu();
     document.body.append(menu.el);
     menu.setPath("/notes");
@@ -134,16 +134,17 @@ describe("widgets/menu", () => {
     });
     menu.setOpen(true);
     expect(menu.isOpen()).toBe(true);
-    expect(menu.el.hidden).toBe(false);
-    expect(menu.el.classList.contains("is-open")).toBe(true);
 
     const item = menu.el.querySelector(".inimark-menu-item") as HTMLButtonElement;
     item.click();
     expect(clicked).toBe(true);
 
-    menu.setOpen(false);
+    menu.setOpen(true);
+    document.body.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, cancelable: true }),
+    );
     expect(menu.isOpen()).toBe(false);
-    expect(menu.el.hidden).toBe(true);
+
     menu.destroy();
   });
 });

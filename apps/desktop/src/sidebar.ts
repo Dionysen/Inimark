@@ -572,11 +572,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   dock.append(libraryWrap);
 
   const menu = createMenu();
+  menu.setDismissAnchors([libraryBar]);
   dock.append(menu.el);
 
   const sortMenu = createMenu();
   sortMenu.el.classList.add("inimark-sort-menu");
   sortMenu.setPath("");
+  sortMenu.setDismissAnchors([sortBtn, bookmarksSortBtn]);
   host.append(sortMenu.el);
   let sortMenuAnchor: HTMLElement = sortBtn;
 
@@ -717,6 +719,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       return;
     }
     sortMenuAnchor = anchor;
+    sortMenu.setDismissAnchors([anchor]);
     render();
     sortMenu.setOpen(true);
     sortBtn.setAttribute("aria-expanded", String(anchor === sortBtn));

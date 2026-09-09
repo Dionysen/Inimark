@@ -155,7 +155,6 @@ export function mountTitleBar(
   let moreBtn: HTMLButtonElement | null = null;
   let moreMenu: ReturnType<typeof createMenu> | null = null;
   let unsubscribeTheme: (() => void) | null = null;
-  let stopOutsideClick: (() => void) | null = null;
 
   if (showMoreMenu) {
     moreMenu = createMenu();
@@ -174,15 +173,7 @@ export function mountTitleBar(
     moreBtn.setAttribute("aria-expanded", "false");
     markNoDrag(moreBtn);
     trailing.append(moreBtn);
-
-    const onDocMouseDown = (event: MouseEvent) => {
-      if (!moreMenu?.isOpen()) return;
-      const target = event.target as Node | null;
-      if (moreBtn?.contains(target) || moreMenu.contains(target)) return;
-      closeMoreMenu();
-    };
-    document.addEventListener("mousedown", onDocMouseDown);
-    stopOutsideClick = () => document.removeEventListener("mousedown", onDocMouseDown);
+    moreMenu.setDismissAnchors([moreBtn]);
 
     unsubscribeTheme = getThemeManager().subscribe(() => {
       if (moreMenu?.isOpen()) renderMoreMenu();
@@ -545,7 +536,6 @@ export function mountTitleBar(
     destroy() {
       unsubscribeLocale();
       unsubscribeTheme?.();
-      stopOutsideClick?.();
       closeMoreMenu();
       moreMenu?.destroy();
       unlistenMaximize?.();

@@ -446,7 +446,10 @@ export function mountEditorContextMenu(
       close();
       return;
     }
-    acquireExclusiveLayer(EDITOR_CONTEXT_LAYER, close);
+    acquireExclusiveLayer(EDITOR_CONTEXT_LAYER, close, {
+      contains: (node) =>
+        node != null && (menu.contains(node) || submenu.contains(node)),
+    });
     renderMenu();
     open = true;
     submenu.hidden = true;
@@ -479,15 +482,6 @@ export function mountEditorContextMenu(
     event.preventDefault();
   }
 
-  function onDocumentMouseDown(event: MouseEvent): void {
-    if (!open) return;
-    // Ignore the right-click that opened the menu (same event bubbles to document).
-    if (event.button === 2) return;
-    const target = event.target as Node | null;
-    if (target && (menu.contains(target) || submenu.contains(target))) return;
-    close();
-  }
-
   function onKeyDown(event: KeyboardEvent): void {
     if (event.key === "Escape" && open) close();
   }
@@ -495,7 +489,6 @@ export function mountEditorContextMenu(
   host.addEventListener("mousedown", onMouseDownCapture, true);
   host.addEventListener("contextmenu", onContextMenuCapture, true);
   host.addEventListener("selectstart", onSelectStartCapture, true);
-  document.addEventListener("mousedown", onDocumentMouseDown);
   document.addEventListener("keydown", onKeyDown);
 
   return {
@@ -503,7 +496,6 @@ export function mountEditorContextMenu(
       host.removeEventListener("mousedown", onMouseDownCapture, true);
       host.removeEventListener("contextmenu", onContextMenuCapture, true);
       host.removeEventListener("selectstart", onSelectStartCapture, true);
-      document.removeEventListener("mousedown", onDocumentMouseDown);
       document.removeEventListener("keydown", onKeyDown);
       clearCloseTimer();
       close();

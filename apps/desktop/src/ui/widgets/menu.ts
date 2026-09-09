@@ -34,6 +34,8 @@ export interface MenuController {
   el: HTMLDivElement;
   setOpen(open: boolean): void;
   isOpen(): boolean;
+  /** Elements treated as inside this menu for outside-click dismissal (triggers). */
+  setDismissAnchors(anchors: HTMLElement[]): void;
   /** True when `node` is inside the root menu or any open flyout submenu. */
   contains(node: Node | null): boolean;
   clear(): void;
@@ -146,7 +148,15 @@ export function createMenu(): MenuController {
   let open = false;
   const flyouts: HTMLElement[] = [];
   const submenuWraps: HTMLElement[] = [];
+  const dismissAnchors: HTMLElement[] = [];
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function menuContains(node: Node | null): boolean {
+    if (!node) return false;
+    if (el.contains(node)) return true;
+    if (flyouts.some((panel) => panel.contains(node))) return true;
+    return dismissAnchors.some((anchor) => anchor.contains(node));
+  }
 
   function clearCloseTimer(): void {
     if (closeTimer != null) {
@@ -170,7 +180,7 @@ export function createMenu(): MenuController {
 
   function setOpen(next: boolean): void {
     if (next) {
-      acquireExclusiveLayer(el, () => setOpen(false));
+      acquireExclusiveLayer(el, () => setOpen(false), { contains: menuContains });
     } else if (open) {
       hideFlyouts();
       releaseExclusiveLayer(el);
@@ -194,10 +204,12 @@ export function createMenu(): MenuController {
     isOpen() {
       return open;
     },
+    setDismissAnchors(anchors) {
+      dismissAnchors.length = 0;
+      dismissAnchors.push(...anchors);
+    },
     contains(node) {
-      if (!node) return false;
-      if (el.contains(node)) return true;
-      return flyouts.some((panel) => panel.contains(node));
+      return menuContains(node);
     },
     clear() {
       destroyFlyouts();

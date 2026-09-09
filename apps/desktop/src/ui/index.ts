@@ -51,6 +51,7 @@ export {
   dismissExclusiveLayers,
   releaseExclusiveLayer,
   type ExclusiveLayerId,
+  type ExclusiveLayerOptions,
 } from "./exclusive-layer.ts";
 export {
   mountTitleBar,

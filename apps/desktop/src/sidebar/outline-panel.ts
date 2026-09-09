@@ -120,6 +120,7 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
   const expandToBtn = toolbar.buttons[2]!;
   expandToBtn.setAttribute("aria-haspopup", "menu");
   expandToBtn.setAttribute("aria-expanded", "false");
+  expandMenu.setDismissAnchors([expandToBtn]);
 
   const treeHost = createTreeHost(t("outline.treeAria"));
   treeHost.classList.add("inimark-outline-tree");
@@ -220,21 +221,10 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     requestAnimationFrame(() => positionExpandMenu());
   }
 
-  function onDocumentClick(event: MouseEvent): void {
-    const target = event.target as Node | null;
-    if (
-      expandMenu.isOpen() &&
-      !(target && (expandMenu.el.contains(target) || expandToBtn.contains(target)))
-    ) {
-      closeExpandMenu();
-    }
-  }
-
   function onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key === "Escape" && expandMenu.isOpen()) closeExpandMenu();
   }
 
-  document.addEventListener("click", onDocumentClick);
   document.addEventListener("keydown", onDocumentKeydown);
 
   function renderNode(node: OutlineNode, depth: number): DocumentFragment {
@@ -363,7 +353,6 @@ export function mountOutlinePanel(host: HTMLElement): OutlinePanelController {
     },
     destroy() {
       unsubscribeLocale();
-      document.removeEventListener("click", onDocumentClick);
       document.removeEventListener("keydown", onDocumentKeydown);
       closeExpandMenu();
       expandMenu.destroy();
