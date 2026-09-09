@@ -13,7 +13,7 @@ import { Plugin, PluginKey, type EditorState } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
 import { getDelims, getExtras, getWidgets, type WidgetDecoration } from "./normalize.ts";
-import { bindWikiModClick } from "./link-navigation.ts";
+import { bindWikiClick } from "./link-navigation.ts";
 import { renderMathToHtml } from "./renderers/math.ts";
 // Widget builders — keyed by `kind`. A widget renders as a DOM element
 // at a specific position; decorations.ts decides whether to emit it based
@@ -46,7 +46,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     if (attrs.unresolved) el.setAttribute("data-unresolved", attrs.unresolved);
     if (attrs.len) el.setAttribute("data-len", attrs.len);
     el.title = attrs.note ?? "";
-    bindWikiModClick(el, attrs.note, attrs.heading || undefined);
+    bindWikiClick(el, attrs.note, attrs.heading || undefined);
     return el;
   },
   "wiki-embed-image": (attrs) => {
@@ -56,7 +56,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
       el.textContent = attrs.alt || attrs.note || "image";
       if (attrs.note) el.setAttribute("data-note", attrs.note);
       el.setAttribute("data-unresolved", "1");
-      bindWikiModClick(el, attrs.note);
+      bindWikiClick(el, attrs.note);
       return el;
     }
     const img = document.createElement("img");
@@ -64,7 +64,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     img.src = attrs.src;
     img.alt = attrs.alt ?? "";
     if (attrs.note) img.setAttribute("data-note", attrs.note);
-    bindWikiModClick(img, attrs.note);
+    bindWikiClick(img, attrs.note);
     return img;
   },
   "wiki-embed-note": (attrs) => {
@@ -77,7 +77,7 @@ const widgetBuilders: Record<string, (attrs: Record<string, string>) => HTMLElem
     title.className = "wiki-embed-note-title";
     title.textContent = attrs.label ?? attrs.note ?? "";
     el.append(title);
-    bindWikiModClick(el, attrs.note);
+    bindWikiClick(el, attrs.note);
     return el;
   },
   "image-render": (attrs) => {

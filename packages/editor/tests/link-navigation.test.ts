@@ -84,7 +84,7 @@ describe("link navigation", () => {
     }
   });
 
-  test("wiki links open on Ctrl+click only", () => {
+  test("wiki links open on plain click, not on Ctrl+click", () => {
     const opened: Array<{ note: string; heading?: string }> = [];
     setWikiLinkBridge({
       resolveNote: () => null,
@@ -101,20 +101,20 @@ describe("link navigation", () => {
       expect(wiki).not.toBeNull();
 
       view.someProp("handleDOMEvents", (handlers) => {
-        handlers?.click?.(view, plainClickEvent(wiki!));
+        handlers?.click?.(view, modClickEvent(wiki!));
         return false;
       });
       expect(opened).toEqual([]);
 
       view.someProp("handleDOMEvents", (handlers) => {
-        handlers?.click?.(view, modClickEvent(wiki!));
+        handlers?.click?.(view, plainClickEvent(wiki!));
         return false;
       });
       expect(opened).toEqual([{ note: "Other Note", heading: undefined }]);
 
       opened.length = 0;
       wiki!.dispatchEvent(
-        new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }),
+        new MouseEvent("click", { bubbles: true, cancelable: true }),
       );
       expect(opened).toEqual([{ note: "Other Note", heading: undefined }]);
     } finally {

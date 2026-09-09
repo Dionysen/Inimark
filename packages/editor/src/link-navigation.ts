@@ -61,21 +61,23 @@ function openWikiFromElement(wiki: HTMLElement): boolean {
   return openWikiNote(note, heading);
 }
 
-/** Widget DOM bypasses ProseMirror click routing — bind mod+click directly. */
-export function bindWikiModClick(
+/** Widget DOM bypasses ProseMirror click routing — bind plain click directly. */
+export function bindWikiClick(
   el: HTMLElement,
   note: string | undefined,
   heading?: string,
 ): void {
   if (!note) return;
-  const onActivate = (event: Event) => {
-    if (!(event instanceof MouseEvent) || !isModifiedClick(event)) return;
+  el.addEventListener("click", (event) => {
+    if (!(event instanceof MouseEvent) || isModifiedClick(event)) return;
     event.preventDefault();
     event.stopPropagation();
     openWikiNote(note, heading);
-  };
-  el.addEventListener("click", onActivate);
+  });
 }
+
+/** @deprecated Use {@link bindWikiClick}. */
+export const bindWikiModClick = bindWikiClick;
 
 function spanAtTextOffset(
   spans: ReturnType<typeof parseInline>,
@@ -120,18 +122,61 @@ function navigateAtDocPos(
   return false;
 }
 
-/** Follow a wiki / http link when the user Cmd/Ctrl+clicks in the editor. */
+export type WikiPointerHit = {
+  note: string;
+  heading?: string;
+  unresolved: boolean;
+};
+
+/** Wiki link under the pointer (rendered widget or `[[source]]` text). */
+export function wikiNoteFromPointer(
+  view: EditorView,
+  event: MouseEvent,
+): WikiPointerHit | null {
+  const target = event.target instanceof Element ? event.target : null;
+  const wiki = wikiElementFromTarget(target);
+  if (wiki) {
+    const note = wiki.getAttribute("data-note");
+    if (!note) return null;
+    return {
+      note,
+      heading: wiki.getAttribute("data-heading") || undefined,
+      unresolved: wiki.getAttribute("data-unresolved") === "1",
+    };
+  }
+
+  const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+  if (!coords) return null;
+
+  const $pos = view.state.doc.resolve(coords.pos);
+  const block = $pos.parent;
+  if (!block.isTextblock || block.type.spec.code) return null;
+
+  const textOffset = coords.pos - $pos.start();
+  const spans = parseInline(block.textContent, block, { state: view.state });
+  const span = spanAtTextOffset(spans, textOffset);
+  if (span?.type !== "wiki_link") return null;
+
+  const note = span.attrs?.note;
+  if (typeof note !== "string" || !note) return null;
+  const heading =
+    typeof span.attrs?.heading === "string" ? span.attrs.heading : undefined;
+  const bridge = getWikiLinkBridge();
+  const unresolved = !bridge?.resolveNote(note);
+  return { note, heading: heading || undefined, unresolved };
+}
+
+/** Wiki links open on plain click; http(s) links still use Cmd/Ctrl+click. */
 export function tryNavigateFromClick(
   view: EditorView,
   event: MouseEvent,
   options?: { onWikiOpen?: (note: string, heading?: string) => void },
 ): boolean {
-  if (!isModifiedClick(event)) return false;
-
   const target = event.target instanceof Element ? event.target : null;
 
   const wiki = wikiElementFromTarget(target);
   if (wiki) {
+    if (isModifiedClick(event)) return false;
     const note = wiki.getAttribute("data-note");
     const heading = wiki.getAttribute("data-heading") || undefined;
     if (!openWikiFromElement(wiki)) return false;
@@ -140,6 +185,8 @@ export function tryNavigateFromClick(
     if (note) options?.onWikiOpen?.(note, heading);
     return true;
   }
+
+  if (!isModifiedClick(event)) return false;
 
   const anchor = target?.closest("a");
   if (anchor) {

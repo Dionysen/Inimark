@@ -24,8 +24,8 @@ import {
 import { clickFocusPlugin } from "./click-focus.ts";
 import { tryNavigateFromClick } from "./link-navigation.ts";
 
-// Cmd/Ctrl+click opens http(s) links and wiki links. Plain clicks keep
-// the caret editable inside contenteditable.
+// Wiki links open on plain click; Cmd/Ctrl+hover shows a preview card.
+// http(s) links still open on Cmd/Ctrl+click.
 function linkNavigationPlugin(): Plugin {
   return new Plugin({
     props: {

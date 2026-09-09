@@ -11,7 +11,7 @@ import {
   WikiAutocompletePopup,
   resolveWikiAutocompleteMatches,
 } from "./wiki-link-autocomplete-popup.ts";
-import { isModifiedClick } from "../link-navigation.ts";
+import { wikiNoteFromPointer } from "../link-navigation.ts";
 import type { MarkdownPreviewController } from "../preview-view.ts";
 
 // Obsidian-style [[wiki]] / ![[embed]] — source stays in the doc; a widget
@@ -22,7 +22,6 @@ import type { MarkdownPreviewController } from "../preview-view.ts";
 
 const WIKI_RE = /(!?)\[\[([^\]]+)\]\]/g;
 const HOVER_DELAY_MS = 420;
-const HIDE_DELAY_MS = 220;
 
 const OPEN_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M15 3h6v6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M10 14 21 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
@@ -420,12 +419,16 @@ function wikiHoverTargetFromEvent(event: Event): HTMLElement | null {
   );
 }
 
+type PointerProbe = Pick<MouseEvent, "clientX" | "clientY" | "ctrlKey" | "metaKey"> & {
+  target?: EventTarget | null;
+};
+
 function wikiInteractionPlugin(): Plugin {
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
-  let hideTimer: ReturnType<typeof setTimeout> | null = null;
   let previewEl: HTMLElement | null = null;
   let previewView: MarkdownPreviewController | null = null;
   let activeNote: string | null = null;
+  let lastPointer: { x: number; y: number } | null = null;
 
   function clearHoverTimer(): void {
     if (hoverTimer) {
@@ -434,29 +437,13 @@ function wikiInteractionPlugin(): Plugin {
     }
   }
 
-  function clearHideTimer(): void {
-    if (hideTimer) {
-      clearTimeout(hideTimer);
-      hideTimer = null;
-    }
-  }
-
   function hidePreview(): void {
     clearHoverTimer();
-    clearHideTimer();
     previewView?.destroy();
     previewView = null;
     previewEl?.remove();
     previewEl = null;
     activeNote = null;
-  }
-
-  function scheduleHide(): void {
-    clearHoverTimer();
-    clearHideTimer();
-    hideTimer = setTimeout(() => {
-      hidePreview();
-    }, HIDE_DELAY_MS);
   }
 
   function positionPreview(anchor: HTMLElement): void {
@@ -476,10 +463,86 @@ function wikiInteractionPlugin(): Plugin {
     previewEl.style.top = `${top}px`;
   }
 
+  function rememberPointer(event: MouseEvent): void {
+    lastPointer = { x: event.clientX, y: event.clientY };
+  }
+
+  function previewAnchorFromProbe(
+    view: EditorView,
+    probe: PointerProbe,
+    fallback?: HTMLElement | null,
+  ): HTMLElement {
+    if (fallback) return fallback;
+    const target = probe.target;
+    if (target instanceof HTMLElement) return target;
+    return view.dom;
+  }
+
+  function cancelPendingPreview(): void {
+    clearHoverTimer();
+    if (activeNote && !previewEl) activeNote = null;
+  }
+
+  function tryShowPreviewAt(view: EditorView, probe: PointerProbe): boolean {
+    if (!probe.ctrlKey && !probe.metaKey) {
+      if (previewEl) return false;
+      cancelPendingPreview();
+      return false;
+    }
+
+    const bridge = getWikiLinkBridge();
+    if (!bridge?.previewNote) return false;
+
+    const hit = wikiNoteFromPointer(view, probe as MouseEvent);
+    if (!hit || hit.unresolved) {
+      if (previewEl) return false;
+      cancelPendingPreview();
+      return false;
+    }
+
+    const note = hit.note;
+    if (previewEl && activeNote === note) return false;
+    if (activeNote === note && hoverTimer != null) return false;
+
+    if (previewEl && activeNote !== note) {
+      previewView?.destroy();
+      previewView = null;
+      previewEl.remove();
+      previewEl = null;
+    }
+
+    activeNote = note;
+    const wiki =
+      probe.target instanceof Element
+        ? (probe.target.closest(
+            ".wiki-link-widget, .wiki-embed-note",
+          ) as HTMLElement | null)
+        : null;
+    showPreview(note, previewAnchorFromProbe(view, probe, wiki));
+    return false;
+  }
+
+  function tryShowPreviewFromPointer(view: EditorView, event: MouseEvent): boolean {
+    rememberPointer(event);
+    return tryShowPreviewAt(view, event);
+  }
+
+  function tryShowPreviewAtLastPointer(view: EditorView, keyEvent: KeyboardEvent): void {
+    if (!lastPointer) return;
+    const el = document.elementFromPoint(lastPointer.x, lastPointer.y);
+    if (!(el instanceof Element) || !view.dom.contains(el)) return;
+    tryShowPreviewAt(view, {
+      clientX: lastPointer.x,
+      clientY: lastPointer.y,
+      ctrlKey: keyEvent.ctrlKey || keyEvent.key === "Control",
+      metaKey: keyEvent.metaKey || keyEvent.key === "Meta",
+      target: el,
+    });
+  }
+
   function showPreview(note: string, anchor: HTMLElement): void {
     const bridge = getWikiLinkBridge();
     if (!bridge?.previewNote) return;
-    clearHideTimer();
     clearHoverTimer();
     hoverTimer = setTimeout(() => {
       void (async () => {
@@ -538,13 +601,6 @@ function wikiInteractionPlugin(): Plugin {
             },
           });
 
-          previewEl.addEventListener("mouseenter", () => {
-            clearHideTimer();
-          });
-          previewEl.addEventListener("mouseleave", () => {
-            scheduleHide();
-          });
-
           positionPreview(anchor);
           requestAnimationFrame(() => positionPreview(anchor));
         } catch (err) {
@@ -563,51 +619,43 @@ function wikiInteractionPlugin(): Plugin {
         click(_view, event) {
           const wiki = wikiTargetFromEvent(event);
           if (!wiki) return false;
-          if (isModifiedClick(event)) hidePreview();
+          hidePreview();
           return false;
         },
-        mouseover(_view, event) {
-          const wiki = wikiHoverTargetFromEvent(event);
-          if (!wiki) return false;
-          const note = wiki.getAttribute("data-note");
-          if (!note || wiki.getAttribute("data-unresolved") === "1") return false;
-          const bridge = getWikiLinkBridge();
-          if (!bridge?.previewNote) return false;
-
-          clearHideTimer();
-          // Already showing / pending for this note — don't restart the timer
-          // on nested mouseover (would prevent the card from ever appearing).
-          if (previewEl && activeNote === note) return false;
-          if (activeNote === note && hoverTimer != null) return false;
-
-          if (previewEl && activeNote !== note) {
-            previewView?.destroy();
-            previewView = null;
-            previewEl.remove();
-            previewEl = null;
-          }
-
-          activeNote = note;
-          showPreview(note, wiki);
-          return false;
+        mouseover(view, event) {
+          return tryShowPreviewFromPointer(view, event);
+        },
+        mousemove(view, event) {
+          return tryShowPreviewFromPointer(view, event);
         },
         mouseout(_view, event) {
+          if (previewEl) return false;
           const related = event.relatedTarget as Node | null;
           const wiki = wikiHoverTargetFromEvent(event);
           if (wiki && related && wiki.contains(related)) return false;
-          if (previewEl && related && previewEl.contains(related)) return false;
-          scheduleHide();
-          return false;
-        },
-        blur() {
-          hidePreview();
+          cancelPendingPreview();
           return false;
         },
       },
     },
-    view() {
+    view(view) {
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Control" && event.key !== "Meta") return;
+        if (event.repeat) return;
+        tryShowPreviewAtLastPointer(view, event);
+      };
+      const onDocumentMouseDown = (event: MouseEvent) => {
+        if (!previewEl) return;
+        const target = event.target;
+        if (target instanceof Node && previewEl.contains(target)) return;
+        hidePreview();
+      };
+      window.addEventListener("keydown", onKeyDown, true);
+      document.addEventListener("mousedown", onDocumentMouseDown, true);
       return {
         destroy() {
+          window.removeEventListener("keydown", onKeyDown, true);
+          document.removeEventListener("mousedown", onDocumentMouseDown, true);
           hidePreview();
         },
       };
