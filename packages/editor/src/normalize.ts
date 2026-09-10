@@ -8,6 +8,7 @@
 import type { Node as PMNode } from "prosemirror-model";
 import { Plugin, PluginKey, type EditorState } from "prosemirror-state";
 
+import { PASTE_PLAIN_TEXT_META } from "./clipboard.ts";
 import { collectInlineFeatures } from "./features/index.ts";
 import { parseInline, type InlineSpan } from "./inline-parse.ts";
 import { schema } from "./schema.ts";
@@ -58,6 +59,8 @@ export type NormalizeState = {
   // Cached for appendTransaction's mark-sync pass — avoids walking the
   // whole doc twice per transaction. Populated by state.apply / init.
   blocks: Array<{ blockPos: number; plan: BlockPlan }>;
+  /** Suppress mark sync after paste-as-plain-text through appendTransaction chains. */
+  skipMarkSync: boolean;
 };
 
 type BlockPlan = { blockStart: number; spans: InlineSpan[] };
@@ -180,24 +183,42 @@ function computePlan(doc: PMNode, state?: EditorState): {
 
 const normalizeKey = new PluginKey<NormalizeState>("normalize-inline");
 
+function withSkipMarkSync(
+  plan: ReturnType<typeof computePlan>,
+  skipMarkSync: boolean,
+): NormalizeState {
+  return { ...plan, skipMarkSync };
+}
+
 export function normalizeInlinePlugin(): Plugin<NormalizeState> {
   return new Plugin<NormalizeState>({
     key: normalizeKey,
 
     state: {
-      init: (_, state) => computePlan(state.doc, state),
-      apply: (tr, prev, _oldState, newState) =>
-        // Skip the doc walk when nothing in the doc changed — selection-
-        // only transactions are very common (every keystroke that moves
-        // the cursor) and the cached plan stays valid for them.
-        tr.docChanged ? computePlan(newState.doc, newState) : prev,
+      init: (_, state) => withSkipMarkSync(computePlan(state.doc, state), false),
+      apply: (tr, prev, _oldState, newState) => {
+        let skipMarkSync = prev.skipMarkSync;
+        if (tr.getMeta(PASTE_PLAIN_TEXT_META)) skipMarkSync = true;
+        else if (
+          skipMarkSync &&
+          tr.docChanged &&
+          !tr.getMeta("appendedTransaction") &&
+          tr.getMeta("addToHistory") !== false
+        ) {
+          skipMarkSync = false;
+        }
+        if (!tr.docChanged) return { ...prev, skipMarkSync };
+        return withSkipMarkSync(computePlan(newState.doc, newState), skipMarkSync);
+      },
     },
 
-    appendTransaction(_transactions, _oldState, newState) {
+    appendTransaction(transactions, _oldState, newState) {
+      const planState = normalizeKey.getState(newState);
+      if (planState?.skipMarkSync) return null;
+      if (transactions.some((t) => t.getMeta(PASTE_PLAIN_TEXT_META))) return null;
       // Reuse the plan computed in state.apply rather than walking the
       // doc a second time. (Caching cut a 50-blocks doc's per-tx
       // overhead roughly in half.)
-      const planState = normalizeKey.getState(newState);
       if (!planState) return null;
       const { blocks } = planState;
       const tr = newState.tr;

@@ -5,6 +5,7 @@ import {
   setOverlayScrollbarBridge,
   type Editor,
 } from "@inimark/editor";
+import { installClipboardBridge } from "./platform/clipboard.ts";
 import { requestOverlayScrollbarRefresh } from "./platform/scrollbars.ts";
 import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
@@ -231,6 +232,8 @@ export function mountApp(host: HTMLElement): AppController {
         workspace ? joinWorkspacePath(workspace.rootPath, path) : null;
     }
   })();
+
+  cleanups.push(installClipboardBridge());
 
   setWikiLinkBridge({
     resolveNote: (noteName) => linkIndex.findFileByNoteName(noteName) ?? null,

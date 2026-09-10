@@ -11,6 +11,11 @@ export type { SearchRevealOptions } from "./search-reveal.ts";
 export type { EditorCommandName } from "./commands.ts";
 export { executeEditorCommand } from "./commands.ts";
 export {
+  setClipboardBridge,
+  getClipboardBridge,
+} from "./clipboard-bridge.ts";
+export type { ClipboardBridge } from "./clipboard-bridge.ts";
+export {
   setWikiLinkBridge,
   getWikiLinkBridge,
 } from "./wiki-link-bridge.ts";

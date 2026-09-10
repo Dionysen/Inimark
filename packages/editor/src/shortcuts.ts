@@ -3,6 +3,7 @@ import type { Schema } from "prosemirror-model";
 import type { Command } from "prosemirror-state";
 import { TextSelection } from "prosemirror-state";
 
+import { pasteAsPlainText } from "./clipboard.ts";
 import { convertCurrentBlockquoteCallout } from "./callouts.ts";
 import {
   toggleBlockquote,
@@ -67,5 +68,9 @@ export function commonShortcutKeymap(schema: Schema): Record<string, Command> {
     "Alt-Mod-c": toggleCodeBlock(schema),
     "Alt-Mod-b": toggleMathBlock(schema),
     "Alt-Mod-r": wrapSelection("[^", "]"),
+    "Mod-Shift-v": (state, _dispatch, view) => {
+      void pasteAsPlainText(view);
+      return true;
+    },
   };
 }

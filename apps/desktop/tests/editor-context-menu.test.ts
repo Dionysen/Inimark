@@ -47,6 +47,43 @@ describe("editor context menu", () => {
     host.remove();
   });
 
+  test("clipboard-as submenu offers copy/paste format actions", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.append(host);
+
+    const editor = createEditor(host, { initialContent: "hello" });
+    const menu = mountEditorContextMenu(host, editor);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 40,
+        clientY: 40,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    const panel = document.querySelector(".inimark-editor-context-menu") as HTMLElement;
+    const clipboardRow = [...panel.querySelectorAll(".inimark-editor-context-row")].find((row) =>
+      row.textContent?.includes("Copy/Paste As"),
+    ) as HTMLElement;
+    expect(clipboardRow).toBeTruthy();
+
+    clipboardRow.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+    const flyout = document.querySelector(".inimark-editor-context-submenu") as HTMLElement;
+    expect(flyout.hidden).toBe(false);
+    expect(flyout.textContent).toContain("Copy as HTML Code");
+    expect(flyout.textContent).toContain("Copy as Plain Text");
+    expect(flyout.textContent).toContain("Paste as Plain Text");
+    expect(flyout.textContent).toContain("Ctrl+Shift+V");
+
+    menu.destroy();
+    editor.destroy();
+    host.remove();
+  });
+
   test("callout submenu offers five kinds at the top level", () => {
     const host = document.createElement("div");
     host.className = "inimark-editor-host";

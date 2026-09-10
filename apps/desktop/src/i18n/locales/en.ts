@@ -215,6 +215,10 @@ export const en: Dictionary = {
       calloutImportant: "Important",
       calloutWarning: "Warning",
       calloutDanger: "Danger",
+      clipboardAs: "Copy/Paste As",
+      copyAsHtml: "Copy as HTML Code",
+      copyAsPlainText: "Copy as Plain Text",
+      pasteAsPlainText: "Paste as Plain Text",
     },
   },
   settings: {

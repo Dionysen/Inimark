@@ -215,6 +215,10 @@ export const zhCN: Dictionary = {
       calloutImportant: "Important",
       calloutWarning: "Warning",
       calloutDanger: "Danger",
+      clipboardAs: "复制/粘贴为",
+      copyAsHtml: "复制为 HTML 代码",
+      copyAsPlainText: "复制为纯文本",
+      pasteAsPlainText: "粘贴为纯文本",
     },
   },
   settings: {

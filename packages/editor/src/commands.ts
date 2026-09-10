@@ -15,6 +15,12 @@ import {
   toggleOrderedList,
   toggleTaskList,
 } from "./format-toggle.ts";
+import {
+  copySelectionAsHtml,
+  copySelectionAsPlainText,
+  pasteAsPlainText,
+  pasteFromClipboard,
+} from "./clipboard.ts";
 import { schema } from "./schema.ts";
 import { wrapSelection } from "./shortcuts.ts";
 
@@ -51,7 +57,10 @@ export type EditorCommandName =
   | "callout-tip"
   | "callout-important"
   | "callout-warning"
-  | "callout-danger";
+  | "callout-danger"
+  | "copy-as-html"
+  | "copy-as-plain-text"
+  | "paste-as-plain-text";
 
 function run(view: EditorView, command: Command): boolean {
   const ok = command(view.state, view.dispatch.bind(view), view);
@@ -107,7 +116,8 @@ export function executeEditorCommand(
     case "copy":
       return document.execCommand("copy");
     case "paste":
-      return document.execCommand("paste");
+      void pasteFromClipboard(view, false);
+      return true;
     case "delete":
       return run(view, deleteSelection);
     case "bold":
@@ -169,6 +179,15 @@ export function executeEditorCommand(
       return run(view, insertCallout("warning"));
     case "callout-danger":
       return run(view, insertCallout("danger"));
+    case "copy-as-html":
+      void copySelectionAsHtml(view);
+      return true;
+    case "copy-as-plain-text":
+      void copySelectionAsPlainText(view);
+      return true;
+    case "paste-as-plain-text":
+      void pasteAsPlainText(view);
+      return true;
     default:
       return false;
   }

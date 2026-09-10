@@ -323,6 +323,32 @@ function buildSubmenus(): SubmenuRow[] {
       icon: CALLOUT_ICONS.note,
       items: buildCalloutSubmenuItems(),
     },
+    {
+      name: "clipboard-as",
+      label: t("editor.ctx.clipboardAs"),
+      icon: ICONS.copy,
+      items: [
+        {
+          kind: "item",
+          name: "copy-as-html",
+          label: t("editor.ctx.copyAsHtml"),
+          icon: ICONS.codeBlock,
+        },
+        {
+          kind: "item",
+          name: "copy-as-plain-text",
+          label: t("editor.ctx.copyAsPlainText"),
+          icon: ICONS.copy,
+        },
+        {
+          kind: "item",
+          name: "paste-as-plain-text",
+          label: t("editor.ctx.pasteAsPlainText"),
+          shortcut: formatShortcutDisplay(["Ctrl", "Shift", "V"]),
+          icon: ICONS.paste,
+        },
+      ],
+    },
   ];
 }
 
