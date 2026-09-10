@@ -9,7 +9,15 @@ export interface UpdateInfo {
 
 export type UpdateErrorKind = "network" | "other";
 
+export class UpdateDownloadCancelled extends Error {
+  constructor() {
+    super("Update download cancelled.");
+    this.name = "UpdateDownloadCancelled";
+  }
+}
+
 let cachedUpdate: Update | null = null;
+let cancelDownload: (() => void) | null = null;
 
 const NETWORK_ERROR_PATTERNS = [
   "failed to fetch",
@@ -97,29 +105,69 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
 export async function downloadAndInstall(
   onProgress?: (downloaded: number, contentLength: number | null) => void,
 ): Promise<void> {
+  await downloadUpdate(onProgress);
+  await installDownloadedUpdate();
+}
+
+/** Abort an in-progress update download started by {@link downloadUpdate}. */
+export function cancelUpdateDownload(): void {
+  cancelDownload?.();
+}
+
+export function isUpdateDownloadCancelled(error: unknown): boolean {
+  return error instanceof UpdateDownloadCancelled;
+}
+
+export async function downloadUpdate(
+  onProgress?: (downloaded: number, contentLength: number | null) => void,
+): Promise<void> {
   if (!cachedUpdate) {
     throw new Error("No update available. Check for updates first.");
   }
 
+  const update = cachedUpdate;
   let downloaded = 0;
   let contentLength: number | null = null;
+  let aborted = false;
 
-  await cachedUpdate.downloadAndInstall((event) => {
-    switch (event.event) {
-      case "Started":
-        contentLength = event.data.contentLength ?? null;
-        onProgress?.(0, contentLength);
-        break;
-      case "Progress":
-        downloaded += event.data.chunkLength;
-        onProgress?.(downloaded, contentLength);
-        break;
-      case "Finished":
-        onProgress?.(downloaded, contentLength);
-        break;
+  cancelDownload = () => {
+    aborted = true;
+    void update.close().catch(() => {});
+    cachedUpdate = null;
+  };
+
+  try {
+    await update.download((event) => {
+      if (aborted) return;
+      switch (event.event) {
+        case "Started":
+          contentLength = event.data.contentLength ?? null;
+          onProgress?.(0, contentLength);
+          break;
+        case "Progress":
+          downloaded += event.data.chunkLength;
+          onProgress?.(downloaded, contentLength);
+          break;
+        case "Finished":
+          onProgress?.(downloaded, contentLength);
+          break;
+      }
+    });
+
+    if (aborted) {
+      throw new UpdateDownloadCancelled();
     }
-  });
+  } finally {
+    cancelDownload = null;
+  }
+}
 
+export async function installDownloadedUpdate(): Promise<void> {
+  if (!cachedUpdate) {
+    throw new Error("No downloaded update available.");
+  }
+
+  await cachedUpdate.install();
   cachedUpdate = null;
 }
 

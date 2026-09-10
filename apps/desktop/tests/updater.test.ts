@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import { classifyUpdateError } from "../src/updater.ts";
+import {
+  classifyUpdateError,
+  UpdateDownloadCancelled,
+  isUpdateDownloadCancelled,
+} from "../src/updater.ts";
 
 describe("classifyUpdateError", () => {
   test("treats common fetch and connection failures as network errors", () => {
@@ -32,5 +36,12 @@ describe("classifyUpdateError", () => {
     expect(classifyUpdateError(null)).toBe("other");
     expect(classifyUpdateError(undefined)).toBe("other");
     expect(classifyUpdateError({ code: "unknown" })).toBe("other");
+  });
+});
+
+describe("isUpdateDownloadCancelled", () => {
+  test("detects cancelled download errors", () => {
+    expect(isUpdateDownloadCancelled(new UpdateDownloadCancelled())).toBe(true);
+    expect(isUpdateDownloadCancelled(new Error("other"))).toBe(false);
   });
 });

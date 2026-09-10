@@ -401,6 +401,153 @@ html.platform-windows .inimark-settings-nav-topbar {
   text-decoration: underline;
 }
 
+.inimark-about-update {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  max-width: 14rem;
+  min-height: var(--inimark-control-height);
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-action {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.inimark-about-update-note {
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.inimark-about-update-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--inimark-space-2);
+  width: 100%;
+  min-height: var(--inimark-control-height);
+  padding: 0 var(--inimark-space-3);
+  border: 1px solid color-mix(in srgb, #22c55e 35%, var(--inimark-border));
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, #22c55e 10%, transparent);
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-ui);
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition);
+}
+
+.inimark-about-update-pill:hover:not(:disabled) {
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+  border-color: color-mix(in srgb, #22c55e 50%, var(--inimark-border));
+}
+
+.inimark-about-update-pill:focus {
+  outline: none;
+}
+
+.inimark-about-update-pill:focus-visible {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #22c55e 30%, transparent);
+}
+
+.inimark-about-update-check-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.inimark-about-update--downloading {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-progress {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--inimark-control-height);
+  overflow: hidden;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-hover));
+}
+
+.inimark-about-update-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--inimark-accent) 88%, #ffffff 12%),
+    var(--inimark-accent)
+  );
+  transition: width 0.18s ease;
+}
+
+.inimark-about-update-progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--inimark-space-2);
+  color: var(--inimark-fg);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.inimark-about-update-cancel {
+  flex-shrink: 0;
+  width: var(--inimark-control-height);
+  min-width: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  border: 1px solid var(--inimark-border);
+  border-radius: 999px;
+  background: var(--inimark-hover);
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-about-update-cancel:hover:not(:disabled) {
+  color: var(--inimark-fg);
+  border-color: color-mix(in srgb, var(--inimark-accent) 35%, var(--inimark-border));
+  background: color-mix(in srgb, var(--inimark-accent) 10%, var(--inimark-hover));
+}
+
+.inimark-about-update-cancel .inimark-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.inimark-about-update-error-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--inimark-space-2);
+  width: 100%;
+}
+
+.inimark-about-update-error {
+  margin: 0;
+  color: color-mix(in srgb, #f87171 85%, var(--inimark-muted-fg));
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .inimark-about-update-actions {
   display: flex;
   flex-shrink: 0;

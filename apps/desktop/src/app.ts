@@ -27,6 +27,8 @@ import {
 } from "./libraries/store.ts";
 import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
+import { mountUpdatePreflightHandler } from "./update-bridge.ts";
+import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
@@ -64,7 +66,6 @@ import { formatMarkdown } from "./settings/markdown-format.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { mountShell } from "./shell.ts";
 import { FileNavigationHistory } from "./navigation-history.ts";
-import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 import { showQuickOpenDialog } from "./ui/quick-open-dialog.ts";
 import { showSidebarTabsDialog } from "./ui/sidebar-tabs-dialog.ts";
 import { normalizeSidebarTabLayout } from "./sidebar/tab-layout.ts";
@@ -945,6 +946,22 @@ export function mountApp(host: HTMLElement): AppController {
         void requestAppClose();
       });
       cleanups.push(unlistenClose);
+
+      cleanups.push(
+        mountUpdatePreflightHandler({
+          isDirty: () => shell.isDirty(),
+          confirmAndSave: async () => {
+            if (!shell.isDirty()) return true;
+            const choice = await promptUnsavedChanges({
+              title: t("dialogs.unsavedTitle"),
+              message: t("settings.about.updateUnsavedMessage"),
+            });
+            if (choice === "cancel") return false;
+            if (choice === "save") return saveCurrentFile();
+            return true;
+          },
+        }),
+      );
     })();
   }
 

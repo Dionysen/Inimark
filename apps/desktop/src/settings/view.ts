@@ -10,7 +10,7 @@ import {
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
-import { classifyUpdateError } from "../updater.ts";
+import { mountAboutUpdateControl } from "./about-update-control.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
@@ -1099,107 +1099,7 @@ export function mountSettingsView(
     versionValue.className = "inimark-about-value";
     versionValue.textContent = aboutVersion;
 
-    const updateActions = document.createElement("div");
-    updateActions.className = "inimark-about-update-actions";
-
-    const updateStatus = document.createElement("p");
-    updateStatus.className = "inimark-about-update-status";
-
-    let checking = false;
-    let installing = false;
-    let pendingVersion: string | null = null;
-
-    const setStatus = (text: string) => {
-      updateStatus.textContent = text;
-    };
-
-    const checkBtn = createButton({
-      label: t("settings.about.checkUpdates"),
-      variant: "primary",
-      onClick: () => {
-        void (async () => {
-          if (!isTauri() || checking || installing) return;
-          checking = true;
-          pendingVersion = null;
-          setStatus(t("settings.about.checking"));
-          checkBtn.disabled = true;
-          installBtn.hidden = true;
-          try {
-            const { checkForUpdate } = await import("../updater.ts");
-            const info = await checkForUpdate();
-            if (!info) {
-              setStatus(t("settings.about.upToDate"));
-            } else {
-              pendingVersion = info.version;
-              setStatus(t("settings.about.available", { version: info.version }));
-              installBtn.hidden = false;
-              installBtn.textContent = t("settings.about.installUpdate", {
-                version: info.version,
-              });
-            }
-          } catch (error) {
-            const kind = classifyUpdateError(error);
-            setStatus(
-              kind === "network"
-                ? t("settings.about.failedNetwork")
-                : t("settings.about.failedOther"),
-            );
-          } finally {
-            checking = false;
-            checkBtn.disabled = false;
-          }
-        })();
-      },
-    });
-
-    const installBtn = createButton({
-      label: t("settings.about.installUpdate", { version: "" }),
-      variant: "default",
-      onClick: () => {
-        void (async () => {
-          if (!isTauri() || installing || !pendingVersion) return;
-          installing = true;
-          checkBtn.disabled = true;
-          installBtn.disabled = true;
-          setStatus(t("settings.about.downloading"));
-          try {
-            const {
-              downloadAndInstall,
-              formatProgressPercent,
-              relaunchApp,
-            } = await import("../updater.ts");
-            await downloadAndInstall((downloaded, contentLength) => {
-              const pct = formatProgressPercent(downloaded, contentLength);
-              setStatus(
-                pct
-                  ? `${t("settings.about.downloading")} ${pct}`
-                  : t("settings.about.downloading"),
-              );
-            });
-            setStatus(t("settings.about.installed"));
-            await relaunchApp();
-          } catch (error) {
-            const kind = classifyUpdateError(error);
-            setStatus(
-              kind === "network"
-                ? t("settings.about.downloadFailedNetwork")
-                : t("settings.about.downloadFailedOther"),
-            );
-            installing = false;
-            checkBtn.disabled = false;
-            installBtn.disabled = false;
-          }
-        })();
-      },
-    });
-    installBtn.hidden = true;
-
-    if (!isTauri()) {
-      setStatus(t("settings.about.desktopOnly"));
-      checkBtn.disabled = true;
-    }
-
-    updateActions.append(checkBtn, installBtn);
+    const updateControl = mountAboutUpdateControl();
 
     const licenseLink = document.createElement("a");
     licenseLink.className = "inimark-about-link";
@@ -1216,7 +1116,7 @@ export function mountSettingsView(
     list.className = "inimark-about-list";
     list.append(
       createRow(t("settings.about.versionInfo"), "", versionValue, "about.version"),
-      createRow(t("settings.about.softwareUpdate"), "", updateActions, "about.updates"),
+      createRow(t("settings.about.softwareUpdate"), "", updateControl.el, "about.updates"),
       createRow(
         t("settings.about.openSourceLicense"),
         "",
@@ -1254,7 +1154,7 @@ export function mountSettingsView(
     });
     links.append(github, issues, email);
 
-    about.append(hero, list, updateStatus, links);
+    about.append(hero, list, links);
     body.append(about);
   }
 
