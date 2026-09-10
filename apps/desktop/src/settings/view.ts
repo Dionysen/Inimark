@@ -10,6 +10,7 @@ import {
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
+import { classifyUpdateError } from "../updater.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
@@ -1136,8 +1137,13 @@ export function mountSettingsView(
                 version: info.version,
               });
             }
-          } catch {
-            setStatus(t("settings.about.failed"));
+          } catch (error) {
+            const kind = classifyUpdateError(error);
+            setStatus(
+              kind === "network"
+                ? t("settings.about.failedNetwork")
+                : t("settings.about.failedOther"),
+            );
           } finally {
             checking = false;
             checkBtn.disabled = false;
@@ -1172,8 +1178,13 @@ export function mountSettingsView(
             });
             setStatus(t("settings.about.installed"));
             await relaunchApp();
-          } catch {
-            setStatus(t("settings.about.failed"));
+          } catch (error) {
+            const kind = classifyUpdateError(error);
+            setStatus(
+              kind === "network"
+                ? t("settings.about.downloadFailedNetwork")
+                : t("settings.about.downloadFailedOther"),
+            );
             installing = false;
             checkBtn.disabled = false;
             installBtn.disabled = false;
