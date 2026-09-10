@@ -96,6 +96,11 @@ describe("settings store", () => {
     applySettings({ ...DEFAULT_SETTINGS, glassEffect: false });
     expect(document.documentElement.dataset.glass).toBe("false");
   });
+  test("defaults update proxy preference to enabled", () => {
+    expect(DEFAULT_SETTINGS.useSystemProxyForUpdates).toBe(true);
+    saveSettings({ ...DEFAULT_SETTINGS, useSystemProxyForUpdates: false });
+    expect(loadSettings().useSystemProxyForUpdates).toBe(false);
+  });
 });
 
 describe("settings view", () => {

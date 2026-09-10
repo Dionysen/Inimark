@@ -645,6 +645,8 @@ export const zhCN: Dictionary = {
       upToDateLabel: "已是最新版本",
       cancelUpdate: "取消更新",
       updateUnsavedMessage: "安装更新前，是否保存当前未保存的更改？",
+      useSystemProxy: "使用系统代理",
+      useSystemProxyDesc: "仅在检查与下载软件更新时使用系统代理。",
       installUpdate: "安装 {{version}}",
       checking: "正在检查更新…",
       upToDate: "已是最新版本。",

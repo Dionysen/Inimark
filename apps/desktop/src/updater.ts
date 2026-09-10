@@ -1,10 +1,16 @@
-import { check, type Update } from "@tauri-apps/plugin-updater";
+import { Update, type DownloadOptions } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { isTauri } from "./platform/env.ts";
 
 export interface UpdateInfo {
   version: string;
   body: string;
   date: string;
+}
+
+export interface UpdateCheckOptions {
+  /** When false, bypass system and explicit proxies for the updater only. */
+  useSystemProxy?: boolean;
 }
 
 export type UpdateErrorKind = "network" | "other";
@@ -16,8 +22,24 @@ export class UpdateDownloadCancelled extends Error {
   }
 }
 
+interface UpdateMetadata {
+  rid: number;
+  currentVersion: string;
+  version: string;
+  date?: string;
+  body?: string;
+  rawJson: Record<string, unknown>;
+}
+
 let cachedUpdate: Update | null = null;
 let cancelDownload: (() => void) | null = null;
+
+/** Prevent update checks/downloads from hanging indefinitely behind a proxy. */
+export const UPDATE_REQUEST_TIMEOUT_MS = 30_000;
+
+function buildDownloadOptions(): DownloadOptions {
+  return { timeout: UPDATE_REQUEST_TIMEOUT_MS };
+}
 
 const NETWORK_ERROR_PATTERNS = [
   "failed to fetch",
@@ -83,18 +105,30 @@ export function classifyUpdateError(error: unknown): UpdateErrorKind {
 }
 
 /** Returns update info when a newer release exists; otherwise null. */
-export async function checkForUpdate(): Promise<UpdateInfo | null> {
+export async function checkForUpdate(
+  options: UpdateCheckOptions = {},
+): Promise<UpdateInfo | null> {
+  const useSystemProxy = options.useSystemProxy ?? true;
   try {
-    const update = await check();
-    if (!update) {
+    if (!isTauri()) {
+      return null;
+    }
+
+    const { invoke } = await import("@tauri-apps/api/core");
+    const metadata = await invoke<UpdateMetadata | null>("check_app_update", {
+      useSystemProxy,
+      timeoutMs: UPDATE_REQUEST_TIMEOUT_MS,
+    });
+    if (!metadata) {
       cachedUpdate = null;
       return null;
     }
-    cachedUpdate = update;
+
+    cachedUpdate = new Update(metadata);
     return {
-      version: update.version,
-      body: update.body ?? "",
-      date: update.date ?? "",
+      version: cachedUpdate.version,
+      body: cachedUpdate.body ?? "",
+      date: cachedUpdate.date ?? "",
     };
   } catch (error) {
     cachedUpdate = null;
@@ -152,7 +186,7 @@ export async function downloadUpdate(
           onProgress?.(downloaded, contentLength);
           break;
       }
-    });
+    }, buildDownloadOptions());
 
     if (aborted) {
       throw new UpdateDownloadCancelled();

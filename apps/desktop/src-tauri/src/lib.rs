@@ -11,7 +11,9 @@ use tauri::TitleBarStyle;
 
 use commands::color_commands::pick_screen_color;
 use commands::font_commands::list_system_fonts;
+use commands::proxy_commands::get_system_proxy_url;
 use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
+use commands::update_commands::check_app_update;
 use commands::window_commands::{show_settings_window, toggle_settings_window};
 
 const WINDOW_LABELS: &[&str] = &["main", "settings"];
@@ -54,6 +56,8 @@ pub fn run() {
             reveal_in_file_manager,
             open_with_default_app,
             open_url,
+            get_system_proxy_url,
+            check_app_update,
             pick_screen_color,
             show_settings_window,
             toggle_settings_window

@@ -3,6 +3,7 @@ import { isTauri } from "../platform/env.ts";
 import { createIconButton, closeIcon } from "../ui/widgets/icon-button.ts";
 import { createButton } from "../ui/widgets/button.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
+import { loadSettings } from "./store.ts";
 import {
   cancelUpdateDownload,
   checkForUpdate,
@@ -170,6 +171,10 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     render();
   };
 
+  const updateOptions = () => ({
+    useSystemProxy: loadSettings().useSystemProxyForUpdates,
+  });
+
   async function runCheck(): Promise<void> {
     if (!isTauri() || busy) return;
     busy = true;
@@ -177,7 +182,7 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     progressPct = 0;
     setState("checking");
     try {
-      const info = await checkForUpdate();
+      const info = await checkForUpdate(updateOptions());
       if (!info) {
         setState("latest");
       } else {
@@ -202,7 +207,7 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     progressPct = 0;
     setState("downloading");
     try {
-      const info = await checkForUpdate();
+      const info = await checkForUpdate(updateOptions());
       if (!info) {
         setState("latest");
         return;

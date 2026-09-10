@@ -122,6 +122,8 @@ export interface AppSettings {
   image: ImageSettings;
   graph: GraphSettings;
   wordCount: WordCountSettings;
+  /** When true, app updates use the OS / user proxy settings. */
+  useSystemProxyForUpdates: boolean;
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
@@ -231,6 +233,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   image: { ...DEFAULT_IMAGE_SETTINGS },
   graph: { ...DEFAULT_GRAPH_SETTINGS },
   wordCount: { ...DEFAULT_WORD_COUNT_SETTINGS },
+  useSystemProxyForUpdates: true,
 };
 
 const EDITOR_WIDTH_LEGACY: Record<string, number> = {
@@ -470,6 +473,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     wordCount: {
       includeSymbols: Boolean(wordCount.includeSymbols),
     },
+    useSystemProxyForUpdates: Boolean(
+      parsed.useSystemProxyForUpdates ?? DEFAULT_SETTINGS.useSystemProxyForUpdates,
+    ),
   };
 }
 

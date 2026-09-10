@@ -1101,6 +1101,14 @@ export function mountSettingsView(
 
     const updateControl = mountAboutUpdateControl();
 
+    const proxyToggle = createToggle({
+      checked: settings.useSystemProxyForUpdates,
+      title: t("settings.about.useSystemProxy"),
+      onChange(checked) {
+        update({ useSystemProxyForUpdates: checked });
+      },
+    });
+
     const licenseLink = document.createElement("a");
     licenseLink.className = "inimark-about-link";
     licenseLink.href = ABOUT_LICENSE_URL;
@@ -1116,6 +1124,12 @@ export function mountSettingsView(
     list.className = "inimark-about-list";
     list.append(
       createRow(t("settings.about.versionInfo"), "", versionValue, "about.version"),
+      createRow(
+        t("settings.about.useSystemProxy"),
+        t("settings.about.useSystemProxyDesc"),
+        proxyToggle.el,
+        "about.useSystemProxy",
+      ),
       createRow(t("settings.about.softwareUpdate"), "", updateControl.el, "about.updates"),
       createRow(
         t("settings.about.openSourceLicense"),

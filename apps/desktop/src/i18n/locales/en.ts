@@ -656,6 +656,8 @@ export const en: Dictionary = {
       upToDateLabel: "You're up to date",
       cancelUpdate: "Cancel update",
       updateUnsavedMessage: "Save unsaved changes before installing the update?",
+      useSystemProxy: "Use system proxy",
+      useSystemProxyDesc: "Applies only when checking for and downloading app updates.",
       installUpdate: "Install {{version}}",
       checking: "Checking for updates…",
       upToDate: "You're up to date.",
