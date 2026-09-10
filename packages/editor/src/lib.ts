@@ -38,6 +38,12 @@ export {
   type MarkdownPreviewOptions,
 } from "./preview-view.ts";
 export {
+  renderMarkdownToStaticHtml,
+  type OutlineItem,
+  type StaticExportOptions,
+  type StaticExportResult,
+} from "./static-export.ts";
+export {
   attachImePositionGuard,
   isImeComposing,
   refreshImeCaretPosition,

@@ -68,6 +68,7 @@ import {
   patchGraphSettings,
   saveSettings,
 } from "./store.ts";
+import { mountPublishPanel } from "../publish/panel.ts";
 import { mountGraphControls } from "./graph-controls.ts";
 import { renderShortcutsPanel } from "./shortcuts-panel.ts";
 import { renderThemePanel } from "./theme-panel.ts";
@@ -103,6 +104,7 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
   theme: settingsThemeIcon,
   shortcuts: settingsShortcutsIcon,
   libraries: libraryIcon,
+  publish: settingsGraphIcon,
   image: settingsImageIcon,
   graph: settingsGraphIcon,
   about: settingsAboutIcon,
@@ -115,6 +117,7 @@ const BASE_SECTION_IDS: SettingsSection[] = [
   "theme",
   "shortcuts",
   "libraries",
+  "publish",
   "image",
   "graph",
   "about",
@@ -460,6 +463,7 @@ export function mountSettingsView(
   let shortcutsCleanup: (() => void) | null = null;
   let themeCleanup: (() => void) | null = null;
   let graphControlsCleanup: (() => void) | null = null;
+  let publishCleanup: (() => void) | null = null;
   let devUpdateCleanup: (() => void) | null = null;
   let libraryDropCleanup: (() => void) | null = null;
 
@@ -1189,6 +1193,8 @@ export function mountSettingsView(
     themeCleanup = null;
     graphControlsCleanup?.();
     graphControlsCleanup = null;
+    publishCleanup?.();
+    publishCleanup = null;
     devUpdateCleanup?.();
     devUpdateCleanup = null;
     libraryDropCleanup?.();
@@ -1334,6 +1340,13 @@ export function mountSettingsView(
       renderImage(body);
     }
 
+    if (activeSection === "publish") {
+      const panelHost = document.createElement("div");
+      body.append(panelHost);
+      const panel = mountPublishPanel(panelHost);
+      publishCleanup = () => panel.destroy();
+    }
+
     if (activeSection === "graph") {
       const controls = mountGraphControls({
         settings: settings.graph,
@@ -1399,6 +1412,7 @@ export function mountSettingsView(
       shortcutsCleanup?.();
       themeCleanup?.();
       graphControlsCleanup?.();
+      publishCleanup?.();
       devUpdateCleanup?.();
       libraryDropCleanup?.();
       host.replaceChildren();

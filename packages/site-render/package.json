@@ -1,0 +1,24 @@
+{
+  "name": "@inimark/site-render",
+  "version": "1.0.2",
+  "private": true,
+  "description": "Build static site models from Inimark vault notes",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@inimark/editor": "workspace:*"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.9.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

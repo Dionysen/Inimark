@@ -13,6 +13,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+inimark-ssg = { path = "../../../crates/inimark-ssg" }
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
@@ -22,7 +23,7 @@ url = "2"
 fontdb = "0.23"
 tauri-plugin-updater = { version = "2.11.0", default-features = true }
 tauri-plugin-process = "2.3.1"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["sync", "rt-multi-thread", "macros", "net"] }
 tauri-plugin-window-state = "2"
 tauri-plugin-clipboard-manager = "2"
 time = { version = "0.3", features = ["formatting", "parsing"] }
@@ -37,16 +38,3 @@ dispatch2 = "0.3"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
-
-[profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
-
-# Same approach as Inimark: patch wry so Overlay traffic lights are vertically
-# centered (y is top inset with matching bottom) and re-applied from drawRect
-# on every paint — that is what prevents resize flicker.
-[patch.crates-io]
-wry = { path = "vendor/wry" }

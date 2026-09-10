@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const host = process.env.TAURI_DEV_HOST;
 const editorRoot = resolve(__dirname, "../../packages/editor");
+const siteRenderRoot = resolve(__dirname, "../../packages/site-render");
 
 const editorAliases = [
   {
@@ -19,6 +20,7 @@ const editorAliases = [
     replacement: resolve(editorRoot, "src/styles/theme-github.css"),
   },
   { find: "@inimark/editor", replacement: resolve(editorRoot, "src/lib.ts") },
+  { find: "@inimark/site-render", replacement: resolve(siteRenderRoot, "src/index.ts") },
 ];
 
 export default defineConfig({

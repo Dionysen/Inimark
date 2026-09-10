@@ -790,6 +790,22 @@ html.platform-windows .inimark-settings-nav-topbar {
   margin-bottom: var(--inimark-space-3);
 }
 
+.inimark-settings-publish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-3) 0;
+}
+
+.inimark-settings-publish-status {
+  margin: 0;
+  padding: var(--inimark-space-2) 0 var(--inimark-space-4);
+  color: var(--inimark-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .inimark-settings-sidebar-tabs-zones {
   display: grid;
   grid-template-columns: 1fr 1fr;

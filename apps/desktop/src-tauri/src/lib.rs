@@ -12,6 +12,9 @@ use tauri::TitleBarStyle;
 use commands::color_commands::pick_screen_color;
 use commands::font_commands::list_system_fonts;
 use commands::proxy_commands::get_system_proxy_url;
+use commands::publish_commands::{
+    publish_start_preview, publish_stop_preview, publish_write_site, SitePreviewState,
+};
 use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
 use commands::update_commands::check_app_update;
 use commands::window_commands::{show_settings_window, toggle_settings_window};
@@ -51,6 +54,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .manage(SitePreviewState::default())
         .invoke_handler(tauri::generate_handler![
             list_system_fonts,
             reveal_in_file_manager,
@@ -60,7 +64,10 @@ pub fn run() {
             check_app_update,
             pick_screen_color,
             show_settings_window,
-            toggle_settings_window
+            toggle_settings_window,
+            publish_write_site,
+            publish_start_preview,
+            publish_stop_preview
         ])
         .setup(|app| {
             for label in WINDOW_LABELS {

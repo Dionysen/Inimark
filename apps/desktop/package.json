@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@inimark/editor": "workspace:*",
+    "@inimark/site-render": "workspace:*",
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.2",
     "@tauri-apps/plugin-dialog": "^2.2.2",

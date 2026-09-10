@@ -9,6 +9,7 @@ export type SettingsSection =
   | "theme"
   | "shortcuts"
   | "libraries"
+  | "publish"
   | "image"
   | "graph"
   | "about"
@@ -20,6 +21,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   "theme",
   "shortcuts",
   "libraries",
+  "publish",
   "image",
   "graph",
   "about",
@@ -104,6 +106,12 @@ const STATIC_ENTRIES: StaticEntry[] = [
   // Libraries
   { id: "libraries.manage", section: "libraries", titleKey: "settings.nav.libraries", descKey: "settings.subtitle.libraries" },
   { id: "libraries.add", section: "libraries", titleKey: "settings.libraries.add", descKey: "settings.libraries.empty" },
+  // Publish
+  { id: "publish.library", section: "publish", titleKey: "settings.publish.library", descKey: "settings.publish.libraryDesc" },
+  { id: "publish.siteName", section: "publish", titleKey: "settings.publish.siteName", descKey: "settings.publish.siteNameDesc" },
+  { id: "publish.out", section: "publish", titleKey: "settings.publish.out", descKey: "settings.publish.outDesc" },
+  { id: "publish.baseHref", section: "publish", titleKey: "settings.publish.baseHref", descKey: "settings.publish.baseHrefDesc" },
+  { id: "publish.home", section: "publish", titleKey: "settings.publish.home", descKey: "settings.publish.homeDesc" },
   // About
   { id: "about.version", section: "about", titleKey: "settings.about.versionInfo", descKey: "settings.subtitle.about" },
   { id: "about.updates", section: "about", titleKey: "settings.about.softwareUpdate", descKey: "settings.about.checkUpdates" },
@@ -193,7 +201,7 @@ export function searchSettings(query: string): SettingSearchMatch[] {
     const title = item.getTitle?.() ?? (item.titleKey ? t(item.titleKey) : "");
     const desc =
       item.getDescription?.() ?? (item.descKey ? t(item.descKey) : "");
-    const haystack = `${title}\n${itemHaystack(item)}`;
+    const haystack = `${title}\n${desc}\n${itemHaystack(item)}`;
     const score = matchScore(haystack, tokens);
     if (score > 0) results.push({ item, score });
   }

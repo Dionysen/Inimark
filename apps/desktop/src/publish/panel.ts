@@ -1,0 +1,279 @@
+import { invoke } from "@tauri-apps/api/core";
+import { t } from "../i18n/index.ts";
+import { listLibraries, type LibraryRecord } from "../libraries/store.ts";
+import { isTauri } from "../platform/env.ts";
+import { openExternalUrl } from "../platform/open-url.ts";
+import {
+  createButton,
+  createSelect,
+  createTextField,
+  type SelectController,
+} from "../ui/widgets/index.ts";
+import { loadPublishConfig, savePublishConfig, type PublishConfig } from "./config.ts";
+import {
+  publishLibrary,
+  startSitePreview,
+  stopSitePreview,
+  type PublishProgress,
+} from "./service.ts";
+
+export interface PublishPanelController {
+  refresh(): void;
+  destroy(): void;
+}
+
+export function mountPublishPanel(host: HTMLElement): PublishPanelController {
+  host.classList.add("inimark-settings-publish");
+
+  const libraryRow = document.createElement("div");
+  libraryRow.className = "inimark-settings-row";
+  libraryRow.dataset.settingId = "publish.library";
+  const libraryMeta = document.createElement("div");
+  libraryMeta.className = "inimark-settings-row-meta";
+  const libraryTitle = document.createElement("div");
+  libraryTitle.className = "inimark-settings-row-title";
+  const libraryDesc = document.createElement("p");
+  libraryDesc.className = "inimark-settings-row-desc";
+  libraryMeta.append(libraryTitle, libraryDesc);
+  const librarySelectHost = document.createElement("div");
+  librarySelectHost.className = "inimark-settings-row-control";
+  libraryRow.append(libraryMeta, librarySelectHost);
+
+  const siteNameField = createTextField({ value: "" });
+  const outField = createTextField({ value: "dist" });
+  const baseHrefField = createTextField({ value: "/" });
+  const homeField = createTextField({ value: "" });
+
+  function makeRow(
+    settingId: string,
+    titleKey: string,
+    descKey: string,
+    control: HTMLElement,
+  ): HTMLElement {
+    const row = document.createElement("div");
+    row.className = "inimark-settings-row";
+    row.dataset.settingId = settingId;
+    const meta = document.createElement("div");
+    meta.className = "inimark-settings-row-meta";
+    const title = document.createElement("div");
+    title.className = "inimark-settings-row-title";
+    title.dataset.i18n = titleKey;
+    const desc = document.createElement("p");
+    desc.className = "inimark-settings-row-desc";
+    desc.dataset.i18n = descKey;
+    meta.append(title, desc);
+    const wrap = document.createElement("div");
+    wrap.className = "inimark-settings-row-control";
+    wrap.append(control);
+    row.append(meta, wrap);
+    return row;
+  }
+
+  const status = document.createElement("p");
+  status.className = "inimark-settings-publish-status";
+
+  const actions = document.createElement("div");
+  actions.className = "inimark-settings-publish-actions";
+
+  let libraries: LibraryRecord[] = [];
+  let selectedId: string | null = null;
+  let lastOutDir: string | null = null;
+  let busy = false;
+  let librarySelect: SelectController | null = null;
+
+  const publishBtn = createButton({
+    label: "",
+    variant: "primary",
+    onClick: () => {
+      void runPublish();
+    },
+  });
+  const previewBtn = createButton({
+    label: "",
+    onClick: () => {
+      void runPreview();
+    },
+  });
+  const openDirBtn = createButton({
+    label: "",
+    onClick: () => {
+      if (!lastOutDir || !isTauri()) return;
+      void invoke("reveal_in_file_manager", { path: lastOutDir });
+    },
+  });
+  const stopPreviewBtn = createButton({
+    label: "",
+    onClick: () => {
+      void stopSitePreview().then(() => {
+        status.textContent = t("settings.publish.previewStopped");
+      });
+    },
+  });
+
+  actions.append(publishBtn, previewBtn, openDirBtn, stopPreviewBtn);
+
+  function selectedLibrary(): LibraryRecord | null {
+    return libraries.find((l) => l.id === selectedId) ?? null;
+  }
+
+  async function loadConfigIntoForm(): Promise<void> {
+    const lib = selectedLibrary();
+    if (!lib) {
+      siteNameField.setValue("");
+      outField.setValue("dist");
+      baseHrefField.setValue("/");
+      homeField.setValue("");
+      return;
+    }
+    const cfg = await loadPublishConfig(lib.rootPath);
+    siteNameField.setValue(cfg.siteName);
+    outField.setValue(cfg.out || "dist");
+    baseHrefField.setValue(cfg.baseHref || "/");
+    homeField.setValue(cfg.home || "");
+  }
+
+  function readFormConfig(): PublishConfig {
+    const lib = selectedLibrary();
+    return {
+      siteName: siteNameField.getValue().trim() || lib?.rootName || "Notes",
+      defaultTheme: "dark",
+      baseHref: baseHrefField.getValue().trim() || "/",
+      out: outField.getValue().trim() || "dist",
+      home: homeField.getValue().trim() || undefined,
+    };
+  }
+
+  function rebuildLibrarySelect(): void {
+    libraries = listLibraries();
+    const options = libraries.length
+      ? libraries.map((l) => ({ value: l.id, label: `${l.rootName} — ${l.rootPath}` }))
+      : [{ value: "", label: t("settings.publish.noLibrary") }];
+    if (!selectedId || !libraries.some((l) => l.id === selectedId)) {
+      selectedId = libraries[0]?.id ?? null;
+    }
+    librarySelect?.destroy();
+    librarySelectHost.replaceChildren();
+    librarySelect = createSelect({
+      options,
+      value: selectedId ?? "",
+      onChange: (value) => {
+        selectedId = value || null;
+        void loadConfigIntoForm();
+      },
+    });
+    librarySelectHost.append(librarySelect.el);
+  }
+
+  function applyI18n(): void {
+    libraryTitle.textContent = t("settings.publish.library");
+    libraryDesc.textContent = t("settings.publish.libraryDesc");
+    host.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
+      const key = el.dataset.i18n;
+      if (key) el.textContent = t(key);
+    });
+    publishBtn.textContent = t("settings.publish.publish");
+    previewBtn.textContent = t("settings.publish.preview");
+    openDirBtn.textContent = t("settings.publish.openDir");
+    stopPreviewBtn.textContent = t("settings.publish.stopPreview");
+  }
+
+  function setBusy(next: boolean): void {
+    busy = next;
+    publishBtn.disabled = busy;
+    previewBtn.disabled = busy || !lastOutDir;
+    openDirBtn.disabled = !lastOutDir;
+  }
+
+  async function runPublish(): Promise<void> {
+    if (busy) return;
+    const lib = selectedLibrary();
+    if (!lib) {
+      status.textContent = t("settings.publish.noLibrary");
+      return;
+    }
+    if (!isTauri()) {
+      status.textContent = t("settings.publish.tauriOnly");
+      return;
+    }
+    const config = readFormConfig();
+    setBusy(true);
+    status.textContent = t("settings.publish.publishing");
+    try {
+      await savePublishConfig(lib.rootPath, config);
+      const result = await publishLibrary(lib.rootPath, config, (p: PublishProgress) => {
+        status.textContent = `${p.phase}: ${p.message}`;
+      });
+      lastOutDir = result.outDir;
+      status.textContent = t("settings.publish.done", {
+        count: result.pageCount,
+        dir: result.outDir,
+      });
+      previewBtn.disabled = false;
+      openDirBtn.disabled = false;
+    } catch (e) {
+      status.textContent = t("settings.publish.failed", {
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runPreview(): Promise<void> {
+    if (!lastOutDir) {
+      status.textContent = t("settings.publish.previewNeedPublish");
+      return;
+    }
+    try {
+      const url = await startSitePreview(lastOutDir);
+      status.textContent = t("settings.publish.previewReady", { url });
+      openExternalUrl(url);
+    } catch (e) {
+      status.textContent = t("settings.publish.failed", {
+        message: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  host.replaceChildren(
+    libraryRow,
+    makeRow(
+      "publish.siteName",
+      "settings.publish.siteName",
+      "settings.publish.siteNameDesc",
+      siteNameField.el,
+    ),
+    makeRow("publish.out", "settings.publish.out", "settings.publish.outDesc", outField.el),
+    makeRow(
+      "publish.baseHref",
+      "settings.publish.baseHref",
+      "settings.publish.baseHrefDesc",
+      baseHrefField.el,
+    ),
+    makeRow("publish.home", "settings.publish.home", "settings.publish.homeDesc", homeField.el),
+    actions,
+    status,
+  );
+
+  function refresh(): void {
+    rebuildLibrarySelect();
+    applyI18n();
+    void loadConfigIntoForm();
+    previewBtn.disabled = !lastOutDir;
+    openDirBtn.disabled = !lastOutDir;
+  }
+
+  refresh();
+
+  return {
+    refresh,
+    destroy() {
+      librarySelect?.destroy();
+      siteNameField.destroy();
+      outField.destroy();
+      baseHrefField.destroy();
+      homeField.destroy();
+      host.replaceChildren();
+    },
+  };
+}

@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = [
+  "apps/desktop/src-tauri",
+  "crates/inimark-ssg",
+]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "net"] }
+tower-http = { version = "0.6", features = ["fs", "set-header"] }
+tower = "0.5"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+# Overlay traffic lights vertically centered; re-applied from drawRect on paint.
+[patch.crates-io]
+wry = { path = "apps/desktop/src-tauri/vendor/wry" }
