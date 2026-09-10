@@ -1537,3 +1537,180 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   width: 0.75rem;
   height: 0.75rem;
 }
+
+/* ── Editor find / replace (VSCode-style, menu glass) ─────────────── */
+
+.inimark-find-bar {
+  position: absolute;
+  top: calc(var(--inimark-titlebar-height, 0px) + 8px);
+  right: 12px;
+  z-index: 45;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: min(520px, calc(100% - 24px));
+  padding: var(--inimark-menu-padding, 6px);
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
+  border-radius: var(--inimark-radius-menu);
+  background: var(--inimark-glass-bg, var(--inimark-surface));
+  box-shadow: var(--inimark-glass-shadow);
+  -webkit-app-region: no-drag;
+}
+
+.inimark-find-bar.is-open,
+.inimark-find-bar:not([hidden]) {
+  display: flex;
+}
+
+.inimark-find-bar[hidden] {
+  display: none !important;
+}
+
+.inimark-find-bar__row {
+  display: grid;
+  grid-template-columns: 22px var(--inimark-find-field-width, 280px) auto;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+}
+
+.inimark-find-bar__row[hidden] {
+  display: none !important;
+}
+
+.inimark-find-bar__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: var(--inimark-find-field-width, 280px);
+  min-width: 0;
+  min-height: var(--inimark-menu-row-height, 28px);
+  padding: 0 0.35rem;
+}
+
+.inimark-find-bar__input {
+  width: 100%;
+  min-width: 0;
+  font-size: var(--inimark-control-font-size, 0.85rem);
+}
+
+.inimark-find-bar__field:has(.inimark-find-bar__inline-options) .inimark-find-bar__input {
+  padding-right: 4.75rem;
+}
+
+.inimark-find-bar__inline-options {
+  position: absolute;
+  right: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  pointer-events: auto;
+}
+
+.inimark-find-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inimark-find-bar__toggle,
+.inimark-find-bar__toggle-spacer {
+  flex: 0 0 22px;
+  width: 22px;
+}
+
+.inimark-find-bar__toggle {
+  display: grid;
+  place-items: center;
+  height: var(--inimark-menu-row-height, 28px);
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+}
+
+.inimark-find-bar__toggle:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-find-bar__icon-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: var(--inimark-menu-row-height, 28px);
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item);
+  background: transparent;
+  color: var(--inimark-fg);
+  cursor: pointer;
+}
+
+.inimark-find-bar__icon-btn:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-find-bar__text-btn {
+  flex: 0 0 auto;
+  min-height: var(--inimark-menu-row-height, 28px);
+  padding: var(--inimark-menu-item-padding-y) 0.55rem;
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item);
+  background: transparent;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size, 0.85rem);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inimark-find-bar__text-btn:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-find-bar__count {
+  flex: 0 0 auto;
+  min-width: 3.75rem;
+  padding: 0 0.15rem;
+  font-size: 0.75rem;
+  color: var(--inimark-muted-fg);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.inimark-find-bar__option {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 0.2rem;
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.inimark-find-bar__option.is-active {
+  color: var(--inimark-accent);
+  background: color-mix(in srgb, var(--inimark-accent) 12%, transparent);
+}
+
+.inimark-find-bar__option:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.typora-web-cm-source .cm-searchMatch {
+  background: color-mix(in srgb, var(--inimark-accent, #3b82f6) 28%, transparent);
+  border-radius: 2px;
+}
+
+.typora-web-cm-source .cm-searchMatch-selected {
+  background: color-mix(in srgb, var(--inimark-accent, #3b82f6) 45%, transparent);
+}

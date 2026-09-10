@@ -16,7 +16,22 @@
 import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
-import { renderedPosToMdOffset } from "./selection-md-map.ts";
+import {
+  applyCmFindQuery,
+  clearCmFindQuery,
+  selectCmMatch,
+  sourceFindExtensions,
+} from "./find-cm.ts";
+import {
+  collectMdMatches,
+  type FindOptions,
+  type MdMatch,
+} from "./find-in-markdown.ts";
+import {
+  applyFindHighlights,
+  clearFindHighlights,
+} from "./find-replace.ts";
+import { mdOffsetToRenderedPos, renderedPosToMdOffset } from "./selection-md-map.ts";
 import { safeTextSelection } from "./selection-utils.ts";
 import {
   createEmbeddedCodeMirrorEditor,
@@ -44,6 +59,13 @@ import {
 import { flashHeadingAtPos } from "./heading-flash.ts";
 import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
+
+export interface FindSession {
+  options: FindOptions;
+  matches: MdMatch[];
+  /** Active match index, or -1 when there are no hits. */
+  index: number;
+}
 
 /** Scroll/cursor snapshot for restoring where the user left off in a file. */
 export interface EditorViewState {
@@ -112,6 +134,16 @@ export interface Editor {
   scrollToBottom(): void;
   /** Run a named format/insert command (context menu, toolbar, …). */
   executeCommand(name: EditorCommandName | string): boolean;
+  /** Selected text in the active surface (rendered or source). */
+  getSelectedText(): string;
+  /** Run a find query and highlight all matches. */
+  configureFind(options: FindOptions): FindSession;
+  findNext(): FindSession;
+  findPrevious(): FindSession;
+  clearFind(): void;
+  replaceCurrent(replacement: string): FindSession;
+  replaceAll(replacement: string): number;
+  getFindSession(): FindSession | null;
   /** Focus whichever surface is active. */
   focus(): void;
   /** Tear down the editor and remove its DOM. */
@@ -145,6 +177,80 @@ export function createEditor(
   let pointerSelecting = false;
   let currentFileHandle: FileSystemFileHandle | null = null;
   let currentFileName: string | null = null;
+  let findOpen = false;
+  let findSession: FindSession | null = null;
+
+  function mdMatchesToPmRanges(md: string, matches: MdMatch[]) {
+    const ranges: Array<{ from: number; to: number }> = [];
+    for (const match of matches) {
+      const from = mdOffsetToRenderedPos(md, match.from);
+      const to = mdOffsetToRenderedPos(md, match.to);
+      if (from < to) ranges.push({ from, to });
+    }
+    return ranges;
+  }
+
+  function scrollToRenderedPos(pos: number): void {
+    const scrollHost = findScrollContainer();
+    try {
+      const coords = view.coordsAtPos(pos);
+      if (!coords) return;
+      const hostRect = scrollHost.getBoundingClientRect();
+      const target = coords.top - hostRect.top + scrollHost.scrollTop - hostRect.height * 0.28;
+      scrollHost.scrollTop = Math.max(0, target);
+    } catch {
+      /* layout not ready */
+    }
+  }
+
+  function applyFindSession(session: FindSession): FindSession {
+    findSession = session;
+    const { options, matches, index } = session;
+    if (!findOpen || !options.query) {
+      return session;
+    }
+
+    if (inSource && sourceView) {
+      const activeMatch = index >= 0 ? matches[index] : undefined;
+      queueMicrotask(() => {
+        if (!inSource || !sourceView || !findOpen) return;
+        applyCmFindQuery(sourceView.view, options);
+        if (activeMatch) selectCmMatch(sourceView.view, activeMatch);
+      });
+      return session;
+    }
+
+    const md = serialize(view.state.doc);
+    const pmMatches = mdMatchesToPmRanges(md, matches);
+    if (index < 0 || !pmMatches[index]) {
+      clearFindHighlights(view);
+      return session;
+    }
+    applyFindHighlights(view, options.query, pmMatches, index);
+    scrollToRenderedPos(pmMatches[index]!.from);
+    view.focus();
+    return session;
+  }
+
+  function refreshFindSession(preferredIndex?: number): FindSession {
+    if (!findSession) {
+      return { options: { query: "" }, matches: [], index: -1 };
+    }
+    const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+    const matches = collectMdMatches(md, findSession.options);
+    let index = preferredIndex ?? findSession.index;
+    if (matches.length === 0) index = -1;
+    else if (index < 0) index = 0;
+    else if (index >= matches.length) index = matches.length - 1;
+    return applyFindSession({ ...findSession, matches, index });
+  }
+
+  function clearFindInternal(): void {
+    findOpen = false;
+    findSession = null;
+    if (inSource && sourceView) clearCmFindQuery(sourceView.view);
+    else clearFindHighlights(view);
+  }
 
   function findScrollContainer(): HTMLElement {
     let el: HTMLElement | null = host;
@@ -301,7 +407,10 @@ export function createEditor(
         if (typewriterMode && (tr.selectionSet || tr.docChanged)) {
           scheduleScrollCursorToCenter();
         }
-        if (tr.docChanged) options.onChange?.(serialize(next.doc));
+        if (tr.docChanged) {
+          options.onChange?.(serialize(next.doc));
+          if (findOpen && findSession) refreshFindSession();
+        }
       },
       handleDOMEvents: {
         focus: () => { options.onFocus?.(); return false; },
@@ -337,6 +446,31 @@ export function createEditor(
     }
   }
 
+  function parseMarkdownDoc(md: string) {
+    const parsed = md ? parse(md) : schema.nodes.doc.createAndFill()!;
+    return ensureTrailingSentinel(parsed);
+  }
+
+  /** Replace the rendered document while keeping PM history (undo/redo). */
+  function applyRenderedMarkdown(nextMd: string): void {
+    const focusMode = readFocusMode(view.state);
+    const newDoc = parseMarkdownDoc(nextMd);
+    const { doc } = view.state;
+    let tr = view.state.tr.replaceWith(0, doc.content.size, newDoc.content);
+    tr = tr.setSelection(TextSelection.atStart(tr.doc));
+    view.dispatch(tr);
+    if (focusMode) {
+      dispatchFocusMode(view.state, (tr) => view.dispatch(tr), true);
+    }
+  }
+
+  function applySourceChanges(
+    changes: Array<{ from: number; to: number; insert: string }>,
+  ): void {
+    if (!sourceView || changes.length === 0) return;
+    sourceView.view.dispatch({ changes, scrollIntoView: true });
+  }
+
   function syncModeClasses(): void {
     wrap.classList.toggle("tw-focus-mode", readFocusMode(view.state));
     wrap.classList.toggle("tw-typewriter-mode", typewriterMode);
@@ -349,23 +483,6 @@ export function createEditor(
   function setSourceMarkdown(md: string): void {
     if (!sourceView) return;
     sourceView.setDoc(md);
-  }
-
-  // Best-effort cursor mapping between rendered and source. Both
-  // directions cut/parse a prefix and use its length / content.size as
-  // the position. Mid-syntax cursors (e.g. between `*` and `bold` in
-  // an unclosed `*bold`) may land a few chars off, but plain prose and
-  // line boundaries are spot-on.
-  function mdOffsetToRenderedPos(md: string, offset: number): number {
-    try {
-      const partial = parse(md.slice(0, Math.max(0, offset)));
-      const pos = partial.content.size;
-      const $pos = partial.resolve(pos);
-      if ($pos.parent.inlineContent) return pos;
-      return TextSelection.near($pos, -1).from;
-    } catch {
-      return 0;
-    }
   }
 
   function currentMdSelection(): { anchor: number; head: number } {
@@ -414,7 +531,15 @@ export function createEditor(
       doc: md,
       markdownSource: true,
       className: "typora-web-cm-source",
-      onChange: (next) => options.onChange?.(next),
+      extraExtensions: sourceFindExtensions(),
+      onChange: (next) => {
+        options.onChange?.(next);
+        if (findOpen && findSession) {
+          queueMicrotask(() => {
+            if (findOpen && findSession) refreshFindSession();
+          });
+        }
+      },
     });
     editorHost.hidden = true;
     sourceHost.hidden = false;
@@ -424,6 +549,7 @@ export function createEditor(
       selection: { anchor: clampedAnchor, head: clampedHead },
     });
     inSource = true;
+    if (findOpen && findSession) refreshFindSession();
     scheduleScrollRestore(snapshot, () => {
       try {
         const pos = sourceView!.view.state.selection.main.head;
@@ -449,6 +575,7 @@ export function createEditor(
     rebuild(md);
     setRenderedSelectionFromMdOffsets(md, anchor, head);
     inSource = false;
+    if (findOpen && findSession) refreshFindSession();
     scheduleScrollRestore(snapshot, () => {
       try {
         return view.coordsAtPos(view.state.selection.head);
@@ -770,6 +897,92 @@ export function createEditor(
       if (inSource) exitSource();
       return executeEditorCommand(view, name);
     },
+    getSelectedText(): string {
+      if (inSource && sourceView) {
+        const { from, to } = sourceView.view.state.selection.main;
+        return sourceView.view.state.doc.sliceString(from, to);
+      }
+      const { from, to } = view.state.selection;
+      if (from === to) return "";
+      const md = serialize(view.state.doc);
+      const start = renderedPosToMdOffset(view.state.doc, from);
+      const end = renderedPosToMdOffset(view.state.doc, to);
+      return md.slice(start, end);
+    },
+    configureFind(options) {
+      findOpen = true;
+      if (!options.query) {
+        findSession = { options, matches: [], index: -1 };
+        if (inSource && sourceView) clearCmFindQuery(sourceView.view);
+        else clearFindHighlights(view);
+        return findSession;
+      }
+      findSession = { options, matches: [], index: -1 };
+      return refreshFindSession(0);
+    },
+    findNext() {
+      if (!findSession || findSession.matches.length === 0) {
+        return findSession ?? { options: { query: "" }, matches: [], index: -1 };
+      }
+      const next =
+        findSession.index < 0
+          ? 0
+          : (findSession.index + 1) % findSession.matches.length;
+      return refreshFindSession(next);
+    },
+    findPrevious() {
+      if (!findSession || findSession.matches.length === 0) {
+        return findSession ?? { options: { query: "" }, matches: [], index: -1 };
+      }
+      const len = findSession.matches.length;
+      const next =
+        findSession.index < 0
+          ? len - 1
+          : (findSession.index - 1 + len) % len;
+      return refreshFindSession(next);
+    },
+    clearFind() {
+      clearFindInternal();
+    },
+    replaceCurrent(replacement) {
+      if (!findSession || findSession.index < 0) return findSession!;
+      const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+      const match = findSession.matches[findSession.index]!;
+      const keepIndex = findSession.index;
+      if (inSource) {
+        applySourceChanges([{ from: match.from, to: match.to, insert: replacement }]);
+      } else {
+        const nextMd = md.slice(0, match.from) + replacement + md.slice(match.to);
+        applyRenderedMarkdown(nextMd);
+      }
+      return refreshFindSession(keepIndex);
+    },
+    replaceAll(replacement) {
+      if (!findSession || findSession.matches.length === 0) return 0;
+      const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+      const matches = findSession.matches;
+      const count = matches.length;
+      if (inSource) {
+        applySourceChanges(
+          [...matches].reverse().map((match) => ({
+            from: match.from,
+            to: match.to,
+            insert: replacement,
+          })),
+        );
+      } else {
+        let nextMd = md;
+        for (const match of [...matches].reverse()) {
+          nextMd = nextMd.slice(0, match.from) + replacement + nextMd.slice(match.to);
+        }
+        applyRenderedMarkdown(nextMd);
+      }
+      refreshFindSession(-1);
+      return count;
+    },
+    getFindSession() {
+      return findSession;
+    },
     focus(): void {
       if (inSource) sourceView?.view.focus();
       else view.focus();
@@ -783,6 +996,7 @@ export function createEditor(
       if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
       host.removeEventListener("mousedown", onEditorSurfaceMouseDown);
       wrap.style.removeProperty("--typewriter-pad");
+      clearFindInternal();
       sourceView?.destroy();
       view.destroy();
       wrap.remove();

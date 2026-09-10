@@ -56,6 +56,7 @@ export interface TitleBarMoreMenuActions {
   onAddBookmark: () => void;
   isSourceMode: () => boolean;
   onToggleSourceMode: () => void;
+  onOpenSearch: () => void;
 }
 
 export interface TitleBarImmersiveMenuActions {
@@ -373,6 +374,15 @@ export function mountTitleBar(
         onClick() {
           closeMoreMenu();
           moreActions.onAddBookmark();
+        },
+      });
+      moreMenu.addItem({
+        label: t("titlebar.more.search"),
+        icon: menuIcons.search,
+        meta: formatShortcutDisplay(["Ctrl", "F"]),
+        onClick() {
+          closeMoreMenu();
+          moreActions.onOpenSearch();
         },
       });
       moreMenu.addDivider();

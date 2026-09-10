@@ -13,6 +13,7 @@ import { wikiLinkEditorPlugins } from "./features/wiki-link.ts";
 import { markdownInputRules, spaceBreaksStoredMarks } from "./input-rules.ts";
 import { markdownPastePlugin } from "./paste.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
+import { findReplacePlugin } from "./find-replace.ts";
 import { searchRevealPlugin } from "./search-reveal.ts";
 import { headingFlashPlugin } from "./heading-flash.ts";
 import { schema } from "./schema.ts";
@@ -74,6 +75,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     ...wikiLinkEditorPlugins(),
     syntaxHintsPlugin(),
     searchRevealPlugin(),
+    findReplacePlugin(),
     headingFlashPlugin(),
     trailingSentinelPlugin(),
     clickFocusPlugin(),

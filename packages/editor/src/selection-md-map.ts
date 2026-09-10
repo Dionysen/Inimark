@@ -1,5 +1,7 @@
 import type { Node as PMNode } from "prosemirror-model";
+import { TextSelection } from "prosemirror-state";
 
+import { parse } from "./parser.ts";
 import { serialize } from "./serializer.ts";
 
 function blockSeparator(prefix: string): string {
@@ -7,6 +9,19 @@ function blockSeparator(prefix: string): string {
   if (prefix.endsWith("\n\n")) return "";
   if (prefix.endsWith("\n")) return "\n";
   return "\n\n";
+}
+
+/** Map a markdown character offset to a rendered document position. */
+export function mdOffsetToRenderedPos(md: string, offset: number): number {
+  try {
+    const partial = parse(md.slice(0, Math.max(0, offset)));
+    const pos = partial.content.size;
+    const $pos = partial.resolve(pos);
+    if ($pos.parent.inlineContent) return pos;
+    return TextSelection.near($pos, -1).from;
+  } catch {
+    return 0;
+  }
 }
 
 /**

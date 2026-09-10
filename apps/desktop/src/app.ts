@@ -47,6 +47,7 @@ import {
 } from "./editor/view-state.ts";
 import { mountWordCount } from "./editor/word-count.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
+import { mountFindBar } from "./editor/find-bar.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import {
   applySettings,
@@ -94,6 +95,7 @@ export function mountApp(host: HTMLElement): AppController {
   applySettings(settings);
 
   const navHistory = new FileNavigationHistory();
+  let openDocumentSearch: (() => void) | null = null;
 
   async function copyToClipboard(text: string): Promise<void> {
     try {
@@ -132,6 +134,7 @@ export function mountApp(host: HTMLElement): AppController {
         editor.toggleSource();
         wordCount?.syncChrome();
       },
+      onOpenSearch: () => openDocumentSearch?.(),
     },
     immersiveMenuActions: {
       getAutoHideTitlebar: () => settings.autoHideTitlebar,
@@ -344,7 +347,13 @@ export function mountApp(host: HTMLElement): AppController {
     editor.scrollToHeading(text, line);
   });
 
-  const editorContextMenu = mountEditorContextMenu(shell.editorHost, editor);
+  const findBar = mountFindBar(shell.editorPane, editor);
+  openDocumentSearch = () => findBar.open(true);
+  cleanups.push(() => findBar.destroy());
+
+  const editorContextMenu = mountEditorContextMenu(shell.editorHost, editor, {
+    onOpenSearch: () => openDocumentSearch?.(),
+  });
   cleanups.push(() => editorContextMenu.destroy());
 
   cleanups.push(

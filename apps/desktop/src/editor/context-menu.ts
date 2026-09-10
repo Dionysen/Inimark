@@ -12,14 +12,26 @@ export interface EditorContextMenuController {
   destroy(): void;
 }
 
+export interface EditorContextMenuOptions {
+  onOpenSearch?: () => void;
+}
+
 const EDITOR_CONTEXT_LAYER = Symbol("editor-context-menu");
 
-type IconAction = {
-  name: EditorCommandName;
-  label: string;
-  shortcut?: string;
-  icon: string;
-};
+type IconAction =
+  | {
+      kind: "command";
+      name: EditorCommandName;
+      label: string;
+      shortcut?: string;
+      icon: string;
+    }
+  | {
+      kind: "search";
+      label: string;
+      shortcut?: string;
+      icon: string;
+    };
 
 type SubmenuLeaf = {
   kind: "item";
@@ -65,6 +77,9 @@ const ICONS = {
   ),
   trash: svg(
     `<path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>`,
+  ),
+  search: svg(
+    `<circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/>`,
   ),
   bold: svg(
     `<path d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>`,
@@ -167,54 +182,66 @@ function buildCalloutSubmenuItems(): SubmenuLeaf[] {
 function buildIconRows(): IconAction[][] {
   return [
     [
-      { name: "cut", label: t("editor.ctx.cut"), icon: ICONS.cut },
-      { name: "copy", label: t("editor.ctx.copy"), icon: ICONS.copy },
-      { name: "paste", label: t("editor.ctx.paste"), icon: ICONS.paste },
-      { name: "delete", label: t("editor.ctx.delete"), icon: ICONS.trash },
+      { kind: "command", name: "cut", label: t("editor.ctx.cut"), icon: ICONS.cut },
+      { kind: "command", name: "copy", label: t("editor.ctx.copy"), icon: ICONS.copy },
+      { kind: "command", name: "paste", label: t("editor.ctx.paste"), icon: ICONS.paste },
+      { kind: "command", name: "delete", label: t("editor.ctx.delete"), icon: ICONS.trash },
+      {
+        kind: "search",
+        label: t("editor.ctx.search"),
+        shortcut: modShortcut("F"),
+        icon: ICONS.search,
+      },
     ],
     [
-      { name: "bold", label: t("editor.ctx.bold"), shortcut: modShortcut("B"), icon: ICONS.bold },
-      { name: "italic", label: t("editor.ctx.italic"), shortcut: modShortcut("I"), icon: ICONS.italic },
+      { kind: "command", name: "bold", label: t("editor.ctx.bold"), shortcut: modShortcut("B"), icon: ICONS.bold },
+      { kind: "command", name: "italic", label: t("editor.ctx.italic"), shortcut: modShortcut("I"), icon: ICONS.italic },
       {
+        kind: "command",
         name: "strike",
         label: t("editor.ctx.strike"),
         shortcut: formatShortcutDisplay(["Alt", "Shift", "5"]),
         icon: ICONS.strikethrough,
       },
       {
+        kind: "command",
         name: "inline-code",
         label: t("editor.ctx.inlineCode"),
         shortcut: modShortcut("Shift", "`"),
         icon: ICONS.code,
       },
-      { name: "link", label: t("editor.ctx.link"), shortcut: modShortcut("K"), icon: ICONS.link },
+      { kind: "command", name: "link", label: t("editor.ctx.link"), shortcut: modShortcut("K"), icon: ICONS.link },
     ],
     [
       {
+        kind: "command",
         name: "quote",
         label: t("editor.ctx.quote"),
         shortcut: altModShortcut("Q"),
         icon: ICONS.quote,
       },
       {
+        kind: "command",
         name: "list",
         label: t("editor.ctx.bulletList"),
         shortcut: altModShortcut("U"),
         icon: ICONS.listUnordered,
       },
       {
+        kind: "command",
         name: "ordered-list",
         label: t("editor.ctx.orderedList"),
         shortcut: altModShortcut("O"),
         icon: ICONS.listOrdered,
       },
       {
+        kind: "command",
         name: "check",
         label: t("editor.ctx.taskList"),
         shortcut: altModShortcut("X"),
         icon: ICONS.checkSquare,
       },
-      { name: "highlight", label: t("editor.ctx.highlight"), icon: ICONS.highlight },
+      { kind: "command", name: "highlight", label: t("editor.ctx.highlight"), icon: ICONS.highlight },
     ],
   ];
 }
@@ -359,7 +386,9 @@ function buildSubmenus(): SubmenuRow[] {
 export function mountEditorContextMenu(
   host: HTMLElement,
   editor: Editor,
+  options: EditorContextMenuOptions = {},
 ): EditorContextMenuController {
+  const onOpenSearch = options.onOpenSearch;
   const menu = document.createElement("div");
   menu.className = "inimark-editor-context-menu inimark-glass";
   menu.hidden = true;
@@ -546,7 +575,9 @@ export function mountEditorContextMenu(
   }
 
   function renderMenu(): void {
-    const iconRows = buildIconRows();
+    const iconRows = buildIconRows().map((row) =>
+      row.filter((action) => action.kind !== "search" || onOpenSearch),
+    );
     const submenuRows = buildSubmenus();
     menu.replaceChildren();
 
@@ -565,6 +596,11 @@ export function mountEditorContextMenu(
         btn.addEventListener("mousedown", (event) => {
           event.preventDefault();
           event.stopPropagation();
+          if (action.kind === "search") {
+            onOpenSearch?.();
+            close();
+            return;
+          }
           runCommand(action.name);
         });
         wrap.append(btn);
