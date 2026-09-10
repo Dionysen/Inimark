@@ -125,6 +125,7 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
         ? "inimark-menu-item__meta inimark-menu-item__meta--below"
         : "inimark-menu-item__meta";
     meta.textContent = options.meta;
+    meta.title = options.meta;
     content.append(meta);
   }
 

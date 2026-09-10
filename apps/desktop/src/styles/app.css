@@ -288,7 +288,47 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
 .inimark-titlebar-more-menu {
   position: fixed;
   z-index: 40;
-  min-width: 10.5rem;
+  width: 13rem;
+  min-width: 13rem;
+  max-width: 13rem;
+  box-sizing: border-box;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content) 0.875rem;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item__content {
+  display: contents;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item__name-row {
+  grid-column: 2;
+  min-width: 0;
+  flex: none;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item__meta {
+  grid-column: 3;
+  justify-self: end;
+  flex: none;
+  margin-left: 0;
+  max-width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item:not(:has(.inimark-menu-item__arrow)) .inimark-menu-item__meta {
+  grid-column: 3 / -1;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item__arrow {
+  grid-column: 4;
+  margin-left: 0;
+  justify-self: end;
 }
 
 .inimark-titlebar-more-menu .inimark-menu__path {
