@@ -11,6 +11,8 @@ export interface UpdateInfo {
 export interface UpdateCheckOptions {
   /** When false, bypass system and explicit proxies for the updater only. */
   useSystemProxy?: boolean;
+  /** Dev-only: pretend the app is this version when comparing against the remote release. */
+  devCurrentVersionOverride?: string;
 }
 
 export type UpdateErrorKind = "network" | "other";
@@ -118,6 +120,7 @@ export async function checkForUpdate(
     const metadata = await invoke<UpdateMetadata | null>("check_app_update", {
       useSystemProxy,
       timeoutMs: UPDATE_REQUEST_TIMEOUT_MS,
+      devCurrentVersionOverride: options.devCurrentVersionOverride ?? null,
     });
     if (!metadata) {
       cachedUpdate = null;

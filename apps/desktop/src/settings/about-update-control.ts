@@ -4,6 +4,7 @@ import { createIconButton, closeIcon } from "../ui/widgets/icon-button.ts";
 import { createButton } from "../ui/widgets/button.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
 import { loadSettings } from "./store.ts";
+import { mergeUpdateCheckOptions } from "../update/dev-update-test.ts";
 import {
   cancelUpdateDownload,
   checkForUpdate,
@@ -171,9 +172,10 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     render();
   };
 
-  const updateOptions = () => ({
-    useSystemProxy: loadSettings().useSystemProxyForUpdates,
-  });
+  const updateOptions = () =>
+    mergeUpdateCheckOptions({
+      useSystemProxy: loadSettings().useSystemProxyForUpdates,
+    });
 
   async function runCheck(): Promise<void> {
     if (!isTauri() || busy) return;

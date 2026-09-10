@@ -28,6 +28,7 @@ import {
 import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
 import { mountUpdatePreflightHandler } from "./update-bridge.ts";
+import { mountUpdateDevCheckHandler } from "./update-dev-bridge.ts";
 import { createAutoUpdateService } from "./update/auto-update.ts";
 import { mountTitlebarUpdateCapsule, type TitlebarUpdateCapsuleController } from "./ui/titlebar-update-capsule.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
@@ -944,6 +945,12 @@ export function mountApp(host: HTMLElement): AppController {
   if (isTauri()) {
     autoUpdate.start();
     cleanups.push(() => autoUpdate.stop());
+    cleanups.push(
+      mountUpdateDevCheckHandler(
+        () => autoUpdate.checkNow(),
+        () => autoUpdate.getState(),
+      ),
+    );
   }
 
   if (isTauri()) {

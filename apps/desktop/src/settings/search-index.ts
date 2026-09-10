@@ -11,7 +11,8 @@ export type SettingsSection =
   | "libraries"
   | "image"
   | "graph"
-  | "about";
+  | "about"
+  | "dev";
 
 const SETTINGS_SECTIONS: SettingsSection[] = [
   "editor",
@@ -22,6 +23,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   "image",
   "graph",
   "about",
+  "dev",
 ];
 
 export function isSettingsSection(value: string): value is SettingsSection {
@@ -109,6 +111,10 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "about.license", section: "about", titleKey: "settings.about.openSourceLicense", descKey: "settings.about.licenseName" },
   { id: "about.github", section: "about", titleKey: "settings.about.github", descKey: "settings.about.desc" },
   { id: "about.email", section: "about", titleKey: "settings.about.email", descKey: "settings.about.desc" },
+  // Dev (dev builds only)
+  { id: "dev.updateOverride", section: "dev", titleKey: "settings.dev.updateOverrideTitle", descKey: "settings.dev.updateOverrideDesc" },
+  { id: "dev.triggerBackgroundCheck", section: "dev", titleKey: "settings.dev.triggerBackgroundCheck", descKey: "settings.dev.updateIntro" },
+  { id: "dev.runLocalCheck", section: "dev", titleKey: "settings.dev.runLocalCheck", descKey: "settings.dev.checkStatusTitle" },
 ];
 
 function shortcutEntries(): SettingSearchItem[] {
@@ -132,7 +138,9 @@ export function listSettingSearchItems(): SettingSearchItem[] {
     getTitle: () => t(entry.titleKey),
     getDescription: () => (entry.descKey ? t(entry.descKey) : ""),
   }));
-  return [...staticItems, ...shortcutEntries()];
+  return [...staticItems, ...shortcutEntries()].filter(
+    (item) => item.section !== "dev" || import.meta.env.DEV,
+  );
 }
 
 function normalizeText(text: string): string {
@@ -204,6 +212,8 @@ export function sectionsMatchingSearch(query: string): Set<SettingsSection> {
 }
 
 export function sectionHasSearchMatch(section: SettingsSection, query: string): boolean {
+  if (section === "dev" && !import.meta.env.DEV) return false;
+
   const tokens = tokenizeQuery(query);
   if (tokens.length === 0) return true;
 

@@ -32,6 +32,7 @@ export {
   settingsImageIcon,
   settingsGraphIcon,
   settingsAboutIcon,
+  settingsDevIcon,
   githubIcon,
   issuesIcon,
   emailIcon,

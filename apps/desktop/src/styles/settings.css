@@ -882,6 +882,84 @@ html.platform-windows .inimark-settings-nav-topbar {
   flex-shrink: 0;
 }
 
+.inimark-settings-dev-update-check-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-3);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-md);
+  background: color-mix(in srgb, var(--inimark-hover) 40%, transparent);
+}
+
+.inimark-settings-dev-update-check-panel[data-state="checking"] {
+  border-color: color-mix(in srgb, var(--inimark-accent) 35%, var(--inimark-border));
+}
+
+.inimark-settings-dev-update-check-panel[data-state="available"] {
+  border-color: color-mix(in srgb, var(--inimark-accent) 55%, var(--inimark-border));
+}
+
+.inimark-settings-dev-update-check-panel[data-state="error"] {
+  border-color: color-mix(in srgb, var(--inimark-danger, #e5534b) 45%, var(--inimark-border));
+}
+
+.inimark-settings-dev-update-check-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--inimark-fg);
+}
+
+.inimark-settings-dev-update-check-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--inimark-fg);
+}
+
+.inimark-settings-dev-update-check-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--inimark-space-1) var(--inimark-space-3);
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.inimark-settings-dev-update-check-meta dt {
+  margin: 0;
+  color: var(--inimark-muted);
+  white-space: nowrap;
+}
+
+.inimark-settings-dev-update-check-meta dd {
+  margin: 0;
+  color: var(--inimark-fg);
+  word-break: break-word;
+}
+
+.inimark-settings-dev-update {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-4);
+  max-width: 40rem;
+}
+
+.inimark-settings-dev-update-intro,
+.inimark-settings-dev-update-status,
+.inimark-settings-dev-update-actual {
+  margin: 0;
+  color: var(--inimark-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.inimark-settings-dev-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--inimark-space-2);
+}
+
 @media (max-width: 720px) {
   .inimark-settings-sidebar-tabs-zones {
     grid-template-columns: 1fr;

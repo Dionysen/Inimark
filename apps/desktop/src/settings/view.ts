@@ -11,6 +11,7 @@ import {
 import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
 import { mountAboutUpdateControl } from "./about-update-control.ts";
+import { mountDevUpdatePanel } from "./dev-update-panel.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
@@ -35,6 +36,7 @@ import {
   menuIcons,
   setNavItemLabel,
   settingsAboutIcon,
+  settingsDevIcon,
   githubIcon,
   issuesIcon,
   emailIcon,
@@ -104,7 +106,23 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
   image: settingsImageIcon,
   graph: settingsGraphIcon,
   about: settingsAboutIcon,
+  dev: settingsDevIcon,
 };
+
+const BASE_SECTION_IDS: SettingsSection[] = [
+  "editor",
+  "appearance",
+  "theme",
+  "shortcuts",
+  "libraries",
+  "image",
+  "graph",
+  "about",
+];
+
+function visibleSectionIds(): SettingsSection[] {
+  return import.meta.env.DEV ? [...BASE_SECTION_IDS, "dev"] : BASE_SECTION_IDS;
+}
 
 function sectionMeta(id: SettingsSection): {
   title: string;
@@ -218,16 +236,7 @@ export function mountSettingsView(
 
   const navList = createNavList();
 
-  const sectionIds: SettingsSection[] = [
-    "editor",
-    "appearance",
-    "theme",
-    "shortcuts",
-    "libraries",
-    "image",
-    "graph",
-    "about",
-  ];
+  const sectionIds = visibleSectionIds();
 
   const navButtons = new Map<SettingsSection, HTMLButtonElement>();
 
@@ -451,6 +460,7 @@ export function mountSettingsView(
   let shortcutsCleanup: (() => void) | null = null;
   let themeCleanup: (() => void) | null = null;
   let graphControlsCleanup: (() => void) | null = null;
+  let devUpdateCleanup: (() => void) | null = null;
   let libraryDropCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
@@ -1179,6 +1189,8 @@ export function mountSettingsView(
     themeCleanup = null;
     graphControlsCleanup?.();
     graphControlsCleanup = null;
+    devUpdateCleanup?.();
+    devUpdateCleanup = null;
     libraryDropCleanup?.();
     libraryDropCleanup = null;
     content.replaceChildren();
@@ -1340,6 +1352,12 @@ export function mountSettingsView(
       renderAbout(body);
     }
 
+    if (activeSection === "dev" && import.meta.env.DEV) {
+      const panel = mountDevUpdatePanel();
+      body.append(panel.el);
+      devUpdateCleanup = () => panel.destroy();
+    }
+
     content.append(body);
 
     if (pendingHighlightId) {
@@ -1381,6 +1399,7 @@ export function mountSettingsView(
       shortcutsCleanup?.();
       themeCleanup?.();
       graphControlsCleanup?.();
+      devUpdateCleanup?.();
       libraryDropCleanup?.();
       host.replaceChildren();
       host.className = "";

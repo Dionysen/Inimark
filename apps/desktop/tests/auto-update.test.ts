@@ -10,16 +10,20 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../src/platform/env.ts", () => ({ isTauri: mocks.isTauri }));
-vi.mock("../src/updater.ts", () => ({
-  checkForUpdate: mocks.checkForUpdate,
-  downloadUpdate: mocks.downloadUpdate,
-  formatProgressPercent: (downloaded: number, contentLength?: number | null) => {
-    if (!contentLength) return "…";
-    return String(Math.round((downloaded / contentLength) * 100));
-  },
-  installDownloadedUpdate: mocks.installDownloadedUpdate,
-  relaunchApp: mocks.relaunchApp,
-}));
+vi.mock("../src/updater.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/updater.ts")>();
+  return {
+    ...actual,
+    checkForUpdate: mocks.checkForUpdate,
+    downloadUpdate: mocks.downloadUpdate,
+    installDownloadedUpdate: mocks.installDownloadedUpdate,
+    relaunchApp: mocks.relaunchApp,
+    formatProgressPercent: (downloaded: number, contentLength?: number | null) => {
+      if (!contentLength) return "…";
+      return String(Math.round((downloaded / contentLength) * 100));
+    },
+  };
+});
 vi.mock("../src/update-bridge.ts", () => ({
   requestUpdatePreflight: mocks.requestUpdatePreflight,
 }));
@@ -129,5 +133,27 @@ describe("createAutoUpdateService", () => {
 
     service.start();
     expect(checkForUpdate).not.toHaveBeenCalled();
+  });
+
+  test("checkNow returns structured report on error", async () => {
+    checkForUpdate.mockRejectedValue(new TypeError("Failed to fetch"));
+    const service = createAutoUpdateService();
+
+    const report = await service.checkNow();
+
+    expect(report.outcome).toBe("error");
+    expect(report.errorKind).toBe("network");
+    service.stop();
+  });
+
+  test("checkNow reports available update", async () => {
+    checkForUpdate.mockResolvedValue({ version: "2.0.0" });
+    const service = createAutoUpdateService();
+
+    const report = await service.checkNow();
+
+    expect(report).toEqual({ outcome: "available", version: "2.0.0" });
+    expect(service.getState().phase).toBe("available");
+    service.stop();
   });
 });
