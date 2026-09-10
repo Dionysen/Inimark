@@ -1,6 +1,6 @@
 import { Slice } from "prosemirror-model";
 import { describe, expect, test } from "vitest";
-import { EditorState } from "prosemirror-state";
+import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { defaultPlugins } from "../src/editor.ts";
@@ -30,6 +30,23 @@ function mountView(markdown = ""): {
       host.remove();
     },
   };
+}
+
+function copyPlainText(view: EditorView): string {
+  const { from, to } = view.state.selection;
+  const slice = view.state.doc.slice(from, to);
+  let text = "";
+  view.someProp("clipboardTextSerializer", (handler) => {
+    text = handler(slice, view);
+  });
+  return text;
+}
+
+function selectAll(view: EditorView): void {
+  const { doc } = view.state;
+  view.dispatch(
+    view.state.tr.setSelection(TextSelection.create(doc, 0, doc.content.size)),
+  );
 }
 
 function pastePlainText(view: EditorView, text: string, html = ""): boolean {
@@ -107,6 +124,55 @@ describe("markdown paste", () => {
       );
       expect(handled).toBe(false);
       expect(view.state.doc.textContent).toBe("keep");
+    } finally {
+      cleanup();
+    }
+  });
+});
+
+describe("markdown copy", () => {
+  test("clipboardTextSerializer preserves block markdown syntax", () => {
+    const { view, cleanup } = mountView("# Title\n\n- one\n- two");
+    try {
+      selectAll(view);
+      const text = copyPlainText(view);
+      expect(text).toContain("# Title");
+      expect(text).toContain("- one");
+      expect(text).toContain("- two");
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("clipboardTextSerializer preserves inline emphasis delimiters", () => {
+    const { view, cleanup } = mountView("**bold** and *italic*");
+    try {
+      selectAll(view);
+      const text = copyPlainText(view);
+      expect(text).toContain("**bold**");
+      expect(text).toContain("*italic*");
+    } finally {
+      cleanup();
+    }
+  });
+
+  test("copied markdown pastes back with structure intact", () => {
+    const { view, cleanup } = mountView("");
+    try {
+      const source = "## Heading\n\nParagraph with **bold**.";
+      insertMarkdownFromText(view, source);
+      selectAll(view);
+      const copied = copyPlainText(view);
+
+      const { view: target, cleanup: targetCleanup } = mountView("");
+      try {
+        expect(pastePlainText(target, copied)).toBe(true);
+        expect(target.state.doc.child(0).type).toBe(schema.nodes.heading);
+        expect(target.state.doc.child(0).attrs.level).toBe(2);
+        expect(target.state.doc.child(1).textContent).toBe("Paragraph with **bold**.");
+      } finally {
+        targetCleanup();
+      }
     } finally {
       cleanup();
     }

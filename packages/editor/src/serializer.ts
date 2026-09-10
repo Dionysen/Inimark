@@ -1,4 +1,4 @@
-import type { Mark, Node as PMNode } from "prosemirror-model";
+import type { Mark, Node as PMNode, Slice } from "prosemirror-model";
 
 import {
   collectBlockHandlers,
@@ -400,6 +400,12 @@ export function serialize(doc: PMNode): string {
   const state = new SerializerState(mdConfig);
   state.renderDoc(stripTrailingEmptyParagraphs(doc));
   return state.out.replace(/\n+$/, "\n");
+}
+
+/** Serialize a document slice to markdown (clipboard copy). */
+export function serializeSlice(slice: Slice): string {
+  if (slice.content.size === 0) return "";
+  return serialize(schema.nodes.doc.create(null, slice.content));
 }
 
 /** Serialize a single top-level block node to markdown (no trailing newline). */

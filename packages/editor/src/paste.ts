@@ -3,6 +3,7 @@ import { Plugin } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import { parse } from "./parser.ts";
+import { serializeSlice } from "./serializer.ts";
 
 const PM_SLICE_RE = /data-pm-slice/i;
 
@@ -28,13 +29,17 @@ export function insertMarkdownFromText(view: EditorView, raw: string): boolean {
 }
 
 /**
- * Route external clipboard markdown through `parse()` so method-B delimiters,
- * block nodes, and inline marks render immediately instead of relying on PM's
- * default HTML-first paste (which drops delimiter text and skips block syntax).
+ * Route clipboard markdown through `parse()` on paste and `serializeSlice()` on
+ * copy so method-B delimiters, block nodes, and inline marks round-trip as
+ * source instead of PM's default rendered plain text / HTML-first paths.
  */
 export function markdownPastePlugin(): Plugin {
   return new Plugin({
     props: {
+      clipboardTextSerializer(slice) {
+        return serializeSlice(slice);
+      },
+
       handlePaste(view, event) {
         const cb = event.clipboardData;
         if (!cb) return false;
