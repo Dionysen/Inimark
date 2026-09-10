@@ -27,7 +27,7 @@ function isInteractiveEditorTarget(target: Element): boolean {
   if (target.closest(".typora-web-code-editor .cm-editor")) return true;
   if (target.closest(".cb-lang-input, .cb-lang-menu")) return true;
   if (target.closest(".typora-web-html-source")) return true;
-  if (target.closest(".table-toolbar, .table-resize-popup")) return true;
+  if (target.closest(".table-toolbar, .table-resize-popup, .table-insert-dialog, .table-rc-toolbar, .table-rc-popup, .inimark-editor-context-menu, .inimark-editor-context-submenu")) return true;
   if (target.closest(".emoji-completion")) return true;
   if (target.closest(".file-input")) return true;
   if (target.closest(".wiki-link-autocomplete")) return true;

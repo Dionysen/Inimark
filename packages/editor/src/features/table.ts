@@ -37,6 +37,199 @@ function alignDelim(align: string | null, width: number): string {
   return "-".repeat(w);
 }
 
+const TABLE_SHORTCUTS = {
+  insertRowBelow: ["Mod", "Enter"],
+  moveRowUp: ["Alt", "ArrowUp"],
+  moveRowDown: ["Alt", "ArrowDown"],
+  moveColumnLeft: ["Alt", "ArrowLeft"],
+  moveColumnRight: ["Alt", "ArrowRight"],
+  deleteRow: ["Mod", "Shift", "Backspace"],
+} as const;
+
+function isMacPlatform(): boolean {
+  if (typeof document !== "undefined") {
+    if (document.documentElement.classList.contains("platform-macos")) return true;
+    if (
+      document.documentElement.classList.contains("platform-windows") ||
+      document.documentElement.classList.contains("platform-linux")
+    ) {
+      return false;
+    }
+  }
+  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/i.test(navigator.platform);
+}
+
+function formatTableShortcutLabel(keys: readonly string[]): string {
+  const mac = isMacPlatform();
+  return keys
+    .map((key) => {
+      if (mac) {
+        switch (key) {
+          case "Mod":
+            return "⌘";
+          case "Alt":
+            return "⌥";
+          case "Shift":
+            return "⇧";
+          case "Enter":
+            return "↩";
+          case "Backspace":
+            return "⌫";
+          case "ArrowUp":
+            return "↑";
+          case "ArrowDown":
+            return "↓";
+          case "ArrowLeft":
+            return "←";
+          case "ArrowRight":
+            return "→";
+          default:
+            return key;
+        }
+      }
+      switch (key) {
+        case "Mod":
+          return "Ctrl";
+        case "ArrowUp":
+          return "↑";
+        case "ArrowDown":
+          return "↓";
+        case "ArrowLeft":
+          return "←";
+        case "ArrowRight":
+          return "→";
+        default:
+          return key;
+      }
+    })
+    .join(mac ? "" : "+");
+}
+
+function parseAlignFromDivider(delim: string): string | null {
+  const t = delim.trim();
+  if (t.startsWith(":") && t.endsWith(":")) return "center";
+  if (t.startsWith(":")) return "left";
+  if (t.endsWith(":")) return "right";
+  return null;
+}
+
+function tableNodeToMarkdown(node: PMNode): string {
+  const rows: string[][] = [];
+  const aligns: Array<string | null> = [];
+  node.forEach((row, _, rowIdx) => {
+    const cells: string[] = [];
+    row.forEach((cell, _o, cellIdx) => {
+      if (rowIdx === 0) aligns[cellIdx] = cell.attrs.align as string | null;
+      cells.push(renderCellInline(cell));
+    });
+    rows.push(cells);
+  });
+
+  const colCount = aligns.length;
+  const widths = new Array<number>(colCount).fill(3);
+  for (const r of rows) {
+    for (let i = 0; i < colCount; i++) {
+      widths[i] = Math.max(widths[i]!, (r[i] ?? "").length);
+    }
+  }
+
+  const formatRow = (cells: string[]): string => {
+    const padded = cells.map((c, i) => " " + c.padEnd(widths[i]!) + " ");
+    return "|" + padded.join("|") + "|";
+  };
+  const dividerRow = (): string => {
+    const dividers = aligns.map((a, i) => " " + alignDelim(a, widths[i]!) + " ");
+    return "|" + dividers.join("|") + "|";
+  };
+
+  const lines = [formatRow(rows[0] ?? []), dividerRow()];
+  for (let i = 1; i < rows.length; i++) lines.push(formatRow(rows[i]!));
+  return lines.join("\n");
+}
+
+function markdownToTableNode(md: string, schema: Schema): PMNode | null {
+  const lines = md
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0);
+  if (lines.length < 2) return null;
+
+  const parseRow = (line: string): string[] => {
+    if (!/^\|.+\|$/.test(line)) return [];
+    return line.split("|").slice(1, -1).map((cell) => cell.trim());
+  };
+
+  const headerCells = parseRow(lines[0]!);
+  const dividerCells = parseRow(lines[1]!);
+  if (headerCells.length < 1 || dividerCells.length !== headerCells.length) return null;
+
+  const aligns = dividerCells.map((cell) => parseAlignFromDivider(cell));
+  const rows: PMNode[] = [];
+  rows.push(
+    schema.nodes.table_row.create(
+      null,
+      headerCells.map((text, idx) =>
+        schema.nodes.table_cell.create(
+          { header: true, align: aligns[idx] ?? null },
+          text ? [schema.text(text)] : [],
+        ),
+      ),
+    ),
+  );
+
+  for (let i = 2; i < lines.length; i++) {
+    const bodyCells = parseRow(lines[i]!);
+    if (bodyCells.length !== headerCells.length) return null;
+    rows.push(
+      schema.nodes.table_row.create(
+        null,
+        bodyCells.map((text) =>
+          schema.nodes.table_cell.create(
+            { header: false, align: null },
+            text ? [schema.text(text)] : [],
+          ),
+        ),
+      ),
+    );
+  }
+
+  return schema.nodes.table.create(null, rows);
+}
+
+async function copyTableAt(view: EditorView, info: TableInfo): Promise<void> {
+  const text = tableNodeToMarkdown(info.node);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+  view.focus?.();
+}
+
+function formatTableAt(view: EditorView, info: TableInfo): void {
+  const schema = view.state.schema;
+  const md = tableNodeToMarkdown(info.node);
+  const newTable = markdownToTableNode(md, schema);
+  if (!newTable) return;
+  const tr = view.state.tr.replaceWith(info.pos, info.pos + info.node.nodeSize, newTable);
+  tr.setSelection(
+    TextSelection.create(
+      tr.doc,
+      cellCursorPos(info.pos, newTable, info.rowIdx, info.cellIdx),
+    ),
+  );
+  view.dispatch(tr);
+  view.focus?.();
+}
+
 // Precompute the inline serialization of a cell — needed twice (column
 // width measurement, then actual emission). We render via the same
 // inline serializer the rest of the doc uses, but into a sandbox so
@@ -46,9 +239,8 @@ function alignDelim(align: string | null, width: number): string {
 // Floating toolbar shown when the cursor is inside a table. Carries:
 //   * resize trigger (田字格 icon) → opens a popup with a hover-grid
 //     and numeric R × C inputs to resize the table.
-//   * 3 align buttons → set `align` on every cell in the cursor's
-//     current column.
-//   * trash → delete the whole table (replaced by an empty paragraph).
+//   * 3 align buttons → toggle `align` on every cell in the cursor's
+//     current column (click again to clear).
 //
 // The toolbar lives at `document.body` (position: fixed, viewport
 // coords). Position is recomputed every PM transaction from the table
@@ -182,11 +374,14 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
   popup: HTMLElement;
 } {
   const root = document.createElement("div");
-  root.className = "table-toolbar inimark-glass";
+  root.className = "inimark-editor-context-menu inimark-glass table-toolbar";
+
+  const iconRow = document.createElement("div");
+  iconRow.className = "inimark-editor-context-icon-row";
 
   const grid = document.createElement("button");
   grid.type = "button";
-  grid.className = "table-tb-btn";
+  grid.className = "inimark-editor-context-icon-btn";
   grid.title = "Resize";
   grid.appendChild(
     svgIcon(
@@ -198,19 +393,23 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
   );
 
   const sep = document.createElement("span");
-  sep.className = "table-tb-sep";
+  sep.className = "table-toolbar__sep";
+  sep.setAttribute("aria-hidden", "true");
 
   const mkAlign = (a: "left" | "center" | "right", lines: string) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "table-tb-btn";
+    b.className = "inimark-editor-context-icon-btn";
     b.title = `Align ${a}`;
     b.dataset.align = a;
     b.appendChild(svgIcon(lines));
     b.addEventListener("mousedown", (e) => e.preventDefault());
     b.addEventListener("click", () => {
       const info = getInfo();
-      if (info) applyAlignToColumn(view, info, a);
+      if (!info) return;
+      const headerCell = info.node.child(0).child(info.cellIdx);
+      const cur = headerCell.attrs.align as string | null;
+      applyAlignToColumn(view, info, cur === a ? null : a);
     });
     return b;
   };
@@ -233,117 +432,31 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
      <line x1='6' y1='18' x2='20' y2='18' stroke='currentColor' stroke-width='2'/>`,
   );
 
-  const spacer = document.createElement("span");
-  spacer.className = "table-tb-spacer";
+  iconRow.append(grid, sep, alignL, alignC, alignR);
+  root.append(iconRow);
 
-  const trash = document.createElement("button");
-  trash.type = "button";
-  trash.className = "table-tb-btn table-tb-trash";
-  trash.title = "Delete table";
-  trash.appendChild(
-    svgIcon(
-      `<path d='M5 7h14M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12'
-        stroke='currentColor' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/>`,
-    ),
-  );
-  trash.addEventListener("mousedown", (e) => e.preventDefault());
-  trash.addEventListener("click", () => {
-    const info = getInfo();
-    if (info) deleteTable(view, info);
-  });
-
-  root.append(grid, sep, alignL, alignC, alignR, spacer, trash);
-
-  // Resize popup — built once, toggled on grid click. Hover the grid
-  // to highlight up to (R, C); the numeric inputs reflect the hover
-  // and can be edited directly. Click the grid (or press Enter on the
-  // inputs) to commit.
-  //
-  // Snapshot the current TableInfo when the popup opens: while the
-  // popup is up, the user may interact with the popup (focusing
-  // inputs, clicking grid cells) which can cause `getInfo()` to flip
-  // to null mid-action. The snapshot keeps the target table stable.
+  // Resize popup — snapshot TableInfo while open so focus moves to the
+  // popup inputs don't invalidate the target table mid-action.
   let popupSnapshot: TableInfo | null = null;
-  const popup = document.createElement("div");
-  popup.className = "table-resize-popup inimark-glass";
-  popup.style.display = "none";
-  // Block focus loss when clicking the popup background — preserves
-  // editor selection so the snapshot stays valid. Inputs are exempt;
-  // they need to receive focus to be typed in.
-  popup.addEventListener("mousedown", (e) => {
-    const t = e.target as HTMLElement;
-    if (t.tagName !== "INPUT") e.preventDefault();
+  const resizePopup = buildSizeGridPopup({
+    className: "table-resize-popup",
+    initialR: 3,
+    initialC: 3,
+    onCommit: (rows, cols) => {
+      const target = popupSnapshot ?? getInfo();
+      if (target) resizeTable(view, target, rows, cols);
+      popupSnapshot = null;
+      resizePopup.close();
+    },
+    onDismiss: () => {
+      popupSnapshot = null;
+    },
   });
-
-  const gridEl = document.createElement("div");
-  gridEl.className = "table-resize-grid";
-  const MAX_R = 10;
-  const MAX_C = 10;
-  const cells: HTMLElement[][] = [];
-  for (let r = 0; r < MAX_R; r++) {
-    const row: HTMLElement[] = [];
-    for (let c = 0; c < MAX_C; c++) {
-      const cell = document.createElement("div");
-      cell.className = "table-resize-cell";
-      cell.dataset.r = String(r + 1);
-      cell.dataset.c = String(c + 1);
-      gridEl.appendChild(cell);
-      row.push(cell);
-    }
-    cells.push(row);
-  }
-
-  const inputs = document.createElement("div");
-  inputs.className = "table-resize-inputs";
-  const rIn = document.createElement("input");
-  rIn.type = "number";
-  rIn.min = "1";
-  rIn.max = "20";
-  const xLabel = document.createElement("span");
-  xLabel.textContent = "×";
-  const cIn = document.createElement("input");
-  cIn.type = "number";
-  cIn.min = "1";
-  cIn.max = "20";
-  inputs.append(rIn, xLabel, cIn);
-
-  const setHighlight = (R: number, C: number) => {
-    for (let r = 0; r < MAX_R; r++)
-      for (let c = 0; c < MAX_C; c++) {
-        cells[r]![c]!.classList.toggle("hover", r < R && c < C);
-      }
-    rIn.value = String(R);
-    cIn.value = String(C);
-  };
-  gridEl.addEventListener("mousemove", (e) => {
-    const t = (e.target as HTMLElement).closest(".table-resize-cell") as HTMLElement | null;
-    if (!t) return;
-    setHighlight(Number(t.dataset.r), Number(t.dataset.c));
-  });
-
-  popup.append(gridEl, inputs);
-
-  const isPopupOpen = () => popup.style.display === "block";
-
-  const dismissOnPointer = (event: Event) => {
-    if (!isPopupOpen()) return;
-    const target = event.target as Node;
-    if (popup.contains(target) || grid.contains(target)) return;
-    closePopup();
-  };
-
-  const dismissOnFocusIn = (event: FocusEvent) => {
-    if (!isPopupOpen()) return;
-    const target = event.target as Node;
-    if (popup.contains(target) || grid.contains(target)) return;
-    closePopup();
-  };
+  const isPopupOpen = () => resizePopup.root.style.display === "block";
 
   const closePopup = () => {
-    popup.style.display = "none";
     popupSnapshot = null;
-    document.removeEventListener("mousedown", dismissOnPointer, true);
-    document.removeEventListener("focusin", dismissOnFocusIn, true);
+    resizePopup.close();
   };
 
   const openPopup = (liveInfo: TableInfo) => {
@@ -354,43 +467,16 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
       R++;
       C = Math.max(C, row.childCount);
     });
-    setHighlight(Math.min(R, MAX_R), Math.min(C, MAX_C));
     const r = grid.getBoundingClientRect();
-    popup.style.top = `${r.bottom + 4}px`;
-    popup.style.left = `${r.left}px`;
-    popup.style.display = "block";
-    document.addEventListener("mousedown", dismissOnPointer, true);
-    document.addEventListener("focusin", dismissOnFocusIn, true);
+    resizePopup.openAt({
+      top: r.top,
+      left: r.left,
+      bottom: r.bottom,
+      right: r.right,
+      rows: R,
+      cols: C,
+    });
   };
-
-  gridEl.addEventListener("click", (e) => {
-    const t = (e.target as HTMLElement).closest(".table-resize-cell") as HTMLElement | null;
-    if (!t) return;
-    const target = popupSnapshot ?? getInfo();
-    if (!target) return;
-    resizeTable(view, target, Number(t.dataset.r), Number(t.dataset.c));
-    closePopup();
-  });
-  const commitInputs = () => {
-    const target = popupSnapshot ?? getInfo();
-    if (!target) return;
-    const R = Math.max(1, Math.min(20, Number(rIn.value) || 1));
-    const C = Math.max(1, Math.min(20, Number(cIn.value) || 1));
-    resizeTable(view, target, R, C);
-    closePopup();
-  };
-  rIn.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      commitInputs();
-    }
-  });
-  cIn.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      commitInputs();
-    }
-  });
 
   grid.addEventListener("mousedown", (e) => e.preventDefault());
   grid.addEventListener("click", () => {
@@ -403,7 +489,240 @@ function buildToolbar(view: EditorView, getInfo: () => TableInfo | null): {
     openPopup(liveInfo);
   });
 
-  return { root, popup, closePopup };
+  return { root, popup: resizePopup.root, closePopup };
+}
+
+function buildRowColMenu(view: EditorView, getInfo: () => TableInfo | null): {
+  root: HTMLElement;
+  popup: HTMLElement;
+  closePopup: () => void;
+  positionPopup: () => void;
+} {
+  const root = document.createElement("div");
+  root.className = "inimark-editor-context-menu inimark-glass table-rc-toolbar";
+
+  const iconRow = document.createElement("div");
+  iconRow.className = "inimark-editor-context-icon-row";
+
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "inimark-editor-context-icon-btn";
+  trigger.title = "Rows & columns";
+  trigger.appendChild(
+    svgIcon(
+      `<rect x='5' y='5' width='14' height='4' rx='1' fill='currentColor'/>
+       <rect x='5' y='11' width='14' height='4' rx='1' fill='currentColor'/>
+       <rect x='5' y='17' width='14' height='2' rx='1' fill='currentColor'/>`,
+    ),
+  );
+
+  const popup = document.createElement("div");
+  popup.className = "inimark-editor-context-submenu inimark-glass table-rc-popup";
+  popup.style.display = "none";
+  popup.addEventListener("mousedown", (e) => e.preventDefault());
+
+  const mkDivider = () => {
+    const divider = document.createElement("div");
+    divider.className = "inimark-editor-context-divider";
+    return divider;
+  };
+
+  const mkItem = (
+    label: string,
+    action: () => void,
+    options: { danger?: boolean; shortcut?: readonly string[] } = {},
+  ) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "inimark-editor-context-item table-rc-item";
+    if (options.danger) btn.classList.add("is-danger");
+    const labelEl = document.createElement("span");
+    labelEl.className = "inimark-editor-context-item-label";
+    labelEl.textContent = label;
+    btn.append(labelEl);
+    if (options.shortcut?.length) {
+      const shortcutEl = document.createElement("span");
+      shortcutEl.className = "inimark-editor-context-item-shortcut";
+      shortcutEl.textContent = formatTableShortcutLabel(options.shortcut);
+      btn.append(shortcutEl);
+    }
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", () => {
+      action();
+      closePopup();
+    });
+    return btn;
+  };
+
+  popup.append(
+    mkItem("上方插入行", () => {
+      const info = getInfo();
+      if (info) insertTableRowAt(view, info, "above");
+    }),
+    mkItem("下方插入行", () => {
+      const info = getInfo();
+      if (info) insertTableRowAt(view, info, "below");
+    }, { shortcut: TABLE_SHORTCUTS.insertRowBelow }),
+    mkItem("左侧插入列", () => {
+      const info = getInfo();
+      if (info) insertTableColumnAt(view, info, "left");
+    }),
+    mkItem("右侧插入列", () => {
+      const info = getInfo();
+      if (info) insertTableColumnAt(view, info, "right");
+    }),
+    mkDivider(),
+    mkItem("上移该行", () => {
+      const info = getInfo();
+      if (info) runTableCommand(view, moveTableRow(-1));
+    }, { shortcut: TABLE_SHORTCUTS.moveRowUp }),
+    mkItem("下移该行", () => {
+      const info = getInfo();
+      if (info) runTableCommand(view, moveTableRow(1));
+    }, { shortcut: TABLE_SHORTCUTS.moveRowDown }),
+    mkItem("左移该列", () => {
+      const info = getInfo();
+      if (info) runTableCommand(view, moveTableColumn(-1));
+    }, { shortcut: TABLE_SHORTCUTS.moveColumnLeft }),
+    mkItem("右移该列", () => {
+      const info = getInfo();
+      if (info) runTableCommand(view, moveTableColumn(1));
+    }, { shortcut: TABLE_SHORTCUTS.moveColumnRight }),
+    mkDivider(),
+    mkItem("删除行", () => {
+      const info = getInfo();
+      if (info) deleteTableRowAt(view, info);
+    }, { danger: true, shortcut: TABLE_SHORTCUTS.deleteRow }),
+    mkItem("删除列", () => {
+      const info = getInfo();
+      if (info) deleteTableColumnAt(view, info);
+    }, { danger: true }),
+    mkDivider(),
+    mkItem("复制表格", () => {
+      const info = getInfo();
+      if (info) copyTableAt(view, info);
+    }),
+    mkItem("格式化表格源码", () => {
+      const info = getInfo();
+      if (info) formatTableAt(view, info);
+    }),
+    mkDivider(),
+    mkItem("删除表格", () => {
+      const info = getInfo();
+      if (info) deleteTable(view, info);
+    }, { danger: true }),
+  );
+
+  iconRow.append(trigger);
+  root.append(iconRow);
+
+  const isOpen = () => popup.style.display === "block";
+
+  const dismissOnPointer = (event: Event) => {
+    if (!isOpen()) return;
+    const target = event.target as Node;
+    if (popup.contains(target) || root.contains(target)) return;
+    closePopup();
+  };
+
+  const closePopup = () => {
+    popup.style.display = "none";
+    document.removeEventListener("mousedown", dismissOnPointer, true);
+  };
+
+  const positionPopup = () => {
+    if (!isOpen()) return;
+    positionBelowAnchor(popup, root.getBoundingClientRect(), { alignRight: true });
+  };
+
+  trigger.addEventListener("mousedown", (e) => e.preventDefault());
+  trigger.addEventListener("click", () => {
+    if (isOpen()) {
+      closePopup();
+      return;
+    }
+    popup.style.display = "block";
+    positionPopup();
+    document.addEventListener("mousedown", dismissOnPointer, true);
+  });
+
+  return { root, popup, closePopup, positionPopup };
+}
+
+const VIEWPORT_GAP = 4;
+const TOOLBAR_GAP = 8;
+
+function clampInViewport(
+  width: number,
+  height: number,
+  left: number,
+  top: number,
+): { left: number; top: number } {
+  let x = left;
+  let y = top;
+  if (x + width > window.innerWidth - VIEWPORT_GAP) {
+    x = window.innerWidth - width - VIEWPORT_GAP;
+  }
+  if (y + height > window.innerHeight - VIEWPORT_GAP) {
+    y = window.innerHeight - height - VIEWPORT_GAP;
+  }
+  if (x < VIEWPORT_GAP) x = VIEWPORT_GAP;
+  if (y < VIEWPORT_GAP) y = VIEWPORT_GAP;
+  return { left: x, top: y };
+}
+
+function applyViewportPosition(
+  el: HTMLElement,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+): void {
+  const clamped = clampInViewport(width, height, left, top);
+  el.style.transform = "none";
+  el.style.left = `${clamped.left}px`;
+  el.style.top = `${clamped.top}px`;
+}
+
+/** Prefer opening above `anchor`; flip below when there isn't enough room. */
+function positionAboveAnchor(
+  el: HTMLElement,
+  anchor: DOMRect,
+  options: { alignRight?: boolean } = {},
+): void {
+  el.style.display = "flex";
+  const { width, height } = el.getBoundingClientRect();
+  let left = options.alignRight ? anchor.right - width : anchor.left;
+  let top = anchor.top - height - TOOLBAR_GAP;
+  if (top < VIEWPORT_GAP) {
+    top = anchor.bottom + TOOLBAR_GAP;
+  }
+  applyViewportPosition(el, left, top, width, height);
+}
+
+/** Prefer opening below `anchor`; flip above when there isn't enough room. */
+function positionBelowAnchor(
+  el: HTMLElement,
+  anchor: DOMRect,
+  options: { alignRight?: boolean } = {},
+): void {
+  el.style.display = "block";
+  const { width, height } = el.getBoundingClientRect();
+  let left = options.alignRight ? anchor.right - width : anchor.left;
+  let top = anchor.bottom + TOOLBAR_GAP;
+  if (top + height > window.innerHeight - VIEWPORT_GAP) {
+    const above = anchor.top - height - TOOLBAR_GAP;
+    if (above >= VIEWPORT_GAP) top = above;
+  }
+  applyViewportPosition(el, left, top, width, height);
+}
+
+function positionAboveTable(el: HTMLElement, tableRect: DOMRect): void {
+  positionAboveAnchor(el, tableRect);
+}
+
+function positionTableCornerMenu(el: HTMLElement, tableRect: DOMRect): void {
+  positionAboveAnchor(el, tableRect, { alignRight: true });
 }
 
 function tableToolbarPlugin(): Plugin {
@@ -413,24 +732,40 @@ function tableToolbarPlugin(): Plugin {
       // Lazy: toolbar DOM is only built and appended when this view is
       // both focused and on a table. Unfocused views (every case-card
       // in the harness with a table seed) never create toolbar DOM.
-      let toolbar: { root: HTMLElement; popup: HTMLElement; closePopup: () => void } | null =
-        null;
+      let toolbar: {
+        root: HTMLElement;
+        popup: HTMLElement;
+        closePopup: () => void;
+        rowCol: {
+          root: HTMLElement;
+          popup: HTMLElement;
+          closePopup: () => void;
+          positionPopup: () => void;
+        };
+      } | null = null;
 
       const ensureMounted = () => {
         if (!toolbar) {
-          toolbar = buildToolbar(view, () => info);
+          const main = buildToolbar(view, () => info);
+          const rowCol = buildRowColMenu(view, () => info);
+          toolbar = { ...main, rowCol };
         }
         if (!toolbar.root.isConnected) {
           document.body.appendChild(toolbar.root);
           document.body.appendChild(toolbar.popup);
+          document.body.appendChild(toolbar.rowCol.root);
+          document.body.appendChild(toolbar.rowCol.popup);
         }
         return toolbar;
       };
       const unmount = () => {
         toolbar?.closePopup();
+        toolbar?.rowCol.closePopup();
         if (toolbar?.root.isConnected) {
           toolbar.root.remove();
           toolbar.popup.remove();
+          toolbar.rowCol.root.remove();
+          toolbar.rowCol.popup.remove();
         }
       };
 
@@ -447,14 +782,13 @@ function tableToolbarPlugin(): Plugin {
         }
         const tb = ensureMounted();
         const rect = dom.getBoundingClientRect();
-        tb.root.style.display = "flex";
-        tb.root.style.top = `${rect.top - 32}px`;
-        tb.root.style.left = `${rect.left}px`;
+        positionAboveTable(tb.root, rect);
+        positionTableCornerMenu(tb.rowCol.root, rect);
+        tb.rowCol.positionPopup();
         // Reflect current column's align in the button states.
-        const cell = info.node.child(info.rowIdx).child(info.cellIdx);
-        const cur = cell.attrs.align as string | null;
+        const cur = info.node.child(0).child(info.cellIdx).attrs.align as string | null;
         tb.root.querySelectorAll<HTMLElement>("[data-align]").forEach((b) => {
-          b.classList.toggle("active", b.dataset.align === cur);
+          b.classList.toggle("is-active", b.dataset.align === cur);
         });
       };
 
@@ -552,6 +886,397 @@ function cellCursorPos(
   pos += 1;
   for (let c = 0; c < cellIdx; c++) pos += row.child(c).nodeSize;
   return pos + 1;
+}
+
+const SIZE_GRID_MAX = 10;
+
+function insertTableRowAt(
+  view: EditorView,
+  info: TableInfo,
+  where: "above" | "below",
+): void {
+  const schema = view.state.schema;
+  const { rowIdx, cellIdx, pos, node: tableNode } = info;
+  const targetRowIdx = where === "above" ? rowIdx : rowIdx + 1;
+  const colCount = tableNode.child(rowIdx).childCount;
+  const headerRow = tableNode.child(0);
+  const newCells: PMNode[] = [];
+  for (let c = 0; c < colCount; c++) {
+    const align = (headerRow.child(c)?.attrs.align as string | null) ?? null;
+    newCells.push(
+      schema.nodes.table_cell.create(
+        { header: targetRowIdx === 0, align },
+        [],
+      ),
+    );
+  }
+  const newRow = schema.nodes.table_row.create(null, newCells);
+  let insertAt = pos + 1;
+  for (let r = 0; r < targetRowIdx; r++) insertAt += tableNode.child(r).nodeSize;
+  const tr = view.state.tr.insert(insertAt, newRow);
+  let cursorPos = insertAt + 1;
+  for (let c = 0; c < cellIdx; c++) cursorPos += newRow.child(c).nodeSize;
+  cursorPos += 1;
+  tr.setSelection(TextSelection.create(tr.doc, cursorPos));
+  view.dispatch(tr);
+  view.focus?.();
+}
+
+function deleteTableRowAt(view: EditorView, info: TableInfo): void {
+  const { rowIdx, cellIdx, pos, node: tableNode } = info;
+  if (tableNode.childCount <= 1) return;
+  let rowStart = pos + 1;
+  for (let r = 0; r < rowIdx; r++) rowStart += tableNode.child(r).nodeSize;
+  const row = tableNode.child(rowIdx);
+  const tr = view.state.tr.delete(rowStart, rowStart + row.nodeSize);
+  const newTable = tr.doc.nodeAt(pos)!;
+  const targetRowIdx = Math.min(rowIdx, newTable.childCount - 1);
+  const targetRow = newTable.child(targetRowIdx);
+  const targetCol = Math.min(cellIdx, targetRow.childCount - 1);
+  tr.setSelection(
+    TextSelection.create(tr.doc, cellCursorPos(pos, newTable, targetRowIdx, targetCol)),
+  );
+  view.dispatch(tr);
+  view.focus?.();
+}
+
+function insertTableColumnAt(
+  view: EditorView,
+  info: TableInfo,
+  where: "left" | "right",
+): void {
+  const schema = view.state.schema;
+  const { rowIdx, cellIdx, pos, node: tableNode } = info;
+  const targetColIdx = where === "left" ? cellIdx : cellIdx + 1;
+  const headerRow = tableNode.child(0);
+  const newRows: PMNode[] = [];
+  tableNode.forEach((row, r) => {
+    const cells: PMNode[] = [];
+    row.forEach((cell) => cells.push(cell));
+    const align =
+      r === 0
+        ? null
+        : ((headerRow.child(Math.min(cellIdx, headerRow.childCount - 1))?.attrs
+            .align as string | null) ?? null);
+    cells.splice(
+      targetColIdx,
+      0,
+      schema.nodes.table_cell.create({ header: r === 0, align }, []),
+    );
+    newRows.push(schema.nodes.table_row.create(null, cells));
+  });
+  const newTable = schema.nodes.table.create(null, newRows);
+  const tr = view.state.tr.replaceWith(pos, pos + tableNode.nodeSize, newTable);
+  tr.setSelection(
+    TextSelection.create(tr.doc, cellCursorPos(pos, newTable, rowIdx, targetColIdx)),
+  );
+  view.dispatch(tr);
+  view.focus?.();
+}
+
+function deleteTableColumnAt(view: EditorView, info: TableInfo): void {
+  const { rowIdx, cellIdx, pos, node: tableNode } = info;
+  const colCount = tableNode.child(0).childCount;
+  if (colCount <= 1) return;
+  const schema = view.state.schema;
+  const newRows: PMNode[] = [];
+  tableNode.forEach((row) => {
+    const cells: PMNode[] = [];
+    row.forEach((cell, idx) => {
+      if (idx !== cellIdx) cells.push(cell);
+    });
+    newRows.push(schema.nodes.table_row.create(null, cells));
+  });
+  const newTable = schema.nodes.table.create(null, newRows);
+  const tr = view.state.tr.replaceWith(pos, pos + tableNode.nodeSize, newTable);
+  const targetCol = Math.min(cellIdx, newTable.child(0).childCount - 1);
+  tr.setSelection(
+    TextSelection.create(tr.doc, cellCursorPos(pos, newTable, rowIdx, targetCol)),
+  );
+  view.dispatch(tr);
+  view.focus?.();
+}
+
+function runTableCommand(view: EditorView, command: Command): void {
+  command(view.state, view.dispatch.bind(view), view);
+  view.focus?.();
+}
+
+type SizeGridPopup = {
+  root: HTMLElement;
+  openAt: (anchor: {
+    top: number;
+    left: number;
+    bottom?: number;
+    right?: number;
+    rows?: number;
+    cols?: number;
+  }) => void;
+  close: () => void;
+  destroy: () => void;
+};
+
+function buildSizeGridPopup(options: {
+  className: string;
+  initialR: number;
+  initialC: number;
+  onCommit: (rows: number, cols: number) => void;
+  onDismiss: () => void;
+}): SizeGridPopup {
+  const root = document.createElement("div");
+  root.className = `inimark-editor-context-menu inimark-glass ${options.className}`;
+
+  const gridEl = document.createElement("div");
+  gridEl.className = "table-resize-grid";
+  const cells: HTMLElement[][] = [];
+  for (let r = 0; r < SIZE_GRID_MAX; r++) {
+    const row: HTMLElement[] = [];
+    for (let c = 0; c < SIZE_GRID_MAX; c++) {
+      const cell = document.createElement("div");
+      cell.className = "table-resize-cell";
+      cell.dataset.r = String(r + 1);
+      cell.dataset.c = String(c + 1);
+      gridEl.appendChild(cell);
+      row.push(cell);
+    }
+    cells.push(row);
+  }
+
+  const inputs = document.createElement("div");
+  inputs.className = "table-resize-inputs";
+  const rIn = document.createElement("input");
+  rIn.type = "number";
+  rIn.min = "1";
+  rIn.max = "20";
+  const xLabel = document.createElement("span");
+  xLabel.textContent = "×";
+  const cIn = document.createElement("input");
+  cIn.type = "number";
+  cIn.min = "1";
+  cIn.max = "20";
+  inputs.append(rIn, xLabel, cIn);
+  root.append(gridEl, inputs);
+
+  const setHighlight = (R: number, C: number) => {
+    for (let r = 0; r < SIZE_GRID_MAX; r++) {
+      for (let c = 0; c < SIZE_GRID_MAX; c++) {
+        cells[r]![c]!.classList.toggle("hover", r < R && c < C);
+      }
+    }
+    rIn.value = String(R);
+    cIn.value = String(C);
+  };
+
+  gridEl.addEventListener("mousemove", (e) => {
+    const t = (e.target as HTMLElement).closest(".table-resize-cell") as HTMLElement | null;
+    if (!t) return;
+    setHighlight(Number(t.dataset.r), Number(t.dataset.c));
+  });
+
+  const commit = (rows: number, cols: number) => {
+    const R = Math.max(1, Math.min(20, rows));
+    const C = Math.max(1, Math.min(20, cols));
+    options.onCommit(R, C);
+  };
+
+  gridEl.addEventListener("click", (e) => {
+    const t = (e.target as HTMLElement).closest(".table-resize-cell") as HTMLElement | null;
+    if (!t) return;
+    commit(Number(t.dataset.r), Number(t.dataset.c));
+  });
+
+  const commitInputs = () => {
+    commit(Number(rIn.value) || 1, Number(cIn.value) || 1);
+  };
+  for (const input of [rIn, cIn]) {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitInputs();
+      }
+    });
+  }
+
+  root.addEventListener("mousedown", (e) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName !== "INPUT") e.preventDefault();
+  });
+
+  let dismissOnPointer: ((event: Event) => void) | null = null;
+  let dismissOnFocusIn: ((event: FocusEvent) => void) | null = null;
+
+  const close = () => {
+    root.style.display = "none";
+    if (dismissOnPointer) {
+      document.removeEventListener("mousedown", dismissOnPointer, true);
+      dismissOnPointer = null;
+    }
+    if (dismissOnFocusIn) {
+      document.removeEventListener("focusin", dismissOnFocusIn, true);
+      dismissOnFocusIn = null;
+    }
+  };
+
+  const openAt = (anchor: {
+    top: number;
+    left: number;
+    bottom?: number;
+    right?: number;
+    rows?: number;
+    cols?: number;
+  }) => {
+    close();
+    setHighlight(
+      Math.min(anchor.rows ?? options.initialR, SIZE_GRID_MAX),
+      Math.min(anchor.cols ?? options.initialC, SIZE_GRID_MAX),
+    );
+    root.style.display = "block";
+    const anchorRect = new DOMRect(
+      anchor.left,
+      anchor.top,
+      Math.max(1, (anchor.right ?? anchor.left + 1) - anchor.left),
+      Math.max(1, (anchor.bottom ?? anchor.top) - anchor.top),
+    );
+    // Measure after layout so the numeric inputs row is included in height.
+    void root.offsetHeight;
+    positionBelowAnchor(root, anchorRect);
+    dismissOnPointer = (event: Event) => {
+      const target = event.target as Node;
+      if (root.contains(target)) return;
+      close();
+      options.onDismiss();
+    };
+    dismissOnFocusIn = (event: FocusEvent) => {
+      const target = event.target as Node;
+      if (root.contains(target)) return;
+      close();
+      options.onDismiss();
+    };
+    document.addEventListener("mousedown", dismissOnPointer, true);
+    document.addEventListener("focusin", dismissOnFocusIn, true);
+  };
+
+  const destroy = () => {
+    close();
+    root.remove();
+  };
+
+  return { root, openAt, close, destroy };
+}
+
+const DEFAULT_INSERT_ROWS = 4;
+const DEFAULT_INSERT_COLS = 3;
+
+type TableInsertDialog = {
+  overlay: HTMLElement;
+  onKeyDown: (event: KeyboardEvent) => void;
+};
+
+let activeInsertDialog: TableInsertDialog | null = null;
+
+function dismissTableInsertDialog(): void {
+  if (!activeInsertDialog) return;
+  document.removeEventListener("keydown", activeInsertDialog.onKeyDown, true);
+  activeInsertDialog.overlay.remove();
+  activeInsertDialog = null;
+}
+
+function clampTableSize(value: number, fallback: number): number {
+  return Math.max(1, Math.min(20, Number.isFinite(value) ? value : fallback));
+}
+
+/** Open a modal to enter row/column counts before inserting a new table. */
+export function showTableInsertPicker(view: EditorView): void {
+  dismissTableInsertDialog();
+
+  const overlay = document.createElement("div");
+  overlay.className = "table-insert-dialog";
+
+  const panel = document.createElement("div");
+  panel.className = "table-insert-dialog__panel inimark-glass";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-modal", "true");
+
+  const title = document.createElement("h2");
+  title.className = "table-insert-dialog__title";
+  title.textContent = "插入表格";
+
+  const form = document.createElement("div");
+  form.className = "table-insert-dialog__form";
+
+  const mkField = (label: string, value: number) => {
+    const field = document.createElement("label");
+    field.className = "table-insert-dialog__field";
+    const name = document.createElement("span");
+    name.className = "table-insert-dialog__label";
+    name.textContent = label;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "1";
+    input.max = "20";
+    input.value = String(value);
+    input.className = "table-insert-dialog__input";
+    field.append(name, input);
+    return { field, input };
+  };
+
+  const rowsField = mkField("行", DEFAULT_INSERT_ROWS);
+  const colsField = mkField("列", DEFAULT_INSERT_COLS);
+  form.append(rowsField.field, colsField.field);
+
+  const actions = document.createElement("div");
+  actions.className = "table-insert-dialog__actions";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "table-insert-dialog__btn";
+  cancelBtn.textContent = "取消";
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.type = "button";
+  confirmBtn.className = "table-insert-dialog__btn table-insert-dialog__btn--primary";
+  confirmBtn.textContent = "确定";
+
+  actions.append(cancelBtn, confirmBtn);
+  panel.append(title, form, actions);
+  overlay.append(panel);
+
+  const commit = () => {
+    const rows = clampTableSize(Number(rowsField.input.value), DEFAULT_INSERT_ROWS);
+    const cols = clampTableSize(Number(colsField.input.value), DEFAULT_INSERT_COLS);
+    dismissTableInsertDialog();
+    insertTableAtSelection(view.state.schema, rows, cols)(
+      view.state,
+      view.dispatch.bind(view),
+      view,
+    );
+    view.focus();
+  };
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      dismissTableInsertDialog();
+      return;
+    }
+    if (event.key === "Enter" && event.target !== cancelBtn) {
+      event.preventDefault();
+      commit();
+    }
+  };
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) dismissTableInsertDialog();
+  });
+  panel.addEventListener("click", (event) => event.stopPropagation());
+  cancelBtn.addEventListener("click", () => dismissTableInsertDialog());
+  confirmBtn.addEventListener("click", () => commit());
+  document.addEventListener("keydown", onKeyDown, true);
+
+  document.body.append(overlay);
+  activeInsertDialog = { overlay, onKeyDown };
+  rowsField.input.focus();
+  rowsField.input.select();
 }
 
 function insertTableAtSelection(schema: Schema, rows = 3, cols = 3): Command {
@@ -683,7 +1408,17 @@ export const table: FeatureSpec = {
   plugins: () => [tableToolbarPlugin()],
 
   keymap: (schema: Schema) => ({
-    "Alt-Mod-t": insertTableAtSelection(schema),
+    "Alt-Mod-t": (_state, _dispatch, view) => {
+      if (view) {
+        showTableInsertPicker(view);
+        return true;
+      }
+      return false;
+    },
+    "Alt-ArrowUp": moveTableRow(-1),
+    "Alt-ArrowDown": moveTableRow(1),
+    "Alt-ArrowLeft": moveTableColumn(-1),
+    "Alt-ArrowRight": moveTableColumn(1),
     "Mod-Ctrl-ArrowUp": moveTableRow(-1),
     "Mod-Ctrl-ArrowDown": moveTableRow(1),
     "Mod-Ctrl-ArrowLeft": moveTableColumn(-1),
@@ -703,84 +1438,20 @@ export const table: FeatureSpec = {
     // Cmd/Ctrl-Enter inside a cell: insert an empty row below the
     // current one. New cells inherit the column's `align` from the
     // header row.
-    "Mod-Enter": (state, dispatch) => {
-      const $from = state.selection.$from;
-      let cellDepth = -1;
-      for (let d = $from.depth; d >= 0; d--) {
-        if ($from.node(d).type.name === "table_cell") {
-          cellDepth = d;
-          break;
-        }
-      }
-      if (cellDepth === -1) return false;
-      const tableDepth = cellDepth - 2;
-      const tableNode = $from.node(tableDepth);
-      const rowIdx = $from.index(tableDepth);
-      const cellIdx = $from.index(cellDepth - 1);
-      const colCount = tableNode.child(rowIdx).childCount;
-      if (dispatch) {
-        const headerRow = tableNode.child(0);
-        const newCells: PMNode[] = [];
-        for (let c = 0; c < colCount; c++) {
-          const align = (headerRow.child(c)?.attrs.align as string | null) ?? null;
-          newCells.push(
-            schema.nodes.table_cell.create({ header: false, align }, []),
-          );
-        }
-        const newRow = schema.nodes.table_row.create(null, newCells);
-        const tableStart = $from.before(tableDepth);
-        let insertAt = tableStart + 1;
-        for (let r = 0; r <= rowIdx; r++) insertAt += tableNode.child(r).nodeSize;
-        const tr = state.tr.insert(insertAt, newRow);
-        // Cursor inside the new row at the same column index.
-        let cursorPos = insertAt + 1; // inside row
-        for (let c = 0; c < cellIdx; c++) cursorPos += newRow.child(c).nodeSize;
-        cursorPos += 1; // inside cell
-        tr.setSelection(TextSelection.create(tr.doc, cursorPos));
-        dispatch(tr);
-      }
+    "Mod-Enter": (state, _dispatch, view) => {
+      const info = findTableAtSelection(state);
+      if (!info || !view) return false;
+      insertTableRowAt(view, info, "below");
       return true;
     },
 
     // Cmd/Ctrl-Shift-Backspace inside a cell: delete the current row.
     // No-op (but consumed) when the table has a single row left.
-    "Mod-Shift-Backspace": (state, dispatch) => {
-      const $from = state.selection.$from;
-      let cellDepth = -1;
-      for (let d = $from.depth; d >= 0; d--) {
-        if ($from.node(d).type.name === "table_cell") {
-          cellDepth = d;
-          break;
-        }
-      }
-      if (cellDepth === -1) return false;
-      const tableDepth = cellDepth - 2;
-      const tableNode = $from.node(tableDepth);
-      const rowIdx = $from.index(tableDepth);
-      const cellIdx = $from.index(cellDepth - 1);
-      if (tableNode.childCount <= 1) return true; // consume, no-op
-      if (dispatch) {
-        const tableStart = $from.before(tableDepth);
-        let rowStart = tableStart + 1;
-        for (let r = 0; r < rowIdx; r++) rowStart += tableNode.child(r).nodeSize;
-        const row = tableNode.child(rowIdx);
-        const tr = state.tr.delete(rowStart, rowStart + row.nodeSize);
-        // Cursor → adjacent row, same column. Prefer next row (same
-        // index in the post-delete table); fall back to previous when
-        // we deleted the last row.
-        const newTable = tr.doc.nodeAt(tableStart)!;
-        const targetRowIdx = Math.min(rowIdx, newTable.childCount - 1);
-        let cursorPos = tableStart + 1;
-        for (let r = 0; r < targetRowIdx; r++)
-          cursorPos += newTable.child(r).nodeSize;
-        cursorPos += 1; // inside row
-        const targetRow = newTable.child(targetRowIdx);
-        const targetCol = Math.min(cellIdx, targetRow.childCount - 1);
-        for (let c = 0; c < targetCol; c++) cursorPos += targetRow.child(c).nodeSize;
-        cursorPos += 1; // inside cell
-        tr.setSelection(TextSelection.create(tr.doc, cursorPos));
-        dispatch(tr);
-      }
+    "Mod-Shift-Backspace": (state, _dispatch, view) => {
+      const info = findTableAtSelection(state);
+      if (!info) return false;
+      if (info.node.childCount <= 1) return true;
+      if (view) deleteTableRowAt(view, info);
       return true;
     },
 
@@ -873,43 +1544,12 @@ export const table: FeatureSpec = {
 
   blockHandlers: {
     table: (state, node) => {
-      // Render every cell first so we can measure column widths and
-      // emit nicely padded source on save. Two-pass (measure → emit).
-      const rows: string[][] = [];
-      const aligns: Array<string | null> = [];
-      node.forEach((row, _, rowIdx) => {
-        const cells: string[] = [];
-        row.forEach((cell, _o, cellIdx) => {
-          if (rowIdx === 0) aligns[cellIdx] = cell.attrs.align as string | null;
-          cells.push(renderCellInline(cell));
-        });
-        rows.push(cells);
-      });
-
-      const colCount = aligns.length;
-      const widths = new Array<number>(colCount).fill(3);
-      for (const r of rows)
-        for (let i = 0; i < colCount; i++)
-          widths[i] = Math.max(widths[i]!, (r[i] ?? "").length);
-
-      const formatRow = (cells: string[]): string => {
-        const padded = cells.map((c, i) => " " + c.padEnd(widths[i]!) + " ");
-        return "|" + padded.join("|") + "|";
-      };
-      const dividerRow = (): string => {
-        const dividers = aligns.map((a, i) => " " + alignDelim(a, widths[i]!) + " ");
-        return "|" + dividers.join("|") + "|";
-      };
-
-      // Header row → divider → body rows.
-      state.write(formatRow(rows[0] ?? []));
-      state.out += "\n";
-      if (state.delim) state.out += state.delim;
-      state.out += dividerRow();
-      for (let i = 1; i < rows.length; i++) {
-        state.out += "\n";
-        if (state.delim) state.out += state.delim;
-        state.out += formatRow(rows[i]!);
+      for (const [idx, line] of tableNodeToMarkdown(node).split("\n").entries()) {
+        if (idx > 0) {
+          state.out += "\n";
+          if (state.delim) state.out += state.delim;
+        }
+        state.write(line);
       }
       state.closeBlock(node);
     },

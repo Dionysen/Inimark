@@ -197,6 +197,25 @@ export const tableSpecs: FeatureSpecs = {
       ],
     },
     {
+      id: "alt-arrow-moves-row",
+      label: "Alt-ArrowUp swaps the current row with the row above",
+      seed: "",
+      events: [
+        "|", "a", "|", "b", "|", "<Enter>",
+        "x",
+        "<Mod-Enter>",
+        "y",
+        "<Alt-ArrowUp>",
+      ],
+      checkpoints: [
+        {
+          at: 10,
+          expect:
+            "<table><tr><th>a</th><th>b</th></tr><tr><td>|y</td><td></td></tr><tr><td>x</td><td></td></tr></table>",
+        },
+      ],
+    },
+    {
       id: "mod-shift-backspace-only-row-noop",
       label: "Mod-Shift-Backspace on a 1-row table is a no-op (use trash to delete)",
       // Build a header-only table by deleting the body row of a 2-row table.

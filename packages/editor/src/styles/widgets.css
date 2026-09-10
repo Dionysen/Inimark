@@ -580,11 +580,271 @@
   word-break: break-word;
 }
 
+/* ─── Floating editor chrome (shared with table toolbars) ────────── */
+/* Mirrors apps/desktop app.css context-menu tokens so body-mounted
+   editor UI matches the right-click menu in every theme. */
+.inimark-glass {
+  background: var(--inimark-glass-bg, var(--inimark-surface-raised, var(--inimark-surface, #fff)));
+  border: 1px solid var(--inimark-glass-border, var(--inimark-border, #e3e3e3));
+  box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 14%, transparent));
+}
+
+html[data-glass="true"] .inimark-glass {
+  backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
+}
+
+.inimark-editor-context-menu,
+.inimark-editor-context-submenu {
+  padding: var(--inimark-menu-padding, 4px);
+  border-radius: var(--inimark-radius-menu, 8px);
+  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
+  font-size: var(--inimark-control-font-size, 13px);
+  color: var(--inimark-fg, #1f1f1f);
+}
+
+.inimark-editor-context-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+}
+
+.inimark-editor-context-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--inimark-menu-row-height, 28px);
+  height: var(--inimark-menu-row-height, 28px);
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item, var(--inimark-radius-control, 6px));
+  padding: 0;
+  background: transparent;
+  color: var(--inimark-fg, #1f1f1f);
+  cursor: pointer;
+  transition: background var(--inimark-control-transition, 150ms ease);
+}
+
+.inimark-editor-context-icon-btn:hover,
+.inimark-editor-context-icon-btn:focus-visible,
+.inimark-editor-context-icon-btn.is-active {
+  background: var(--inimark-hover, #f0f0f0);
+}
+
+.inimark-editor-context-icon-btn.is-active {
+  background: color-mix(in srgb, var(--inimark-accent, #4078c0) 14%, transparent);
+}
+
+.inimark-editor-context-icon-btn.is-danger {
+  color: #e5484d;
+}
+
+.inimark-editor-context-icon-btn.is-danger:hover,
+.inimark-editor-context-icon-btn.is-danger:focus-visible {
+  background: color-mix(in srgb, #e5484d 14%, transparent);
+}
+
+.inimark-editor-context-icon-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.inimark-editor-context-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--inimark-border, #e3e3e3);
+}
+
+.inimark-editor-context-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+  min-height: var(--inimark-menu-row-height, 28px);
+  padding: var(--inimark-menu-item-padding-y, 4px) var(--inimark-control-padding-x, 8px);
+  border: 0;
+  border-radius: var(--inimark-radius-menu-item, var(--inimark-radius-control, 6px));
+  background: transparent;
+  color: var(--inimark-fg, #1f1f1f);
+  font: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--inimark-control-transition, 150ms ease);
+}
+
+.inimark-editor-context-item:hover,
+.inimark-editor-context-item:focus-visible {
+  background: var(--inimark-hover, #f0f0f0);
+}
+
+.inimark-editor-context-item.is-danger {
+  color: #e5484d;
+}
+
+.inimark-editor-context-item.is-danger:hover,
+.inimark-editor-context-item.is-danger:focus-visible {
+  background: color-mix(in srgb, #e5484d 14%, transparent);
+}
+
+.inimark-editor-context-item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.inimark-editor-context-item-shortcut {
+  margin-left: 0.75rem;
+  color: var(--inimark-muted-fg, #666);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.inimark-menu__heading {
+  margin: 4px 8px 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg, #666);
+}
+
 /* ─── Table toolbar (body-mounted floating UI) ───────────────────── */
-/* Surface chrome matches .inimark-menu / editor context menus via
-   inimark-glass + shared design tokens. */
-.table-toolbar.inimark-glass,
-.table-resize-popup.inimark-glass,
+.table-toolbar.inimark-editor-context-menu,
+.table-rc-toolbar.inimark-editor-context-menu {
+  position: fixed;
+  display: none;
+  z-index: 60;
+  min-width: auto;
+}
+
+.table-toolbar__sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 2px;
+  background: var(--inimark-border, #e3e3e3);
+}
+
+.table-resize-popup.inimark-editor-context-menu {
+  position: fixed;
+  display: none;
+  z-index: 61;
+  min-width: auto;
+  box-sizing: border-box;
+  overflow: visible;
+  padding: var(--inimark-menu-padding, 4px);
+  padding-bottom: var(--inimark-space-2, 8px);
+}
+
+.table-insert-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: var(--inimark-space-4, 1rem);
+  background: color-mix(in srgb, #000 35%, transparent);
+}
+
+.table-insert-dialog__panel {
+  width: min(18rem, 100%);
+  padding: var(--inimark-space-4, 1rem);
+  border-radius: var(--inimark-radius-md, 0.5rem);
+  color: var(--inimark-fg, #1f1f1f);
+  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.table-insert-dialog__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.table-insert-dialog__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--inimark-space-3, 0.75rem);
+  margin: var(--inimark-space-3, 0.75rem) 0 var(--inimark-space-4, 1rem);
+}
+
+.table-insert-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1, 0.25rem);
+}
+
+.table-insert-dialog__label {
+  color: var(--inimark-muted-fg, #666);
+  font-size: 0.85rem;
+}
+
+.table-insert-dialog__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--inimark-control-height, 28px);
+  height: var(--inimark-control-height, 28px);
+  padding: 0 var(--inimark-control-padding-x, 8px);
+  border: 1px solid var(--inimark-border, #d0d0d0);
+  border-radius: var(--inimark-radius-control, 6px);
+  background: var(--inimark-input-bg, var(--inimark-content-bg, #fff));
+  color: var(--inimark-fg, #1f1f1f);
+  font: inherit;
+  line-height: 1.25;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.table-insert-dialog__input:focus {
+  outline: none;
+  border-color: var(--inimark-accent, #4078c0);
+  box-shadow: 0 0 0 2px var(--inimark-focus-ring, color-mix(in srgb, var(--inimark-accent, #4078c0) 45%, transparent));
+}
+
+.table-insert-dialog__input[type="number"]::-webkit-inner-spin-button,
+.table-insert-dialog__input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.table-insert-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--inimark-space-2, 0.5rem);
+}
+
+.table-insert-dialog__btn {
+  min-width: 4.5rem;
+  min-height: var(--inimark-control-height, 28px);
+  padding: 0 var(--inimark-control-padding-x, 8px);
+  border: 1px solid var(--inimark-border, #d0d0d0);
+  border-radius: var(--inimark-radius-control, 6px);
+  background: var(--inimark-surface, #fff);
+  color: var(--inimark-fg, #1f1f1f);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--inimark-control-transition, 150ms ease);
+}
+
+.table-insert-dialog__btn:hover {
+  background: var(--inimark-hover, #f0f0f0);
+}
+
+.table-insert-dialog__btn--primary {
+  border-color: var(--inimark-accent, #4078c0);
+  background: var(--inimark-accent, #4078c0);
+  color: var(--inimark-accent-fg, #fff);
+}
+
+.table-insert-dialog__btn--primary:hover {
+  background: var(--accent-hover, var(--inimark-accent, #4078c0));
+}
+
+.table-rc-popup.inimark-editor-context-submenu {
+  position: fixed;
+  display: none;
+  z-index: 61;
+  min-width: 11.5rem;
+}
+
 .cb-lang-input.inimark-glass,
 .cb-lang-menu.inimark-glass {
   background: var(--inimark-glass-bg, var(--inimark-surface-raised, var(--inimark-surface, #fff)));
@@ -592,86 +852,18 @@
   box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 14%, transparent));
 }
 
-html[data-glass="true"] .table-toolbar.inimark-glass,
-html[data-glass="true"] .table-resize-popup.inimark-glass,
 html[data-glass="true"] .cb-lang-input.inimark-glass,
 html[data-glass="true"] .cb-lang-menu.inimark-glass {
   backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
   -webkit-backdrop-filter: blur(var(--inimark-glass-blur, 18px)) saturate(var(--inimark-glass-saturate, 180%));
 }
 
-.table-toolbar {
-  position: fixed;
-  display: none;
-  align-items: center;
-  gap: var(--inimark-space-1, 4px);
-  padding: var(--inimark-menu-padding, 4px) var(--inimark-space-2, 8px);
-  border-radius: var(--inimark-radius-menu, 8px);
-  z-index: 60;
-  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
-  font-size: var(--inimark-control-font-size, 13px);
-  color: var(--inimark-fg, #1f1f1f);
-}
-
-.table-tb-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--inimark-chrome-btn-size, 26px);
-  height: var(--inimark-chrome-btn-size, 26px);
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--inimark-fg, #1f1f1f);
-  border-radius: var(--inimark-radius-menu-item, var(--inimark-radius-control, 6px));
-  cursor: pointer;
-  transition:
-    background var(--inimark-control-transition, 150ms ease),
-    color var(--inimark-control-transition, 150ms ease);
-}
-
-.table-tb-btn:hover {
-  background: var(--inimark-hover, #f0f0f0);
-}
-
-.table-tb-btn.active {
-  background: color-mix(in srgb, var(--inimark-accent, #4078c0) 16%, transparent);
-  color: var(--inimark-fg, #1f1f1f);
-}
-
-.table-tb-trash:hover {
-  background: color-mix(in srgb, var(--danger, #cf222e) 12%, transparent);
-  color: var(--danger, #c0392b);
-}
-
-.table-tb-sep {
-  width: 1px;
-  align-self: stretch;
-  background: var(--inimark-border, #e3e3e3);
-  margin: 2px var(--inimark-space-1, 4px);
-}
-
-.table-tb-spacer {
-  flex: 1;
-  min-width: var(--inimark-space-3, 12px);
-}
-
-.table-resize-popup {
-  position: fixed;
-  display: none;
-  padding: var(--inimark-space-3, 12px);
-  border-radius: var(--inimark-radius-menu, 8px);
-  z-index: 61;
-  color: var(--inimark-fg, #1f1f1f);
-  font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
-  font-size: var(--inimark-control-font-size, 13px);
-}
-
 .table-resize-grid {
   display: grid;
   grid-template-columns: repeat(10, 18px);
   gap: 3px;
-  margin-bottom: var(--inimark-space-3, 12px);
+  margin: var(--inimark-menu-padding, 4px);
+  margin-bottom: var(--inimark-space-1, 4px);
 }
 
 .table-resize-cell {
@@ -696,23 +888,37 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   align-items: center;
   justify-content: center;
   gap: var(--inimark-space-2, 6px);
+  margin: 0;
+  padding: var(--inimark-space-2, 8px) var(--inimark-menu-padding, 4px) 0;
   border-top: 1px solid var(--inimark-border, #eee);
-  padding-top: var(--inimark-space-2, 10px);
   color: var(--inimark-muted-fg, #555);
+  flex-shrink: 0;
 }
 
 .table-resize-inputs input {
-  width: 2.25rem;
-  padding: var(--inimark-space-1, 4px) var(--inimark-space-2, 6px);
+  box-sizing: border-box;
+  width: 2.75rem;
+  min-height: var(--inimark-control-height, 28px);
+  height: var(--inimark-control-height, 28px);
+  padding: 0 var(--inimark-space-1, 4px);
   border: 1px solid var(--inimark-border, #d0d0d0);
   border-radius: var(--inimark-radius-control, 6px);
   background: var(--inimark-input-bg, var(--inimark-content-bg, #fff));
   color: var(--inimark-fg, #1f1f1f);
   text-align: center;
   font: inherit;
+  line-height: 1.25;
+  appearance: textfield;
+  -moz-appearance: textfield;
   transition:
     border-color var(--inimark-control-transition, 150ms ease),
     background var(--inimark-control-transition, 150ms ease);
+}
+
+.table-resize-inputs input[type="number"]::-webkit-inner-spin-button,
+.table-resize-inputs input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .table-resize-inputs input:focus {

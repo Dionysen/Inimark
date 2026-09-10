@@ -402,6 +402,13 @@ export function serialize(doc: PMNode): string {
   return state.out.replace(/\n+$/, "\n");
 }
 
+/** Serialize a single top-level block node to markdown (no trailing newline). */
+export function serializeBlock(node: PMNode): string {
+  const state = new SerializerState(mdConfig);
+  state.renderBlock(node);
+  return state.out.replace(/\n+$/, "");
+}
+
 export function serializeWith(
   doc: PMNode,
   config: SerializerConfig,

@@ -4,6 +4,7 @@ import { TextSelection, type Command } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import { insertCallout } from "./callouts.ts";
+import { showTableInsertPicker } from "./features/table.ts";
 import { insertMoreBreak } from "./features/more-break.ts";
 import {
   toggleBlockquote,
@@ -67,26 +68,6 @@ function insertHorizontalRule(s: Schema): Command {
       const after = tr.selection.from;
       tr.insert(after, para);
       tr.setSelection(TextSelection.create(tr.doc, after + 1));
-      dispatch(tr.scrollIntoView());
-    }
-    return true;
-  };
-}
-
-function insertTable(s: Schema, rows = 3, cols = 3): Command {
-  return (state, dispatch) => {
-    const makeRow = (header: boolean) => {
-      const cells = [];
-      for (let c = 0; c < cols; c++) {
-        cells.push(s.nodes.table_cell.create({ header, align: null }));
-      }
-      return s.nodes.table_row.create(null, cells);
-    };
-    const rowNodes = [makeRow(true)];
-    for (let r = 1; r < rows; r++) rowNodes.push(makeRow(false));
-    const table = s.nodes.table.create(null, rowNodes);
-    if (dispatch) {
-      const tr = state.tr.replaceSelectionWith(table);
       dispatch(tr.scrollIntoView());
     }
     return true;
@@ -168,7 +149,8 @@ export function executeEditorCommand(
     case "more":
       return run(view, insertMoreBreak(schema));
     case "table":
-      return run(view, insertTable(schema));
+      showTableInsertPicker(view);
+      return true;
     case "code":
       return run(view, toggleCodeBlock(schema));
     case "math":

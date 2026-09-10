@@ -1,8 +1,9 @@
-﻿import { describe, expect, test } from "vitest";
+﻿import { describe, expect, test, vi } from "vitest";
 import { TextSelection } from "prosemirror-state";
 
 import { runFeatureCases } from "../utils.ts";
 import { createEditor, type Editor } from "../../src/lib.ts";
+import { showTableInsertPicker } from "../../src/features/table.ts";
 import { tableSpecs } from "../../specs/features/table.specs.ts";
 
 runFeatureCases(tableSpecs);
@@ -64,6 +65,7 @@ describe("table toolbar", () => {
 
       expect(document.body.querySelector(".table-toolbar")).not.toBeNull();
       expect(document.body.querySelector(".table-resize-popup")).not.toBeNull();
+      expect(document.body.querySelector(".table-rc-toolbar")).not.toBeNull();
     } finally {
       editor.destroy();
       host.remove();
@@ -97,7 +99,32 @@ describe("table toolbar", () => {
     }
   });
 
-  test("deletes the whole table through the toolbar without leaving stale toolbar DOM", () => {
+  test("toggles column alignment off when clicking the active align button again", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| :--- | --- |\n| a | b |",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      const alignLeft = document.body.querySelector<HTMLElement>(
+        ".table-toolbar [data-align='left']",
+      );
+      alignLeft?.click();
+
+      expect(editor.getMarkdown()).toBe("| A   | B   |\n| --- | --- |\n| a   | b   |");
+      expect(alignLeft?.classList.contains("is-active")).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+    }
+  });
+
+  test("deletes the whole table through the row/column menu without leaving stale toolbar DOM", () => {
     const host = createHost();
     const editor = createEditor(host, {
       initialContent: "| A | B |\n| --- | --- |\n| a | b |",
@@ -107,7 +134,11 @@ describe("table toolbar", () => {
       setSelectionInTableCell(editor);
       focusTable(editor);
 
-      document.body.querySelector<HTMLElement>(".table-tb-trash")?.click();
+      document.body.querySelector<HTMLElement>(".table-rc-toolbar button")?.click();
+      const items = document.body.querySelectorAll<HTMLElement>(
+        ".table-rc-popup .inimark-editor-context-item",
+      );
+      items[items.length - 1]?.click();
 
       expect(editor.getMarkdown()).toBe("");
       expect(document.body.querySelector(".table-toolbar")).toBeNull();
@@ -117,6 +148,8 @@ describe("table toolbar", () => {
       host.remove();
       document.body.querySelector(".table-toolbar")?.remove();
       document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
     }
   });
 
@@ -179,6 +212,190 @@ describe("table toolbar", () => {
       host.remove();
       document.body.querySelector(".table-toolbar")?.remove();
       document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
+    }
+  });
+
+  test("insert dialog creates a table with default 4 rows and 3 columns", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "" });
+
+    try {
+      showTableInsertPicker(editor.view);
+      expect(document.body.querySelector(".table-insert-dialog")).not.toBeNull();
+
+      document.body
+        .querySelector<HTMLElement>(".table-insert-dialog__btn--primary")
+        ?.click();
+
+      expect(editor.getMarkdown()).toBe(
+        "|     |     |     |\n| --- | --- | --- |\n|     |     |     |\n|     |     |     |\n|     |     |     |",
+      );
+      expect(document.body.querySelector(".table-insert-dialog")).toBeNull();
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-insert-dialog")?.remove();
+    }
+  });
+
+  test("insert dialog creates a table with custom row and column counts", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "" });
+
+    try {
+      showTableInsertPicker(editor.view);
+      const inputs = document.body.querySelectorAll<HTMLInputElement>(
+        ".table-insert-dialog__input",
+      );
+      inputs[0]!.value = "2";
+      inputs[1]!.value = "4";
+      document.body
+        .querySelector<HTMLElement>(".table-insert-dialog__btn--primary")
+        ?.click();
+
+      expect(editor.getMarkdown()).toBe(
+        "|     |     |     |     |\n| --- | --- | --- | --- |\n|     |     |     |     |",
+      );
+      expect(document.body.querySelector(".table-insert-dialog")).toBeNull();
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-insert-dialog")?.remove();
+    }
+  });
+
+  test("row/column popup stays inside the viewport when opened near the bottom edge", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| --- | --- |\n| a | b |",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      const trigger = document.body.querySelector<HTMLElement>(".table-rc-toolbar");
+      const popup = document.body.querySelector<HTMLElement>(".table-rc-popup");
+      expect(trigger).not.toBeNull();
+      expect(popup).not.toBeNull();
+
+      const triggerHeight = trigger!.offsetHeight || 32;
+      Object.defineProperty(trigger!, "getBoundingClientRect", {
+        configurable: true,
+        value: () =>
+          new DOMRect(100, window.innerHeight - triggerHeight - 4, 32, triggerHeight),
+      });
+
+      trigger!.querySelector("button")?.click();
+      expect(popup!.style.display).toBe("block");
+
+      const popupRect = popup!.getBoundingClientRect();
+      expect(popupRect.bottom).toBeLessThanOrEqual(window.innerHeight - 3);
+      expect(popupRect.top).toBeLessThan(window.innerHeight - triggerHeight - 4);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
+    }
+  });
+
+  test("row/column menu shows shortcuts for bound commands", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| --- | --- |\n| a | b |",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      document.body.querySelector<HTMLElement>(".table-rc-toolbar button")?.click();
+      const shortcuts = Array.from(
+        document.body.querySelectorAll<HTMLElement>(
+          ".table-rc-popup .inimark-editor-context-item-shortcut",
+        ),
+      ).map((el) => el.textContent);
+
+      expect(shortcuts.some((s) => /Enter|↩/.test(s ?? ""))).toBe(true);
+      expect(shortcuts.some((s) => /↓/.test(s ?? ""))).toBe(true);
+      expect(shortcuts.some((s) => /Backspace|⌫/.test(s ?? ""))).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
+    }
+  });
+
+  test("row/column menu copies the table markdown to the clipboard", async () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| --- | --- |\n| a | b |",
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      document.body.querySelector<HTMLElement>(".table-rc-toolbar button")?.click();
+      const items = document.body.querySelectorAll<HTMLElement>(
+        ".table-rc-popup .inimark-editor-context-item",
+      );
+      items[10]?.click();
+
+      expect(writeText).toHaveBeenCalledWith(
+        "| A   | B   |\n| --- | --- |\n| a   | b   |",
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
+    }
+  });
+
+  test("row/column menu inserts a row below the current one", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "| A | B |\n| --- | --- |\n| a | b |",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+
+      document.body
+        .querySelector<HTMLElement>(".table-rc-toolbar button")
+        ?.click();
+      const items = document.body.querySelectorAll<HTMLElement>(
+        ".table-rc-popup .inimark-editor-context-item",
+      );
+      items[1]?.click();
+
+      expect(editor.getMarkdown()).toBe(
+        "| A   | B   |\n| --- | --- |\n| a   | b   |\n|     |     |",
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
     }
   });
 });
