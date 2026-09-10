@@ -19,6 +19,7 @@ import {
   SETTINGS_SYNC_EVENT,
 } from "./settings/store.ts";
 import { isTauri } from "./platform/env.ts";
+import { closeWindow } from "./platform/window-chrome.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { isSettingsSection } from "./settings/search-index.ts";
@@ -37,6 +38,7 @@ const teardownImePosition = initImePositionGuard();
 const teardownShortcutGuard = installNativeShortcutGuard();
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
+  close: () => void closeWindow(),
 });
 
 const host = document.querySelector<HTMLElement>("#app");
