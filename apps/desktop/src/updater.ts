@@ -1,6 +1,7 @@
 import { Update, type DownloadOptions } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { isTauri } from "./platform/env.ts";
+import { isMacDevInstallBlocked } from "./update/dev-update-test.ts";
 
 export interface UpdateInfo {
   version: string;
@@ -21,6 +22,13 @@ export class UpdateDownloadCancelled extends Error {
   constructor() {
     super("Update download cancelled.");
     this.name = "UpdateDownloadCancelled";
+  }
+}
+
+export class DevUpdateInstallBlocked extends Error {
+  constructor() {
+    super("Update install is blocked in macOS dev builds.");
+    this.name = "DevUpdateInstallBlocked";
   }
 }
 
@@ -155,6 +163,10 @@ export function isUpdateDownloadCancelled(error: unknown): boolean {
   return error instanceof UpdateDownloadCancelled;
 }
 
+export function isDevUpdateInstallBlocked(error: unknown): boolean {
+  return error instanceof DevUpdateInstallBlocked;
+}
+
 export async function downloadUpdate(
   onProgress?: (downloaded: number, contentLength: number | null) => void,
 ): Promise<void> {
@@ -200,6 +212,10 @@ export async function downloadUpdate(
 }
 
 export async function installDownloadedUpdate(): Promise<void> {
+  if (isMacDevInstallBlocked()) {
+    throw new DevUpdateInstallBlocked();
+  }
+
   if (!cachedUpdate) {
     throw new Error("No downloaded update available.");
   }

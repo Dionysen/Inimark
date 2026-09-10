@@ -276,7 +276,9 @@ export const zhCN: Dictionary = {
     },
     dev: {
       updateIntro:
-        "将模拟当前版本设为低于远程发布版本，即可触发关于页手动更新与顶栏自动更新提示。留空则使用真实版本。",
+        "将模拟当前版本设为低于远程发布版本，即可触发关于页手动更新与顶栏自动更新提示。留空则使用真实版本。macOS 开发模式下仅可测试下载，不会执行安装。",
+      installBlockedOnMacDev:
+        "macOS 开发模式不支持安装更新（会替换 dev bundle）。可测试检查与下载流程。",
       updateOverrideTitle: "模拟当前版本",
       updateOverrideDesc: "检查更新时假装应用正在运行此版本（默认 0.0.0）。",
       updateOverrideSaved: "已应用模拟版本：{{version}}",

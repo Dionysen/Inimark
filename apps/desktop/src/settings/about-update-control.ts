@@ -12,6 +12,7 @@ import {
   downloadUpdate,
   formatProgressPercent,
   installDownloadedUpdate,
+  isDevUpdateInstallBlocked,
   isUpdateDownloadCancelled,
   relaunchApp,
 } from "../updater.ts";
@@ -36,6 +37,7 @@ function updateErrorMessage(error: unknown): string {
 
 function downloadErrorMessage(error: unknown): string {
   if (isUpdateDownloadCancelled(error)) return "";
+  if (isDevUpdateInstallBlocked(error)) return t("settings.dev.installBlockedOnMacDev");
   const kind = classifyUpdateError(error);
   return kind === "network"
     ? t("settings.about.downloadFailedNetwork")

@@ -1,3 +1,4 @@
+import { t } from "../i18n/index.ts";
 import { isTauri } from "../platform/env.ts";
 import { loadSettings } from "../settings/store.ts";
 import { mergeUpdateCheckOptions } from "./dev-update-test.ts";
@@ -8,6 +9,7 @@ import {
   downloadUpdate,
   formatProgressPercent,
   installDownloadedUpdate,
+  isDevUpdateInstallBlocked,
   relaunchApp,
   type UpdateErrorKind,
 } from "../updater.ts";
@@ -161,7 +163,10 @@ export function createAutoUpdateService(): AutoUpdateService {
 
       await installDownloadedUpdate();
       await relaunchApp();
-    } catch {
+    } catch (error) {
+      if (isDevUpdateInstallBlocked(error)) {
+        console.warn(t("settings.dev.installBlockedOnMacDev"));
+      }
       state = { phase: "available", version, progress: 0 };
       emit();
     } finally {

@@ -30,17 +30,6 @@ export function mountTitlebarUpdateCapsule(
     if (state.phase === "downloading" || state.phase === "installing") {
       root.className = "inimark-titlebar-update-capsule is-visible is-progress";
 
-      const track = document.createElement("div");
-      track.className = "inimark-titlebar-update-capsule__track";
-      track.setAttribute("role", "progressbar");
-      track.setAttribute("aria-valuemin", "0");
-      track.setAttribute("aria-valuemax", "100");
-      track.setAttribute("aria-valuenow", String(state.progress));
-
-      const fill = document.createElement("div");
-      fill.className = "inimark-titlebar-update-capsule__fill";
-      fill.style.width = `${state.progress}%`;
-
       const label = document.createElement("span");
       label.className = "inimark-titlebar-update-capsule__label";
       label.textContent =
@@ -50,8 +39,20 @@ export function mountTitlebarUpdateCapsule(
             ? `${state.progress}%`
             : t("titlebar.updateDownloading");
 
-      track.append(fill, label);
-      root.append(track);
+      const track = document.createElement("div");
+      track.className = "inimark-titlebar-update-capsule__track";
+      track.setAttribute("role", "progressbar");
+      track.setAttribute("aria-valuemin", "0");
+      track.setAttribute("aria-valuemax", "100");
+      track.setAttribute("aria-valuenow", String(state.progress));
+      track.setAttribute("aria-label", label.textContent);
+
+      const fill = document.createElement("div");
+      fill.className = "inimark-titlebar-update-capsule__fill";
+      fill.style.width = `${state.progress}%`;
+
+      track.append(fill);
+      root.append(label, track);
       return;
     }
 

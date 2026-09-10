@@ -276,7 +276,9 @@ export const en: Dictionary = {
     },
     dev: {
       updateIntro:
-        "Set a simulated current version lower than the remote release to trigger the About page update flow and the titlebar auto-update capsule. Leave empty to use the real version.",
+        "Set a simulated current version lower than the remote release to trigger the About page update flow and the titlebar auto-update capsule. Leave empty to use the real version. On macOS dev builds, download can be tested but install is blocked.",
+      installBlockedOnMacDev:
+        "Installing updates is disabled in macOS dev builds (it would replace the dev bundle). Check and download flows can still be tested.",
       updateOverrideTitle: "Simulated current version",
       updateOverrideDesc: "Pretend the app is running this version when checking for updates (default 0.0.0).",
       updateOverrideSaved: "Simulated version applied: {{version}}",

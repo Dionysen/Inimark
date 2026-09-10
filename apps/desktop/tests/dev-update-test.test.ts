@@ -1,13 +1,18 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   DEFAULT_DEV_UPDATE_TEST_SETTINGS,
   DEV_UPDATE_TEST_STORAGE_KEY,
   getDevUpdateCheckOverride,
+  isMacDevInstallBlocked,
   loadDevUpdateTestSettings,
   mergeUpdateCheckOptions,
   saveDevUpdateTestSettings,
 } from "../src/update/dev-update-test.ts";
+
+vi.mock("../src/platform/platform.ts", () => ({
+  detectPlatform: vi.fn(() => "linux"),
+}));
 
 describe("dev update test settings", () => {
   beforeEach(() => {
@@ -35,5 +40,15 @@ describe("dev update test settings", () => {
   test("getDevUpdateCheckOverride ignores blank values", () => {
     saveDevUpdateTestSettings({ overrideCurrentVersion: "   " });
     expect(getDevUpdateCheckOverride()).toBeUndefined();
+  });
+
+  test("isMacDevInstallBlocked is true only on macOS dev builds", async () => {
+    const { detectPlatform } = await import("../src/platform/platform.ts");
+
+    vi.mocked(detectPlatform).mockReturnValue("macos");
+    expect(isMacDevInstallBlocked()).toBe(true);
+
+    vi.mocked(detectPlatform).mockReturnValue("windows");
+    expect(isMacDevInstallBlocked()).toBe(false);
   });
 });

@@ -231,40 +231,36 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
   cursor: default;
 }
 
-.inimark-titlebar-update-capsule__track {
-  position: relative;
-  width: 7.5rem;
-  height: calc(var(--inimark-chrome-btn-size) - 4px);
-  overflow: hidden;
-  border: 1px solid var(--inimark-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-hover));
+.inimark-titlebar-update-capsule.is-progress {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 6.5rem;
+  padding: 0 2px;
 }
 
-.inimark-titlebar-update-capsule__fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--inimark-accent) 88%, #ffffff 12%),
-    var(--inimark-accent)
-  );
-  transition: width 0.18s ease;
-}
-
-.inimark-titlebar-update-capsule__label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.45rem;
-  color: var(--inimark-fg);
+.inimark-titlebar-update-capsule.is-progress .inimark-titlebar-update-capsule__label {
+  display: block;
+  color: var(--inimark-muted-fg);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
-  pointer-events: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.inimark-titlebar-update-capsule.is-progress .inimark-titlebar-update-capsule__track {
+  width: 100%;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 0;
+  background: var(--inimark-border);
+}
+
+.inimark-titlebar-update-capsule.is-progress .inimark-titlebar-update-capsule__fill {
+  height: 100%;
+  border-radius: 0;
+  background: var(--inimark-accent);
+  transition: width 0.18s ease;
 }
 
 .inimark-right-sidebar-titlebar-toggle {

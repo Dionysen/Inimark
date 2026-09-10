@@ -1,3 +1,4 @@
+import { detectPlatform } from "../platform/platform.ts";
 import type { UpdateCheckOptions } from "../updater.ts";
 
 export const DEV_UPDATE_TEST_STORAGE_KEY = "inimark:dev-update-test";
@@ -14,6 +15,11 @@ export const DEFAULT_DEV_UPDATE_TEST_SETTINGS: DevUpdateTestSettings = {
 /** True in Vite dev builds only; stripped from production bundles. */
 export function isDevBuild(): boolean {
   return import.meta.env.DEV;
+}
+
+/** macOS dev builds replace the local .app bundle on install and break the next `tauri dev`. */
+export function isMacDevInstallBlocked(): boolean {
+  return isDevBuild() && detectPlatform() === "macos";
 }
 
 export function loadDevUpdateTestSettings(): DevUpdateTestSettings {
