@@ -79,7 +79,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1NzBCQ0VCMUM4QTYwODkKUldTSllJb2M2N3h3bFVPY1h3bjFYY2FPQWljSnJ0T2ZiZnQ2N0d3S0ovcm5zZVh0TWFnaGRpbEoK",
       "endpoints": [
-        "https://github.com/Dionysen/Inimark2/releases/latest/download/latest.json"
+        "https://github.com/Dionysen/Inimark/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
