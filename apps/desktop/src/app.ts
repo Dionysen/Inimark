@@ -28,6 +28,8 @@ import {
 import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
 import { mountUpdatePreflightHandler } from "./update-bridge.ts";
+import { createAutoUpdateService } from "./update/auto-update.ts";
+import { mountTitlebarUpdateCapsule, type TitlebarUpdateCapsuleController } from "./ui/titlebar-update-capsule.ts";
 import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
@@ -98,6 +100,8 @@ export function mountApp(host: HTMLElement): AppController {
 
   const navHistory = new FileNavigationHistory();
   let openDocumentSearch: (() => void) | null = null;
+  let titlebarUpdateCapsule: TitlebarUpdateCapsuleController | null = null;
+  const autoUpdate = createAutoUpdateService();
 
   async function copyToClipboard(text: string): Promise<void> {
     try {
@@ -109,6 +113,14 @@ export function mountApp(host: HTMLElement): AppController {
 
   const shell = mountShell(host, {
     onCloseRequest: () => requestAppClose(),
+    mountMoreClusterExtras(cluster) {
+      if (!isTauri()) return () => {};
+      titlebarUpdateCapsule = mountTitlebarUpdateCapsule(cluster, autoUpdate);
+      return () => {
+        titlebarUpdateCapsule?.destroy();
+        titlebarUpdateCapsule = null;
+      };
+    },
     moreMenuActions: {
       canGoBack: () => navHistory.canBack(),
       canGoForward: () => navHistory.canForward(),
@@ -928,6 +940,11 @@ export function mountApp(host: HTMLElement): AppController {
   };
   window.addEventListener("storage", onStorage);
   cleanups.push(() => window.removeEventListener("storage", onStorage));
+
+  if (isTauri()) {
+    autoUpdate.start();
+    cleanups.push(() => autoUpdate.stop());
+  }
 
   if (isTauri()) {
     void (async () => {

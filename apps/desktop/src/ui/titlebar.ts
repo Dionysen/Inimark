@@ -79,6 +79,8 @@ export interface TitleBarOptions {
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
   /** Open sidebar tab layout configuration. */
   onConfigureSidebarTabs?: () => void;
+  /** Mount widgets inside the More-button cluster (e.g. update capsule). */
+  mountMoreClusterExtras?: (cluster: HTMLElement) => () => void;
   onClose?: () => void | Promise<void>;
 }
 
@@ -155,6 +157,7 @@ export function mountTitleBar(
 
   let moreBtn: HTMLButtonElement | null = null;
   let moreMenu: ReturnType<typeof createMenu> | null = null;
+  let destroyMoreClusterExtras: (() => void) | null = null;
   let unsubscribeTheme: (() => void) | null = null;
 
   if (showMoreMenu) {
@@ -162,6 +165,14 @@ export function mountTitleBar(
     moreMenu.el.classList.add("inimark-titlebar-more-menu");
     moreMenu.setPath("");
     host.append(moreMenu.el);
+
+    const moreCluster = document.createElement("div");
+    moreCluster.className = "inimark-titlebar-more-cluster";
+    markNoDrag(moreCluster);
+
+    if (options.mountMoreClusterExtras) {
+      destroyMoreClusterExtras = options.mountMoreClusterExtras(moreCluster);
+    }
 
     moreBtn = createIconButton({
       label: t("common.more"),
@@ -177,7 +188,8 @@ export function mountTitleBar(
       event.preventDefault();
       event.stopPropagation();
     });
-    trailing.append(moreBtn);
+    moreCluster.append(moreBtn);
+    trailing.append(moreCluster);
     moreMenu.setDismissAnchors([moreBtn]);
 
     unsubscribeTheme = getThemeManager().subscribe(() => {
@@ -552,6 +564,7 @@ export function mountTitleBar(
       unsubscribeTheme?.();
       closeMoreMenu();
       moreMenu?.destroy();
+      destroyMoreClusterExtras?.();
       unlistenMaximize?.();
       host.replaceChildren();
       host.className = "";

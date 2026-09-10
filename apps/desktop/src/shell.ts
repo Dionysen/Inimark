@@ -76,6 +76,7 @@ export interface ShellMountOptions {
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
   onConfigureSidebarTabs?: () => void;
+  mountMoreClusterExtras?: (cluster: HTMLElement) => () => void;
 }
 
 export function mountShell(
@@ -219,6 +220,7 @@ export function mountShell(
     moreMenuActions: options.moreMenuActions,
     immersiveMenuActions: options.immersiveMenuActions,
     onConfigureSidebarTabs: options.onConfigureSidebarTabs,
+    mountMoreClusterExtras: options.mountMoreClusterExtras,
     sidebarToggle: {
       open: sidebarOpen,
       onToggle: toggleSidebar,

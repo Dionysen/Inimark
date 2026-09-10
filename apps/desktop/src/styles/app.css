@@ -59,6 +59,7 @@ html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone > .inimark-titlebar 
 
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-leading,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-cluster,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-btn,
 html[data-auto-hide-titlebar="true"] .inimark-right-sidebar-titlebar-toggle {
   opacity: 0;
@@ -83,10 +84,12 @@ html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within > .inim
 
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-leading,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-more-cluster,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-more-btn,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-right-sidebar-titlebar-toggle,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-leading,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-more-cluster,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-more-btn,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-right-sidebar-titlebar-toggle {
   opacity: 1;
@@ -175,6 +178,95 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
   -webkit-app-region: no-drag;
 }
 
+.inimark-titlebar-more-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  flex-shrink: 0;
+}
+
+.inimark-titlebar-update-capsule {
+  display: none;
+  flex-shrink: 0;
+}
+
+.inimark-titlebar-update-capsule.is-visible {
+  display: inline-flex;
+  align-items: center;
+}
+
+.inimark-titlebar-update-capsule__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--inimark-chrome-btn-size) - 4px);
+  padding: 0 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
+  color: var(--inimark-accent);
+  font-family: var(--inimark-font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition),
+    transform var(--inimark-control-transition);
+}
+
+.inimark-titlebar-update-capsule__pill:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--inimark-accent) 24%, transparent);
+  border-color: color-mix(in srgb, var(--inimark-accent) 60%, var(--inimark-border));
+}
+
+.inimark-titlebar-update-capsule__pill:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.inimark-titlebar-update-capsule__pill:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.inimark-titlebar-update-capsule__track {
+  position: relative;
+  width: 7.5rem;
+  height: calc(var(--inimark-chrome-btn-size) - 4px);
+  overflow: hidden;
+  border: 1px solid var(--inimark-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-hover));
+}
+
+.inimark-titlebar-update-capsule__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--inimark-accent) 88%, #ffffff 12%),
+    var(--inimark-accent)
+  );
+  transition: width 0.18s ease;
+}
+
+.inimark-titlebar-update-capsule__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.45rem;
+  color: var(--inimark-fg);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
 .inimark-right-sidebar-titlebar-toggle {
   /* Match right-sidebar topbar padding when the panel is open. */
   margin-left: 0;
@@ -219,7 +311,8 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 /* Windows + collapsed right sidebar: More sits left of the fixed toggle
    (editing area spans the window). When the right sidebar is open, More stays
    in normal titlebar flow so it remains right-aligned in the editor column. */
-html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-more-btn {
+/* Windows + collapsed right sidebar: More cluster sits left of the fixed toggle. */
+html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-more-cluster {
   position: fixed;
   top: calc((var(--inimark-titlebar-height) - var(--inimark-chrome-btn-size)) / 2);
   right: calc(
@@ -227,6 +320,14 @@ html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-m
       var(--inimark-space-2)
   );
   z-index: 30;
+  margin: 0;
+}
+
+html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-more-btn {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
   margin: 0;
 }
 

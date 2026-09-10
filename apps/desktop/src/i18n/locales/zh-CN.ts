@@ -29,6 +29,9 @@ export const zhCN: Dictionary = {
     showInFiles: "在文件管理器中显示",
   },
   titlebar: {
+    updateCapsule: "更新 v{{version}}",
+    updateDownloading: "正在下载…",
+    updateInstalling: "正在安装…",
     more: {
       back: "后退",
       forward: "前进",

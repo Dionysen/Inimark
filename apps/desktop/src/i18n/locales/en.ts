@@ -29,6 +29,9 @@ export const en: Dictionary = {
     showInFiles: "Show in Files",
   },
   titlebar: {
+    updateCapsule: "Update v{{version}}",
+    updateDownloading: "Downloading…",
+    updateInstalling: "Installing…",
     more: {
       back: "Back",
       forward: "Forward",
