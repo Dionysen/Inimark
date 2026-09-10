@@ -21,23 +21,38 @@ function renderOutline(outline: OutlineItem[]): string {
     .join("")}</ul>`;
 }
 
+function treeContainsActive(node: ManifestNode, currentHtmlPath: string): boolean {
+  if (node.kind === "file") return node.href === currentHtmlPath;
+  return (node.children ?? []).some((child) =>
+    treeContainsActive(child, currentHtmlPath),
+  );
+}
+
 function renderTree(
   nodes: ManifestNode[],
   currentHtmlPath: string,
   depth = 0,
 ): string {
   if (!nodes.length) return "";
+  const chevronSvg =
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   return `<ul class="site-tree" data-depth="${depth}">${nodes
     .map((node) => {
       if (node.kind === "directory") {
+        const expanded = treeContainsActive(node, currentHtmlPath);
         const kids = renderTree(node.children ?? [], currentHtmlPath, depth + 1);
-        return `<li class="site-tree-dir"><button type="button" class="site-tree-toggle" aria-expanded="true">${escapeHtml(node.name)}</button>${kids}</li>`;
+        const kidsHtml = expanded
+          ? kids
+          : kids.replace(/^<ul /, '<ul hidden ');
+        const chevronClass = expanded
+          ? "site-tree-chevron is-expanded"
+          : "site-tree-chevron";
+        return `<li class="site-tree-dir${expanded ? "" : " is-collapsed"}"><button type="button" class="site-tree-toggle" aria-expanded="${expanded ? "true" : "false"}"><span class="${chevronClass}" aria-hidden="true">${chevronSvg}</span><span class="site-tree-label">${escapeHtml(node.name)}</span></button>${kidsHtml}</li>`;
       }
       const href = node.href ?? "#";
       const active = node.href === currentHtmlPath ? " is-active" : "";
-      // href in manifest is site-relative from out root (notes/…)
       const rel = relativeHref(currentHtmlPath, href);
-      return `<li class="site-tree-file${active}"><a href="${escapeHtml(rel)}">${escapeHtml(node.name)}</a></li>`;
+      return `<li class="site-tree-file${active}"><a href="${escapeHtml(rel)}"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">${escapeHtml(node.name)}</span></a></li>`;
     })
     .join("")}</ul>`;
 }
@@ -68,15 +83,15 @@ export function renderNotePage(options: {
   <link rel="stylesheet" href="${escapeHtml(cssHref)}">
 </head>
 <body class="site-body">
-  <header class="site-header">
-    <a class="site-brand" href="${escapeHtml(relativeHref(page.htmlPath, "index.html"))}">${escapeHtml(config.siteName)}</a>
-    <label class="site-theme-picker">
-      <span class="site-theme-label">Theme</span>
-      <select id="site-theme" aria-label="Theme">${themeOptions}</select>
-    </label>
-  </header>
   <div class="site-layout">
     <aside class="site-sidebar" aria-label="Notes">
+      <div class="site-sidebar-head">
+        <a class="site-brand" href="${escapeHtml(relativeHref(page.htmlPath, "index.html"))}">${escapeHtml(config.siteName)}</a>
+        <label class="site-theme-picker">
+          <span class="site-theme-label">Theme</span>
+          <select id="site-theme" aria-label="Theme">${themeOptions}</select>
+        </label>
+      </div>
       <nav class="site-nav">${renderTree(manifest, page.htmlPath)}</nav>
     </aside>
     <main class="site-main">

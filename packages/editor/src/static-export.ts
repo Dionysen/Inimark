@@ -102,6 +102,9 @@ function serializeNode(
   const el = node;
   if (shouldDrop(el)) return "";
 
+  // Front matter is used for site metadata only — omit from published body.
+  if (el.tagName.toLowerCase() === "yaml-block") return "";
+
   // Fenced code: prefer plain <pre><code>
   if (el.classList.contains("code-block-node")) {
     const code = el.querySelector(".pm-code-content");

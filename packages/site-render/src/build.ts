@@ -5,6 +5,7 @@ import {
 } from "@inimark/editor";
 
 import { SITE_JS, SITE_LAYOUT_CSS } from "./assets.ts";
+import { parseFrontmatterTitle } from "./frontmatter.ts";
 import {
   isAbsoluteFsPath,
   isLocalAssetSrc,
@@ -87,29 +88,40 @@ function installWikiBridge(
   return () => setWikiLinkBridge(previous);
 }
 
-function buildFlatManifest(notes: VaultNoteInput[]): ManifestNode[] {
+function buildFlatManifest(
+  notes: VaultNoteInput[],
+  titleByPath: Map<string, string>,
+): ManifestNode[] {
   return notes
     .slice()
     .sort((a, b) => a.path.localeCompare(b.path))
     .map((n) => ({
-      name: noteTitleFromPath(n.path) + ".md",
+      name: titleByPath.get(normalizeSlashes(n.path)) ?? noteTitleFromPath(n.path),
       path: n.path,
       kind: "file" as const,
       href: noteHtmlPath(n.path),
     }));
 }
 
-/** Attach hrefs to file nodes in a vault tree for the site sidebar. */
-export function annotateManifestTree(nodes: ManifestNode[]): ManifestNode[] {
+/** Attach hrefs and display titles to file nodes for the site sidebar. */
+export function annotateManifestTree(
+  nodes: ManifestNode[],
+  titleByPath: Map<string, string> = new Map(),
+): ManifestNode[] {
   return nodes.map((node) => {
     if (node.kind === "directory") {
       return {
         ...node,
-        children: annotateManifestTree(node.children ?? []),
+        children: annotateManifestTree(node.children ?? [], titleByPath),
       };
     }
     if (/\.(md|markdown|mdown)$/i.test(node.path)) {
-      return { ...node, href: noteHtmlPath(node.path) };
+      const path = normalizeSlashes(node.path);
+      return {
+        ...node,
+        name: titleByPath.get(path) ?? noteTitleFromPath(path),
+        href: noteHtmlPath(path),
+      };
     }
     return node;
   });
@@ -200,10 +212,13 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         resolveWikiHref: resolveWikiHref(note.path),
       });
 
+      const fallbackTitle = noteTitleFromPath(note.path);
+      const title = parseFrontmatterTitle(note.markdown, fallbackTitle);
+
       pages.push({
         sourcePath: note.path,
         htmlPath: noteHtmlPath(note.path),
-        title: noteTitleFromPath(note.path),
+        title,
         bodyHtml: exported.html,
         outline: exported.outline,
       });
@@ -212,8 +227,13 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
     }
   }
 
+  const titleByPath = new Map(
+    pages.map((p) => [normalizeSlashes(p.sourcePath), p.title]),
+  );
+
   const manifest = annotateManifestTree(
-    options.tree?.length ? options.tree : buildFlatManifest(options.notes),
+    options.tree?.length ? options.tree : buildFlatManifest(options.notes, titleByPath),
+    titleByPath,
   );
 
   const siteCss = packSiteCss({

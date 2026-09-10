@@ -9,4 +9,11 @@ describe("renderMarkdownToStaticHtml", () => {
     expect(result.outline[0]?.text).toBe("Title");
     expect(result.html).toContain("<p>");
   });
+
+  it("omits yaml front matter from body html", () => {
+    const result = renderMarkdownToStaticHtml("---\ntitle: Meta\n---\n\n# Body");
+    expect(result.html).not.toContain("yaml-block");
+    expect(result.html).not.toContain("title: Meta");
+    expect(result.html).toContain("Body");
+  });
 });
