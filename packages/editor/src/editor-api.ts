@@ -60,6 +60,7 @@ import {
 import { flashHeadingAtPos } from "./heading-flash.ts";
 import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
+import { isImeComposing } from "./ime-position.ts";
 
 export interface FindSession {
   options: FindOptions;
@@ -336,7 +337,7 @@ export function createEditor(
   }
 
   function scrollCursorToCenterNow(): void {
-    if (inSource || pointerSelecting) return;
+    if (inSource || pointerSelecting || isImeComposing() || view.composing) return;
     try {
       const sc = findScrollContainer();
       const coords = view.coordsAtPos(view.state.selection.head);
@@ -350,7 +351,9 @@ export function createEditor(
   }
 
   function scheduleScrollCursorToCenter(): void {
-    if (!typewriterMode || inSource || pointerSelecting) return;
+    if (!typewriterMode || inSource || pointerSelecting || isImeComposing() || view.composing) {
+      return;
+    }
     if (performance.now() < suppressTypewriterUntil) return;
     if (typewriterRaf != null) return;
     typewriterRaf = requestAnimationFrame(() => {
@@ -405,7 +408,12 @@ export function createEditor(
       dispatchTransaction(tr) {
         const next = v.state.apply(tr);
         v.updateState(next);
-        if (typewriterMode && (tr.selectionSet || tr.docChanged)) {
+        if (
+          typewriterMode &&
+          (tr.selectionSet || tr.docChanged) &&
+          !isImeComposing() &&
+          !v.composing
+        ) {
           scheduleScrollCursorToCenter();
         }
         if (tr.docChanged) {
@@ -639,6 +647,13 @@ export function createEditor(
   view = buildView(options.initialContent ?? "");
   // Capture so caret placement runs before ProseMirror's default mousedown handling.
   host.addEventListener("mousedown", onEditorSurfaceMouseDown, true);
+  wrap.addEventListener(
+    "compositionend",
+    () => {
+      if (typewriterMode) scheduleScrollCursorToCenter();
+    },
+    true,
+  );
 
   const controller: Editor = {
     getMarkdown(): string {

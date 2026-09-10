@@ -1,6 +1,7 @@
 import { initPlatform } from "./platform/platform.ts";
 import { installChromeGuards } from "./platform/chrome-guards.ts";
 import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
+import { initImePositionGuard } from "./platform/ime-position.ts";
 import { initFullscreenChrome } from "./platform/window-chrome.ts";
 import { initThemeManager } from "./themes/manager.ts";
 import { initI18n } from "./i18n/index.ts";
@@ -14,6 +15,7 @@ initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
 const teardownChromeGuards = installChromeGuards();
 const teardownFullscreen = initFullscreenChrome();
 const teardownScrollbars = initAutoHideScrollbars();
+const teardownImePosition = initImePositionGuard();
 const teardownTooltips = initTooltipLayer();
 
 const root = document.querySelector<HTMLElement>("#app");
@@ -28,6 +30,7 @@ void initThemeManager().then(() => {
     teardownChromeGuards();
     teardownFullscreen();
     teardownScrollbars();
+    teardownImePosition();
     teardownTooltips();
     app.destroy();
   });

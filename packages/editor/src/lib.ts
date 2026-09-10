@@ -38,6 +38,12 @@ export {
   type MarkdownPreviewOptions,
 } from "./preview-view.ts";
 export {
+  attachImePositionGuard,
+  isImeComposing,
+  refreshImeCaretPosition,
+} from "./ime-position.ts";
+export type { ImePositionGuardOptions } from "./ime-position.ts";
+export {
   buildMarkdownTreeFromDirectory,
   pickMarkdownDirectory,
   readMarkdownFileHandle,
