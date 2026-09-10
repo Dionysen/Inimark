@@ -651,6 +651,7 @@ export const zhCN: Dictionary = {
       desktopOnly: "请在桌面应用中检查更新。",
       github: "GitHub",
       issues: "问题反馈",
+      email: "solongnight@outlook.com",
     },
   },
   quickOpen: {

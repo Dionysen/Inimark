@@ -107,6 +107,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "about.updates", section: "about", titleKey: "settings.about.softwareUpdate", descKey: "settings.about.checkUpdates" },
   { id: "about.license", section: "about", titleKey: "settings.about.openSourceLicense", descKey: "settings.about.licenseName" },
   { id: "about.github", section: "about", titleKey: "settings.about.github", descKey: "settings.about.desc" },
+  { id: "about.email", section: "about", titleKey: "settings.about.email", descKey: "settings.about.desc" },
 ];
 
 function shortcutEntries(): SettingSearchItem[] {

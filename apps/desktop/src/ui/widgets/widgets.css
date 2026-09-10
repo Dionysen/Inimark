@@ -161,6 +161,18 @@
   border-color: #dc2626;
 }
 
+.inimark-btn--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-btn--with-icon .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 /* ── Icon button ────────────────────────────────────────────────── */
 
 .inimark-icon-btn {

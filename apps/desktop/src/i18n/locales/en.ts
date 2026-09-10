@@ -662,6 +662,7 @@ export const en: Dictionary = {
       desktopOnly: "Updates are available in the desktop app.",
       github: "GitHub",
       issues: "Issues",
+      email: "solongnight@outlook.com",
     },
   },
   quickOpen: {

@@ -9,6 +9,7 @@ import {
   renameLibrary,
 } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
+import { openExternalUrl } from "../platform/open-url.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
@@ -33,6 +34,9 @@ import {
   menuIcons,
   setNavItemLabel,
   settingsAboutIcon,
+  githubIcon,
+  issuesIcon,
+  emailIcon,
   settingsAppearanceIcon,
   settingsEditorIcon,
   settingsImageIcon,
@@ -115,6 +119,11 @@ const SETTINGS_NAV_WIDTH_KEY = "inimark-settings-nav-width";
 const SETTINGS_NAV_WIDTH_DEFAULT = 220;
 const SETTINGS_NAV_WIDTH_MIN = 160;
 const SETTINGS_NAV_WIDTH_MAX = 420;
+
+const ABOUT_REPO_URL = "https://github.com/Dionysen/Inimark";
+const ABOUT_ISSUES_URL = `${ABOUT_REPO_URL}/issues`;
+const ABOUT_EMAIL = "solongnight@outlook.com";
+const ABOUT_LICENSE_URL = "https://opensource.org/licenses/MIT";
 
 const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
 const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
@@ -1183,10 +1192,14 @@ export function mountSettingsView(
 
     const licenseLink = document.createElement("a");
     licenseLink.className = "inimark-about-link";
-    licenseLink.href = "https://opensource.org/licenses/MIT";
+    licenseLink.href = ABOUT_LICENSE_URL;
     licenseLink.target = "_blank";
     licenseLink.rel = "noopener noreferrer";
     licenseLink.textContent = t("settings.about.licenseName");
+    licenseLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      openExternalUrl(ABOUT_LICENSE_URL);
+    });
 
     const list = document.createElement("div");
     list.className = "inimark-about-list";
@@ -1206,23 +1219,29 @@ export function mountSettingsView(
 
     const github = createButton({
       label: t("settings.about.github"),
+      icon: githubIcon(),
       variant: "default",
       onClick: () => {
-        window.open("https://github.com/Dionysen/Inimark2", "_blank", "noopener,noreferrer");
+        openExternalUrl(ABOUT_REPO_URL);
       },
     });
     const issues = createButton({
       label: t("settings.about.issues"),
+      icon: issuesIcon(),
       variant: "default",
       onClick: () => {
-        window.open(
-          "https://github.com/Dionysen/Inimark2/issues",
-          "_blank",
-          "noopener,noreferrer",
-        );
+        openExternalUrl(ABOUT_ISSUES_URL);
       },
     });
-    links.append(github, issues);
+    const email = createButton({
+      label: t("settings.about.email"),
+      icon: emailIcon(),
+      variant: "default",
+      onClick: () => {
+        openExternalUrl(`mailto:${ABOUT_EMAIL}`);
+      },
+    });
+    links.append(github, issues, email);
 
     about.append(hero, list, updateStatus, links);
     body.append(about);

@@ -26,6 +26,7 @@ import {
   type FileViewState,
 } from "./libraries/store.ts";
 import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
+import { openExternalUrl } from "./platform/open-url.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
@@ -317,14 +318,7 @@ export function mountApp(host: HTMLElement): AppController {
 
   setLinkNavigationBridge({
     openUrl(href) {
-      void (async () => {
-        if (isTauri()) {
-          const { invoke } = await import("@tauri-apps/api/core");
-          await invoke("open_url", { url: href });
-          return;
-        }
-        window.open(href, "_blank", "noopener,noreferrer");
-      })();
+      openExternalUrl(href);
     },
   });
   cleanups.push(() => setLinkNavigationBridge(null));
