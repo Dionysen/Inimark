@@ -370,15 +370,16 @@ html.platform-windows .inimark-settings-nav-topbar {
 .inimark-about-list .inimark-settings-row-control {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  justify-self: end;
   min-height: var(--inimark-control-height);
-  text-align: left;
+  text-align: right;
 }
 
 .inimark-about-value {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end;
   min-height: var(--inimark-control-height);
   color: var(--inimark-muted-fg);
   font-size: var(--inimark-control-font-size, 13px);
