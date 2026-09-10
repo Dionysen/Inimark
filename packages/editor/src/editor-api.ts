@@ -22,6 +22,7 @@ import {
   selectCmMatch,
   sourceFindExtensions,
 } from "./find-cm.ts";
+import { sourceLineNumberExtensions } from "./source-line-numbers.ts";
 import {
   collectMdMatches,
   type FindOptions,
@@ -531,7 +532,7 @@ export function createEditor(
       doc: md,
       markdownSource: true,
       className: "typora-web-cm-source",
-      extraExtensions: sourceFindExtensions(),
+      extraExtensions: [...sourceFindExtensions(), ...sourceLineNumberExtensions()],
       onChange: (next) => {
         options.onChange?.(next);
         if (findOpen && findSession) {

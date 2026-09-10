@@ -1117,10 +1117,19 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   cursor: text;
 }
 
+.inimark-editor-host .typora-web-cm-source .cm-lineNumbers .cm-gutterElement {
+  color: var(--inimark-fg-muted);
+  font-family: var(--inimark-font-mono);
+}
+
 .inimark-editor-host .ProseMirror,
 .inimark-editor-host .typora-web-source-editor .cm-content {
   font-size: var(--inimark-editor-font-size);
   font-family: var(--editor-font, var(--inimark-font-ui));
+}
+
+.inimark-editor-host .typora-web-cm-source .cm-gutters {
+  font-size: var(--inimark-editor-font-size);
 }
 
 /* Frosted / liquid glass surface (frost only when data-glass) */

@@ -211,7 +211,7 @@ function commonExtensions(
         overflowWrap: "anywhere",
         wordBreak: "break-word",
       },
-      ".cm-gutters": {
+      "&.typora-web-code-editor .cm-gutters, &.typora-web-html-source .cm-gutters": {
         display: "none",
       },
       ".cm-activeLine": {

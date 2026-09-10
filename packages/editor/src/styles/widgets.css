@@ -72,6 +72,54 @@
   word-break: break-word;
 }
 
+/* Source mode: Typora-style sparse line numbers outside the writing column. */
+.typora-web-cm-source.cm-editor {
+  position: relative;
+}
+.typora-web-cm-source .cm-gutters {
+  position: absolute;
+  right: 100%;
+  top: 0;
+  width: 0;
+  min-width: 0;
+  overflow: visible;
+  display: flex;
+  font-size: inherit;
+  line-height: inherit;
+  font-family: var(
+    --tw-source-line-number-font,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace
+  );
+}
+.typora-web-cm-source .cm-lineNumbers {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: max-content;
+  min-width: 2.75em;
+}
+.typora-web-cm-source .cm-scroller {
+  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.typora-web-cm-source .cm-lineNumbers .cm-gutterElement {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  color: var(--tw-source-line-number, #888);
+  font-size: inherit;
+  line-height: inherit;
+  font-family: inherit;
+  min-width: 2.75em;
+  padding: 0 var(--tw-source-line-number-gap, 0.75em) 0 0;
+  text-align: right;
+}
+
 /* ─── PM root reset ──────────────────────────────────────────────── */
 .ProseMirror {
   outline: none;
