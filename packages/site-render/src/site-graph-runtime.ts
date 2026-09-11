@@ -1,5 +1,5 @@
 /**
- * Browser runtime for the published local graph.
+ * Browser runtime for published site graphs (preview + modal).
  * Ported from apps/desktop graph-panel forces / camera / draw (defaults only).
  * Embedded into SITE_JS as a string — keep self-contained (no imports).
  */
@@ -37,16 +37,33 @@ export const SITE_GRAPH_JS = `
     const value = getComputedStyle(el).getPropertyValue(name).trim();
     return value || fallback;
   }
+  function relativeHref(fromHtmlPath, toHtmlPath) {
+    const fromParts = String(fromHtmlPath || "").replace(/\\\\/g, "/").split("/");
+    fromParts.pop();
+    const toParts = String(toHtmlPath || "").replace(/\\\\/g, "/").split("/");
+    let i = 0;
+    while (i < fromParts.length && i < toParts.length && fromParts[i] === toParts[i]) i++;
+    const up = fromParts.length - i;
+    const down = toParts.slice(i).join("/");
+    return (up > 0 ? "../".repeat(up) : "") + down;
+  }
+  function parseGraphPayload(raw) {
+    try { return JSON.parse(raw || "{}"); }
+    catch { return null; }
+  }
 
-  function mountLocalGraph(host) {
+  /**
+   * @param {HTMLElement} host
+   * @param {object} payload
+   * @param {{ lockCursor?: boolean }} [options]
+   *   lockCursor: keep default arrow (preview rail). Modal keeps grab/pointer.
+   */
+  function mountSiteGraph(host, payload, options) {
     const canvas = host.querySelector(".site-graph-canvas");
-    const dataEl = host.querySelector(".site-graph-data");
-    if (!(canvas instanceof HTMLCanvasElement) || !dataEl) return;
-    let payload;
-    try { payload = JSON.parse(dataEl.textContent || "{}"); }
-    catch { return; }
-    const nodesIn = Array.isArray(payload.nodes) ? payload.nodes : [];
-    if (!nodesIn.length) return;
+    if (!(canvas instanceof HTMLCanvasElement)) return () => {};
+    const lockCursor = !!(options && options.lockCursor);
+    const nodesIn = Array.isArray(payload?.nodes) ? payload.nodes : [];
+    if (!nodesIn.length) return () => {};
 
     const edgeIn = Array.isArray(payload.edges) ? payload.edges : [];
     const nodes = nodesIn.map((n) => ({
@@ -89,6 +106,17 @@ export const SITE_GRAPH_JS = `
     let adjacency = new Map();
     let dirty = true;
     let width = 240, height = 200;
+    let disposed = false;
+    let raf = 0;
+
+    function setCursor(value) {
+      if (lockCursor) {
+        canvas.style.cursor = "default";
+        return;
+      }
+      canvas.style.cursor = value;
+    }
+    setCursor("default");
 
     function rebuildAdjacency() {
       adjacency = new Map(nodes.map((n) => [n.id, new Set()]));
@@ -402,7 +430,6 @@ export const SITE_GRAPH_JS = `
         const rScreen = nodeRadius(node, maxDeg, scaleClamp, nodeScale);
         const hitR = Math.max(rScreen / Math.max(scale, 0.001), 8 / Math.max(scale, 0.3));
         const d = Math.hypot(node.x - world.x, node.y - world.y);
-        // Prefer current note slightly when overlapping.
         const score = d - (node.center ? 0.5 : 0);
         if (d <= hitR && score < bestDist) { bestDist = score; best = node; }
       }
@@ -410,6 +437,7 @@ export const SITE_GRAPH_JS = `
     }
 
     function tick() {
+      if (disposed) return;
       const rect = host.getBoundingClientRect();
       width = Math.max(1, Math.floor(rect.width));
       height = Math.max(1, Math.floor(rect.height));
@@ -425,17 +453,17 @@ export const SITE_GRAPH_JS = `
         draw();
         dirty = false;
       }
-      requestAnimationFrame(tick);
+      raf = requestAnimationFrame(tick);
     }
 
-    canvas.addEventListener("pointerdown", (event) => {
+    const onPointerDown = (event) => {
       const hit = hitNode(event.clientX, event.clientY);
       downX = event.clientX; downY = event.clientY; pointerMoved = false;
       if (hit && event.button === 0) {
         dragId = hit.id;
         hoverId = hit.id;
         panning = false;
-        canvas.style.cursor = "pointer";
+        setCursor(lockCursor ? "default" : "pointer");
         canvas.setPointerCapture(event.pointerId);
         dirty = true;
         return;
@@ -449,12 +477,12 @@ export const SITE_GRAPH_JS = `
         panVelDx = panVelDy = 0; panVelDt = 16;
         panGestureT = performance.now();
         canvas.setPointerCapture(event.pointerId);
-        canvas.style.cursor = "grabbing";
+        setCursor(lockCursor ? "default" : "grabbing");
         dirty = true;
       }
-    });
+    };
 
-    canvas.addEventListener("pointermove", (event) => {
+    const onPointerMove = (event) => {
       if (Math.hypot(event.clientX - downX, event.clientY - downY) > 4) pointerMoved = true;
       if (panning) {
         const dx = event.clientX - panLastX;
@@ -478,15 +506,15 @@ export const SITE_GRAPH_JS = `
         node.x = world.x; node.y = world.y;
         node.vx = 0; node.vy = 0;
         alpha = Math.max(alpha, 0.12);
-        canvas.style.cursor = "pointer";
+        setCursor(lockCursor ? "default" : "pointer");
         dirty = true;
         return;
       }
       const hit = hitNode(event.clientX, event.clientY);
       const next = hit?.id ?? null;
       if (next !== hoverId) { hoverId = next; dirty = true; }
-      canvas.style.cursor = hit ? "pointer" : "grab";
-    });
+      setCursor(lockCursor ? "default" : (hit ? "pointer" : "grab"));
+    };
 
     const endPointer = (event) => {
       if (panning) {
@@ -496,7 +524,7 @@ export const SITE_GRAPH_JS = `
           panvX = panVelDx / panVelDt;
           panvY = panVelDy / panVelDt;
         }
-        canvas.style.cursor = "grab";
+        setCursor(lockCursor ? "default" : "grab");
       }
       if (dragId) {
         const id = dragId;
@@ -506,15 +534,13 @@ export const SITE_GRAPH_JS = `
           if (node && node.href) location.href = node.href;
         }
         alpha = Math.max(alpha, SETTINGS.animate ? 0.2 : 0.12);
-        canvas.style.cursor = "grab";
+        setCursor(lockCursor ? "default" : "grab");
       }
       try { canvas.releasePointerCapture(event.pointerId); } catch {}
       dirty = true;
     };
-    canvas.addEventListener("pointerup", endPointer);
-    canvas.addEventListener("pointercancel", endPointer);
 
-    canvas.addEventListener("wheel", (event) => {
+    const onWheel = (event) => {
       event.preventDefault();
       const rect = canvas.getBoundingClientRect();
       zoomUseCursor = true;
@@ -523,7 +549,13 @@ export const SITE_GRAPH_JS = `
       const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
       targetScale = Math.max(GRAPH_SCALE_MIN, Math.min(GRAPH_SCALE_MAX, targetScale * factor));
       dirty = true;
-    }, { passive: false });
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", endPointer);
+    canvas.addEventListener("pointercancel", endPointer);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
 
     rebuildAdjacency();
     seedLayout();
@@ -534,8 +566,137 @@ export const SITE_GRAPH_JS = `
     fitCamera(28);
     if (SETTINGS.animate) alpha = Math.max(alpha, 0.2);
     dirty = true;
-    requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerup", endPointer);
+      canvas.removeEventListener("pointercancel", endPointer);
+      canvas.removeEventListener("wheel", onWheel);
+    };
   }
 
-  document.querySelectorAll(".site-graph-host").forEach(mountLocalGraph);
+  let activeModalDispose = null;
+  let globalGraphCache = null;
+
+  function closeGraphModal() {
+    if (activeModalDispose) {
+      activeModalDispose();
+      activeModalDispose = null;
+    }
+    document.querySelector(".site-graph-modal")?.remove();
+    document.documentElement.classList.remove("site-graph-modal-open");
+  }
+
+  function openGraphModal(title, payload) {
+    closeGraphModal();
+    const overlay = document.createElement("div");
+    overlay.className = "site-graph-modal";
+    overlay.innerHTML =
+      '<div class="site-graph-modal-dialog" role="dialog" aria-modal="true">' +
+      '<div class="site-graph-modal-head">' +
+      '<div class="site-graph-modal-title"></div>' +
+      '<button type="button" class="site-graph-modal-close" aria-label="Close">×</button>' +
+      "</div>" +
+      '<div class="site-graph-modal-body"><div class="site-graph-modal-host">' +
+      '<canvas class="site-graph-canvas" aria-label="Relationship graph"></canvas>' +
+      "</div></div></div>";
+    overlay.querySelector(".site-graph-modal-title").textContent = title;
+    document.body.appendChild(overlay);
+    document.documentElement.classList.add("site-graph-modal-open");
+
+    const host = overlay.querySelector(".site-graph-modal-host");
+    activeModalDispose = mountSiteGraph(host, payload, { lockCursor: false });
+
+    const onKey = (event) => {
+      if (event.key === "Escape") closeGraphModal();
+    };
+    const onBackdrop = (event) => {
+      if (event.target === overlay) closeGraphModal();
+    };
+    overlay.querySelector(".site-graph-modal-close")?.addEventListener("click", closeGraphModal);
+    overlay.addEventListener("click", onBackdrop);
+    window.addEventListener("keydown", onKey);
+    const prevDispose = activeModalDispose;
+    activeModalDispose = () => {
+      window.removeEventListener("keydown", onKey);
+      prevDispose?.();
+    };
+  }
+
+  function readEmbeddedGlobalGraph() {
+    if (typeof window !== "undefined" && window.__INIMARK_GLOBAL_GRAPH__) {
+      return window.__INIMARK_GLOBAL_GRAPH__;
+    }
+    return null;
+  }
+
+  async function loadGlobalGraph(url, centerId, pageHtmlPath) {
+    if (!globalGraphCache) {
+      const embedded = readEmbeddedGlobalGraph();
+      if (embedded && Array.isArray(embedded.nodes)) {
+        globalGraphCache = embedded;
+      } else if (url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to load global graph (" + res.status + ")");
+        globalGraphCache = await res.json();
+      } else {
+        throw new Error("Global graph data is missing");
+      }
+    }
+    const raw = globalGraphCache;
+    const nodes = (Array.isArray(raw.nodes) ? raw.nodes : []).map((n) => ({
+      id: n.id,
+      label: n.label || n.id,
+      href: n.htmlPath ? relativeHref(pageHtmlPath, n.htmlPath) : (n.href || ""),
+      center: n.id === centerId,
+    }));
+    const edges = Array.isArray(raw.edges) ? raw.edges : [];
+    return { centerId, nodes, edges };
+  }
+
+  function findPreviewHost(fromEl) {
+    const section = fromEl.closest(".site-graph");
+    return section?.querySelector(".site-graph-host[data-graph-preview]") || null;
+  }
+
+  document.querySelectorAll(".site-graph-host[data-graph-preview]").forEach((host) => {
+    const dataEl = host.querySelector(".site-graph-data");
+    const localPayload = parseGraphPayload(dataEl?.textContent);
+    if (localPayload) mountSiteGraph(host, localPayload, { lockCursor: true });
+  });
+
+  document.addEventListener("click", async (event) => {
+    const btn = event.target.closest?.("[data-graph-mode]");
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const host = findPreviewHost(btn);
+    const dataEl = host?.querySelector(".site-graph-data");
+    const localPayload = parseGraphPayload(dataEl?.textContent);
+    const pageHtml = host?.getAttribute("data-page-html") || "";
+    const globalUrl = host?.getAttribute("data-global-graph") || "";
+    const mode = btn.getAttribute("data-graph-mode");
+
+    try {
+      if (mode === "local") {
+        openGraphModal("Local graph", localPayload || { nodes: [], edges: [] });
+        return;
+      }
+      if (mode === "global") {
+        const centerId = localPayload?.centerId || "";
+        const payload = await loadGlobalGraph(globalUrl, centerId, pageHtml);
+        if (!payload.nodes.length) throw new Error("Global graph has no nodes");
+        openGraphModal("Global graph", payload);
+      }
+    } catch (err) {
+      console.error(err);
+      const message = err && err.message ? err.message : String(err);
+      window.alert("Failed to open global graph:\\n" + message);
+    }
+  });
 `;

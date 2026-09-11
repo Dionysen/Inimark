@@ -350,12 +350,29 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
     editorThemeCss: options.editorThemeCss,
   });
 
+  const globalGraph = {
+    nodes: pages.map((p) => ({
+      id: normalizeSlashes(p.sourcePath),
+      label: p.title,
+      htmlPath: p.htmlPath,
+    })),
+    edges: edges.map((e) => ({ source: e.from, target: e.to })),
+  };
+
   const files: SiteFile[] = [
     { path: "assets/site.css", content: siteCss },
-    { path: "assets/site.js", content: SITE_JS },
+    {
+      path: "assets/site.js",
+      // Embed global graph so modal works without fetch (file:// / offline / Pages lag).
+      content: `window.__INIMARK_GLOBAL_GRAPH__ = ${JSON.stringify(globalGraph)};\n${SITE_JS}`,
+    },
     {
       path: "assets/manifest.json",
       content: JSON.stringify({ siteName: config.siteName, tree: manifest }, null, 2),
+    },
+    {
+      path: "assets/graph.json",
+      content: JSON.stringify(globalGraph, null, 2),
     },
   ];
 

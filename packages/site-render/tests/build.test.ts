@@ -59,6 +59,13 @@ describe("buildSite", () => {
     expect(welcome.content).toContain("Outline");
     expect(welcome.content).toContain("Graph");
     expect(welcome.content).toContain("site-graph-canvas");
+    expect(welcome.content).toContain('data-graph-mode="local"');
+    expect(welcome.content).toContain('data-graph-mode="global"');
+    expect(welcome.content).toContain("assets/graph.json");
+    expect(result.files.some((f) => f.path === "assets/graph.json")).toBe(true);
+    const siteJs = result.files.find((f) => f.path === "assets/site.js")!;
+    expect(siteJs.content).toContain("__INIMARK_GLOBAL_GRAPH__");
+    expect(siteJs.content).toContain("Welcome Home");
     expect(welcome.content).toContain("site-links-footer");
     expect(welcome.content).toContain("Backlinks");
     expect(welcome.content).toContain("Outgoing");

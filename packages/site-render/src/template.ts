@@ -58,9 +58,20 @@ function renderLinksFooter(page: BuiltPage): string {
 
 function renderGraphPanel(page: BuiltPage): string {
   const payload = JSON.stringify(page.graph).replace(/</g, "\\u003c");
+  const globalHref = relativeHref(page.htmlPath, "assets/graph.json");
+  const localIcon =
+    '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="5" cy="7" r="2" fill="currentColor" opacity=".85"/><circle cx="19" cy="8" r="2" fill="currentColor" opacity=".85"/><circle cx="7" cy="18" r="2" fill="currentColor" opacity=".85"/><circle cx="18" cy="17" r="2" fill="currentColor" opacity=".85"/><path d="M9.2 9.2L10.8 10.8M14.8 10.2L16.8 9M9.6 14.8L8.2 16.4M14.2 14.2L16.2 15.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  const globalIcon =
+    '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.4 2.6 3.6 5.4 3.6 8.5s-1.2 5.9-3.6 8.5c-2.4-2.6-3.6-5.4-3.6-8.5S9.6 6.1 12 3.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
   return `<section class="site-graph" aria-label="Graph">
-      <div class="site-rail-title">Graph</div>
-      <div class="site-graph-host">
+      <div class="site-graph-head">
+        <div class="site-rail-title">Graph</div>
+        <div class="site-graph-actions">
+          <button type="button" class="site-graph-btn" data-graph-mode="local" title="Local graph" aria-label="Open local graph">${localIcon}</button>
+          <button type="button" class="site-graph-btn" data-graph-mode="global" title="Global graph" aria-label="Open global graph">${globalIcon}</button>
+        </div>
+      </div>
+      <div class="site-graph-host" data-graph-preview data-page-html="${escapeHtml(page.htmlPath)}" data-global-graph="${escapeHtml(globalHref)}">
         <canvas class="site-graph-canvas" width="320" height="280" aria-label="Local relationship graph"></canvas>
         <script type="application/json" class="site-graph-data">${payload}</script>
       </div>

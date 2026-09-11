@@ -194,6 +194,42 @@ ${webkitScrollbar(".site-nav")}
 .site-graph {
   flex: 0 0 auto;
 }
+.site-graph-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.site-graph-head .site-rail-title {
+  margin-bottom: 0;
+}
+.site-graph-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.site-graph-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.site-graph-btn:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--bg-hover);
+}
+.site-graph-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .site-graph-host {
   position: relative;
   width: 100%;
@@ -225,11 +261,78 @@ html[data-theme="grey"] {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: grab;
+  cursor: default;
   touch-action: none;
 }
-.site-graph-canvas:active {
-  cursor: grabbing;
+.site-graph-host[data-graph-preview] .site-graph-canvas,
+.site-graph-host[data-graph-preview] .site-graph-canvas:active {
+  cursor: default;
+}
+.site-graph-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+  backdrop-filter: blur(6px);
+}
+.site-graph-modal-dialog {
+  width: min(1100px, 100%);
+  height: min(780px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+.site-graph-modal-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.site-graph-modal-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text-strong, var(--text-primary));
+}
+.site-graph-modal-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.site-graph-modal-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.site-graph-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px;
+}
+.site-graph-modal-host {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+html.site-graph-modal-open,
+html.site-graph-modal-open body {
+  overflow: hidden;
 }
 .site-outline {
   flex: 1 1 auto;
