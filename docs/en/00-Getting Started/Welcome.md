@@ -17,11 +17,11 @@ translationKey: welcome
 
 ## In one line
 
-| Axis | What Inimark does |
-| ---- | ----------------- |
-| Edit | Typora-style **WYSIWYG** (no split live preview) |
+| Axis | What Inimark does                                              |
+| ---- | -------------------------------------------------------------- |
+| Edit | Typora-style **WYSIWYG** (no split live preview)               |
 | Know | Local **libraries** + `[[wikilinks]]` + [[Relationship Graph]] |
-| Ship | Same notes → **static website** |
+| Ship | Same notes → **static website**                                |
 
 $$
 \text{Inimark} \approx \underbrace{\text{WYSIWYG}}_{\text{Typora}} + \underbrace{\text{Vault + Graph}}_{\text{Obsidian}} + \underbrace{\text{SSG}}_{\text{Publish}}
@@ -37,11 +37,11 @@ flowchart LR
   D --> E[Appendix]
 ```
 
-| Pillar | Start here |
-| --- | --- |
-| Editing | [[Editing Modes]] · [[Markdown Syntax]] |
+| Pillar    | Start here                                                                  |
+| --------- | --------------------------------------------------------------------------- |
+| Editing   | [[Editing Modes]] · [[Markdown Syntax]]                                     |
 | Knowledge | [[Libraries and Files]] · [[Wikilinks and Embeds]] · [[Relationship Graph]] |
-| Ship | [[Themes and Appearance]] · [[Publish a Site]] |
+| Ship      | [[Themes and Appearance]] · [[Publish a Site]]                              |
 
 Full map: [[MOC-English Docs]].
 

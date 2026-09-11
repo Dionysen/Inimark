@@ -4,9 +4,7 @@ lang: en
 translationKey: interface-tour
 ---
 
-
 # Interface Tour
-
 
 **中文:** [[界面导览|中文]] · [[MOC-English Docs]]
 
@@ -22,11 +20,11 @@ Think of the main window as three columns:
 
 ## Title bar
 
-| Area | Role |
-| --- | --- |
-| Back / Forward | [[Libraries and Files|Navigation history]] across opened notes |
-| Window controls | Min / max / close (macOS traffic lights) |
-| More menu | Immersive options: auto-hide title / status bar |
+| Area            | Role                                            |
+| --------------- | ----------------------------------------------- |
+| Back / Forward  | [[Libraries and Files                           |
+| Window controls | Min / max / close (macOS traffic lights)        |
+| More menu       | Immersive options: auto-hide title / status bar |
 
 > [!TIP]
 > For distraction-free writing, auto-hide the title and status bars so the UI feels closer to “a single sheet of paper”. See [[Themes and Appearance]].
@@ -35,13 +33,13 @@ Think of the main window as three columns:
 
 Left and right **tabs are configurable** (Files / Search / Bookmarks / Outline / Graph).
 
-| Tab | One-liner | Deep dive |
-| --- | --- | --- |
-| Files | Vault file tree | [[Libraries and Files]] |
-| Search | Name + content search | [[Search Bookmarks Outline]] |
-| Bookmarks | Bookmarks and groups | [[Search Bookmarks Outline]] |
-| Outline | Heading tree for the active note | [[Search Bookmarks Outline]] |
-| Graph | Graph plus outlinks / backlinks | [[Relationship Graph]] |
+| Tab       | One-liner                        | Deep dive                    |
+| --------- | -------------------------------- | ---------------------------- |
+| Files     | Vault file tree                  | [[Libraries and Files]]      |
+| Search    | Name + content search            | [[Search Bookmarks Outline]] |
+| Bookmarks | Bookmarks and groups             | [[Search Bookmarks Outline]] |
+| Outline   | Heading tree for the active note | [[Search Bookmarks Outline]] |
+| Graph     | Graph plus outlinks / backlinks  | [[Relationship Graph]]       |
 
 Sidebars support:
 

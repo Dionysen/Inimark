@@ -4,9 +4,7 @@ lang: en
 translationKey: search-bookmarks
 ---
 
-
 # Search, Bookmarks, and Outline
-
 
 **中文:** [[搜索书签与大纲|中文]] · [[Interface Tour]] · [[Libraries and Files]]
 
@@ -14,11 +12,11 @@ Three navigation tabs that complement the [[Relationship Graph]].
 
 ## Search
 
-| Capability | Notes |
-| --- | --- |
-| File names | Fast filtering |
-| Content | Full-text hits |
-| Jump | Open files; may reveal matches in the editor |
+| Capability | Notes                                        |
+| ---------- | -------------------------------------------- |
+| File names | Fast filtering                               |
+| Content    | Full-text hits                               |
+| Jump       | Open files; may reveal matches in the editor |
 
 > [!NOTE]
 > Unlike in-note `Ctrl+F`: Search = **across files**; Find = **current file**. See [[Find Replace and Shortcuts]].
@@ -34,7 +32,6 @@ Typical uses:
 - This week’s “main thread”
 - The help MOC [[MOC-English Docs]]
 - Pre-publish review notes
-
 - [ ] Bookmark [[Publish a Site]]
 - [ ] Bookmark [[Markdown Syntax]]
 

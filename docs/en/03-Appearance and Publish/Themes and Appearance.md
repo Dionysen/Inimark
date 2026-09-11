@@ -4,18 +4,16 @@ lang: en
 translationKey: themes
 ---
 
-
 # Themes and Appearance
-
 
 **中文:** [[主题与外观|中文]] · [[Publish a Site]] · [[Interface Tour]]
 
 ## Appearance modes
 
-| Mode | Meaning |
-| --- | --- |
-| Light | Light UI |
-| Dark | Dark UI |
+| Mode   | Meaning   |
+| ------ | --------- |
+| Light  | Light UI  |
+| Dark   | Dark UI   |
 | System | Follow OS |
 
 Built-ins include Light / Grey / Dark; you can also import **custom theme packs** (`.inimark-theme.json`).
@@ -43,25 +41,3 @@ Goal: **maximize the writing surface** — Typora-like focus with Obsidian-like 
 ## Relation to Publish
 
 Static sites can reuse the app theme system (`defaultTheme` in `publish.config.json`).
-
-Example fields for this vault:
-
-```json
-{
-  "siteName": "Inimark Docs",
-  "defaultTheme": "light",
-  "baseHref": "/",
-  "out": "dist",
-  "home": "README.md"
-}
-```
-
-Full flow: [[Publish a Site]].
-
-## Fonts and zoom
-
-Wheel-zoom the editor ([[Find Replace and Shortcuts]]); system font hooks come from the desktop shell.
-
----
-
-Next: [[Publish a Site]]
