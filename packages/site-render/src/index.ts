@@ -22,3 +22,11 @@ export {
   mediaOutPath,
   stripFileUrl,
 } from "./paths.ts";
+export {
+  loadVaultFromFs,
+  loadPublishConfig,
+  createNotePathResolver,
+  type LoadedVault,
+  type VaultNoteFile,
+} from "./vault-fs.ts";
+export { writeSiteToFs } from "./write-fs.ts";

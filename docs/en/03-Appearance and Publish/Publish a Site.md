@@ -41,6 +41,26 @@ Boundaries also live in [[Roadmap]].
 
 ## Steps
 
+### CLI (recommended for GitHub Pages)
+
+This repo ships a script that builds `docs/` and pushes to `gh-pages`:
+
+```bash
+# Build only → docs/dist
+pnpm docs:build
+
+# Build and force-push to origin/gh-pages
+pnpm docs:deploy
+```
+
+Site URL: https://dionysen.github.io/Inimark/  
+`publish.config.json` sets `baseHref` to `/Inimark/`.
+
+> [!TIP]
+> After the first deploy, set GitHub **Settings → Pages** → Source: **Deploy from a branch** → `gh-pages` / root.
+
+### In-app Publish
+
 1. Open `docs/` as a library in Inimark
 2. Open **Settings → Publish**
 3. Confirm `siteName` / `out` / `baseHref` / `home`

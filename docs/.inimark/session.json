@@ -1,0 +1,72 @@
+{
+  "activeFilePath": "en/04-Appendix/Roadmap.md",
+  "expandedDirs": [
+    "en",
+    "zh",
+    "zh/01-编辑与Markdown",
+    "zh/00-由此开始",
+    "en/04-Appendix"
+  ],
+  "fileViews": {
+    "zh/MOC-中文文档.md": {
+      "anchor": 8,
+      "scrollTop": 187.1999969482422,
+      "updatedAt": 1789087140488
+    },
+    "zh/00-由此开始/欢迎.md": {
+      "anchor": 222,
+      "scrollTop": 200,
+      "updatedAt": 1789087319465
+    },
+    "en/MOC-English Docs.md": {
+      "anchor": 210,
+      "scrollTop": 400,
+      "updatedAt": 1789087170198
+    },
+    "en/00-Getting Started/Welcome.md": {
+      "anchor": 1612,
+      "scrollTop": 1187.199951171875,
+      "updatedAt": 1789087233848
+    },
+    "en/00-Getting Started/Install Inimark.md": {
+      "anchor": 1309,
+      "scrollTop": 1026.4000244140625,
+      "updatedAt": 1789087268651
+    },
+    "zh/01-编辑与Markdown/编辑模式.md": {
+      "anchor": 1180,
+      "scrollTop": 1248.800048828125,
+      "updatedAt": 1789087276946
+    },
+    "zh/04-附录/路线图.md": {
+      "anchor": 1012,
+      "scrollTop": 476,
+      "updatedAt": 1789087318477
+    },
+    "zh/00-由此开始/安装与启动.md": {
+      "anchor": 8,
+      "scrollTop": 0,
+      "updatedAt": 1789087318935
+    },
+    "zh/00-由此开始/界面导览.md": {
+      "anchor": 1268,
+      "scrollTop": 0,
+      "updatedAt": 1789087434526
+    },
+    "en/04-Appendix/Roadmap.md": {
+      "anchor": 626,
+      "scrollTop": 0,
+      "updatedAt": 1789087591642
+    },
+    "en/04-Appendix/Feature Comparison.md": {
+      "anchor": 13,
+      "scrollTop": 300,
+      "updatedAt": 1789087438472
+    },
+    "en/02-Vault and Knowledge/Relationship Graph.md": {
+      "anchor": 8,
+      "scrollTop": 0,
+      "updatedAt": 1789087437511
+    }
+  }
+}

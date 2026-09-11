@@ -12,9 +12,13 @@
     "typecheck": "pnpm -r typecheck",
     "tauri": "pnpm --filter @inimark/desktop tauri",
     "bump-version": "node scripts/bump-version.mjs",
-    "replace-icon": "node scripts/replace-icon.mjs"
+    "replace-icon": "node scripts/replace-icon.mjs",
+    "docs:build": "tsx scripts/publish-docs.ts",
+    "docs:deploy": "tsx scripts/publish-docs.ts --deploy"
   },
   "devDependencies": {
-    "sharp": "^0.34.4"
+    "happy-dom": "^20.9.0",
+    "sharp": "^0.34.4",
+    "tsx": "^4.20.5"
   }
 }
