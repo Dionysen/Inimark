@@ -2,6 +2,36 @@
 
 import { SITE_GRAPH_JS } from "./site-graph-runtime.ts";
 
+const SCROLLBAR_THIN = `scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, #888) transparent;`;
+
+function webkitScrollbar(selector: string): string {
+  return `${selector}::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+${selector}::-webkit-scrollbar-track {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+${selector}::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #888);
+  border-radius: var(--radius-scrollbar, 4px);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+${selector}::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #aaa);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+${selector}::-webkit-scrollbar-corner {
+  background: transparent;
+}`;
+}
+
 export const SITE_LAYOUT_CSS = `/* Inimark published site layout */
 *, *::before, *::after { box-sizing: border-box; }
 html {
@@ -9,10 +39,8 @@ html {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-ui, system-ui, sans-serif);
-  /* Document scrollbar lives on the far right of the viewport. */
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb, #888) transparent;
+  ${SCROLLBAR_THIN}
 }
 body {
   margin: 0;
@@ -22,92 +50,36 @@ body {
   font-family: var(--font-ui, system-ui, sans-serif);
 }
 /* Keep native / hover scrollbars in sync with the active theme.
-   Without this, macOS WebKit can flash a light 鈥渓egacy鈥?scrollbar when
-   the pointer sits on the bar (overlay 鈫?always-visible switch). */
+   Without this, macOS WebKit can flash a light legacy scrollbar when
+   the pointer sits on the bar (overlay -> always-visible switch). */
 html { color-scheme: dark; }
 html[data-theme="light"],
 html[data-theme="grey"] { color-scheme: light; }
 html[data-theme="dark"] { color-scheme: dark; }
 
-html::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-html::-webkit-scrollbar-track {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
-html::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb, #888);
-  border-radius: var(--radius-scrollbar, 4px);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-html::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover, #aaa);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-html::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Left nav may still scroll independently when sticky; keep a thin bar. */
-.site-nav {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb, #888) transparent;
-}
-.site-nav::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.site-nav::-webkit-scrollbar-track {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
-.site-nav::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb, #888);
-  border-radius: var(--radius-scrollbar, 4px);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.site-nav::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover, #aaa);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-.site-nav::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Right rail: allow overflow for long outlines, but never show a scrollbar. */
-.site-rail,
-.site-outline {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.site-rail::-webkit-scrollbar,
-.site-outline::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
-}
+${webkitScrollbar("html")}
+${webkitScrollbar(".site-nav")}
 
 .site-body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
-/* Cluster sidebars against the article: fixed column widths + centered grid.
-   Page height follows the article; window scrollbar is the site scrollbar. */
+/* Centered three-column cluster; sidebars are fixed on wide screens. */
 .site-layout {
+  --site-gutter: 20px;
+  --site-sidebar-w: 325px;
+  --site-rail-w: 312px;
+  --site-main-max: 48rem;
+  --site-main-w: min(var(--site-main-max), calc(100vw - var(--site-sidebar-w) - var(--site-rail-w) - 2 * var(--site-gutter)));
+  --site-cluster-w: calc(var(--site-sidebar-w) + var(--site-main-w) + var(--site-rail-w));
+  --site-cluster-left: max(var(--site-gutter), calc((100vw - var(--site-cluster-w)) / 2));
+  --site-cluster-right: max(var(--site-gutter), calc((100vw - var(--site-cluster-w)) / 2));
+  --site-sidebar-gap: 32px;
+  --site-rail-inset: 32px;
   flex: 1;
   display: grid;
-  grid-template-columns: 325px minmax(0, 44rem) 312px;
+  grid-template-columns: var(--site-sidebar-w) minmax(0, var(--site-main-w)) var(--site-rail-w);
   justify-content: center;
   align-items: start;
   column-gap: 0;
@@ -115,7 +87,7 @@ html::-webkit-scrollbar-corner {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 14px 20px 48px;
+  padding: 14px var(--site-gutter) 48px;
   background: var(--bg-primary);
 }
 .site-sidebar,
@@ -129,14 +101,10 @@ html::-webkit-scrollbar-corner {
   min-height: 0;
 }
 .site-sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 0 32px 0 0;
-  margin-right: 32px;
+  padding: 0 var(--site-sidebar-gap) 0 0;
+  margin-right: var(--site-sidebar-gap);
   border-right: 1px solid var(--border);
   overflow: hidden;
 }
@@ -206,22 +174,20 @@ html::-webkit-scrollbar-corner {
 }
 .site-nav {
   flex: 1;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 10px 4px 16px;
   min-height: 0;
+  ${SCROLLBAR_THIN}
 }
 .site-rail {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 18px;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 14px 0 16px 32px;
+  overflow: hidden;
+  padding: 14px 0 16px var(--site-rail-inset);
   margin-left: 16px;
   border: none;
 }
@@ -266,20 +232,33 @@ html[data-theme="grey"] {
   cursor: grabbing;
 }
 .site-outline {
-  overflow: visible;
-  padding: 0;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.site-outline::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 .site-main {
   overflow: visible;
   padding: 8px 16px 64px;
   min-width: 0;
+  align-self: start;
 }
 .site-article {
   max-width: none;
   width: 100%;
   margin: 0;
+}
+.site-article :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: 12px;
 }
 .site-links-footer {
   margin-top: 48px;
@@ -457,27 +436,93 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
   border-bottom-style: dashed;
 }
 .site-article yaml-block { display: none !important; }
+
+/* Desktop: fixed sidebars; document scroll carries the article (scrollbar at viewport right). */
+@media (min-width: 721px) {
+  .site-layout {
+    display: grid;
+    grid-template-columns: var(--site-sidebar-w) minmax(0, var(--site-main-w)) var(--site-rail-w);
+    justify-content: center;
+    align-items: start;
+    padding: 14px var(--site-gutter) 48px;
+  }
+  .site-sidebar {
+    position: fixed;
+    top: 0;
+    left: var(--site-cluster-left);
+    width: var(--site-sidebar-w);
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 2;
+    background: var(--bg-primary);
+  }
+  .site-rail {
+    position: fixed;
+    top: 0;
+    right: var(--site-cluster-right);
+    width: var(--site-rail-w);
+    height: 100vh;
+    max-height: 100vh;
+    margin-left: 0;
+    z-index: 2;
+    background: var(--bg-primary);
+  }
+  .site-main {
+    grid-column: 2;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+    margin-left: var(--site-sidebar-gap);
+    padding: 8px 16px 64px;
+  }
+  .site-article {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+}
+
 @media (max-width: 1100px) {
   .site-layout {
-    grid-template-columns: 299px minmax(0, 40rem) 273px;
-    padding: 12px 14px;
+    --site-sidebar-w: 299px;
+    --site-rail-w: 273px;
+    --site-main-max: 44rem;
+    --site-main-w: min(var(--site-main-max), calc(100vw - var(--site-sidebar-w) - var(--site-rail-w) - 2 * var(--site-gutter)));
+    --site-gutter: 14px;
   }
 }
 @media (max-width: 960px) {
   .site-layout {
-    grid-template-columns: minmax(260px, 312px) minmax(0, 44rem);
-    justify-content: center;
+    --site-rail-w: 0px;
+    --site-main-w: min(var(--site-main-max), calc(100vw - var(--site-sidebar-w) - 2 * var(--site-gutter)));
   }
   .site-rail { display: none; }
 }
 @media (max-width: 720px) {
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+  html {
+    overflow-y: auto;
+  }
+  .site-body {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
   .site-layout {
+    display: grid;
     grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
     padding: 10px;
     gap: 10px;
   }
   .site-sidebar {
     position: static;
+    width: auto;
     height: auto;
     max-height: 45vh;
     margin-right: 0;
@@ -485,12 +530,36 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
     border-right: none;
     border-bottom: 1px solid var(--border);
     padding-bottom: 8px;
+    overflow: hidden;
+  }
+  .site-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .site-rail {
     position: static;
+    width: auto;
     height: auto;
+    max-height: none;
+    overflow: hidden;
   }
-  .site-main { padding: 12px 8px 48px; }
+  .site-outline {
+    max-height: 40vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .site-main {
+    position: static;
+    overflow: visible;
+    margin-left: 0;
+    padding: 12px 8px 48px;
+  }
+  .site-article {
+    max-width: none;
+    margin: 0;
+  }
 }
 `;
 
@@ -528,6 +597,32 @@ export const SITE_JS = `(() => {
       if (lang) localStorage.setItem(LANG_KEY, lang);
     });
   });
+
+  const main = document.querySelector(".site-main");
+  if (main) {
+    const scrollRoot = document.scrollingElement || document.documentElement;
+    const scrollToHash = (hash) => {
+      if (!hash || hash === "#") return;
+      const id = decodeURIComponent(hash.slice(1));
+      const target = document.getElementById(id);
+      if (!target) return;
+      const top =
+        target.getBoundingClientRect().top +
+        scrollRoot.scrollTop -
+        12;
+      scrollRoot.scrollTo({ top, behavior: "smooth" });
+    };
+    main.addEventListener("click", (event) => {
+      const link = event.target.closest('a[href^="#"]');
+      if (!link) return;
+      const href = link.getAttribute("href");
+      if (!href || href === "#") return;
+      event.preventDefault();
+      scrollToHash(href);
+      history.replaceState(null, "", href);
+    });
+    if (location.hash) scrollToHash(location.hash);
+  }
 ${SITE_GRAPH_JS}
 })();
 `;
