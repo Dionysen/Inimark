@@ -94,11 +94,13 @@ function updateViewFallbacks(relativePath) {
 function updateCargoLock(relativePath) {
   const path = join(root, relativePath);
   const prev = readFileSync(path, "utf8");
+  // Cargo.lock may use LF or CRLF depending on the checkout platform.
   const next = prev.replace(
-    /(name = "inimark-desktop"\nversion = ")[^"]*(")/,
+    /(name = "inimark-desktop"\r?\nversion = ")[^"]*(")/,
     `$1${version}$2`,
   );
-  if (next === prev && !prev.includes(`name = "inimark-desktop"\nversion = "${version}"`)) {
+  const alreadyAtTarget = /name = "inimark-desktop"\r?\nversion = "([^"]*)"/.exec(prev)?.[1] === version;
+  if (next === prev && !alreadyAtTarget) {
     console.error(`Failed to update version in ${relativePath}`);
     process.exit(1);
   }
