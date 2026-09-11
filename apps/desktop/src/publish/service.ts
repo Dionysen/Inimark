@@ -10,6 +10,7 @@ import themesCss from "../styles/themes.css?raw";
 import widgetsCss from "../../../../packages/editor/src/styles/widgets.css?raw";
 import themeTyporaCss from "../../../../packages/editor/src/styles/theme-typora.css?raw";
 import katexCss from "katex/dist/katex.min.css?raw";
+import mermaidRuntimeJs from "mermaid/dist/mermaid.min.js?raw";
 
 import { BUILTIN_THEMES } from "../themes/builtin.ts";
 import {
@@ -182,6 +183,7 @@ export async function publishLibrary(
     editorWidgetsCss: widgetsCss,
     editorThemeCss: themeTyporaCss,
     themeIds,
+    mermaidRuntimeJs,
   });
 
   const outDir = joinWorkspacePath(vaultPath, built.outRelative);

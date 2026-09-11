@@ -360,6 +360,32 @@ html.site-graph-modal-open body {
   width: 100%;
   margin: 0;
 }
+.site-article .code-block-node.has-diagram .diagram-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 0 16px;
+  overflow-x: auto;
+  text-align: center;
+}
+.site-article .code-block-node.has-diagram .diagram-panel > svg,
+.site-article .code-block-node.has-diagram .diagram-panel .mermaid > svg {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  height: auto;
+}
+.site-article .code-block-node.has-diagram .diagram-panel pre.mermaid {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  font: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+}
 .site-article :is(h1, h2, h3, h4, h5, h6) {
   scroll-margin-top: 12px;
 }
@@ -675,10 +701,353 @@ export const SITE_JS = `(() => {
     root.setAttribute("data-theme", saved);
     if (select) select.value = saved;
   }
+
+  const LIGHT_FALLBACKS = {
+    surface: "#ffffff",
+    secondary: "#f6f8fa",
+    tertiary: "#eaeef2",
+    contentBg: "#ffffff",
+    code: "#f6f8fa",
+    fg: "#1f2328",
+    muted: "#656d76",
+    border: "#d0d7de",
+    accent: "#0969da",
+    accentHover: "#0550ae",
+    danger: "#cf222e",
+    blockquoteBg: "#f6f8fa",
+    blockquoteBorder: "#d0d7de",
+  };
+  const DARK_FALLBACKS = {
+    surface: "#1b1d24",
+    secondary: "#111217",
+    tertiary: "#25272b",
+    contentBg: "#1b1d24",
+    code: "#1f2129",
+    fg: "#ece7dd",
+    muted: "#aeb6c2",
+    border: "#4a4d52",
+    accent: "#8ab4e7",
+    accentHover: "#b994f4",
+    danger: "#ff8f86",
+    blockquoteBg: "#2d2a22",
+    blockquoteBorder: "#8a7440",
+  };
+
+  const clampByte = (n) => Math.min(255, Math.max(0, Math.round(n)));
+  const toHex = ({ r, g, b }) =>
+    "#" +
+    [r, g, b]
+      .map((n) => clampByte(n).toString(16).padStart(2, "0"))
+      .join("");
+
+  const parseCssColor = (value) => {
+    const trimmed = String(value || "").trim();
+    if (!trimmed || trimmed === "transparent") return null;
+    if (/^#[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+      let hex = trimmed.slice(1);
+      if (hex.length === 3 || hex.length === 4) {
+        hex = hex
+          .split("")
+          .map((c) => c + c)
+          .join("");
+      }
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16),
+        a: hex.length >= 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1,
+      };
+    }
+    const rgb = trimmed.match(
+      /^rgba?\\(\\s*([\\d.]+)\\s*[,\\s]\\s*([\\d.]+)\\s*[,\\s]\\s*([\\d.]+)(?:\\s*[,/]\\s*([\\d.]+%?))?\\s*\\)$/i,
+    );
+    if (rgb) {
+      let a = 1;
+      if (rgb[4] != null) {
+        a = rgb[4].endsWith("%") ? parseFloat(rgb[4]) / 100 : Number(rgb[4]);
+      }
+      return {
+        r: Number(rgb[1]),
+        g: Number(rgb[2]),
+        b: Number(rgb[3]),
+        a: Math.min(1, Math.max(0, a)),
+      };
+    }
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (ctx) {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = "#000";
+        ctx.fillStyle = trimmed;
+        ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+        if (r + g + b + a > 0 || /^black$/i.test(trimmed) || trimmed === "#000" || trimmed === "#000000") {
+          return { r, g, b, a: a / 255 };
+        }
+      }
+    } catch (_) {}
+    return null;
+  };
+
+  const toMermaidColor = (value, fallback, backdrop = "#ffffff") => {
+    const parsed = parseCssColor(value) || parseCssColor(fallback);
+    const fb = parseCssColor(fallback) || { r: 128, g: 128, b: 128, a: 1 };
+    const color = parsed || fb;
+    if (color.a >= 0.999) return toHex(color);
+    const base = parseCssColor(backdrop) || { r: 255, g: 255, b: 255, a: 1 };
+    const a = color.a;
+    return toHex({
+      r: color.r * a + base.r * (1 - a),
+      g: color.g * a + base.g * (1 - a),
+      b: color.b * a + base.b * (1 - a),
+    });
+  };
+
+  const readCssVar = (name, fallback) => {
+    try {
+      const value = getComputedStyle(root).getPropertyValue(name).trim();
+      return value || fallback;
+    } catch (_) {
+      return fallback;
+    }
+  };
+
+  const isDarkAppearance = () => {
+    const theme = root.getAttribute("data-theme") || "";
+    if (/dark/i.test(theme)) return true;
+    if (/light|grey|gray/i.test(theme)) return false;
+    const bg = parseCssColor(readCssVar("--bg-primary", "#ffffff"));
+    if (!bg) return false;
+    return (0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b) / 255 < 0.45;
+  };
+
+  const syncAppearance = () => {
+    root.dataset.appearance = isDarkAppearance() ? "dark" : "light";
+  };
+
+  const buildMermaidThemeVariables = () => {
+    const dark = isDarkAppearance();
+    const fb = dark ? DARK_FALLBACKS : LIGHT_FALLBACKS;
+    const contentBgRaw = readCssVar("--bg-primary", readCssVar("--inimark-content-bg", fb.contentBg));
+    const contentBg = toMermaidColor(contentBgRaw, fb.contentBg, fb.contentBg);
+    const solid = (raw, fallback) => toMermaidColor(raw, fallback, contentBg);
+    const s = {
+      surface: solid(readCssVar("--bg-surface", readCssVar("--inimark-surface", fb.surface)), fb.surface),
+      secondary: solid(readCssVar("--bg-secondary", readCssVar("--inimark-bg", fb.secondary)), fb.secondary),
+      tertiary: solid(
+        readCssVar("--bg-tertiary", readCssVar("--inimark-surface-raised", fb.tertiary)),
+        fb.tertiary,
+      ),
+      contentBg,
+      code: solid(readCssVar("--bg-code", fb.code), fb.code),
+      fg: solid(readCssVar("--text-primary", readCssVar("--inimark-fg", fb.fg)), fb.fg),
+      muted: solid(readCssVar("--text-secondary", readCssVar("--inimark-muted-fg", fb.muted)), fb.muted),
+      border: solid(readCssVar("--border", readCssVar("--inimark-border", fb.border)), fb.border),
+      accent: solid(readCssVar("--accent", readCssVar("--inimark-accent", fb.accent)), fb.accent),
+      accentHover: solid(readCssVar("--accent-hover", fb.accentHover), fb.accentHover),
+      danger: solid(readCssVar("--danger", fb.danger), fb.danger),
+      blockquoteBg: solid(readCssVar("--blockquote-bg", fb.blockquoteBg), fb.blockquoteBg),
+      blockquoteBorder: solid(readCssVar("--blockquote-border", fb.blockquoteBorder), fb.blockquoteBorder),
+    };
+    const pieSectionText = dark ? s.contentBg : s.fg;
+    return {
+      darkMode: dark,
+      background: "transparent",
+      primaryColor: s.surface,
+      secondaryColor: s.secondary,
+      tertiaryColor: s.tertiary,
+      mainBkg: s.surface,
+      secondBkg: s.secondary,
+      primaryTextColor: s.fg,
+      secondaryTextColor: s.fg,
+      tertiaryTextColor: s.fg,
+      textColor: s.fg,
+      nodeTextColor: s.fg,
+      primaryBorderColor: s.border,
+      secondaryBorderColor: s.border,
+      tertiaryBorderColor: s.border,
+      lineColor: s.muted,
+      arrowheadColor: s.muted,
+      defaultLinkColor: s.muted,
+      titleColor: s.accent,
+      edgeLabelBackground: s.code,
+      clusterBkg: s.secondary,
+      clusterBorder: s.border,
+      noteBkgColor: s.blockquoteBg,
+      noteTextColor: s.fg,
+      noteBorderColor: s.blockquoteBorder,
+      actorBkg: s.surface,
+      actorTextColor: s.fg,
+      actorBorder: s.border,
+      actorLineColor: s.border,
+      labelBoxBkgColor: s.surface,
+      labelBoxBorderColor: s.border,
+      signalColor: s.muted,
+      signalTextColor: s.fg,
+      labelTextColor: s.fg,
+      loopTextColor: s.fg,
+      activationBorderColor: s.border,
+      activationBkgColor: s.tertiary,
+      sequenceNumberColor: s.contentBg,
+      sectionBkgColor: s.surface,
+      altSectionBkgColor: s.tertiary,
+      sectionBkgColor2: s.surface,
+      excludeBkgColor: s.danger,
+      taskBorderColor: s.border,
+      taskBkgColor: s.surface,
+      taskTextColor: s.fg,
+      taskTextOutsideColor: s.fg,
+      taskTextLightColor: s.contentBg,
+      taskTextDarkColor: s.fg,
+      taskTextClickableColor: s.accent,
+      activeTaskBorderColor: s.accent,
+      activeTaskBkgColor: s.secondary,
+      doneTaskBkgColor: s.code,
+      doneTaskBorderColor: s.border,
+      critBorderColor: s.danger,
+      critBkgColor: s.secondary,
+      gridColor: s.border,
+      todayLineColor: s.danger,
+      vertLineColor: s.border,
+      personBkg: s.surface,
+      personBorder: s.border,
+      rowOdd: s.code,
+      rowEven: s.secondary,
+      transitionColor: s.muted,
+      transitionLabelColor: s.fg,
+      stateLabelColor: s.fg,
+      stateBkg: s.surface,
+      labelBackgroundColor: s.code,
+      compositeBackground: s.secondary,
+      altBackground: s.tertiary,
+      compositeTitleBackground: s.tertiary,
+      compositeBorder: s.border,
+      innerEndBackground: s.fg,
+      errorBkgColor: s.secondary,
+      errorTextColor: s.danger,
+      specialStateColor: s.accent,
+      scaleLabelColor: s.fg,
+      classText: s.fg,
+      requirementBackground: s.surface,
+      requirementBorderColor: s.border,
+      requirementTextColor: s.fg,
+      relationColor: s.muted,
+      relationLabelBackground: s.code,
+      relationLabelColor: s.fg,
+      branchLabelColor: s.fg,
+      tagLabelColor: s.fg,
+      tagLabelBackground: s.code,
+      tagLabelBorder: s.border,
+      commitLabelColor: s.fg,
+      commitLabelBackground: s.code,
+      archEdgeColor: s.muted,
+      archEdgeArrowColor: s.muted,
+      archGroupBorderColor: s.border,
+      quadrant1TextFill: s.fg,
+      quadrant2TextFill: s.fg,
+      quadrant3TextFill: s.fg,
+      quadrant4TextFill: s.fg,
+      quadrantPointTextFill: s.fg,
+      quadrantXAxisTextFill: s.fg,
+      quadrantYAxisTextFill: s.fg,
+      quadrantTitleFill: s.accent,
+      pieTitleTextColor: s.accent,
+      pieSectionTextColor: pieSectionText,
+      pieLegendTextColor: s.fg,
+      pieStrokeColor: pieSectionText,
+      vennTitleTextColor: s.accent,
+      vennSetTextColor: s.fg,
+      wardleyEvolutionColor: s.accent,
+      xyChart: {
+        titleColor: s.accent,
+        dataLabelColor: s.fg,
+        xAxisTitleColor: s.fg,
+        xAxisLabelColor: s.fg,
+        xAxisTickColor: s.muted,
+        xAxisLineColor: s.muted,
+        yAxisTitleColor: s.fg,
+        yAxisLabelColor: s.fg,
+        yAxisTickColor: s.muted,
+        yAxisLineColor: s.muted,
+        plotColorPalette: s.accent + "," + s.accentHover + "," + s.muted + "," + s.danger,
+      },
+      packet: {
+        startByteColor: s.fg,
+        endByteColor: s.fg,
+        labelColor: s.fg,
+        titleColor: s.accent,
+        blockStrokeColor: s.border,
+        blockFillColor: s.surface,
+      },
+      wardley: {
+        axisTextColor: s.fg,
+        componentLabelColor: s.fg,
+        annotationTextColor: s.fg,
+      },
+    };
+  };
+
+  syncAppearance();
+
+  const waitForMermaid = () =>
+    new Promise((resolve, reject) => {
+      if (window.mermaid) {
+        resolve(window.mermaid);
+        return;
+      }
+      let tries = 0;
+      const timer = setInterval(() => {
+        if (window.mermaid) {
+          clearInterval(timer);
+          resolve(window.mermaid);
+        } else if (++tries > 200) {
+          clearInterval(timer);
+          reject(new Error("Mermaid failed to load"));
+        }
+      }, 25);
+    });
+
+  const markDiagramSuccess = (pre) => {
+    const panel = pre.closest(".diagram-panel");
+    const block = pre.closest(".code-block-node");
+    if (panel) panel.dataset.diagramState = "success";
+    if (block) {
+      block.classList.add("diagram-success");
+      block.classList.remove("diagram-pending");
+    }
+  };
+
+  const renderMermaidDiagrams = async () => {
+    const nodes = Array.from(document.querySelectorAll("pre.mermaid"));
+    if (!nodes.length) return;
+    try {
+      syncAppearance();
+      const mermaid = await waitForMermaid();
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        suppressErrorRendering: true,
+        theme: "base",
+        themeVariables: buildMermaidThemeVariables(),
+      });
+      await mermaid.run({ nodes });
+      nodes.forEach(markDiagramSuccess);
+    } catch (error) {
+      console.warn("Inimark site: Mermaid render failed", error);
+    }
+  };
+
   select?.addEventListener("change", () => {
     const value = select.value;
     root.setAttribute("data-theme", value);
     localStorage.setItem(STORAGE_KEY, value);
+    syncAppearance();
+    // Mermaid SVG colors are baked at render time; reload to re-theme diagrams.
+    if (document.querySelector("pre.mermaid, .diagram-panel svg")) {
+      location.reload();
+    }
   });
   document.querySelectorAll(".site-tree-toggle").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -726,6 +1095,8 @@ export const SITE_JS = `(() => {
     });
     if (location.hash) scrollToHash(location.hash);
   }
+
+  renderMermaidDiagrams();
 ${SITE_GRAPH_JS}
 })();
 `;

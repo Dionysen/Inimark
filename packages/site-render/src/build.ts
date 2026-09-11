@@ -64,6 +64,11 @@ export interface BuildSiteOptions {
   editorThemeCss: string;
   /** Theme ids offered in the site picker. */
   themeIds: string[];
+  /**
+   * Optional Mermaid UMD bundle (`mermaid.min.js`) embedded as `assets/mermaid.min.js`.
+   * Required for published ```mermaid fences to hydrate in the browser.
+   */
+  mermaidRuntimeJs?: string;
 }
 
 function headingSlug(heading: string): string {
@@ -376,6 +381,13 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
     },
   ];
 
+  const hasMermaidRuntime = Boolean(options.mermaidRuntimeJs?.trim());
+  if (hasMermaidRuntime) {
+    files.push({
+      path: "assets/mermaid.min.js",
+      content: options.mermaidRuntimeJs!,
+    });
+  }
   if (config.locales?.languages.length) {
     files.push({
       path: "assets/locale-map.json",
@@ -406,6 +418,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         themes: options.themeIds,
         localeMap,
         localeHomeHtml,
+        hasMermaidRuntime,
       }),
     });
   }

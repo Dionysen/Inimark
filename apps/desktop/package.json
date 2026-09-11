@@ -20,7 +20,8 @@
     "@tauri-apps/plugin-fs": "^2.2.1",
     "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-updater": "^2.11.0",
-    "katex": "^0.16.46"
+    "katex": "^0.16.46",
+    "mermaid": "^11.15.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",

@@ -207,4 +207,36 @@ describe("buildSite", () => {
 
     expect(index.content).toContain("notes/zh/欢迎.html");
   });
+
+  it("emits Mermaid sources and ships the runtime for client hydration", () => {
+    const result = buildSite({
+      config: { siteName: "Diagrams", defaultTheme: "light", baseHref: "/", out: "dist" },
+      notes: [
+        {
+          path: "Chart.md",
+          markdown: "# Chart\n\n```mermaid\nflowchart LR\n  A --> B\n```\n",
+        },
+      ],
+      resolveNotePath: () => null,
+      resolveMediaAbsolutePath: () => null,
+      themeVariablesCss: "",
+      editorWidgetsCss: "",
+      editorThemeCss: "",
+      themeIds: ["light"],
+      mermaidRuntimeJs: "/* mermaid stub */\nwindow.mermaid = {};",
+    });
+
+    const page = result.files.find((f) => f.path === "notes/Chart.html")!;
+    expect(page.content).toContain('pre class="mermaid"');
+    expect(page.content).toContain("flowchart LR");
+    expect(page.content).toContain("assets/mermaid.min.js");
+    expect(page.content).toContain("data-inimark-mermaid");
+    expect(result.files.some((f) => f.path === "assets/mermaid.min.js")).toBe(true);
+    expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
+      "buildMermaidThemeVariables",
+    );
+    expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
+      'theme: "base"',
+    );
+  });
 });

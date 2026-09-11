@@ -149,6 +149,7 @@ export function renderNotePage(options: {
   themes: string[];
   localeMap?: LocaleMap;
   localeHomeHtml?: Map<string, string>;
+  hasMermaidRuntime?: boolean;
 }): string {
   const {
     config,
@@ -157,9 +158,11 @@ export function renderNotePage(options: {
     themes,
     localeMap = {},
     localeHomeHtml = new Map(),
+    hasMermaidRuntime = false,
   } = options;
   const cssHref = relativeHref(page.htmlPath, "assets/site.css");
   const jsHref = relativeHref(page.htmlPath, "assets/site.js");
+  const mermaidHref = relativeHref(page.htmlPath, "assets/mermaid.min.js");
   const themeOptions = themes
     .map(
       (id) =>
@@ -178,6 +181,9 @@ export function renderNotePage(options: {
     localeHomeHtml.get(config.locales?.default ?? "") ||
     "index.html";
   const brandHref = relativeHref(page.htmlPath, brandTarget);
+  const mermaidScript = hasMermaidRuntime
+    ? `  <script src="${escapeHtml(mermaidHref)}" defer data-inimark-mermaid></script>\n`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="${escapeHtml(htmlLang)}" data-theme="${escapeHtml(config.defaultTheme)}"${page.lang ? ` data-page-lang="${escapeHtml(page.lang)}"` : ""}>
@@ -213,7 +219,7 @@ export function renderNotePage(options: {
       </section>
     </aside>
   </div>
-  <script src="${escapeHtml(jsHref)}" defer></script>
+${mermaidScript}  <script src="${escapeHtml(jsHref)}" defer></script>
 </body>
 </html>
 `;

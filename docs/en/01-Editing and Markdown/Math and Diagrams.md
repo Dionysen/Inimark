@@ -625,7 +625,7 @@ Source:
 requirementDiagram
   requirement stable {
     id: R1
-    text: Math and diagrams render in WYSIWYG
+    text: "Math and diagrams render in WYSIWYG"
     risk: low
     verifymethod: test
   }
@@ -641,7 +641,7 @@ Rendered:
 requirementDiagram
   requirement stable {
     id: R1
-    text: Math and diagrams render in WYSIWYG
+    text: "Math and diagrams render in WYSIWYG"
     risk: low
     verifymethod: test
   }

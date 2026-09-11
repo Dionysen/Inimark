@@ -1,10 +1,13 @@
 /// <reference types="vitest/config" />
+import { createRequire } from "node:module";
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 
+const require = createRequire(import.meta.url);
 const host = process.env.TAURI_DEV_HOST;
 const editorRoot = resolve(__dirname, "../../packages/editor");
 const siteRenderRoot = resolve(__dirname, "../../packages/site-render");
+const mermaidMinJs = require.resolve("mermaid/dist/mermaid.min.js");
 
 const editorAliases = [
   {
@@ -21,6 +24,8 @@ const editorAliases = [
   },
   { find: "@inimark/editor", replacement: resolve(editorRoot, "src/lib.ts") },
   { find: "@inimark/site-render", replacement: resolve(siteRenderRoot, "src/index.ts") },
+  // Mermaid package exports omit the UMD build; alias so `?raw` can embed it.
+  { find: "mermaid/dist/mermaid.min.js", replacement: mermaidMinJs },
 ];
 
 export default defineConfig({

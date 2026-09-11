@@ -90,6 +90,28 @@ function serializeChildren(
     .join("");
 }
 
+function serializeFencedCode(el: Element): string {
+  const code = el.querySelector(".pm-code-content");
+  const pre = el.querySelector("pre.code-source-frame, pre");
+  const lang =
+    pre?.getAttribute("data-lang") ||
+    el.getAttribute("data-lang") ||
+    "";
+  const text = code?.textContent ?? el.textContent ?? "";
+  // Published sites hydrate Mermaid in the browser (headless export DOM cannot
+  // produce SVG). Keep source in <pre class="mermaid"> for mermaid.run().
+  if (lang.trim().toLowerCase() === "mermaid") {
+    return (
+      `<div class="code-block-node has-diagram diagram-pending" data-lang="mermaid">` +
+      `<div class="diagram-panel" data-diagram-state="pending">` +
+      `<pre class="mermaid">${escapeHtml(text)}</pre>` +
+      `</div></div>`
+    );
+  }
+  const langAttr = lang ? ` data-lang="${escapeAttr(lang)}"` : "";
+  return `<pre${langAttr}><code>${escapeHtml(text)}</code></pre>`;
+}
+
 function serializeNode(
   node: Node,
   options: StaticExportOptions,
@@ -105,17 +127,9 @@ function serializeNode(
   // Front matter is used for site metadata only — omit from published body.
   if (el.tagName.toLowerCase() === "yaml-block") return "";
 
-  // Fenced code: prefer plain <pre><code>
+  // Fenced code: Mermaid → client-hydrated diagram; other langs → <pre><code>
   if (el.classList.contains("code-block-node")) {
-    const code = el.querySelector(".pm-code-content");
-    const pre = el.querySelector("pre.code-source-frame, pre");
-    const lang =
-      pre?.getAttribute("data-lang") ||
-      el.getAttribute("data-lang") ||
-      "";
-    const text = code?.textContent ?? el.textContent ?? "";
-    const langAttr = lang ? ` data-lang="${escapeAttr(lang)}"` : "";
-    return `<pre${langAttr}><code>${escapeHtml(text)}</code></pre>`;
+    return serializeFencedCode(el);
   }
 
   // Wiki link widget → <a>
@@ -255,6 +269,7 @@ function escapeAttr(s: string): string {
 /**
  * Render markdown to static reading-mode HTML using the live editor pipeline.
  * Must run in a DOM environment (browser / happy-dom).
+ * Mermaid fences are emitted for client-side hydration on the published site.
  */
 export function renderMarkdownToStaticHtml(
   markdown: string,

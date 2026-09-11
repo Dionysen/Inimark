@@ -184,6 +184,10 @@ async function main(): Promise<void> {
     editorWidgetsCss,
     editorThemeCss,
     themeIds: [...BUILTIN_THEMES],
+    mermaidRuntimeJs: readFileSync(
+      require.resolve("mermaid/dist/mermaid.min.js"),
+      "utf8",
+    ),
   });
 
   const outDir = join(opts.vault, built.outRelative);
