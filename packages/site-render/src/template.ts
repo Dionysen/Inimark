@@ -8,7 +8,7 @@ import type {
 } from "./types.ts";
 import type { LocaleMap } from "./locales.ts";
 import { joinUrl, relativeHref } from "./paths.ts";
-import { SITE_THEME_BOOT_JS } from "./assets.ts";
+import { SITE_THEME_BOOT_JS, SITE_TREE_BOOT_JS } from "./assets.ts";
 
 function escapeHtml(s: string): string {
   return s
@@ -134,7 +134,7 @@ function renderTree(
         const chevronClass = expanded
           ? "site-tree-chevron is-expanded"
           : "site-tree-chevron";
-        return `<li class="site-tree-dir${expanded ? "" : " is-collapsed"}"><button type="button" class="site-tree-toggle" aria-expanded="${expanded ? "true" : "false"}"><span class="${chevronClass}" aria-hidden="true">${chevronSvg}</span><span class="site-tree-label">${escapeHtml(node.name)}</span></button>${kidsHtml}</li>`;
+        return `<li class="site-tree-dir${expanded ? "" : " is-collapsed"}" data-tree-path="${escapeHtml(node.path)}"><button type="button" class="site-tree-toggle" aria-expanded="${expanded ? "true" : "false"}"><span class="${chevronClass}" aria-hidden="true">${chevronSvg}</span><span class="site-tree-label">${escapeHtml(node.name)}</span></button>${kidsHtml}</li>`;
       }
       const href = node.href ?? "#";
       const active = node.href === currentHtmlPath ? " is-active" : "";
@@ -211,6 +211,7 @@ export function renderNotePage(options: {
         ${langSwitcher}
       </div>
       <nav class="site-nav">${renderTree(manifest, page.htmlPath)}</nav>
+      <script>${SITE_TREE_BOOT_JS}</script>
     </aside>
     <main class="site-main">
       <article class="ProseMirror site-article">${page.bodyHtml}</article>

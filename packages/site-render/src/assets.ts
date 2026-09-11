@@ -103,7 +103,7 @@ ${webkitScrollbar(".site-nav")}
 .site-sidebar {
   display: flex;
   flex-direction: column;
-  padding: 0 var(--site-sidebar-gap) 0 0;
+  padding: 0 10px 0 0;
   margin-right: var(--site-sidebar-gap);
   border-right: 1px solid var(--border);
   overflow: hidden;
@@ -196,7 +196,11 @@ html:not([data-appearance="dark"]) .site-theme-toggle .site-theme-icon-moon {
   overscroll-behavior: contain;
   padding: 10px 4px 16px;
   min-height: 0;
+  visibility: hidden;
   ${SCROLLBAR_THIN}
+}
+html[data-tree-ready] .site-nav {
+  visibility: visible;
 }
 .site-rail {
   display: flex;
@@ -726,6 +730,57 @@ export const SITE_THEME_BOOT_JS = `(() => {
   } catch (_) {}
 })();`;
 
+/** Runs immediately after the sidebar tree so expand state is restored before paint. */
+export const SITE_TREE_BOOT_JS = `(() => {
+  const TREE_KEY = "inimark-site-tree";
+  const root = document.documentElement;
+  const loadTreeState = () => {
+    try {
+      const raw = localStorage.getItem(TREE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  };
+  const saveTreeState = (state) => {
+    try {
+      localStorage.setItem(TREE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  };
+  const setDirOpen = (li, open) => {
+    const btn = li.querySelector(":scope > .site-tree-toggle");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    li.classList.toggle("is-collapsed", !open);
+    btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", open);
+    const nested = li.querySelector(":scope > .site-tree");
+    if (nested) nested.hidden = !open;
+  };
+  try {
+    const state = loadTreeState();
+    let changed = false;
+    document.querySelectorAll(".site-tree-dir").forEach((li) => {
+      const path = li.getAttribute("data-tree-path");
+      const containsActive = Boolean(li.querySelector(".site-tree-file.is-active"));
+      let open = containsActive;
+      if (!containsActive && path && Object.prototype.hasOwnProperty.call(state, path)) {
+        open = Boolean(state[path]);
+      } else if (!containsActive) {
+        const btn = li.querySelector(":scope > .site-tree-toggle");
+        open = btn?.getAttribute("aria-expanded") !== "false";
+      }
+      setDirOpen(li, open);
+      if (path && state[path] !== open) {
+        state[path] = open;
+        changed = true;
+      }
+    });
+    if (changed) saveTreeState(state);
+  } catch (_) {}
+  root.setAttribute("data-tree-ready", "1");
+})();`;
+
 export const SITE_JS = `(() => {
   const STORAGE_KEY = "inimark-site-theme";
   const root = document.documentElement;
@@ -1102,16 +1157,42 @@ export const SITE_JS = `(() => {
       return;
     }
   });
+
+  const TREE_KEY = "inimark-site-tree";
+  const loadTreeState = () => {
+    try {
+      const raw = localStorage.getItem(TREE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  };
+  const saveTreeState = (state) => {
+    try {
+      localStorage.setItem(TREE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  };
+  const setDirOpen = (li, open) => {
+    const btn = li.querySelector(":scope > .site-tree-toggle");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    li.classList.toggle("is-collapsed", !open);
+    btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", open);
+    const nested = li.querySelector(":scope > .site-tree");
+    if (nested) nested.hidden = !open;
+  };
   document.querySelectorAll(".site-tree-toggle").forEach((btn) => {
     btn.addEventListener("click", () => {
       const li = btn.closest(".site-tree-dir");
       if (!li) return;
       const open = btn.getAttribute("aria-expanded") !== "false";
-      btn.setAttribute("aria-expanded", open ? "false" : "true");
-      li.classList.toggle("is-collapsed", open);
-      btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", !open);
-      const nested = li.querySelector(":scope > .site-tree");
-      if (nested) nested.hidden = open;
+      setDirOpen(li, !open);
+      const path = li.getAttribute("data-tree-path");
+      if (!path) return;
+      const state = loadTreeState();
+      state[path] = !open;
+      saveTreeState(state);
     });
   });
 
