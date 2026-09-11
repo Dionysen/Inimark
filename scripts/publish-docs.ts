@@ -133,8 +133,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { buildSite, loadVaultFromFs, writeSiteToFs } = await import(
-    "../packages/site-render/src/index.ts"
+  const { buildSite } = await import("../packages/site-render/src/index.ts");
+  const { loadVaultFromFs, writeSiteToFs } = await import(
+    "../packages/site-render/src/node.ts"
   );
 
   const vault = await loadVaultFromFs(opts.vault);

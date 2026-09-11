@@ -24,14 +24,6 @@ export {
 } from "./types.ts";
 export { parseWikiNoteTargets, type WikiLinkRef } from "./wiki-links.ts";
 export {
-  loadVaultFromFs,
-  loadPublishConfig,
-  createNotePathResolver,
-  type LoadedVault,
-  type VaultNoteFile,
-} from "./vault-fs.ts";
-export { writeSiteToFs } from "./write-fs.ts";
-export {
   buildLocaleMap,
   filterManifestForLocale,
   inferLangFromPath,
