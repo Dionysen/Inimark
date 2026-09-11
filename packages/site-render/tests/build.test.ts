@@ -57,9 +57,18 @@ describe("buildSite", () => {
     expect(welcome.content).toContain("site-theme");
     expect(welcome.content).toContain("wiki-link-widget");
     expect(welcome.content).toContain("Outline");
+    expect(welcome.content).toContain("Graph");
+    expect(welcome.content).toContain("site-graph-canvas");
+    expect(welcome.content).toContain("site-links-footer");
     expect(welcome.content).toContain("Backlinks");
     expect(welcome.content).toContain("Outgoing");
-    // Other ← Welcome backlink appears on Other; Welcome outlinks to Other
+    // Links footer comes after article; graph sits in the right rail.
+    expect(welcome.content.indexOf("site-article")).toBeLessThan(
+      welcome.content.indexOf("site-links-footer"),
+    );
+    expect(welcome.content.indexOf("site-graph")).toBeLessThan(
+      welcome.content.indexOf('aria-label="Outline"'),
+    );
     expect(welcome.content).toMatch(/Outgoing[\s\S]*Other/);
     expect(other.content).toMatch(/Backlinks[\s\S]*Welcome Home/);
     // sibling page still expands only its ancestor folder

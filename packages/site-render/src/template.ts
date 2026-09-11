@@ -39,16 +39,29 @@ function renderLinkList(items: SiteLinkItem[], emptyLabel: string): string {
     .join("")}</ul>`;
 }
 
-function renderLinksPanel(page: BuiltPage): string {
-  return `<section class="site-links" aria-label="Links">
-      <div class="site-rail-title">Links</div>
-      <div class="site-links-group">
-        <div class="site-links-subtitle">Outgoing <span class="site-links-count">${page.outlinks.length}</span></div>
-        ${renderLinkList(page.outlinks, "No outgoing links")}
+function renderLinksFooter(page: BuiltPage): string {
+  return `<section class="site-links-footer" aria-label="Links">
+      <h2 class="site-links-footer-title">Links</h2>
+      <div class="site-links-footer-grid">
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Outgoing <span class="site-links-count">${page.outlinks.length}</span></div>
+          ${renderLinkList(page.outlinks, "No outgoing links")}
+        </div>
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Backlinks <span class="site-links-count">${page.backlinks.length}</span></div>
+          ${renderLinkList(page.backlinks, "No backlinks")}
+        </div>
       </div>
-      <div class="site-links-group">
-        <div class="site-links-subtitle">Backlinks <span class="site-links-count">${page.backlinks.length}</span></div>
-        ${renderLinkList(page.backlinks, "No backlinks")}
+    </section>`;
+}
+
+function renderGraphPanel(page: BuiltPage): string {
+  const payload = JSON.stringify(page.graph).replace(/</g, "\\u003c");
+  return `<section class="site-graph" aria-label="Graph">
+      <div class="site-rail-title">Graph</div>
+      <div class="site-graph-host">
+        <canvas class="site-graph-canvas" width="320" height="280" aria-label="Local relationship graph"></canvas>
+        <script type="application/json" class="site-graph-data">${payload}</script>
       </div>
     </section>`;
 }
@@ -128,9 +141,10 @@ export function renderNotePage(options: {
     </aside>
     <main class="site-main">
       <article class="ProseMirror site-article">${page.bodyHtml}</article>
+      ${renderLinksFooter(page)}
     </main>
     <aside class="site-rail" aria-label="Page tools">
-      ${renderLinksPanel(page)}
+      ${renderGraphPanel(page)}
       <section class="site-outline" aria-label="Outline">
         <div class="site-rail-title">Outline</div>
         ${renderOutline(page.outline)}

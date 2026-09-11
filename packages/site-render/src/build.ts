@@ -25,6 +25,7 @@ import type {
   SiteBuildResult,
   SiteConfig,
   SiteFile,
+  SiteGraphPayload,
   SiteLinkItem,
 } from "./types.ts";
 import { DEFAULT_SITE_CONFIG } from "./types.ts";
@@ -225,6 +226,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         outline: exported.outline,
         outlinks: [],
         backlinks: [],
+        graph: { centerId: normalizeSlashes(note.path), nodes: [], edges: [] },
       });
     } finally {
       restore();
@@ -264,12 +266,35 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
     };
   };
 
+  /** Local graph = current note + 1-hop neighbors and edges among that set. */
+  const buildLocalGraph = (centerPath: string, fromHtml: string): SiteGraphPayload => {
+    const ids = new Set<string>([centerPath]);
+    for (const edge of edges) {
+      if (edge.from === centerPath) ids.add(edge.to);
+      if (edge.to === centerPath) ids.add(edge.from);
+    }
+    const nodes = [...ids].map((id) => {
+      const page = pageByPath.get(id)!;
+      return {
+        id,
+        label: titleByPath.get(id) ?? noteTitleFromPath(id),
+        href: id === centerPath ? "" : relativeHref(fromHtml, page.htmlPath),
+        center: id === centerPath,
+      };
+    });
+    const localEdges = edges
+      .filter((edge) => ids.has(edge.from) && ids.has(edge.to))
+      .map((edge) => ({ source: edge.from, target: edge.to }));
+    return { centerId: centerPath, nodes, edges: localEdges };
+  };
+
   for (const page of pages) {
     const path = normalizeSlashes(page.sourcePath);
     const outTargets = edges.filter((e) => e.from === path).map((e) => e.to);
     const backSources = edges.filter((e) => e.to === path).map((e) => e.from);
     page.outlinks = outTargets.map((to) => toLinkItem(page.htmlPath, to));
     page.backlinks = backSources.map((from) => toLinkItem(page.htmlPath, from));
+    page.graph = buildLocalGraph(path, page.htmlPath);
   }
 
   const manifest = annotateManifestTree(

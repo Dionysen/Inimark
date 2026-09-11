@@ -25,12 +25,32 @@ export interface OutlineItem {
   text: string;
 }
 
-/** A resolved wiki link shown in the published right rail. */
+/** A resolved wiki link shown below the article. */
 export interface SiteLinkItem {
   title: string;
   /** Relative href from the current page HTML. */
   href: string;
   sourcePath: string;
+}
+
+/** One node in the published local relationship graph. */
+export interface SiteGraphNode {
+  id: string;
+  label: string;
+  href: string;
+  center?: boolean;
+}
+
+export interface SiteGraphEdge {
+  source: string;
+  target: string;
+}
+
+/** 1-hop neighborhood around the current note for the site graph canvas. */
+export interface SiteGraphPayload {
+  centerId: string;
+  nodes: SiteGraphNode[];
+  edges: SiteGraphEdge[];
 }
 
 export interface BuiltPage {
@@ -43,6 +63,8 @@ export interface BuiltPage {
   outline: OutlineItem[];
   outlinks: SiteLinkItem[];
   backlinks: SiteLinkItem[];
+  /** Local graph (center + 1-hop neighbors). */
+  graph: SiteGraphPayload;
 }
 
 export interface MediaCopyPlan {

@@ -12,6 +12,9 @@ export {
   type BuiltPage,
   type OutlineItem,
   type SiteLinkItem,
+  type SiteGraphPayload,
+  type SiteGraphNode,
+  type SiteGraphEdge,
 } from "./types.ts";
 export { parseWikiNoteTargets, type WikiLinkRef } from "./wiki-links.ts";
 export {

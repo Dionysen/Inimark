@@ -1,4 +1,6 @@
-/** Shell CSS for the published site (layout + chrome). Editor prose CSS is appended separately. */
+﻿/** Shell CSS for the published site (layout + chrome). Editor prose CSS is appended separately. */
+
+import { SITE_GRAPH_JS } from "./site-graph-runtime.ts";
 
 export const SITE_LAYOUT_CSS = `/* Inimark published site layout */
 *, *::before, *::after { box-sizing: border-box; }
@@ -20,8 +22,8 @@ body {
   font-family: var(--font-ui, system-ui, sans-serif);
 }
 /* Keep native / hover scrollbars in sync with the active theme.
-   Without this, macOS WebKit can flash a light “legacy” scrollbar when
-   the pointer sits on the bar (overlay → always-visible switch). */
+   Without this, macOS WebKit can flash a light 鈥渓egacy鈥?scrollbar when
+   the pointer sits on the bar (overlay 鈫?always-visible switch). */
 html { color-scheme: dark; }
 html[data-theme="light"],
 html[data-theme="grey"] { color-scheme: light; }
@@ -84,13 +86,11 @@ html::-webkit-scrollbar-corner {
 
 /* Right rail: allow overflow for long outlines, but never show a scrollbar. */
 .site-rail,
-.site-links,
 .site-outline {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 .site-rail::-webkit-scrollbar,
-.site-links::-webkit-scrollbar,
 .site-outline::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -107,7 +107,7 @@ html::-webkit-scrollbar-corner {
 .site-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 250px minmax(0, 44rem) 240px;
+  grid-template-columns: 325px minmax(0, 44rem) 312px;
   justify-content: center;
   align-items: start;
   column-gap: 0;
@@ -120,7 +120,7 @@ html::-webkit-scrollbar-corner {
 }
 .site-sidebar,
 .site-rail,
-.site-links,
+.site-graph,
 .site-outline {
   background: transparent;
   border: none;
@@ -135,8 +135,8 @@ html::-webkit-scrollbar-corner {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 0 16px 0 0;
-  margin-right: 16px;
+  padding: 0 32px 0 0;
+  margin-right: 32px;
   border-right: 1px solid var(--border);
   overflow: hidden;
 }
@@ -191,32 +191,87 @@ html::-webkit-scrollbar-corner {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 14px 0 16px 16px;
-  margin-left: 8px;
+  padding: 14px 0 16px 32px;
+  margin-left: 16px;
   border: none;
 }
-.site-links,
+.site-graph {
+  flex: 0 0 auto;
+}
+.site-graph-host {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* Match desktop graph color tokens (tokens.css) for published themes. */
+html {
+  --inimark-accent: var(--accent);
+  --inimark-graph-node: #b4b4b4;
+  --inimark-graph-node-active: #d0d0d0;
+  --inimark-graph-label: #dcdcdc;
+  --inimark-graph-link: #3c3c3c;
+  --inimark-graph-highlight: color-mix(in srgb, var(--accent) 62%, #6b7280 38%);
+}
+html[data-theme="light"],
+html[data-theme="grey"] {
+  --inimark-graph-node: #6e6e6e;
+  --inimark-graph-node-active: #4a4a4a;
+  --inimark-graph-label: #333333;
+  --inimark-graph-link: #c4c4c4;
+  --inimark-graph-highlight: color-mix(in srgb, var(--accent) 55%, #64748b 45%);
+}
+.site-graph-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+.site-graph-canvas:active {
+  cursor: grabbing;
+}
 .site-outline {
   overflow: visible;
   padding: 0;
-}
-.site-links {
-  flex: 0 0 auto;
-  max-height: none;
-}
-.site-outline {
   flex: 0 0 auto;
   min-height: 0;
 }
 .site-main {
   overflow: visible;
-  padding: 8px 8px 64px;
+  padding: 8px 16px 64px;
   min-width: 0;
 }
 .site-article {
   max-width: none;
   width: 100%;
   margin: 0;
+}
+.site-links-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.site-links-footer-title {
+  margin: 0 0 16px;
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--text-strong, var(--text-primary));
+  letter-spacing: -0.01em;
+}
+.site-links-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 28px;
+}
+@media (max-width: 640px) {
+  .site-links-footer-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .site-tree {
   list-style: none;
@@ -299,10 +354,10 @@ html::-webkit-scrollbar-corner {
   margin-bottom: 10px;
   padding: 0 10px;
 }
-.site-links-group + .site-links-group {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+.site-links-footer .site-links-group + .site-links-group {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 .site-links-subtitle {
   display: flex;
@@ -313,7 +368,7 @@ html::-webkit-scrollbar-corner {
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 6px;
-  padding: 0 10px;
+  padding: 0;
 }
 .site-links-count {
   font-weight: 500;
@@ -336,10 +391,19 @@ html::-webkit-scrollbar-corner {
   line-height: 1.45;
   border-radius: 8px;
 }
+.site-links-footer .site-links-item a {
+  padding-left: 0;
+  padding-right: 0;
+}
 .site-links-item a:hover,
 .site-outline-item a:hover {
   color: var(--accent);
   background: var(--bg-hover);
+}
+.site-links-footer .site-links-item a:hover {
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .site-outline-item.level-1 a { font-weight: 600; color: var(--text-primary); }
 .site-outline-item.level-3 { padding-left: 10px; }
@@ -365,13 +429,13 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
 .site-article yaml-block { display: none !important; }
 @media (max-width: 1100px) {
   .site-layout {
-    grid-template-columns: 230px minmax(0, 40rem) 210px;
+    grid-template-columns: 299px minmax(0, 40rem) 273px;
     padding: 12px 14px;
   }
 }
 @media (max-width: 960px) {
   .site-layout {
-    grid-template-columns: minmax(200px, 240px) minmax(0, 44rem);
+    grid-template-columns: minmax(260px, 312px) minmax(0, 44rem);
     justify-content: center;
   }
   .site-rail { display: none; }
@@ -426,5 +490,6 @@ export const SITE_JS = `(() => {
       if (nested) nested.hidden = open;
     });
   });
+${SITE_GRAPH_JS}
 })();
 `;
