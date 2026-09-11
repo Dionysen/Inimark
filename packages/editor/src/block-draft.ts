@@ -17,6 +17,8 @@
 // `setBlockType` / whatever builds the real node. Typing inside the
 // paragraph (even making it no longer match) does NOT commit — the commit
 // trigger is "cursor exits this paragraph", not "match invalidated".
+// A non-empty selection that stays entirely inside the same paragraph
+// (typical of IME composition ranges) also does NOT commit.
 //
 // A second, imperative commit path is exposed as `handle.commit(view)` —
 // for triggers that aren't selection changes (fenced code's autocomplete
@@ -67,19 +69,31 @@ export type LeaveLineDraftHandle = {
 export function leaveLineDraft<M>(spec: LeaveLineDraftSpec<M>): LeaveLineDraftHandle {
   const key = new PluginKey<DecorationSet>("leaveLineDraft");
 
+  /** True when the whole selection sits inside one paragraph at `paraPos`. */
+  function selectionInParagraph(
+    sel: EditorState["selection"],
+    paraPos: number,
+  ): boolean {
+    if (sel.$from.before() !== paraPos) return false;
+    return sel.empty || sel.$to.before() === paraPos;
+  }
+
   function matchForCursorParagraph(
     state: EditorState,
   ): { paragraph: PMNode; paragraphPos: number; paragraphStart: number; data: M; prefixLen: number } | null {
     const sel = state.selection;
-    if (!sel.empty) return null;
     const $from = sel.$from;
     const paragraph = $from.parent;
     if (paragraph.type.name !== "paragraph") return null;
+    const paragraphPos = $from.before();
+    // Keep draft decorations during IME composition ranges that stay on
+    // this line; only bail when the selection spills into another block.
+    if (!selectionInParagraph(sel, paragraphPos)) return null;
     const m = spec.match(paragraph.textContent);
     if (!m) return null;
     return {
       paragraph,
-      paragraphPos: $from.before(),
+      paragraphPos,
       paragraphStart: $from.start(),
       data: m.data,
       prefixLen: m.prefixLen,
@@ -117,22 +131,23 @@ export function leaveLineDraft<M>(spec: LeaveLineDraftSpec<M>): LeaveLineDraftHa
       },
     },
     appendTransaction(trs, oldState, newState) {
-      // Trigger: oldState's cursor was in a matching paragraph, newState's
-      // cursor is in a DIFFERENT paragraph (mapped-position compare).
-      // Typing inside the same paragraph — even edits that break the match
-      // — does not commit; only "leaving the line" does.
+      // Trigger: oldState's selection was entirely in a matching paragraph,
+      // newState's selection is in a DIFFERENT paragraph (mapped-position
+      // compare). Typing or composing inside the same paragraph — even
+      // edits that break the match, or IME ranges that make the selection
+      // non-empty — does not commit; only "leaving the line" does.
       const oldSel = oldState.selection;
-      if (!oldSel.empty) return null;
       const oldPara = oldSel.$from.parent;
       if (oldPara.type.name !== "paragraph") return null;
+      const oldParaPos = oldSel.$from.before();
+      if (!selectionInParagraph(oldSel, oldParaPos)) return null;
       if (!spec.match(oldPara.textContent)) return null;
 
-      const oldParaPos = oldSel.$from.before();
       let mapped = oldParaPos;
       for (const tr of trs) mapped = tr.mapping.map(mapped);
 
       const newSel = newState.selection;
-      if (newSel.empty && newSel.$from.before() === mapped) return null;
+      if (selectionInParagraph(newSel, mapped)) return null;
 
       // Paragraph might have been deleted or replaced already — bail
       // rather than corrupt the doc.

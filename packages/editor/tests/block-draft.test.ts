@@ -86,6 +86,27 @@ describe("leaveLineDraft", () => {
     expect(first.textContent).toBe("hello");
   });
 
+  test("leaving from an IME composition range still commits", () => {
+    // Selection starts as a non-empty range inside the draft paragraph
+    // (composition), then moves into the next paragraph — must commit.
+    const base = mkState(["!! hello", "world"], 0);
+    const contentStart = 1 + "!! ".length;
+    const contentEnd = 1 + "!! hello".length;
+    const composing = base.apply(
+      base.tr.setSelection(
+        TextSelection.create(base.doc, contentStart, contentEnd),
+      ),
+    );
+    expect(composing.doc.child(0).type.name).toBe("paragraph");
+
+    const p2start = composing.doc.child(0).nodeSize + 1;
+    const next = composing.apply(
+      composing.tr.setSelection(TextSelection.create(composing.doc, p2start)),
+    );
+    expect(next.doc.child(0).type.name).toBe("heading");
+    expect(next.doc.child(0).textContent).toBe("hello");
+  });
+
   test("typing inside the matching paragraph does NOT commit", () => {
     const state = mkState(["!! hello", "world"], 0);
     const caret = 1 + "!! hello".length; // end of first paragraph
@@ -94,6 +115,37 @@ describe("leaveLineDraft", () => {
     // Still a paragraph; cursor still inside; no commit.
     expect(next.doc.child(0).type.name).toBe("paragraph");
     expect(next.doc.child(0).textContent).toBe("!! hello!");
+  });
+
+  test("IME composition range inside the matching paragraph does NOT commit", () => {
+    // Chinese/Japanese IME often expands an empty caret into a non-empty
+    // TextSelection over the composing text — still the same paragraph.
+    // That must not be treated as "leaving the line".
+    const state = mkState(["!! hello", "world"], 0);
+    const contentStart = 1 + "!! ".length;
+    const contentEnd = 1 + "!! hello".length;
+    const tr = state.tr.setSelection(
+      TextSelection.create(state.doc, contentStart, contentEnd),
+    );
+    const next = state.apply(tr);
+    expect(next.doc.child(0).type.name).toBe("paragraph");
+    expect(next.doc.child(0).textContent).toBe("!! hello");
+    // Draft decorations should stay while the range is on this line.
+    expect(bang.plugin.getState(next)!.find().length).toBeGreaterThan(0);
+  });
+
+  test("insert + composition range in one transaction does NOT commit", () => {
+    // Matches the "# " → first pinyin letter → second letter expanding the
+    // composition selection path that used to promote to a heading mid-IME.
+    const state = mkState(["!! ni", "world"], 0);
+    const caret = 1 + "!! ni".length;
+    const tr = state.tr.insertText("h", caret, caret);
+    const contentStart = 1 + "!! ".length;
+    const contentEnd = caret + 1; // "nih"
+    tr.setSelection(TextSelection.create(tr.doc, contentStart, contentEnd));
+    const next = state.apply(tr);
+    expect(next.doc.child(0).type.name).toBe("paragraph");
+    expect(next.doc.child(0).textContent).toBe("!! nih");
   });
 
   test("paragraph no longer matches at leave time → no commit", () => {
