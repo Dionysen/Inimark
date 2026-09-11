@@ -25,3 +25,4 @@ packages/editor/dist/
 .pnpm-store
 
 .cursor
+docs/.inimark/
