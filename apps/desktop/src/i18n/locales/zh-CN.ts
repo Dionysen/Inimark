@@ -441,7 +441,7 @@ export const zhCN: Dictionary = {
       copyColor: "复制颜色",
       copied: "已复制！",
       eyedropper: "从屏幕取色",
-      eyedropperHint: "点击屏幕取色，Esc 取消",
+      eyedropperHint: "全屏取色中：点击取样，Esc 或 Cancel 取消",
       eyedropperFailed: "取色失败",
       editTheme: "编辑主题：{{name}}",
       editCodeTheme: "编辑代码主题：{{name}}",
