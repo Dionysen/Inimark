@@ -66,7 +66,7 @@ mindmap
 
 ### Three-minute path
 
-1. [[Install Inimark]] — get it running
+1. [[Install Inimark]] — install from [Releases](https://github.com/Dionysen/Inimark/releases)
 2. [[Interface Tour]] — learn the chrome
 3. [[Markdown Syntax]] — feel the editor
 4. [[Wikilinks and Embeds]] — connect notes

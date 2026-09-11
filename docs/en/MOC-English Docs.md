@@ -18,7 +18,7 @@ translationKey: moc
 ## 00 · Getting Started
 
 - [[Welcome]] — positioning and reading path
-- [[Install Inimark]] — toolchain and commands
+- [[Install Inimark]] — GitHub Releases · build from source
 - [[Interface Tour]] — title bar, dual sidebars, status bar
 
 ## 01 · Editing and Markdown
