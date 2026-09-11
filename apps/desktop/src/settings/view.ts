@@ -1075,10 +1075,10 @@ export function mountSettingsView(
         const { getVersion } = await import("@tauri-apps/api/app");
         aboutVersion = await getVersion();
       } else {
-        aboutVersion = "1.0.2";
+        aboutVersion = "1.0.3";
       }
     } catch {
-      aboutVersion = "1.0.2";
+      aboutVersion = "1.0.3";
     }
     if (activeSection === "about") renderContent();
   }
