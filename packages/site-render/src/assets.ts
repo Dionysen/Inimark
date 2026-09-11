@@ -692,6 +692,17 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
 }
 `;
 
+/** Runs in `<head>` before CSS so navigation does not flash the default theme. */
+export const SITE_THEME_BOOT_JS = `(() => {
+  try {
+    const saved = localStorage.getItem("inimark-site-theme");
+    if (!saved) return;
+    const root = document.documentElement;
+    root.setAttribute("data-theme", saved);
+    root.dataset.appearance = /dark/i.test(saved) ? "dark" : "light";
+  } catch (_) {}
+})();`;
+
 export const SITE_JS = `(() => {
   const STORAGE_KEY = "inimark-site-theme";
   const root = document.documentElement;

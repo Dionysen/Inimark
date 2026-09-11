@@ -231,6 +231,7 @@ describe("buildSite", () => {
     expect(page.content).toContain("flowchart LR");
     expect(page.content).toContain("assets/mermaid.min.js");
     expect(page.content).toContain("data-inimark-mermaid");
+    expect(page.content).toContain("inimark-site-theme");
     expect(result.files.some((f) => f.path === "assets/mermaid.min.js")).toBe(true);
     expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
       "buildMermaidThemeVariables",

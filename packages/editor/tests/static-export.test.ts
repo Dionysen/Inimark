@@ -27,4 +27,29 @@ describe("renderMarkdownToStaticHtml", () => {
     expect(result.html).toContain("flowchart LR");
     expect(result.html).toContain("A --&gt; B");
   });
+
+  it("exports the trailing wiki link as a widget, not source chrome", async () => {
+    const { setWikiLinkBridge } = await import("../src/wiki-link-bridge.ts");
+    setWikiLinkBridge({
+      resolveNote: (noteName) => noteName,
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote: () => {},
+    });
+    try {
+      const result = renderMarkdownToStaticHtml(
+        "Prev: [[Alpha]] · Next: [[Beta Note]]\n",
+        {
+          resolveWikiHref: (note) => ({ href: `${note}.html`, unresolved: false }),
+        },
+      );
+      expect(result.html).toContain('data-note="Alpha"');
+      expect(result.html).toContain('data-note="Beta Note"');
+      expect(result.html).toContain('href="Beta Note.html"');
+      expect(result.html).not.toContain("syntax-hint");
+      expect(result.html).not.toContain("[[Beta Note]]");
+    } finally {
+      setWikiLinkBridge(null);
+    }
+  });
 });

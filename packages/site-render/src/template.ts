@@ -7,6 +7,7 @@ import type {
 } from "./types.ts";
 import type { LocaleMap } from "./locales.ts";
 import { joinUrl, relativeHref } from "./paths.ts";
+import { SITE_THEME_BOOT_JS } from "./assets.ts";
 
 function escapeHtml(s: string): string {
   return s
@@ -190,6 +191,7 @@ export function renderNotePage(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>${SITE_THEME_BOOT_JS}</script>
   <title>${escapeHtml(page.title)} · ${escapeHtml(config.siteName)}</title>
   ${config.siteDescription ? `<meta name="description" content="${escapeHtml(config.siteDescription)}">` : ""}
   <link rel="stylesheet" href="${escapeHtml(cssHref)}">

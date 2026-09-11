@@ -1,4 +1,4 @@
-import { EditorState, TextSelection } from "prosemirror-state";
+import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { documentMetadataPlugin } from "./document-metadata.ts";
@@ -8,6 +8,7 @@ import { tryNavigateFromClick } from "./link-navigation.ts";
 import { normalizeInlinePlugin } from "./normalize.ts";
 import { parse } from "./parser.ts";
 import { schema } from "./schema.ts";
+import { readingModeSelection } from "./static-export.ts";
 
 const PREVIEW_MAX_CHARS = 24_000;
 
@@ -52,9 +53,9 @@ export function mountReadonlyMarkdownPreview(
   });
 
   // Match createEditor: run one no-op so normalize's appendTransaction
-  // applies method-B marks before first paint. Park the caret at the end
-  // so most of the doc renders in the "cursor outside" (reading) state.
-  const state = base.apply(base.tr.setSelection(TextSelection.atEnd(doc)));
+  // applies method-B marks before first paint. Use a non-empty selection so
+  // wiki/math "outside" widgets stay mounted (caret-at-end hides the last one).
+  const state = base.apply(base.tr.setSelection(readingModeSelection(doc)));
 
   const view = new EditorView(host, {
     state,

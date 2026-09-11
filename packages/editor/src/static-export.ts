@@ -1,8 +1,9 @@
 // Static HTML export from a read-only ProseMirror view — keeps reading-mode
 // widgets (wiki, images, math, tasks) while stripping method-B source chrome.
 
-import { EditorState, TextSelection } from "prosemirror-state";
+import { EditorState, TextSelection, type Selection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import type { Node as PMNode } from "prosemirror-model";
 
 import { documentMetadataPlugin } from "./document-metadata.ts";
 import { syntaxHintsPlugin } from "./decorations.ts";
@@ -32,6 +33,18 @@ export interface StaticExportResult {
   outline: OutlineItem[];
   /** Relative / local src values discovered on images. */
   assetSrcs: string[];
+}
+
+/**
+ * Non-empty selection so decoration logic treats the caret as outside every
+ * span (`cursor = null`). A caret at doc end otherwise lands inside the last
+ * `[[wiki]]` / math delimiter and exports source chrome instead of widgets.
+ */
+export function readingModeSelection(doc: PMNode): Selection {
+  const from = TextSelection.atStart(doc).from;
+  const to = TextSelection.atEnd(doc).from;
+  if (from === to) return TextSelection.atStart(doc);
+  return TextSelection.create(doc, from, to);
 }
 
 const HIDDEN_CLASSES = new Set([
@@ -294,7 +307,7 @@ export function renderMarkdownToStaticHtml(
         syntaxHintsPlugin(),
       ],
     });
-    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(doc)));
+    const state = base.apply(base.tr.setSelection(readingModeSelection(doc)));
     const view = new EditorView(host, {
       state,
       editable: () => false,
