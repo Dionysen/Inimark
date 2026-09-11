@@ -25,6 +25,14 @@ export interface OutlineItem {
   text: string;
 }
 
+/** A resolved wiki link shown in the published right rail. */
+export interface SiteLinkItem {
+  title: string;
+  /** Relative href from the current page HTML. */
+  href: string;
+  sourcePath: string;
+}
+
 export interface BuiltPage {
   /** Vault-relative markdown path, forward slashes. */
   sourcePath: string;
@@ -33,6 +41,8 @@ export interface BuiltPage {
   title: string;
   bodyHtml: string;
   outline: OutlineItem[];
+  outlinks: SiteLinkItem[];
+  backlinks: SiteLinkItem[];
 }
 
 export interface MediaCopyPlan {

@@ -11,7 +11,9 @@ export {
   type ManifestNode,
   type BuiltPage,
   type OutlineItem,
+  type SiteLinkItem,
 } from "./types.ts";
+export { parseWikiNoteTargets, type WikiLinkRef } from "./wiki-links.ts";
 export {
   noteHtmlPath,
   noteTitleFromPath,

@@ -50,14 +50,18 @@ describe("buildSite", () => {
     expect(result.pageCount).toBe(2);
 
     const welcome = result.files.find((f) => f.path === "notes/folder/Welcome.html")!;
+    const other = result.files.find((f) => f.path === "notes/folder/Other.html")!;
     expect(welcome.content).toContain("Welcome Home");
     expect(welcome.content).not.toContain("<yaml-block");
     expect(welcome.content).toContain('aria-expanded="true"'); // ancestor of active
     expect(welcome.content).toContain("site-theme");
     expect(welcome.content).toContain("wiki-link-widget");
     expect(welcome.content).toContain("Outline");
-
-    const other = result.files.find((f) => f.path === "notes/folder/Other.html")!;
+    expect(welcome.content).toContain("Backlinks");
+    expect(welcome.content).toContain("Outgoing");
+    // Other ← Welcome backlink appears on Other; Welcome outlinks to Other
+    expect(welcome.content).toMatch(/Outgoing[\s\S]*Other/);
+    expect(other.content).toMatch(/Backlinks[\s\S]*Welcome Home/);
     // sibling page still expands only its ancestor folder
     expect(other.content).toContain('aria-expanded="true"');
   });

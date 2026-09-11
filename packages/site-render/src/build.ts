@@ -25,8 +25,10 @@ import type {
   SiteBuildResult,
   SiteConfig,
   SiteFile,
+  SiteLinkItem,
 } from "./types.ts";
 import { DEFAULT_SITE_CONFIG } from "./types.ts";
+import { parseWikiNoteTargets } from "./wiki-links.ts";
 
 export interface VaultNoteInput {
   /** Vault-relative path with forward slashes. */
@@ -221,6 +223,8 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         title,
         bodyHtml: exported.html,
         outline: exported.outline,
+        outlinks: [],
+        backlinks: [],
       });
     } finally {
       restore();
@@ -230,6 +234,43 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
   const titleByPath = new Map(
     pages.map((p) => [normalizeSlashes(p.sourcePath), p.title]),
   );
+  const pageByPath = new Map(
+    pages.map((p) => [normalizeSlashes(p.sourcePath), p]),
+  );
+
+  /** Collect resolved wiki edges once, then attach out/back links per page. */
+  const edges: Array<{ from: string; to: string }> = [];
+  for (const note of options.notes) {
+    const from = normalizeSlashes(note.path);
+    const seen = new Set<string>();
+    for (const link of parseWikiNoteTargets(note.markdown)) {
+      const target = options.resolveNotePath(link.noteName);
+      if (!target) continue;
+      const to = normalizeSlashes(target);
+      if (!pageByPath.has(to) || to === from) continue;
+      const key = `${from}\0${to}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      edges.push({ from, to });
+    }
+  }
+
+  const toLinkItem = (fromHtml: string, targetPath: string): SiteLinkItem => {
+    const page = pageByPath.get(targetPath)!;
+    return {
+      title: titleByPath.get(targetPath) ?? noteTitleFromPath(targetPath),
+      href: relativeHref(fromHtml, page.htmlPath),
+      sourcePath: targetPath,
+    };
+  };
+
+  for (const page of pages) {
+    const path = normalizeSlashes(page.sourcePath);
+    const outTargets = edges.filter((e) => e.from === path).map((e) => e.to);
+    const backSources = edges.filter((e) => e.to === path).map((e) => e.from);
+    page.outlinks = outTargets.map((to) => toLinkItem(page.htmlPath, to));
+    page.backlinks = backSources.map((from) => toLinkItem(page.htmlPath, from));
+  }
 
   const manifest = annotateManifestTree(
     options.tree?.length ? options.tree : buildFlatManifest(options.notes, titleByPath),

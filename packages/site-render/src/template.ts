@@ -1,4 +1,10 @@
-import type { BuiltPage, ManifestNode, OutlineItem, SiteConfig } from "./types.ts";
+import type {
+  BuiltPage,
+  ManifestNode,
+  OutlineItem,
+  SiteConfig,
+  SiteLinkItem,
+} from "./types.ts";
 import { joinUrl, relativeHref } from "./paths.ts";
 
 function escapeHtml(s: string): string {
@@ -11,7 +17,7 @@ function escapeHtml(s: string): string {
 
 function renderOutline(outline: OutlineItem[]): string {
   if (!outline.length) {
-    return `<p class="site-outline-empty">No headings</p>`;
+    return `<p class="site-rail-empty">No headings</p>`;
   }
   return `<ul class="site-outline-list">${outline
     .map(
@@ -19,6 +25,32 @@ function renderOutline(outline: OutlineItem[]): string {
         `<li class="site-outline-item level-${item.level}"><a href="#${escapeHtml(item.id)}">${escapeHtml(item.text)}</a></li>`,
     )
     .join("")}</ul>`;
+}
+
+function renderLinkList(items: SiteLinkItem[], emptyLabel: string): string {
+  if (!items.length) {
+    return `<p class="site-rail-empty">${escapeHtml(emptyLabel)}</p>`;
+  }
+  return `<ul class="site-links-list">${items
+    .map(
+      (item) =>
+        `<li class="site-links-item"><a href="${escapeHtml(item.href)}">${escapeHtml(item.title)}</a></li>`,
+    )
+    .join("")}</ul>`;
+}
+
+function renderLinksPanel(page: BuiltPage): string {
+  return `<section class="site-links" aria-label="Links">
+      <div class="site-rail-title">Links</div>
+      <div class="site-links-group">
+        <div class="site-links-subtitle">Outgoing <span class="site-links-count">${page.outlinks.length}</span></div>
+        ${renderLinkList(page.outlinks, "No outgoing links")}
+      </div>
+      <div class="site-links-group">
+        <div class="site-links-subtitle">Backlinks <span class="site-links-count">${page.backlinks.length}</span></div>
+        ${renderLinkList(page.backlinks, "No backlinks")}
+      </div>
+    </section>`;
 }
 
 function treeContainsActive(node: ManifestNode, currentHtmlPath: string): boolean {
@@ -97,9 +129,12 @@ export function renderNotePage(options: {
     <main class="site-main">
       <article class="ProseMirror site-article">${page.bodyHtml}</article>
     </main>
-    <aside class="site-outline" aria-label="Outline">
-      <div class="site-outline-title">Outline</div>
-      ${renderOutline(page.outline)}
+    <aside class="site-rail" aria-label="Page tools">
+      ${renderLinksPanel(page)}
+      <section class="site-outline" aria-label="Outline">
+        <div class="site-rail-title">Outline</div>
+        ${renderOutline(page.outline)}
+      </section>
     </aside>
   </div>
   <script src="${escapeHtml(jsHref)}" defer></script>
