@@ -263,20 +263,20 @@ $$
 
 ## Mermaid diagram gallery
 
-Each diagram shows copyable source first, then the rendered chart. Put the source in a ````mermaid` fence.
+Each diagram shows copyable source first, then the rendered chart. Put the source in a ` ```mermaid ` fence.
 
 ### Flowchart
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 flowchart LR
   Note[Note] -->|"[[wikilink]]"| Note2[Another note]
   Note2 --> Graph[Graph]
   Note --> Site[Published site]
 ```
-```
+````
 
 Rendered:
 
@@ -291,7 +291,7 @@ flowchart LR
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 sequenceDiagram
   participant Author
@@ -301,7 +301,7 @@ sequenceDiagram
   Author->>SSG: Publish
   SSG-->>Author: Static HTML
 ```
-```
+````
 
 Rendered:
 
@@ -319,7 +319,7 @@ sequenceDiagram
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 classDiagram
   class Note {
@@ -333,7 +333,7 @@ classDiagram
   }
   Library "1" --> "*" Note : contains
 ```
-```
+````
 
 Rendered:
 
@@ -355,7 +355,7 @@ classDiagram
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 stateDiagram-v2
   [*] --> Idle
@@ -364,7 +364,7 @@ stateDiagram-v2
   Preview --> Editing: keep editing
   Editing --> [*]: close
 ```
-```
+````
 
 Rendered:
 
@@ -381,7 +381,7 @@ stateDiagram-v2
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 erDiagram
   LIBRARY ||--o{ NOTE : contains
@@ -394,7 +394,7 @@ erDiagram
     string target
   }
 ```
-```
+````
 
 Rendered:
 
@@ -415,7 +415,7 @@ erDiagram
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 gantt
   title Help-vault writing cadence
@@ -426,7 +426,7 @@ gantt
   section Publish
   Themes and site         :b1, after a2, 3d
 ```
-```
+````
 
 Rendered:
 
@@ -445,7 +445,7 @@ gantt
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 pie showData
   title Time spent on notes (sketch)
@@ -454,7 +454,7 @@ pie showData
   "Theme & publish" : 20
   "Other" : 10
 ```
-```
+````
 
 Rendered:
 
@@ -471,7 +471,7 @@ pie showData
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 mindmap
   root((Inimark))
@@ -486,7 +486,7 @@ mindmap
       Themes
       Static site
 ```
-```
+````
 
 Rendered:
 
@@ -509,7 +509,7 @@ mindmap
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 timeline
   title Inimark reading path
@@ -522,7 +522,7 @@ timeline
   section Output
     Publish : Export a static site
 ```
-```
+````
 
 Rendered:
 
@@ -543,7 +543,7 @@ timeline
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 gitGraph
   commit id: "init"
@@ -554,7 +554,7 @@ gitGraph
   merge feature
   commit id: "release"
 ```
-```
+````
 
 Rendered:
 
@@ -573,7 +573,7 @@ gitGraph
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 journey
   title From install to publish
@@ -586,7 +586,7 @@ journey
   section Publish
     Publish preview: 4: User
 ```
-```
+````
 
 Rendered:
 
@@ -607,7 +607,7 @@ journey
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 quadrantChart
   title Feature trade-offs (sketch)
@@ -622,7 +622,7 @@ quadrantChart
   Publish: [0.55, 0.75]
   Plugin market: [0.9, 0.35]
 ```
-```
+````
 
 Rendered:
 
@@ -645,7 +645,7 @@ quadrantChart
 
 Source:
 
-```markdown
+````markdown
 ```mermaid
 requirementDiagram
   requirement stable {
@@ -659,7 +659,7 @@ requirementDiagram
   }
   editor - satisfies -> stable
 ```
-```
+````
 
 Rendered:
 

@@ -4,9 +4,7 @@ lang: en
 translationKey: wikilinks
 ---
 
-
 # Wikilinks and Embeds
-
 
 **中文:** [[双链与嵌入|中文]] · [[Relationship Graph]] · [[Libraries and Files]]
 
@@ -47,10 +45,10 @@ Use embeds for reusable snippets, MOCs, and definition cards inside long notes.
 
 ## Outlinks and backlinks
 
-| Term | Meaning |
-| --- | --- |
-| Outlinks | Notes this note points to |
-| Backlinks | Notes that point here |
+| Term      | Meaning                   |
+| --------- | ------------------------- |
+| Outlinks  | Notes this note points to |
+| Backlinks | Notes that point here     |
 
 Lists appear in the [[Relationship Graph]] panel; the graph visualizes the same index.
 
@@ -73,11 +71,11 @@ See [[Data Directory]].
 
 On **rename / move**, Inimark can rewrite `[[links]]` elsewhere:
 
-| Policy | When |
-| --- | --- |
-| ask | Safe default |
-| always | Large refactors |
-| never | Full manual control |
+| Policy | When                |
+| ------ | ------------------- |
+| ask    | Safe default        |
+| always | Large refactors     |
+| never  | Full manual control |
 
 Configured with library / link-update options; operations start from [[Libraries and Files]].
 

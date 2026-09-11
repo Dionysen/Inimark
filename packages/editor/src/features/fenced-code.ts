@@ -22,7 +22,7 @@ import {
 } from "../code-highlighter.ts";
 import { createLatestTaskScheduler } from "../renderers/latest-task.ts";
 import {
-  getMermaidRenderAppearance,
+  getMermaidThemeFingerprint,
   mermaidRenderer,
 } from "../renderers/mermaid.ts";
 import { setCaretInTextblock } from "../selection-utils.ts";
@@ -730,7 +730,7 @@ class CodeBlockView implements NodeView {
     this.appearanceObserver = new MutationObserver(this.onAppearanceChange);
     this.appearanceObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-appearance"],
+      attributeFilter: ["data-appearance", "data-theme", "style"],
     });
   }
 
@@ -1021,7 +1021,7 @@ class CodeBlockView implements NodeView {
       return;
     }
     const code = node.textContent;
-    const diagramKey = `${lang}\u0000${getMermaidRenderAppearance()}\u0000${code}`;
+    const diagramKey = `${lang}\u0000${getMermaidThemeFingerprint()}\u0000${code}`;
     if (diagramKey === this.renderedDiagramKey || diagramKey === this.pendingDiagramKey) return;
     this.diagramScheduler.cancel();
     this.stopDiagramObserver();

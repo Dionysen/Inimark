@@ -363,6 +363,7 @@ class ThemeManager {
     this.injectOrUpdateStyle(id, css, true);
     document.documentElement.dataset.theme = `custom-${id}`;
     emit(THEME_CSS_EVENT, { id, css, enable: true }).catch(() => {});
+    window.dispatchEvent(new CustomEvent("typora-web:appearancechange"));
   }
 
   async updateThemeVariables(id: string, variables: ThemeVariable[]): Promise<void> {
@@ -374,6 +375,9 @@ class ThemeManager {
     if (manifest) {
       this.customThemes = this.customThemes.map((m) => (m.id === id ? manifest : m));
       this.notify();
+    }
+    if (active) {
+      window.dispatchEvent(new CustomEvent("typora-web:appearancechange"));
     }
   }
 

@@ -4,8 +4,11 @@ import { TextSelection } from "prosemirror-state";
 import { createEditor } from "../src/lib.ts";
 import { feedEvent } from "../specs/events.ts";
 import {
+  buildMermaidThemeVariables,
   createMermaidRenderer,
   getMermaidRenderAppearance,
+  getMermaidThemeFingerprint,
+  mermaidConfigForAppearance,
   mermaidRenderer,
   normalizeMermaidSourceForRender,
 } from "../src/renderers/mermaid.ts";
@@ -22,7 +25,21 @@ describe("mermaid renderer", () => {
     );
   });
 
-  test("initializes Mermaid lazily with strict security and light theme", async () => {
+  test("initializes Mermaid with base theme variables derived from CSS tokens", async () => {
+    const root = document.documentElement;
+    const previous = {
+      appearance: root.dataset.appearance,
+      surface: root.style.getPropertyValue("--bg-surface"),
+      fg: root.style.getPropertyValue("--text-primary"),
+      accent: root.style.getPropertyValue("--accent"),
+      border: root.style.getPropertyValue("--border"),
+    };
+    root.dataset.appearance = "light";
+    root.style.setProperty("--bg-surface", "#112233");
+    root.style.setProperty("--text-primary", "#445566");
+    root.style.setProperty("--accent", "#ff6600");
+    root.style.setProperty("--border", "rgba(145, 145, 145, 0.159)");
+
     const calls: unknown[] = [];
     const renderer = createMermaidRenderer(async () => ({
       initialize(config: unknown) {
@@ -33,21 +50,50 @@ describe("mermaid renderer", () => {
       },
     }));
 
-    const result = await renderer.render("graph TD\nA-->B");
-
-    expect(result.state).toBe("success");
-    if (result.state !== "success") throw new Error("expected Mermaid render success");
-    expect(result.svg).toContain("<svg");
-    expect(calls).toEqual([{
-      startOnLoad: false,
-      securityLevel: "strict",
-      suppressErrorRendering: true,
-      theme: "default",
-      themeVariables: { background: "transparent" },
-    }]);
+    try {
+      const result = await renderer.render("graph TD\nA-->B");
+      expect(result.state).toBe("success");
+      expect(calls).toHaveLength(1);
+      const vars = (calls[0] as { themeVariables: Record<string, string> }).themeVariables;
+      expect(calls[0]).toMatchObject({
+        startOnLoad: false,
+        securityLevel: "strict",
+        suppressErrorRendering: true,
+        theme: "base",
+        themeVariables: {
+          darkMode: false,
+          background: "transparent",
+          primaryColor: "#112233",
+          primaryTextColor: "#445566",
+          titleColor: "#ff6600",
+        },
+      });
+      // Translucent theme borders must be flattened to opaque hex for Mermaid.
+      expect(vars.primaryBorderColor).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(vars.primaryBorderColor).not.toContain("rgba");
+    } finally {
+      if (previous.appearance === undefined) delete root.dataset.appearance;
+      else root.dataset.appearance = previous.appearance;
+      if (previous.surface) root.style.setProperty("--bg-surface", previous.surface);
+      else root.style.removeProperty("--bg-surface");
+      if (previous.fg) root.style.setProperty("--text-primary", previous.fg);
+      else root.style.removeProperty("--text-primary");
+      if (previous.accent) root.style.setProperty("--accent", previous.accent);
+      else root.style.removeProperty("--accent");
+      if (previous.border) root.style.setProperty("--border", previous.border);
+      else root.style.removeProperty("--border");
+    }
   });
 
-  test("uses a dark Mermaid theme when the document appearance is dark", async () => {
+  test("toMermaidColor flattens translucent rgba onto a backdrop", async () => {
+    const { toMermaidColor } = await import("../src/renderers/mermaid.ts");
+    expect(toMermaidColor("rgba(145, 145, 145, 0.159)", "#4a4d52", "#1b1d24")).toMatch(
+      /^#[0-9a-f]{6}$/i,
+    );
+    expect(toMermaidColor("#74a7fe", "#0969da")).toBe("#74a7fe");
+  });
+
+  test("uses darkMode when the document appearance is dark", async () => {
     const previousAppearance = document.documentElement.dataset.appearance;
     document.documentElement.dataset.appearance = "dark";
     const calls: unknown[] = [];
@@ -73,19 +119,13 @@ describe("mermaid renderer", () => {
         theme: "base",
         themeVariables: {
           darkMode: true,
-          primaryTextColor: "#ece7dd",
-          actorTextColor: "#ece7dd",
-          lineColor: "#aeb6c2",
-          branchLabelColor: "#ece7dd",
-          packet: {
-            labelColor: "#ece7dd",
-            blockFillColor: "#25272b",
-          },
-          wardley: {
-            componentLabelColor: "#ece7dd",
-          },
+          background: "transparent",
         },
       });
+      const vars = (calls[0] as { themeVariables: Record<string, unknown> }).themeVariables;
+      expect(typeof vars.primaryColor).toBe("string");
+      expect(typeof vars.primaryTextColor).toBe("string");
+      expect(typeof vars.titleColor).toBe("string");
     } finally {
       if (previousAppearance === undefined) {
         delete document.documentElement.dataset.appearance;
@@ -93,6 +133,28 @@ describe("mermaid renderer", () => {
         document.documentElement.dataset.appearance = previousAppearance;
       }
     }
+  });
+
+  test("theme fingerprint changes when CSS theme tokens change", () => {
+    const root = document.documentElement;
+    const previous = root.style.getPropertyValue("--accent");
+    const before = getMermaidThemeFingerprint();
+    root.style.setProperty("--accent", "#123456");
+    const after = getMermaidThemeFingerprint();
+    expect(after).not.toBe(before);
+    if (previous) root.style.setProperty("--accent", previous);
+    else root.style.removeProperty("--accent");
+  });
+
+  test("buildMermaidThemeVariables exposes seed colors without pie1-12", () => {
+    const vars = buildMermaidThemeVariables("light");
+    expect(vars.background).toBe("transparent");
+    expect(vars.darkMode).toBe(false);
+    expect(vars.primaryColor).toBeTruthy();
+    expect(vars.secondaryColor).toBeTruthy();
+    expect(vars.tertiaryColor).toBeTruthy();
+    expect(vars).not.toHaveProperty("pie1");
+    expect(mermaidConfigForAppearance("dark").theme).toBe("base");
   });
 
   test("treats Mermaid-generated syntax error SVG as an error state", async () => {
