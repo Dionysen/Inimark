@@ -767,15 +767,14 @@ class CodeBlockView implements NodeView {
   private onDocumentMouseDown = (event: MouseEvent): void => {
     const target = event.target as Node | null;
     if (target && this.menuEl.contains(target)) return;
+    // Clicks inside the block / chrome keep Mermaid source open so the
+    // CodeMirror editor stays visible and focusable. Only outside clicks
+    // dismiss `diagram-source-open` (same pattern as html-block).
     if (
       target &&
       (this.dom.contains(target) || this.chromeEl.contains(target) || this.menuEl.contains(target))
     ) {
       if (!this.inputEl.contains(target as Node)) this.hideLanguageMenu();
-      if (!this.dom.classList.contains("diagram-error")) {
-        this.dom.classList.remove("diagram-source-open");
-        this.sourceFrameEl.classList.remove("diagram-source-open");
-      }
       return;
     }
     this.hideLanguageMenu();

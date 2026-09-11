@@ -187,7 +187,13 @@ describe("mermaid source visibility policy", () => {
       panel?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
       expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
-      expect(host.querySelector(".typora-web-code-editor")).not.toBeNull();
+      const source = host.querySelector<HTMLElement>(".typora-web-code-editor");
+      expect(source).not.toBeNull();
+
+      // Clicking the source must keep it open — otherwise CM is display:none
+      // mid-mousedown and focus is lost before editing can start.
+      source?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
 
       document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
 
