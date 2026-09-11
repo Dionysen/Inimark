@@ -3,6 +3,8 @@ import { t } from "../i18n/index.ts";
 import { listLibraries, type LibraryRecord } from "../libraries/store.ts";
 import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
+import { BUILTIN_THEMES } from "../themes/builtin.ts";
+import { loadManifest } from "../themes/custom-theme-manager.ts";
 import {
   createButton,
   createSelect,
@@ -27,6 +29,10 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
 
   /** Last loaded file config; form only edits a subset of fields. */
   let lastLoadedConfig: PublishConfig | null = null;
+  let themeOptions: Array<{ value: string; label: string }> = BUILTIN_THEMES.map((id) => ({
+    value: id,
+    label: id,
+  }));
 
   const libraryRow = document.createElement("div");
   libraryRow.className = "inimark-settings-row";
@@ -46,6 +52,13 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   const outField = createTextField({ value: "dist" });
   const baseHrefField = createTextField({ value: "/" });
   const homeField = createTextField({ value: "" });
+
+  const lightThemeHost = document.createElement("div");
+  const darkThemeHost = document.createElement("div");
+  let lightThemeSelect: SelectController | null = null;
+  let darkThemeSelect: SelectController | null = null;
+  let lightThemeValue = "light";
+  let darkThemeValue = "dark";
 
   function makeRow(
     settingId: string,
@@ -119,6 +132,52 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     return libraries.find((l) => l.id === selectedId) ?? null;
   }
 
+  function rebuildThemeSelects(): void {
+    const options = themeOptions.length
+      ? themeOptions
+      : BUILTIN_THEMES.map((id) => ({ value: id, label: id }));
+    if (!options.some((o) => o.value === lightThemeValue)) {
+      lightThemeValue = options.find((o) => o.value === "light")?.value ?? options[0]!.value;
+    }
+    if (!options.some((o) => o.value === darkThemeValue)) {
+      darkThemeValue = options.find((o) => o.value === "dark")?.value ?? options[0]!.value;
+    }
+
+    lightThemeSelect?.destroy();
+    darkThemeSelect?.destroy();
+    lightThemeHost.replaceChildren();
+    darkThemeHost.replaceChildren();
+
+    lightThemeSelect = createSelect({
+      options,
+      value: lightThemeValue,
+      onChange: (value) => {
+        lightThemeValue = value;
+      },
+    });
+    darkThemeSelect = createSelect({
+      options,
+      value: darkThemeValue,
+      onChange: (value) => {
+        darkThemeValue = value;
+      },
+    });
+    lightThemeHost.append(lightThemeSelect.el);
+    darkThemeHost.append(darkThemeSelect.el);
+  }
+
+  async function refreshThemeOptions(): Promise<void> {
+    const manifests = await loadManifest().catch(() => []);
+    themeOptions = [
+      ...BUILTIN_THEMES.map((id) => ({ value: id, label: id })),
+      ...manifests.map((m) => ({
+        value: `custom-${m.id}`,
+        label: m.name?.trim() || `custom-${m.id}`,
+      })),
+    ];
+    rebuildThemeSelects();
+  }
+
   async function loadConfigIntoForm(): Promise<void> {
     const lib = selectedLibrary();
     if (!lib) {
@@ -127,6 +186,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       outField.setValue("dist");
       baseHrefField.setValue("/");
       homeField.setValue("");
+      lightThemeValue = "light";
+      darkThemeValue = "dark";
+      rebuildThemeSelects();
       return;
     }
     const cfg = await loadPublishConfig(lib.rootPath);
@@ -135,6 +197,13 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     outField.setValue(cfg.out || "dist");
     baseHrefField.setValue(cfg.baseHref || "/");
     homeField.setValue(cfg.home || "");
+    lightThemeValue = cfg.lightTheme || "light";
+    darkThemeValue = cfg.darkTheme || "dark";
+    if (!cfg.lightTheme && !cfg.darkTheme && cfg.defaultTheme) {
+      if (/dark/i.test(cfg.defaultTheme)) darkThemeValue = cfg.defaultTheme;
+      else lightThemeValue = cfg.defaultTheme;
+    }
+    rebuildThemeSelects();
   }
 
   /**
@@ -146,6 +215,8 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     const base = lastLoadedConfig ?? {
       siteName: lib?.rootName || "Notes",
       defaultTheme: "dark",
+      lightTheme: "light",
+      darkTheme: "dark",
       baseHref: "/",
       out: "dist",
     };
@@ -155,6 +226,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       baseHref: baseHrefField.getValue().trim() || "/",
       out: outField.getValue().trim() || "dist",
       home: homeField.getValue().trim() || undefined,
+      lightTheme: lightThemeValue,
+      darkTheme: darkThemeValue,
+      defaultTheme: darkThemeValue,
     };
   }
 
@@ -258,6 +332,18 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       "settings.publish.siteNameDesc",
       siteNameField.el,
     ),
+    makeRow(
+      "publish.lightTheme",
+      "settings.publish.lightTheme",
+      "settings.publish.lightThemeDesc",
+      lightThemeHost,
+    ),
+    makeRow(
+      "publish.darkTheme",
+      "settings.publish.darkTheme",
+      "settings.publish.darkThemeDesc",
+      darkThemeHost,
+    ),
     makeRow("publish.out", "settings.publish.out", "settings.publish.outDesc", outField.el),
     makeRow(
       "publish.baseHref",
@@ -273,7 +359,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   function refresh(): void {
     rebuildLibrarySelect();
     applyI18n();
-    void loadConfigIntoForm();
+    void refreshThemeOptions().then(() => loadConfigIntoForm());
     previewBtn.disabled = !lastOutDir;
     openDirBtn.disabled = !lastOutDir;
   }
@@ -284,6 +370,8 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     refresh,
     destroy() {
       librarySelect?.destroy();
+      lightThemeSelect?.destroy();
+      darkThemeSelect?.destroy();
       siteNameField.destroy();
       outField.destroy();
       baseHrefField.destroy();

@@ -152,12 +152,34 @@ export async function publishLibrary(
   const appearance = loadAppearanceState();
   const resolved = resolveAppearanceMode(appearance.appearanceMode);
   const preferred = resolveActiveFromPair(appearance.preferredAppTheme, resolved);
-  const defaultTheme = config.defaultTheme || preferred;
   const { css: themeVariablesCss, themeIds } = await packThemeCss();
+
+  const lightTheme =
+    config.lightTheme && themeIds.includes(config.lightTheme)
+      ? config.lightTheme
+      : themeIds.includes("light")
+        ? "light"
+        : themeIds[0]!;
+  const darkTheme =
+    config.darkTheme && themeIds.includes(config.darkTheme)
+      ? config.darkTheme
+      : themeIds.includes("dark")
+        ? "dark"
+        : themeIds[themeIds.length - 1]!;
+  const defaultTheme =
+    config.defaultTheme && themeIds.includes(config.defaultTheme)
+      ? config.defaultTheme
+      : resolved === "dark"
+        ? darkTheme
+        : preferred && themeIds.includes(preferred)
+          ? preferred
+          : lightTheme;
 
   const siteConfig: SiteConfig = {
     ...config,
-    defaultTheme: themeIds.includes(defaultTheme) ? defaultTheme : themeIds[0]!,
+    lightTheme,
+    darkTheme,
+    defaultTheme,
   };
 
   onProgress?.({

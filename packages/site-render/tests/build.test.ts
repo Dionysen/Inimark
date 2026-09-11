@@ -54,7 +54,10 @@ describe("buildSite", () => {
     expect(welcome.content).toContain("Welcome Home");
     expect(welcome.content).not.toContain("<yaml-block");
     expect(welcome.content).toContain('aria-expanded="true"'); // ancestor of active
-    expect(welcome.content).toContain("site-theme");
+    expect(welcome.content).toContain("site-theme-toggle");
+    expect(welcome.content).toContain('data-theme-light="light"');
+    expect(welcome.content).toContain('data-theme-dark="dark"');
+    expect(welcome.content).not.toContain('id="site-theme"');
     expect(welcome.content).toContain("wiki-link-widget");
     expect(welcome.content).toContain("Outline");
     expect(welcome.content).toContain("Graph");

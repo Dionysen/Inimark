@@ -34,7 +34,7 @@ import type {
   SiteGraphPayload,
   SiteLinkItem,
 } from "./types.ts";
-import { DEFAULT_SITE_CONFIG } from "./types.ts";
+import { DEFAULT_SITE_CONFIG, resolveSiteThemePair } from "./types.ts";
 import { parseWikiNoteTargets } from "./wiki-links.ts";
 
 export interface VaultNoteInput {
@@ -169,7 +169,15 @@ function pickHome(notes: VaultNoteInput[], config: SiteConfig): VaultNoteInput {
  * Runs in a DOM environment (Tauri webview or happy-dom).
  */
 export function buildSite(options: BuildSiteOptions): SiteBuildResult {
-  const config: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...options.config };
+  const baseConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...options.config };
+  const themePair = resolveSiteThemePair(baseConfig, options.themeIds);
+  const config: SiteConfig = {
+    ...baseConfig,
+    lightTheme: themePair.lightTheme,
+    darkTheme: themePair.darkTheme,
+    defaultTheme:
+      themePair.defaultAppearance === "dark" ? themePair.darkTheme : themePair.lightTheme,
+  };
   const notes = config.locales?.languages.length
     ? options.notes.filter((n) => isUnderLocaleRoot(n.path, config.locales))
     : options.notes;
@@ -416,6 +424,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         page,
         manifest: pageManifest,
         themes: options.themeIds,
+        themePair,
         localeMap,
         localeHomeHtml,
         hasMermaidRuntime,

@@ -8,6 +8,9 @@ export {
 } from "./frontmatter.ts";
 export {
   DEFAULT_SITE_CONFIG,
+  resolveSiteThemePair,
+  type SiteAppearance,
+  type ResolvedSiteThemes,
   type SiteConfig,
   type SiteLocalesConfig,
   type SiteLocaleLanguage,

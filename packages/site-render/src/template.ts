@@ -2,6 +2,7 @@ import type {
   BuiltPage,
   ManifestNode,
   OutlineItem,
+  ResolvedSiteThemes,
   SiteConfig,
   SiteLinkItem,
 } from "./types.ts";
@@ -148,6 +149,7 @@ export function renderNotePage(options: {
   page: BuiltPage;
   manifest: ManifestNode[];
   themes: string[];
+  themePair: ResolvedSiteThemes;
   localeMap?: LocaleMap;
   localeHomeHtml?: Map<string, string>;
   hasMermaidRuntime?: boolean;
@@ -156,7 +158,7 @@ export function renderNotePage(options: {
     config,
     page,
     manifest,
-    themes,
+    themePair,
     localeMap = {},
     localeHomeHtml = new Map(),
     hasMermaidRuntime = false,
@@ -164,12 +166,6 @@ export function renderNotePage(options: {
   const cssHref = relativeHref(page.htmlPath, "assets/site.css");
   const jsHref = relativeHref(page.htmlPath, "assets/site.js");
   const mermaidHref = relativeHref(page.htmlPath, "assets/mermaid.min.js");
-  const themeOptions = themes
-    .map(
-      (id) =>
-        `<option value="${escapeHtml(id)}"${id === config.defaultTheme ? " selected" : ""}>${escapeHtml(id)}</option>`,
-    )
-    .join("");
   const langSwitcher = renderLangSwitcher({
     config,
     page,
@@ -185,9 +181,15 @@ export function renderNotePage(options: {
   const mermaidScript = hasMermaidRuntime
     ? `  <script src="${escapeHtml(mermaidHref)}" defer data-inimark-mermaid></script>\n`
     : "";
+  const initialTheme =
+    themePair.defaultAppearance === "dark" ? themePair.darkTheme : themePair.lightTheme;
+  const sunIcon =
+    '<svg class="site-theme-icon site-theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>';
+  const moonIcon =
+    '<svg class="site-theme-icon site-theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>';
 
   return `<!DOCTYPE html>
-<html lang="${escapeHtml(htmlLang)}" data-theme="${escapeHtml(config.defaultTheme)}"${page.lang ? ` data-page-lang="${escapeHtml(page.lang)}"` : ""}>
+<html lang="${escapeHtml(htmlLang)}" data-theme="${escapeHtml(initialTheme)}" data-appearance="${escapeHtml(themePair.defaultAppearance)}" data-theme-light="${escapeHtml(themePair.lightTheme)}" data-theme-dark="${escapeHtml(themePair.darkTheme)}"${page.lang ? ` data-page-lang="${escapeHtml(page.lang)}"` : ""}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -200,12 +202,13 @@ export function renderNotePage(options: {
   <div class="site-layout">
     <aside class="site-sidebar" aria-label="Notes">
       <div class="site-sidebar-head">
-        <a class="site-brand" href="${escapeHtml(brandHref)}">${escapeHtml(config.siteName)}</a>
+        <div class="site-sidebar-head-row">
+          <a class="site-brand" href="${escapeHtml(brandHref)}">${escapeHtml(config.siteName)}</a>
+          <button type="button" class="site-theme-toggle" id="site-theme-toggle" aria-label="Toggle light and dark theme" title="Theme">
+            ${sunIcon}${moonIcon}
+          </button>
+        </div>
         ${langSwitcher}
-        <label class="site-theme-picker">
-          <span class="site-theme-label">Theme</span>
-          <select id="site-theme" aria-label="Theme">${themeOptions}</select>
-        </label>
       </div>
       <nav class="site-nav">${renderTree(manifest, page.htmlPath)}</nav>
     </aside>

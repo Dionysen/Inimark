@@ -113,8 +113,17 @@ ${webkitScrollbar(".site-nav")}
   padding: 16px 4px 14px;
   border-bottom: none;
 }
+.site-sidebar-head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 6px;
+}
 .site-brand {
   display: block;
+  flex: 1;
+  min-width: 0;
   color: var(--text-strong, var(--text-primary));
   text-decoration: none;
   font-weight: 700;
@@ -124,6 +133,32 @@ ${webkitScrollbar(".site-nav")}
   padding: 2px 10px 10px;
 }
 .site-brand:hover { color: var(--accent); }
+.site-theme-toggle {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.site-theme-toggle:hover {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: var(--bg-hover, transparent);
+}
+.site-theme-toggle .site-theme-icon {
+  display: none;
+}
+html[data-appearance="dark"] .site-theme-toggle .site-theme-icon-sun,
+html:not([data-appearance="dark"]) .site-theme-toggle .site-theme-icon-moon {
+  display: block;
+}
 .site-lang {
   display: flex;
   flex-wrap: wrap;
@@ -153,24 +188,6 @@ ${webkitScrollbar(".site-nav")}
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   background: rgba(var(--accent-rgb, 116, 167, 254), 0.12);
-}
-.site-theme-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0 10px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-.site-theme-picker select {
-  width: 100%;
-  background: var(--bg-input, var(--bg-primary));
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  height: 32px;
-  padding: 0 10px;
-  font-size: 13px;
 }
 .site-nav {
   flex: 1;
@@ -695,22 +712,46 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
 /** Runs in `<head>` before CSS so navigation does not flash the default theme. */
 export const SITE_THEME_BOOT_JS = `(() => {
   try {
-    const saved = localStorage.getItem("inimark-site-theme");
-    if (!saved) return;
     const root = document.documentElement;
-    root.setAttribute("data-theme", saved);
-    root.dataset.appearance = /dark/i.test(saved) ? "dark" : "light";
+    const light = root.getAttribute("data-theme-light") || "light";
+    const dark = root.getAttribute("data-theme-dark") || "dark";
+    const saved = localStorage.getItem("inimark-site-theme");
+    let mode = root.getAttribute("data-appearance") === "dark" ? "dark" : "light";
+    if (saved === "dark" || saved === dark) mode = "dark";
+    else if (saved === "light" || saved === light) mode = "light";
+    else if (saved && /dark/i.test(saved)) mode = "dark";
+    else if (saved) mode = "light";
+    root.setAttribute("data-theme", mode === "dark" ? dark : light);
+    root.dataset.appearance = mode;
   } catch (_) {}
 })();`;
 
 export const SITE_JS = `(() => {
   const STORAGE_KEY = "inimark-site-theme";
   const root = document.documentElement;
-  const select = document.getElementById("site-theme");
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    root.setAttribute("data-theme", saved);
-    if (select) select.value = saved;
+  const toggle = document.getElementById("site-theme-toggle");
+  const lightTheme = root.getAttribute("data-theme-light") || "light";
+  const darkTheme = root.getAttribute("data-theme-dark") || "dark";
+
+  const currentMode = () =>
+    root.dataset.appearance === "dark" || root.getAttribute("data-theme") === darkTheme
+      ? "dark"
+      : "light";
+
+  const applyAppearance = (mode) => {
+    const next = mode === "dark" ? "dark" : "light";
+    root.dataset.appearance = next;
+    root.setAttribute("data-theme", next === "dark" ? darkTheme : lightTheme);
+    localStorage.setItem(STORAGE_KEY, next);
+  };
+
+  // Re-apply after DOM ready in case boot script and default attrs raced.
+  {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === "dark" || saved === darkTheme) applyAppearance("dark");
+    else if (saved === "light" || saved === lightTheme) applyAppearance("light");
+    else if (saved && /dark/i.test(saved)) applyAppearance("dark");
+    else applyAppearance(currentMode());
   }
 
   const LIGHT_FALLBACKS = {
@@ -826,6 +867,8 @@ export const SITE_JS = `(() => {
   };
 
   const isDarkAppearance = () => {
+    if (root.dataset.appearance === "dark") return true;
+    if (root.dataset.appearance === "light") return false;
     const theme = root.getAttribute("data-theme") || "";
     if (/dark/i.test(theme)) return true;
     if (/light|grey|gray/i.test(theme)) return false;
@@ -835,6 +878,7 @@ export const SITE_JS = `(() => {
   };
 
   const syncAppearance = () => {
+    if (root.dataset.appearance === "dark" || root.dataset.appearance === "light") return;
     root.dataset.appearance = isDarkAppearance() ? "dark" : "light";
   };
 
@@ -1050,14 +1094,12 @@ export const SITE_JS = `(() => {
     }
   };
 
-  select?.addEventListener("change", () => {
-    const value = select.value;
-    root.setAttribute("data-theme", value);
-    localStorage.setItem(STORAGE_KEY, value);
-    syncAppearance();
+  toggle?.addEventListener("click", () => {
+    applyAppearance(currentMode() === "dark" ? "light" : "dark");
     // Mermaid SVG colors are baked at render time; reload to re-theme diagrams.
     if (document.querySelector("pre.mermaid, .diagram-panel svg")) {
       location.reload();
+      return;
     }
   });
   document.querySelectorAll(".site-tree-toggle").forEach((btn) => {

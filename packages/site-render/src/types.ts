@@ -1,8 +1,15 @@
 export interface SiteConfig {
   siteName: string;
   siteDescription?: string;
-  /** Default theme id applied on first visit (light | grey | dark | custom-…). */
+  /**
+   * Initial theme id (or legacy single-theme preference).
+   * Prefer `lightTheme` / `darkTheme` for the published site pair.
+   */
   defaultTheme: string;
+  /** Theme id used when the site appearance is light. */
+  lightTheme?: string;
+  /** Theme id used when the site appearance is dark. */
+  darkTheme?: string;
   /** URL path prefix, e.g. `/repo/` or `/`. */
   baseHref: string;
   /** Output directory relative to vault root (default `dist`). */
@@ -16,6 +23,55 @@ export interface SiteConfig {
    */
   locales?: SiteLocalesConfig;
 }
+
+export type SiteAppearance = "light" | "dark";
+
+export interface ResolvedSiteThemes {
+  lightTheme: string;
+  darkTheme: string;
+  defaultAppearance: SiteAppearance;
+}
+
+function pickThemeId(id: string | undefined, fallback: string, available: string[]): string {
+  if (id && available.includes(id)) return id;
+  if (available.includes(fallback)) return fallback;
+  return available[0] ?? fallback;
+}
+
+/** Resolve the light/dark theme pair for a published site (with legacy defaults). */
+export function resolveSiteThemePair(
+  config: Pick<SiteConfig, "defaultTheme" | "lightTheme" | "darkTheme">,
+  availableIds: string[] = ["light", "grey", "dark"],
+): ResolvedSiteThemes {
+  const available = availableIds.length ? availableIds : ["light", "dark"];
+  let lightTheme = pickThemeId(config.lightTheme, "light", available);
+  let darkTheme = pickThemeId(config.darkTheme, "dark", available);
+
+  if (!config.lightTheme && !config.darkTheme && config.defaultTheme) {
+    if (/dark/i.test(config.defaultTheme)) {
+      darkTheme = pickThemeId(config.defaultTheme, darkTheme, available);
+    } else {
+      lightTheme = pickThemeId(config.defaultTheme, lightTheme, available);
+    }
+  }
+
+  const defaultAppearance: SiteAppearance =
+    config.defaultTheme === darkTheme || /dark/i.test(config.defaultTheme || "")
+      ? "dark"
+      : "light";
+
+  return { lightTheme, darkTheme, defaultAppearance };
+}
+
+export const DEFAULT_SITE_CONFIG: SiteConfig = {
+  siteName: "Notes",
+  defaultTheme: "dark",
+  lightTheme: "light",
+  darkTheme: "dark",
+  baseHref: "/",
+  out: "dist",
+};
+
 
 /** One language offered by a published site. */
 export interface SiteLocaleLanguage {
@@ -116,10 +172,3 @@ export interface SiteBuildResult {
   outRelative: string;
   pageCount: number;
 }
-
-export const DEFAULT_SITE_CONFIG: SiteConfig = {
-  siteName: "Notes",
-  defaultTheme: "dark",
-  baseHref: "/",
-  out: "dist",
-};

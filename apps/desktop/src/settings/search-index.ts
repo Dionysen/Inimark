@@ -109,6 +109,8 @@ const STATIC_ENTRIES: StaticEntry[] = [
   // Publish
   { id: "publish.library", section: "publish", titleKey: "settings.publish.library", descKey: "settings.publish.libraryDesc" },
   { id: "publish.siteName", section: "publish", titleKey: "settings.publish.siteName", descKey: "settings.publish.siteNameDesc" },
+  { id: "publish.lightTheme", section: "publish", titleKey: "settings.publish.lightTheme", descKey: "settings.publish.lightThemeDesc" },
+  { id: "publish.darkTheme", section: "publish", titleKey: "settings.publish.darkTheme", descKey: "settings.publish.darkThemeDesc" },
   { id: "publish.out", section: "publish", titleKey: "settings.publish.out", descKey: "settings.publish.outDesc" },
   { id: "publish.baseHref", section: "publish", titleKey: "settings.publish.baseHref", descKey: "settings.publish.baseHrefDesc" },
   { id: "publish.home", section: "publish", titleKey: "settings.publish.home", descKey: "settings.publish.homeDesc" },
