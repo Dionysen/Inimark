@@ -14,7 +14,7 @@ Inimark ships **KaTeX** and **Mermaid**, with familiar academic / engineering ma
 
 Source:
 
-```markdown
+```txt
 Mass–energy: $E = mc^2$
 
 Euler’s identity: $e^{i\pi} + 1 = 0$
@@ -36,7 +36,7 @@ Pythagoras: $a^2 + b^2 = c^2$
 
 Source:
 
-```markdown
+```txt
 $$
 P(A\mid B) = \frac{P(B\mid A)\,P(A)}{P(B)}
 $$
@@ -52,7 +52,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \begin{pmatrix}
 a & b \\
@@ -92,7 +92,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \int_{-\infty}^{\infty} e^{-x^{2}}\,dx = \sqrt{\pi}
 $$
@@ -108,7 +108,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 e^{x} = \sum_{n=0}^{\infty} \frac{x^{n}}{n!} = 1 + x + \frac{x^{2}}{2!} + \frac{x^{3}}{3!} + \cdots
 $$
@@ -124,7 +124,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \hat{f}(\xi) = \int_{-\infty}^{\infty} f(x)\,e^{-2\pi i x\xi}\,dx
 $$
@@ -140,7 +140,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 i\hbar\frac{\partial}{\partial t}\Psi(\mathbf{r}, t) = \hat{H}\Psi(\mathbf{r}, t)
 $$
@@ -156,7 +156,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \begin{aligned}
 \nabla\cdot\mathbf{E} &= \frac{\rho}{\varepsilon_{0}} \\
@@ -182,7 +182,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \frac{d}{dt}\left(\frac{\partial L}{\partial \dot{q}_{i}}\right) - \frac{\partial L}{\partial q_{i}} = 0
 $$
@@ -198,7 +198,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 R_{\mu\nu} - \frac{1}{2}Rg_{\mu\nu} + \Lambda g_{\mu\nu} = \frac{8\pi G}{c^{4}}T_{\mu\nu}
 $$
@@ -214,7 +214,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \rho\left(\frac{\partial\mathbf{u}}{\partial t} + \mathbf{u}\cdot\nabla\mathbf{u}\right) = -\nabla p + \mu\nabla^{2}\mathbf{u} + \mathbf{f}
 $$
@@ -230,7 +230,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 f(a) = \frac{1}{2\pi i}\oint_{C}\frac{f(z)}{z-a}\,dz
 $$
@@ -246,7 +246,7 @@ $$
 
 Source:
 
-```markdown
+```txt
 $$
 \frac{\partial V}{\partial t} + \frac{1}{2}\sigma^{2}S^{2}\frac{\partial^{2}V}{\partial S^{2}} + rS\frac{\partial V}{\partial S} - rV = 0
 $$
@@ -263,20 +263,18 @@ $$
 
 ## Mermaid diagram gallery
 
-Each diagram shows copyable source first, then the rendered chart. Put the source in a ` ```mermaid ` fence.
+Each diagram shows copyable source first, then the rendered chart. Write Mermaid in a ` ```mermaid ` fence to render.
 
 ### Flowchart
 
 Source:
 
-````markdown
-```mermaid
+```tx t
 flowchart LR
   Note[Note] -->|"[[wikilink]]"| Note2[Another note]
   Note2 --> Graph[Graph]
   Note --> Site[Published site]
 ```
-````
 
 Rendered:
 
@@ -291,8 +289,7 @@ flowchart LR
 
 Source:
 
-````markdown
-```mermaid
+```txt
 sequenceDiagram
   participant Author
   participant Editor
@@ -301,7 +298,6 @@ sequenceDiagram
   Author->>SSG: Publish
   SSG-->>Author: Static HTML
 ```
-````
 
 Rendered:
 
@@ -319,8 +315,7 @@ sequenceDiagram
 
 Source:
 
-````markdown
-```mermaid
+```txt
 classDiagram
   class Note {
     +string path
@@ -333,7 +328,6 @@ classDiagram
   }
   Library "1" --> "*" Note : contains
 ```
-````
 
 Rendered:
 
@@ -355,8 +349,7 @@ classDiagram
 
 Source:
 
-````markdown
-```mermaid
+```txt
 stateDiagram-v2
   [*] --> Idle
   Idle --> Editing: open note
@@ -364,7 +357,6 @@ stateDiagram-v2
   Preview --> Editing: keep editing
   Editing --> [*]: close
 ```
-````
 
 Rendered:
 
@@ -381,8 +373,7 @@ stateDiagram-v2
 
 Source:
 
-````markdown
-```mermaid
+```txt
 erDiagram
   LIBRARY ||--o{ NOTE : contains
   NOTE ||--o{ LINK : has
@@ -394,7 +385,6 @@ erDiagram
     string target
   }
 ```
-````
 
 Rendered:
 
@@ -415,8 +405,7 @@ erDiagram
 
 Source:
 
-````markdown
-```mermaid
+```txt
 gantt
   title Help-vault writing cadence
   dateFormat  YYYY-MM-DD
@@ -426,7 +415,6 @@ gantt
   section Publish
   Themes and site         :b1, after a2, 3d
 ```
-````
 
 Rendered:
 
@@ -445,8 +433,7 @@ gantt
 
 Source:
 
-````markdown
-```mermaid
+```txt
 pie showData
   title Time spent on notes (sketch)
   "Writing" : 45
@@ -454,7 +441,6 @@ pie showData
   "Theme & publish" : 20
   "Other" : 10
 ```
-````
 
 Rendered:
 
@@ -471,8 +457,7 @@ pie showData
 
 Source:
 
-````markdown
-```mermaid
+```txt
 mindmap
   root((Inimark))
     Edit
@@ -486,7 +471,6 @@ mindmap
       Themes
       Static site
 ```
-````
 
 Rendered:
 
@@ -509,8 +493,7 @@ mindmap
 
 Source:
 
-````markdown
-```mermaid
+```txt
 timeline
   title Inimark reading path
   section Start
@@ -522,7 +505,6 @@ timeline
   section Output
     Publish : Export a static site
 ```
-````
 
 Rendered:
 
@@ -543,8 +525,7 @@ timeline
 
 Source:
 
-````markdown
-```mermaid
+```txt
 gitGraph
   commit id: "init"
   branch feature
@@ -554,7 +535,6 @@ gitGraph
   merge feature
   commit id: "release"
 ```
-````
 
 Rendered:
 
@@ -573,8 +553,7 @@ gitGraph
 
 Source:
 
-````markdown
-```mermaid
+```txt
 journey
   title From install to publish
   section Install
@@ -586,7 +565,6 @@ journey
   section Publish
     Publish preview: 4: User
 ```
-````
 
 Rendered:
 
@@ -607,8 +585,7 @@ journey
 
 Source:
 
-````markdown
-```mermaid
+```txt
 quadrantChart
   title Feature trade-offs (sketch)
   x-axis Low effort --> High effort
@@ -622,7 +599,6 @@ quadrantChart
   Publish: [0.55, 0.75]
   Plugin market: [0.9, 0.35]
 ```
-````
 
 Rendered:
 
@@ -645,8 +621,7 @@ quadrantChart
 
 Source:
 
-````markdown
-```mermaid
+```txt
 requirementDiagram
   requirement stable {
     id: R1
@@ -659,7 +634,6 @@ requirementDiagram
   }
   editor - satisfies -> stable
 ```
-````
 
 Rendered:
 
