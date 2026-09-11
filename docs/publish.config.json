@@ -1,0 +1,8 @@
+{
+  "siteName": "Inimark Docs",
+  "siteDescription": "Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。",
+  "defaultTheme": "light",
+  "baseHref": "/",
+  "out": "dist",
+  "home": "README.md"
+}
