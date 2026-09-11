@@ -2,6 +2,7 @@ import { t } from "../i18n/index.ts";
 import { DEFAULT_SHORTCUTS } from "../shortcuts/defaults.ts";
 import { formatShortcutDisplay, loadShortcuts } from "../shortcuts/store.ts";
 import { shortcutActionLabel } from "./shortcuts-panel.ts";
+import { loadSettings } from "./store.ts";
 
 export type SettingsSection =
   | "editor"
@@ -121,10 +122,12 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "about.license", section: "about", titleKey: "settings.about.openSourceLicense", descKey: "settings.about.licenseName" },
   { id: "about.github", section: "about", titleKey: "settings.about.github", descKey: "settings.about.desc" },
   { id: "about.email", section: "about", titleKey: "settings.about.email", descKey: "settings.about.desc" },
+  { id: "about.showDev", section: "about", titleKey: "settings.about.showDevSection", descKey: "settings.about.showDevSectionDesc" },
   // Dev (dev builds only)
   { id: "dev.updateOverride", section: "dev", titleKey: "settings.dev.updateOverrideTitle", descKey: "settings.dev.updateOverrideDesc" },
   { id: "dev.triggerBackgroundCheck", section: "dev", titleKey: "settings.dev.triggerBackgroundCheck", descKey: "settings.dev.updateIntro" },
   { id: "dev.runLocalCheck", section: "dev", titleKey: "settings.dev.runLocalCheck", descKey: "settings.dev.checkStatusTitle" },
+  { id: "dev.openAboutUpdate", section: "dev", titleKey: "settings.dev.openAboutUpdate", descKey: "settings.dev.updateIntro" },
 ];
 
 function shortcutEntries(): SettingSearchItem[] {
@@ -142,15 +145,22 @@ function shortcutEntries(): SettingSearchItem[] {
   });
 }
 
+/** Whether the Dev settings section should appear (dev build + user preference). */
+export function isDevSettingsVisible(): boolean {
+  return Boolean(import.meta.env.DEV) && loadSettings().showDevSection;
+}
+
 export function listSettingSearchItems(): SettingSearchItem[] {
   const staticItems: SettingSearchItem[] = STATIC_ENTRIES.map((entry) => ({
     ...entry,
     getTitle: () => t(entry.titleKey),
     getDescription: () => (entry.descKey ? t(entry.descKey) : ""),
   }));
-  return [...staticItems, ...shortcutEntries()].filter(
-    (item) => item.section !== "dev" || import.meta.env.DEV,
-  );
+  return [...staticItems, ...shortcutEntries()].filter((item) => {
+    if (item.section === "dev") return isDevSettingsVisible();
+    if (item.id === "about.showDev") return Boolean(import.meta.env.DEV);
+    return true;
+  });
 }
 
 function normalizeText(text: string): string {
@@ -285,7 +295,7 @@ export function sectionsMatchingSearch(query: string): Set<SettingsSection> {
 }
 
 export function sectionHasSearchMatch(section: SettingsSection, query: string): boolean {
-  if (section === "dev" && !import.meta.env.DEV) return false;
+  if (section === "dev" && !isDevSettingsVisible()) return false;
 
   const tokens = tokenizeQuery(query);
   if (tokens.length === 0) return true;

@@ -100,6 +100,9 @@ describe("settings store", () => {
     expect(DEFAULT_SETTINGS.useSystemProxyForUpdates).toBe(true);
     saveSettings({ ...DEFAULT_SETTINGS, useSystemProxyForUpdates: false });
     expect(loadSettings().useSystemProxyForUpdates).toBe(false);
+    expect(DEFAULT_SETTINGS.showDevSection).toBe(false);
+    saveSettings({ ...DEFAULT_SETTINGS, showDevSection: true });
+    expect(loadSettings().showDevSection).toBe(true);
   });
 });
 
@@ -116,13 +119,13 @@ describe("settings view", () => {
 
     const search = host.querySelector<HTMLInputElement>(".inimark-search .inimark-field__input");
     expect(search).not.toBeNull();
-    search!.value = "theme";
+    search!.value = "code theme";
     search!.dispatchEvent(new Event("input", { bubbles: true }));
 
     const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-nav-item")];
     const visible = items.filter((item) => !item.hidden);
-    expect(visible.length).toBe(1);
-    expect(visible[0]?.dataset.section).toBe("theme");
+    expect(visible.some((item) => item.dataset.section === "theme")).toBe(true);
+    expect(visible.every((item) => item.dataset.section === "theme")).toBe(true);
 
     expect(host.querySelector(".inimark-settings-search-results")).not.toBeNull();
 

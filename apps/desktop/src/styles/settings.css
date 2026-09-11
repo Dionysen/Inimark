@@ -760,6 +760,77 @@ html.platform-windows .inimark-settings-nav-topbar {
   margin-top: 0;
 }
 
+.inimark-settings-collapse-group {
+  margin: 0 0 var(--inimark-space-3);
+}
+
+.inimark-settings-collapse-group:last-child {
+  margin-bottom: 0;
+}
+
+.inimark-settings-collapse-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 2px);
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--inimark-radius-control);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-settings-collapse-header:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-settings-collapse-chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+}
+
+.inimark-settings-collapse-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-settings-collapse-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.inimark-settings-collapse-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-settings-collapse-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-2) 0 0;
+}
+
+.inimark-settings-collapse-body[hidden] {
+  display: none;
+}
+
 .inimark-settings-inline-controls {
   display: flex;
   align-items: center;

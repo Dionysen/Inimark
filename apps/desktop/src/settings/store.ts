@@ -124,6 +124,11 @@ export interface AppSettings {
   wordCount: WordCountSettings;
   /** When true, app updates use the OS / user proxy settings. */
   useSystemProxyForUpdates: boolean;
+  /**
+   * Show the Dev settings section in the sidebar.
+   * Only meaningful in development builds; ignored in production.
+   */
+  showDevSection: boolean;
 }
 
 export const SETTINGS_STORAGE_KEY = "inimark:settings";
@@ -234,6 +239,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   graph: { ...DEFAULT_GRAPH_SETTINGS },
   wordCount: { ...DEFAULT_WORD_COUNT_SETTINGS },
   useSystemProxyForUpdates: true,
+  showDevSection: false,
 };
 
 const EDITOR_WIDTH_LEGACY: Record<string, number> = {
@@ -476,6 +482,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     useSystemProxyForUpdates: Boolean(
       parsed.useSystemProxyForUpdates ?? DEFAULT_SETTINGS.useSystemProxyForUpdates,
     ),
+    showDevSection: Boolean(parsed.showDevSection ?? DEFAULT_SETTINGS.showDevSection),
   };
 }
 

@@ -80,6 +80,7 @@ import {
   type SettingsSection,
   type SettingSearchItem,
   appendHighlightedSearchText,
+  isDevSettingsVisible,
   searchSettings,
   sectionHasSearchMatch,
 } from "./search-index.ts";
@@ -124,8 +125,9 @@ const BASE_SECTION_IDS: SettingsSection[] = [
   "about",
 ];
 
-function visibleSectionIds(): SettingsSection[] {
-  return import.meta.env.DEV ? [...BASE_SECTION_IDS, "dev"] : BASE_SECTION_IDS;
+function visibleSectionIds(showDev: boolean): SettingsSection[] {
+  if (import.meta.env.DEV && showDev) return [...BASE_SECTION_IDS, "dev"];
+  return BASE_SECTION_IDS;
 }
 
 function sectionMeta(id: SettingsSection): {
@@ -240,24 +242,28 @@ export function mountSettingsView(
 
   const navList = createNavList();
 
-  const sectionIds = visibleSectionIds();
-
   const navButtons = new Map<SettingsSection, HTMLButtonElement>();
 
-  for (const id of sectionIds) {
-    const btn = createNavItem({
-      id,
-      label: sectionMeta(id).title,
-      icon: SECTION_ICONS[id](),
-      onClick() {
-        activeSection = id;
-        renderNav();
-        renderContent();
-      },
-    });
-    navButtons.set(id, btn);
-    navList.append(btn);
+  function rebuildNavButtons(): void {
+    navButtons.clear();
+    navList.replaceChildren();
+    for (const id of visibleSectionIds(settings.showDevSection)) {
+      const btn = createNavItem({
+        id,
+        label: sectionMeta(id).title,
+        icon: SECTION_ICONS[id](),
+        onClick() {
+          activeSection = id;
+          renderNav();
+          renderContent();
+        },
+      });
+      navButtons.set(id, btn);
+      navList.append(btn);
+    }
   }
+
+  rebuildNavButtons();
 
   navBody.append(search.el, navList);
 
@@ -378,7 +384,7 @@ export function mountSettingsView(
   function navigateToSection(section: SettingsSection): void {
     searchQuery = "";
     search.setValue("");
-    activeSection = section;
+    activeSection = section === "dev" && !isDevSettingsVisible() ? "about" : section;
     pendingHighlightId = null;
     renderNav();
     renderContent();
@@ -387,7 +393,8 @@ export function mountSettingsView(
   function navigateToSetting(item: SettingSearchItem): void {
     searchQuery = "";
     search.setValue("");
-    activeSection = item.section;
+    activeSection =
+      item.section === "dev" && !isDevSettingsVisible() ? "about" : item.section;
     pendingHighlightId = item.id;
     renderNav();
     renderContent();
@@ -438,9 +445,20 @@ export function mountSettingsView(
   }
 
   function update(partial: Partial<AppSettings>): void {
+    const prevShowDev = settings.showDevSection;
     settings = { ...settings, ...partial };
     saveSettings(settings);
     onChangeHandler(settings);
+    if (partial.showDevSection === false && activeSection === "dev") {
+      activeSection = "about";
+    }
+    if (
+      partial.showDevSection !== undefined &&
+      partial.showDevSection !== prevShowDev
+    ) {
+      rebuildNavButtons();
+    }
+    renderNav();
     renderContent();
   }
 
@@ -1126,17 +1144,6 @@ export function mountSettingsView(
       },
     });
 
-    const licenseLink = document.createElement("a");
-    licenseLink.className = "inimark-about-link";
-    licenseLink.href = ABOUT_LICENSE_URL;
-    licenseLink.target = "_blank";
-    licenseLink.rel = "noopener noreferrer";
-    licenseLink.textContent = t("settings.about.licenseName");
-    licenseLink.addEventListener("click", (event) => {
-      event.preventDefault();
-      openExternalUrl(ABOUT_LICENSE_URL);
-    });
-
     const list = document.createElement("div");
     list.className = "inimark-about-list";
     list.append(
@@ -1148,6 +1155,38 @@ export function mountSettingsView(
         "about.useSystemProxy",
       ),
       createRow(t("settings.about.softwareUpdate"), "", updateControl.el, "about.updates"),
+    );
+
+    if (import.meta.env.DEV) {
+      const showDevToggle = createToggle({
+        checked: settings.showDevSection,
+        title: t("settings.about.showDevSection"),
+        onChange(checked) {
+          update({ showDevSection: checked });
+        },
+      });
+      list.append(
+        createRow(
+          t("settings.about.showDevSection"),
+          t("settings.about.showDevSectionDesc"),
+          showDevToggle.el,
+          "about.showDev",
+        ),
+      );
+    }
+
+    const licenseLink = document.createElement("a");
+    licenseLink.className = "inimark-about-link";
+    licenseLink.href = ABOUT_LICENSE_URL;
+    licenseLink.target = "_blank";
+    licenseLink.rel = "noopener noreferrer";
+    licenseLink.textContent = t("settings.about.licenseName");
+    licenseLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      openExternalUrl(ABOUT_LICENSE_URL);
+    });
+
+    list.append(
       createRow(
         t("settings.about.openSourceLicense"),
         "",
@@ -1368,7 +1407,7 @@ export function mountSettingsView(
       renderAbout(body);
     }
 
-    if (activeSection === "dev" && import.meta.env.DEV) {
+    if (activeSection === "dev" && isDevSettingsVisible()) {
       const panel = mountDevUpdatePanel();
       body.append(panel.el);
       devUpdateCleanup = () => panel.destroy();
@@ -1400,7 +1439,14 @@ export function mountSettingsView(
     },
     navigateToSection,
     refresh() {
+      const prevShowDev = settings.showDevSection;
       settings = loadSettings();
+      if (activeSection === "dev" && !isDevSettingsVisible()) {
+        activeSection = "about";
+      }
+      if (settings.showDevSection !== prevShowDev) {
+        rebuildNavButtons();
+      }
       search.input.placeholder = t("settings.searchPlaceholder");
       search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
       renderNav();

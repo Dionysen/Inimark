@@ -305,6 +305,10 @@ export const zhCN: Dictionary = {
       previewStopped: "预览服务已停止。",
     },
     dev: {
+      group: {
+        simulation: "更新模拟",
+        checks: "更新检查",
+      },
       updateIntro:
         "将模拟当前版本设为低于远程发布版本，即可触发关于页手动更新与顶栏自动更新提示。留空则使用真实版本。macOS 开发模式下仅可测试下载，不会执行安装。",
       installBlockedOnMacDev:
@@ -729,6 +733,8 @@ export const zhCN: Dictionary = {
       updateUnsavedMessage: "安装更新前，是否保存当前未保存的更改？",
       useSystemProxy: "使用系统代理",
       useSystemProxyDesc: "仅在检查与下载软件更新时使用系统代理。",
+      showDevSection: "显示开发设置",
+      showDevSectionDesc: "在设置侧栏中显示「开发」分组（仅开发构建可用）。",
       installUpdate: "安装 {{version}}",
       checking: "正在检查更新…",
       upToDate: "已是最新版本。",

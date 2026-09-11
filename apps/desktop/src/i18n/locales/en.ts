@@ -305,6 +305,10 @@ export const en: Dictionary = {
       previewStopped: "Preview server stopped.",
     },
     dev: {
+      group: {
+        simulation: "Update simulation",
+        checks: "Update checks",
+      },
       updateIntro:
         "Set a simulated current version lower than the remote release to trigger the About page update flow and the titlebar auto-update capsule. Leave empty to use the real version. On macOS dev builds, download can be tested but install is blocked.",
       installBlockedOnMacDev:
@@ -740,6 +744,8 @@ export const en: Dictionary = {
       updateUnsavedMessage: "Save unsaved changes before installing the update?",
       useSystemProxy: "Use system proxy",
       useSystemProxyDesc: "Applies only when checking for and downloading app updates.",
+      showDevSection: "Show Dev settings",
+      showDevSectionDesc: "Show the Dev section in the settings sidebar (development builds only).",
       installUpdate: "Install {{version}}",
       checking: "Checking for updates…",
       upToDate: "You're up to date.",

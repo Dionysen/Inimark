@@ -4,13 +4,16 @@ import { setLocale } from "../src/i18n/index.ts";
 import {
   appendHighlightedSearchText,
   collectSearchHighlightRanges,
+  isDevSettingsVisible,
   searchSettings,
   sectionHasSearchMatch,
 } from "../src/settings/search-index.ts";
+import { DEFAULT_SETTINGS, saveSettings } from "../src/settings/store.ts";
 
 describe("settings search index", () => {
   beforeEach(() => {
     setLocale("zh-CN");
+    saveSettings({ ...DEFAULT_SETTINGS });
   });
 
   test("matches localized setting titles in Chinese", () => {
@@ -49,5 +52,14 @@ describe("settings search index", () => {
     const marks = [...host.querySelectorAll("mark.inimark-settings-search-mark")];
     expect(marks.map((mark) => mark.textContent)).toEqual(["ab"]);
     expect(host.textContent).toBe("Sidebar tabs");
+  });
+
+  test("hides Dev section when showDevSection is off", () => {
+    expect(DEFAULT_SETTINGS.showDevSection).toBe(false);
+    expect(isDevSettingsVisible()).toBe(false);
+    expect(sectionHasSearchMatch("dev", "")).toBe(false);
+
+    saveSettings({ ...DEFAULT_SETTINGS, showDevSection: true });
+    expect(isDevSettingsVisible()).toBe(import.meta.env.DEV);
   });
 });

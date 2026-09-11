@@ -15,6 +15,7 @@ import {
   type UpdateErrorKind,
 } from "../updater.ts";
 import { createButton, createTextField } from "../ui/widgets/index.ts";
+import { createCollapsibleSettingsGroup } from "./collapsible-group.ts";
 
 export interface DevUpdatePanelController {
   el: HTMLElement;
@@ -237,7 +238,7 @@ export function mountDevUpdatePanel(): DevUpdatePanelController {
   async function runLocalCheck(): Promise<void> {
     if (!isTauri() || checkBusy) return;
     setCheckBusy(true);
-    checkStatus.textContent = t("settings.dev.checkChecking");
+    checkStatus.textContent = t("settings.dev.checkStatusChecking");
     checkPanel.dataset.state = "checking";
 
     try {
@@ -272,7 +273,7 @@ export function mountDevUpdatePanel(): DevUpdatePanelController {
   async function runBackgroundCheck(): Promise<void> {
     if (!isTauri() || checkBusy) return;
     setCheckBusy(true);
-    checkStatus.textContent = t("settings.dev.checkCheckingBackground");
+    checkStatus.textContent = t("settings.dev.checkStatusCheckingBackground");
     checkPanel.dataset.state = "checking";
 
     const result = await requestBackgroundUpdateCheck();
@@ -345,7 +346,11 @@ export function mountDevUpdatePanel(): DevUpdatePanelController {
   overrideEl.textContent =
     getDevUpdateCheckOverride() ?? t("settings.dev.updateOverrideDisabled");
 
-  root.append(
+  const simulationGroup = createCollapsibleSettingsGroup({
+    id: "dev.updates.simulation",
+    title: t("settings.dev.group.simulation"),
+  });
+  simulationGroup.body.append(
     intro,
     createRow(
       t("settings.dev.updateOverrideTitle"),
@@ -355,9 +360,15 @@ export function mountDevUpdatePanel(): DevUpdatePanelController {
     ),
     overrideStatus,
     actualVersion,
-    checkPanel,
-    actions,
   );
+
+  const checksGroup = createCollapsibleSettingsGroup({
+    id: "dev.updates.checks",
+    title: t("settings.dev.group.checks"),
+  });
+  checksGroup.body.append(checkPanel, actions);
+
+  root.append(simulationGroup.el, checksGroup.el);
 
   return {
     el: root,
