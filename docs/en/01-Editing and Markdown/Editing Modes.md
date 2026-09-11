@@ -4,7 +4,6 @@ title: Editing Modes
 
 # Editing Modes
 
-[toc]
 
 **中文:** [[编辑模式|中文]] · [[MOC-English Docs]]
 

@@ -4,7 +4,6 @@ title: Data Directory
 
 # Data Directory
 
-[toc]
 
 **中文:** [[数据目录|中文]] · [[Libraries and Files]] · [[Publish a Site]]
 

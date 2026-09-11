@@ -4,7 +4,6 @@ title: Welcome
 
 # Welcome to Inimark
 
-[toc]
 
 **中文:** [[欢迎|中文]] · Map: [[MOC-English Docs]]
 
@@ -13,7 +12,6 @@ title: Welcome
 >
 > **Editing that aspires to beat Typora**, plus **Obsidian-like thinking and knowledge networks**, plus Inimark-native powers.
 
-<!--more-->
 
 ## In one line
 

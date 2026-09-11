@@ -4,7 +4,6 @@ title: Settings Overview
 
 # Settings Overview
 
-[toc]
 
 **中文:** [[设置总览|中文]] · [[Interface Tour]] · [[Find Replace and Shortcuts]]
 

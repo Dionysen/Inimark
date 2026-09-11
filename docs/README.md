@@ -8,7 +8,6 @@ title: Inimark Docs
 
 Inimark is a native Markdown editor: write in a live WYSIWYG surface, grow a local vault with `[[wikilinks]]`, and ship a static site from the same notes.
 
-<!--more-->
 
 ## Choose your language · 选择语言
 

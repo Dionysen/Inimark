@@ -4,7 +4,6 @@ title: Themes and Appearance
 
 # Themes and Appearance
 
-[toc]
 
 **中文:** [[主题与外观|中文]] · [[Publish a Site]] · [[Interface Tour]]
 

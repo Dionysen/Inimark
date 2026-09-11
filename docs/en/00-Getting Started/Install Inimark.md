@@ -4,7 +4,6 @@ title: Install Inimark
 
 # Install Inimark
 
-[toc]
 
 **中文:** [[安装与启动|中文]] · Back to [[Welcome]] · [[MOC-English Docs]]
 

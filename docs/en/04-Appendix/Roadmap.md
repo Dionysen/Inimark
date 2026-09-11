@@ -4,7 +4,6 @@ title: Roadmap
 
 # Roadmap
 
-[toc]
 
 **中文:** [[路线图|中文]] · [[Feature Comparison]] · [[MOC-English Docs]]
 

@@ -4,7 +4,6 @@ title: Math and Diagrams
 
 # Math and Diagrams
 
-[toc]
 
 **中文:** [[数学公式与图表|中文]] · [[Markdown Syntax]] · [[MOC-English Docs]]
 

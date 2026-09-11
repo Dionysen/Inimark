@@ -4,7 +4,6 @@ title: Feature Comparison
 
 # Feature Comparison
 
-[toc]
 
 **中文:** [[功能对照表|中文]] · [[Roadmap]] · [[Welcome]]
 

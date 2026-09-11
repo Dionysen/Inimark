@@ -4,7 +4,6 @@ title: Interface Tour
 
 # Interface Tour
 
-[toc]
 
 **中文:** [[界面导览|中文]] · [[MOC-English Docs]]
 

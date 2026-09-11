@@ -4,7 +4,6 @@ title: Wikilinks and Embeds
 
 # Wikilinks and Embeds
 
-[toc]
 
 **中文:** [[双链与嵌入|中文]] · [[Relationship Graph]] · [[Libraries and Files]]
 

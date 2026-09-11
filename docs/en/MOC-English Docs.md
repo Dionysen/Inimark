@@ -4,7 +4,6 @@ title: English Docs · Map of Content
 
 # English Docs · Map of Content
 
-[toc]
 
 > [!NOTE]
 > This is the English **MOC**. Topics are wired with `[[wikilinks]]` so the vault reads like a site *and* a graph.

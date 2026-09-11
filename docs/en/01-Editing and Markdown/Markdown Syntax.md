@@ -4,7 +4,6 @@ title: Markdown Syntax
 
 # Markdown Syntax
 
-[toc]
 
 **中文:** [[Markdown语法|中文]] · Related [[Editing Modes]] · [[Math and Diagrams]]
 
@@ -152,19 +151,13 @@ Used for titles and similar metadata; Publish reads `title` (see [[Publish a Sit
 
 ## TOC
 
-Write:
-
-```markdown
-[toc]
-```
-
-This page already uses it at the top.
+The editor can generate an in-note table of contents from headings when you insert its TOC marker on its own line. This help vault relies on the Outline sidebar instead, so the marker is not used in these pages.
 
 ## HTML and comments
 
 - HTML blocks: allowed (use sparingly)
 - Comments: `<!-- hides in reading flow -->`
-- Excerpt marker: `<!--more-->`
+- Excerpt break: a special HTML comment more-marker for publish/summary splits (not used in this help vault)
 
 <!-- HTML comment sample -->
 

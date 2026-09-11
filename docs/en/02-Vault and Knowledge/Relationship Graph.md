@@ -4,7 +4,6 @@ title: Relationship Graph
 
 # Relationship Graph
 
-[toc]
 
 **中文:** [[关系图谱|中文]] · [[Wikilinks and Embeds]] · [[MOC-English Docs]]
 

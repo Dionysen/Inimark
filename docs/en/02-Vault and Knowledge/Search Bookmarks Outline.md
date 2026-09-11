@@ -4,7 +4,6 @@ title: Search Bookmarks Outline
 
 # Search, Bookmarks, and Outline
 
-[toc]
 
 **中文:** [[搜索书签与大纲|中文]] · [[Interface Tour]] · [[Libraries and Files]]
 
@@ -43,7 +42,7 @@ A tree of `AT` headings for the active note; click to jump.
 Good for:
 
 - Long-form structure
-- Complementing in-body `[toc]` (`[toc]` lives in the note; Outline stays in the sidebar)
+- Long notes where you want heading jump links without leaving the sidebar
 
 ```mermaid
 flowchart TB

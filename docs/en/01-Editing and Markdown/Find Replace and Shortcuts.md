@@ -4,7 +4,6 @@ title: Find Replace and Shortcuts
 
 # Find, Replace, and Shortcuts
 
-[toc]
 
 **中文:** [[查找替换与快捷键|中文]] · [[Editing Modes]] · [[Settings Overview]]
 

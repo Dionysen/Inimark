@@ -4,7 +4,6 @@ title: Publish a Site
 
 # Publish a Site
 
-[toc]
 
 **中文:** [[发布为网站|中文]] · [[Themes and Appearance]] · [[MOC-English Docs]]
 
@@ -84,7 +83,7 @@ sequenceDiagram
 - Number folders for nav order (`00-`, `01-`, …)
 - Keep **unique titles** for clean `[[wikilinks]]`
 - Parallel trees: `zh/` and `en/`, cross-link with aliases
-- Lean on `[toc]`, callouts, tables — see [[Markdown Syntax]]
+- Lean on clear headings, callouts, and tables — see [[Markdown Syntax]]
 - Use [[README]] as the language portal
 
 ## Extending Publish later

@@ -4,7 +4,6 @@ title: Libraries and Files
 
 # Libraries and Files
 
-[toc]
 
 **中文:** [[库与文件|中文]] · [[Wikilinks and Embeds]] · [[MOC-English Docs]]
 
