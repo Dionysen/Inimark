@@ -1,6 +1,9 @@
 ---
 title: Editing Modes
+lang: en
+translationKey: editing-modes
 ---
+
 
 # Editing Modes
 

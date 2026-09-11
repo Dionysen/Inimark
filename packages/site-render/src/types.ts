@@ -9,6 +9,33 @@ export interface SiteConfig {
   out: string;
   /** Relative path of home note within vault, e.g. `README.md`. */
   home?: string;
+  /**
+   * Optional multilingual publishing.
+   * When set, the site chrome shows a language switcher and filters the nav
+   * tree to the active locale folder.
+   */
+  locales?: SiteLocalesConfig;
+}
+
+/** One language offered by a published site. */
+export interface SiteLocaleLanguage {
+  /** Short id used in front matter `lang`, e.g. `zh` / `en`. */
+  id: string;
+  /** Label shown in the language switcher. */
+  label: string;
+  /** Vault-relative folder root for this locale, e.g. `zh`. */
+  root: string;
+  /**
+   * Optional home note for this locale (vault-relative markdown path).
+   * Used when switching language without a paired translation.
+   */
+  home?: string;
+}
+
+export interface SiteLocalesConfig {
+  /** Default language id when a page has no `lang`. */
+  default: string;
+  languages: SiteLocaleLanguage[];
 }
 
 export interface ManifestNode {
@@ -65,6 +92,10 @@ export interface BuiltPage {
   backlinks: SiteLinkItem[];
   /** Local graph (center + 1-hop neighbors). */
   graph: SiteGraphPayload;
+  /** Locale id from front matter or inferred from path. */
+  lang?: string;
+  /** Shared key pairing translations across languages. */
+  translationKey?: string;
 }
 
 export interface MediaCopyPlan {

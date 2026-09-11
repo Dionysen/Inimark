@@ -1,6 +1,9 @@
 ---
 title: 中文文档目录
+lang: zh
+translationKey: moc
 ---
+
 
 # 中文文档 · 内容地图
 
@@ -8,7 +11,7 @@ title: 中文文档目录
 > [!NOTE]
 > 这是中文帮助的 **MOC（Map of Content）**。每个主题都用双链串起来——像 Obsidian，读起来像一本站。
 
-**English:** [[MOC-English Docs|English Docs]] · 首页 [[README|Inimark Docs]]
+**English:** [[MOC-English Docs|English Docs]] · 首页 [[欢迎]]
 
 ---
 

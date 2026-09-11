@@ -1,6 +1,9 @@
 ---
 title: Data Directory
+lang: en
+translationKey: data-directory
 ---
+
 
 # Data Directory
 
@@ -46,7 +49,7 @@ flowchart TB
 
 | Path | Role |
 | --- | --- |
-| `publish.config.json` | Publish config |
+| `publish.config.json` | Publish config (optional `locales`) |
 | `README.md` | Bilingual portal |
 | `zh/` · `en/` | Parallel doc trees |
 | `dist/` | Build output (usually ignored via global `dist/`) |

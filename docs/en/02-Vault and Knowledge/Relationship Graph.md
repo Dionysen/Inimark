@@ -1,6 +1,9 @@
 ---
 title: Relationship Graph
+lang: en
+translationKey: relationship-graph
 ---
+
 
 # Relationship Graph
 

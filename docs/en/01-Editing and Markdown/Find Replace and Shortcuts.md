@@ -1,6 +1,9 @@
 ---
 title: Find Replace and Shortcuts
+lang: en
+translationKey: find-replace
 ---
+
 
 # Find, Replace, and Shortcuts
 

@@ -1,6 +1,9 @@
 ---
 title: Markdown语法
+lang: zh
+translationKey: markdown-syntax
 ---
+
 
 # Markdown 语法
 
@@ -144,10 +147,12 @@ export function hello(name: string): string {
 ```yaml
 ---
 title: Markdown语法
+lang: zh
+translationKey: markdown-syntax
 ---
 ```
 
-可用于标题等元数据；发布站点时也会读取 `title`（见 [[发布为网站]]）。
+可用于标题等元数据；发布站点时会读取 `title`，多语言还会读 `lang` / `translationKey`（见 [[发布为网站]]）。
 
 ## TOC · 目录
 

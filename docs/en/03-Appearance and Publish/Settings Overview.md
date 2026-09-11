@@ -1,6 +1,9 @@
 ---
 title: Settings Overview
+lang: en
+translationKey: settings-overview
 ---
+
 
 # Settings Overview
 
@@ -34,7 +37,7 @@ Keeps long-lived libraries tidy and [[Publish a Site]] output more stable.
 
 ## i18n
 
-App UI supports `en` / `zh-CN` (or system). **Help notes** are a parallel bilingual tree, independent of UI locale — see [[README]].
+App UI supports `en` / `zh-CN` (or system). **Help notes** are a parallel bilingual tree, independent of UI locale; published sites can switch languages via `locales` + `translationKey` — see [[Welcome]] and [[Publish a Site]].
 
 ```mermaid
 mindmap

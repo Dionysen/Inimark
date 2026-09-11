@@ -1,6 +1,9 @@
 ---
 title: English Docs · Map of Content
+lang: en
+translationKey: moc
 ---
+
 
 # English Docs · Map of Content
 
@@ -8,7 +11,7 @@ title: English Docs · Map of Content
 > [!NOTE]
 > This is the English **MOC**. Topics are wired with `[[wikilinks]]` so the vault reads like a site *and* a graph.
 
-**中文:** [[MOC-中文文档|中文文档]] · Home [[README|Inimark Docs]]
+**中文:** [[MOC-中文文档|中文文档]] · Home [[Welcome]]
 
 ---
 

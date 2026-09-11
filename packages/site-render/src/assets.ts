@@ -156,6 +156,36 @@ html::-webkit-scrollbar-corner {
   padding: 2px 10px 10px;
 }
 .site-brand:hover { color: var(--accent); }
+.site-lang {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 10px 12px;
+}
+.site-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  background: transparent;
+}
+.site-lang-btn:hover {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+.site-lang-btn.is-active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: rgba(var(--accent-rgb, 116, 167, 254), 0.12);
+}
 .site-theme-picker {
   display: flex;
   flex-direction: column;
@@ -488,6 +518,14 @@ export const SITE_JS = `(() => {
       btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", !open);
       const nested = li.querySelector(":scope > .site-tree");
       if (nested) nested.hidden = open;
+    });
+  });
+
+  const LANG_KEY = "inimark-site-lang";
+  document.querySelectorAll(".site-lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const lang = btn.getAttribute("data-lang");
+      if (lang) localStorage.setItem(LANG_KEY, lang);
     });
   });
 ${SITE_GRAPH_JS}

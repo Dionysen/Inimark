@@ -1,6 +1,9 @@
 ---
 title: Search Bookmarks Outline
+lang: en
+translationKey: search-bookmarks
 ---
+
 
 # Search, Bookmarks, and Outline
 

@@ -5,7 +5,7 @@ import {
 } from "@inimark/editor";
 
 import { SITE_JS, SITE_LAYOUT_CSS } from "./assets.ts";
-import { parseFrontmatterTitle } from "./frontmatter.ts";
+import { parseSiteFrontmatter } from "./frontmatter.ts";
 import {
   isAbsoluteFsPath,
   isLocalAssetSrc,
@@ -16,6 +16,12 @@ import {
   relativeHref,
   stripFileUrl,
 } from "./paths.ts";
+import {
+  buildLocaleMap,
+  filterManifestForLocale,
+  inferLangFromPath,
+  isUnderLocaleRoot,
+} from "./locales.ts";
 import { packSiteCss } from "./theme.ts";
 import { renderIndexRedirect, renderNotePage } from "./template.ts";
 import type {
@@ -136,6 +142,16 @@ function pickHome(notes: VaultNoteInput[], config: SiteConfig): VaultNoteInput {
     const found = notes.find((n) => normalizeSlashes(n.path) === home);
     if (found) return found;
   }
+  if (config.locales?.languages.length) {
+    const def =
+      config.locales.languages.find((l) => l.id === config.locales!.default) ??
+      config.locales.languages[0];
+    if (def?.home) {
+      const home = normalizeSlashes(def.home);
+      const found = notes.find((n) => normalizeSlashes(n.path) === home);
+      if (found) return found;
+    }
+  }
   const readme = notes.find((n) =>
     /(^|\/)readme\.md$/i.test(normalizeSlashes(n.path)),
   );
@@ -149,12 +165,15 @@ function pickHome(notes: VaultNoteInput[], config: SiteConfig): VaultNoteInput {
  */
 export function buildSite(options: BuildSiteOptions): SiteBuildResult {
   const config: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...options.config };
-  if (!options.notes.length) {
+  const notes = config.locales?.languages.length
+    ? options.notes.filter((n) => isUnderLocaleRoot(n.path, config.locales))
+    : options.notes;
+  if (!notes.length) {
     throw new Error("No markdown notes to publish.");
   }
 
   const noteByPath = new Map(
-    options.notes.map((n) => [normalizeSlashes(n.path), n]),
+    notes.map((n) => [normalizeSlashes(n.path), n]),
   );
 
   const resolveWikiHref = (fromSource: string) => {
@@ -175,7 +194,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
   const mediaSeen = new Set<string>();
   const pages: BuiltPage[] = [];
 
-  for (const note of options.notes) {
+  for (const note of notes) {
     const restore = installWikiBridge(options.resolveNotePath);
     try {
       const rewriteSrc = (src: string): string | null => {
@@ -216,7 +235,11 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
       });
 
       const fallbackTitle = noteTitleFromPath(note.path);
-      const title = parseFrontmatterTitle(note.markdown, fallbackTitle);
+      const fm = parseSiteFrontmatter(note.markdown);
+      const title = fm.title || fallbackTitle;
+      const lang =
+        fm.lang || inferLangFromPath(note.path, config.locales) || undefined;
+      const translationKey = fm.translationKey;
 
       pages.push({
         sourcePath: note.path,
@@ -227,6 +250,8 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         outlinks: [],
         backlinks: [],
         graph: { centerId: normalizeSlashes(note.path), nodes: [], edges: [] },
+        lang,
+        translationKey,
       });
     } finally {
       restore();
@@ -242,7 +267,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
 
   /** Collect resolved wiki edges once, then attach out/back links per page. */
   const edges: Array<{ from: string; to: string }> = [];
-  for (const note of options.notes) {
+  for (const note of notes) {
     const from = normalizeSlashes(note.path);
     const seen = new Set<string>();
     for (const link of parseWikiNoteTargets(note.markdown)) {
@@ -298,9 +323,25 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
   }
 
   const manifest = annotateManifestTree(
-    options.tree?.length ? options.tree : buildFlatManifest(options.notes, titleByPath),
+    options.tree?.length ? options.tree : buildFlatManifest(notes, titleByPath),
     titleByPath,
   );
+
+  const localeMap = buildLocaleMap(pages);
+  const localeHomeHtml = new Map<string, string>();
+  if (config.locales?.languages.length) {
+    for (const lang of config.locales.languages) {
+      if (lang.home) {
+        localeHomeHtml.set(lang.id, noteHtmlPath(normalizeSlashes(lang.home)));
+        continue;
+      }
+      // Fallback: first page in this locale by path order.
+      const first = pages
+        .filter((p) => p.lang === lang.id)
+        .sort((a, b) => a.sourcePath.localeCompare(b.sourcePath))[0];
+      if (first) localeHomeHtml.set(lang.id, first.htmlPath);
+    }
+  }
 
   const siteCss = packSiteCss({
     layoutCss: SITE_LAYOUT_CSS,
@@ -318,19 +359,41 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
     },
   ];
 
+  if (config.locales?.languages.length) {
+    files.push({
+      path: "assets/locale-map.json",
+      content: JSON.stringify(
+        {
+          default: config.locales.default,
+          languages: config.locales.languages.map((l) => ({
+            id: l.id,
+            label: l.label,
+            home: localeHomeHtml.get(l.id) ?? null,
+          })),
+          translations: localeMap,
+        },
+        null,
+        2,
+      ),
+    });
+  }
+
   for (const page of pages) {
+    const pageManifest = filterManifestForLocale(manifest, config.locales, page.lang);
     files.push({
       path: page.htmlPath,
       content: renderNotePage({
         config,
         page,
-        manifest,
+        manifest: pageManifest,
         themes: options.themeIds,
+        localeMap,
+        localeHomeHtml,
       }),
     });
   }
 
-  const home = pickHome(options.notes, config);
+  const home = pickHome(notes, config);
   files.push({
     path: "index.html",
     content: renderIndexRedirect({

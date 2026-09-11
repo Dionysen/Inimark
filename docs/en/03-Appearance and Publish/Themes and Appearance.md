@@ -1,6 +1,9 @@
 ---
 title: Themes and Appearance
+lang: en
+translationKey: themes
 ---
+
 
 # Themes and Appearance
 

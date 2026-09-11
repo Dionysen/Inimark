@@ -1,6 +1,9 @@
 ---
 title: Interface Tour
+lang: en
+translationKey: interface-tour
 ---
+
 
 # Interface Tour
 

@@ -5,6 +5,7 @@ import type {
   SiteConfig,
   SiteLinkItem,
 } from "./types.ts";
+import type { LocaleMap } from "./locales.ts";
 import { joinUrl, relativeHref } from "./paths.ts";
 
 function escapeHtml(s: string): string {
@@ -66,6 +67,34 @@ function renderGraphPanel(page: BuiltPage): string {
     </section>`;
 }
 
+function renderLangSwitcher(options: {
+  config: SiteConfig;
+  page: BuiltPage;
+  localeMap: LocaleMap;
+  localeHomeHtml: Map<string, string>;
+}): string {
+  const locales = options.config.locales;
+  if (!locales?.languages.length) return "";
+
+  const { page, localeMap, localeHomeHtml } = options;
+  const active = page.lang || locales.default;
+  const pair = page.translationKey ? localeMap[page.translationKey] : undefined;
+
+  const buttons = locales.languages
+    .map((lang) => {
+      const targetHtml =
+        pair?.[lang.id] ?? localeHomeHtml.get(lang.id) ?? null;
+      const href = targetHtml
+        ? relativeHref(page.htmlPath, targetHtml)
+        : relativeHref(page.htmlPath, "index.html");
+      const isActive = lang.id === active;
+      return `<a class="site-lang-btn${isActive ? " is-active" : ""}" href="${escapeHtml(href)}" data-lang="${escapeHtml(lang.id)}" hreflang="${escapeHtml(lang.id)}"${isActive ? ' aria-current="page"' : ""}>${escapeHtml(lang.label)}</a>`;
+    })
+    .join("");
+
+  return `<div class="site-lang" role="navigation" aria-label="Language" data-translation-key="${escapeHtml(page.translationKey || "")}" data-lang="${escapeHtml(active)}">${buttons}</div>`;
+}
+
 function treeContainsActive(node: ManifestNode, currentHtmlPath: string): boolean {
   if (node.kind === "file") return node.href === currentHtmlPath;
   return (node.children ?? []).some((child) =>
@@ -107,8 +136,17 @@ export function renderNotePage(options: {
   page: BuiltPage;
   manifest: ManifestNode[];
   themes: string[];
+  localeMap?: LocaleMap;
+  localeHomeHtml?: Map<string, string>;
 }): string {
-  const { config, page, manifest, themes } = options;
+  const {
+    config,
+    page,
+    manifest,
+    themes,
+    localeMap = {},
+    localeHomeHtml = new Map(),
+  } = options;
   const cssHref = relativeHref(page.htmlPath, "assets/site.css");
   const jsHref = relativeHref(page.htmlPath, "assets/site.js");
   const themeOptions = themes
@@ -117,9 +155,21 @@ export function renderNotePage(options: {
         `<option value="${escapeHtml(id)}"${id === config.defaultTheme ? " selected" : ""}>${escapeHtml(id)}</option>`,
     )
     .join("");
+  const langSwitcher = renderLangSwitcher({
+    config,
+    page,
+    localeMap,
+    localeHomeHtml,
+  });
+  const htmlLang = page.lang || config.locales?.default || "en";
+  const brandTarget =
+    (page.lang && localeHomeHtml.get(page.lang)) ||
+    localeHomeHtml.get(config.locales?.default ?? "") ||
+    "index.html";
+  const brandHref = relativeHref(page.htmlPath, brandTarget);
 
   return `<!DOCTYPE html>
-<html lang="en" data-theme="${escapeHtml(config.defaultTheme)}">
+<html lang="${escapeHtml(htmlLang)}" data-theme="${escapeHtml(config.defaultTheme)}"${page.lang ? ` data-page-lang="${escapeHtml(page.lang)}"` : ""}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -131,7 +181,8 @@ export function renderNotePage(options: {
   <div class="site-layout">
     <aside class="site-sidebar" aria-label="Notes">
       <div class="site-sidebar-head">
-        <a class="site-brand" href="${escapeHtml(relativeHref(page.htmlPath, "index.html"))}">${escapeHtml(config.siteName)}</a>
+        <a class="site-brand" href="${escapeHtml(brandHref)}">${escapeHtml(config.siteName)}</a>
+        ${langSwitcher}
         <label class="site-theme-picker">
           <span class="site-theme-label">Theme</span>
           <select id="site-theme" aria-label="Theme">${themeOptions}</select>

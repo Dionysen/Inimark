@@ -25,6 +25,9 @@ export interface PublishPanelController {
 export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   host.classList.add("inimark-settings-publish");
 
+  /** Last loaded file config; form only edits a subset of fields. */
+  let lastLoadedConfig: PublishConfig | null = null;
+
   const libraryRow = document.createElement("div");
   libraryRow.className = "inimark-settings-row";
   libraryRow.dataset.settingId = "publish.library";
@@ -119,6 +122,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   async function loadConfigIntoForm(): Promise<void> {
     const lib = selectedLibrary();
     if (!lib) {
+      lastLoadedConfig = null;
       siteNameField.setValue("");
       outField.setValue("dist");
       baseHrefField.setValue("/");
@@ -126,17 +130,28 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       return;
     }
     const cfg = await loadPublishConfig(lib.rootPath);
+    lastLoadedConfig = cfg;
     siteNameField.setValue(cfg.siteName);
     outField.setValue(cfg.out || "dist");
     baseHrefField.setValue(cfg.baseHref || "/");
     homeField.setValue(cfg.home || "");
   }
 
+  /**
+   * Merge editable form fields onto the last loaded config so optional keys
+   * (e.g. `locales`, `siteDescription`) are not wiped on save.
+   */
   function readFormConfig(): PublishConfig {
     const lib = selectedLibrary();
-    return {
-      siteName: siteNameField.getValue().trim() || lib?.rootName || "Notes",
+    const base = lastLoadedConfig ?? {
+      siteName: lib?.rootName || "Notes",
       defaultTheme: "dark",
+      baseHref: "/",
+      out: "dist",
+    };
+    return {
+      ...base,
+      siteName: siteNameField.getValue().trim() || lib?.rootName || "Notes",
       baseHref: baseHrefField.getValue().trim() || "/",
       out: outField.getValue().trim() || "dist",
       home: homeField.getValue().trim() || undefined,

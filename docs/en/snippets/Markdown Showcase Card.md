@@ -1,6 +1,9 @@
 ---
 title: Markdown Showcase Card
+lang: en
+translationKey: showcase-card
 ---
+
 
 ### Inline
 

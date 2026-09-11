@@ -4,5 +4,22 @@
   "defaultTheme": "light",
   "baseHref": "/Inimark/",
   "out": "dist",
-  "home": "README.md"
+  "home": "zh/00-由此开始/欢迎.md",
+  "locales": {
+    "default": "zh",
+    "languages": [
+      {
+        "id": "zh",
+        "label": "中文",
+        "root": "zh",
+        "home": "zh/00-由此开始/欢迎.md"
+      },
+      {
+        "id": "en",
+        "label": "English",
+        "root": "en",
+        "home": "en/00-Getting Started/Welcome.md"
+      }
+    ]
+  }
 }

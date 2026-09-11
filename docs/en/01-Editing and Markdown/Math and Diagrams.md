@@ -1,6 +1,9 @@
 ---
 title: Math and Diagrams
+lang: en
+translationKey: math-diagrams
 ---
+
 
 # Math and Diagrams
 

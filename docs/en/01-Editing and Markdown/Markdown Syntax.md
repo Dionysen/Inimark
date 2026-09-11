@@ -1,6 +1,9 @@
 ---
 title: Markdown Syntax
+lang: en
+translationKey: markdown-syntax
 ---
+
 
 # Markdown Syntax
 
@@ -144,10 +147,12 @@ YAML at the top of this note:
 ```yaml
 ---
 title: Markdown Syntax
+lang: en
+translationKey: markdown-syntax
 ---
 ```
 
-Used for titles and similar metadata; Publish reads `title` (see [[Publish a Site]]).
+Used for titles and similar metadata; Publish reads `title`, and for multilingual sites also `lang` / `translationKey` (see [[Publish a Site]]).
 
 ## TOC
 

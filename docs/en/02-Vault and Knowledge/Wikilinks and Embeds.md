@@ -1,6 +1,9 @@
 ---
 title: Wikilinks and Embeds
+lang: en
+translationKey: wikilinks
 ---
+
 
 # Wikilinks and Embeds
 

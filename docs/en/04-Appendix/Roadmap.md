@@ -1,6 +1,9 @@
 ---
 title: Roadmap
+lang: en
+translationKey: roadmap
 ---
+
 
 # Roadmap
 
@@ -19,6 +22,7 @@ title: Roadmap
 - [x] `[[wikilinks]]` / `![[embeds]]` · rewrite · graph
 - [x] Theme packs · i18n · settings window · rebindable shortcuts
 - [x] Publish SSG + local preview
+- [x] Publish multilingual switcher (`locales` + `translationKey`)
 - [x] Auto-update pipeline
 
 ## Partial / exposed but unfinished
@@ -45,8 +49,7 @@ Per your call: **Publish first, then extend**. Candidates:
 1. Full-text site search
 2. Richer sidebar IA (beyond folder trees)
 3. SEO: sitemap / Open Graph
-4. Language switcher chrome (today: note aliases)
-5. Optional embedded graph page
+4. Optional vault-wide graph page (per-page local graph already ships)
 
 ```mermaid
 flowchart LR
@@ -58,4 +61,4 @@ flowchart LR
   E1 --> Img[Image paste pipeline]
 ```
 
-Back: [[MOC-English Docs]] · Home [[README]]
+Back: [[MOC-English Docs]] · Home [[Welcome]]

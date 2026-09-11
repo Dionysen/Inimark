@@ -1,6 +1,9 @@
 ---
 title: Libraries and Files
+lang: en
+translationKey: libraries-files
 ---
+
 
 # Libraries and Files
 

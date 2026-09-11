@@ -1,6 +1,9 @@
 ---
 title: Install Inimark
+lang: en
+translationKey: install
 ---
+
 
 # Install Inimark
 

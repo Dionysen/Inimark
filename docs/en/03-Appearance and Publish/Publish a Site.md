@@ -1,5 +1,7 @@
 ---
 title: Publish a Site
+lang: en
+translationKey: publish-site
 ---
 
 # Publish a Site
@@ -19,11 +21,12 @@ Build the current library into a **static site**: same Markdown, same theme lang
 | Multi-page HTML | ✅ |
 | Folder nav tree | ✅ |
 | Per-page outline | ✅ |
+| Local relationship graph (right rail) | ✅ |
 | Theme switching | ✅ |
+| Language switcher (`locales`) | ✅ |
 | `[[wikilinks]]` → relative hrefs | ✅ |
 | Local preview server | ✅ |
 | Site-wide search | ❌ (extend later) |
-| Graph page | ❌ (extend later) |
 
 Boundaries also live in [[Roadmap]].
 
@@ -36,7 +39,37 @@ Boundaries also live in [[Roadmap]].
 | `defaultTheme` | Initial theme | `light` |
 | `baseHref` | Deploy prefix | `/` or `/repo/` |
 | `out` | Output dir | `dist` |
-| `home` | Home note | `README.md` |
+| `home` | Home note | `zh/00-由此开始/欢迎.md` |
+| `locales` | Optional multilingual | see below |
+
+### Multilingual (optional)
+
+Declare `locales` in `publish.config.json` to show a language switcher in the site chrome. The nav tree unwraps the active locale `root` (no `zh` / `en` shell folders), and notes outside locale roots are not published.
+
+```json
+"locales": {
+  "default": "zh",
+  "languages": [
+    { "id": "zh", "label": "中文", "root": "zh", "home": "zh/00-由此开始/欢迎.md" },
+    { "id": "en", "label": "English", "root": "en", "home": "en/00-Getting Started/Welcome.md" }
+  ]
+}
+```
+
+Pair translations with front matter:
+
+```yaml
+---
+title: Welcome
+lang: en
+translationKey: welcome
+---
+```
+
+- `lang`: language id (optional; inferred when the path sits under a locale `root`)
+- `translationKey`: shared key across languages; the switcher prefers the paired note, otherwise the locale `home`
+
+This help vault’s parallel `zh/` / `en/` trees already follow that convention.
 
 ## Steps
 
@@ -62,7 +95,7 @@ Site URL: https://dionysen.github.io/Inimark/
 
 1. Open `docs/` as a library in Inimark
 2. Open **Settings → Publish**
-3. Confirm `siteName` / `out` / `baseHref` / `home`
+3. Confirm `siteName` / `out` / `baseHref` / `home` (`locales` live in the config file and are preserved when saving the form)
 4. **Preview** locally, or build
 5. Deploy `dist/` to any static host
 
@@ -82,9 +115,9 @@ sequenceDiagram
 
 - Number folders for nav order (`00-`, `01-`, …)
 - Keep **unique titles** for clean `[[wikilinks]]`
-- Parallel trees: `zh/` and `en/`, cross-link with aliases
+- Parallel trees: `zh/` and `en/`, pair with the same `translationKey`, and cross-link with aliases
 - Lean on clear headings, callouts, and tables — see [[Markdown Syntax]]
-- Use [[README]] as the language portal
+- Each language starts from its own welcome note (this vault: [[欢迎]] / [[Welcome]])
 
 ## Extending Publish later
 

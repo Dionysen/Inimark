@@ -1,6 +1,9 @@
 ---
 title: Feature Comparison
+lang: en
+translationKey: feature-comparison
 ---
+
 
 # Feature Comparison
 
