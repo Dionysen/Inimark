@@ -171,8 +171,33 @@ export function supportsEyeDropper(): boolean {
   return typeof window !== "undefined" && "EyeDropper" in window;
 }
 
-/** Pick a screen color via EyeDropper API, or the native macOS sampler via Tauri. */
+/**
+ * Pick a screen color.
+ * Prefers the native Tauri sampler (macOS / Windows); falls back to EyeDropper
+ * when the native command is unavailable (e.g. unsupported OS or plain web).
+ */
 export async function pickColorWithEyeDropper(): Promise<string | null> {
+  let invoke: ((cmd: string) => Promise<string>) | null = null;
+  try {
+    const core = await import("@tauri-apps/api/core");
+    invoke = (cmd) => core.invoke<string>(cmd);
+  } catch {
+    invoke = null;
+  }
+
+  if (invoke) {
+    try {
+      const hex = await invoke("pick_screen_color");
+      return typeof hex === "string" && hex.length > 0 ? hex : null;
+    } catch (err) {
+      const msg = String(err);
+      if (/cancel/i.test(msg)) return null;
+      if (!/not available/i.test(msg)) {
+        throw err instanceof Error ? err : new Error(msg);
+      }
+    }
+  }
+
   if (supportsEyeDropper()) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,13 +209,7 @@ export async function pickColorWithEyeDropper(): Promise<string | null> {
     }
   }
 
-  try {
-    const { invoke } = await import("@tauri-apps/api/core");
-    const hex = await invoke<string>("pick_screen_color");
-    return typeof hex === "string" && hex.length > 0 ? hex : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 /** Classic light/dark transparency checkerboard (cell size in CSS px). */

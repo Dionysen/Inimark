@@ -9,6 +9,7 @@ import {
   type HsvaColor,
 } from "./color-utils.ts";
 import { createIconButton, createTextField } from "../ui/widgets/index.ts";
+import { updateTooltip } from "../ui/widgets/tooltip.ts";
 import { t } from "../i18n/index.ts";
 
 export interface ThemeColorFieldOptions {
@@ -108,16 +109,37 @@ export function createThemeColorField(options: ThemeColorFieldOptions): HTMLElem
   dropperBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (dropperBtn.disabled) return;
     const wasOpen = open;
     if (wasOpen) setOpen(false);
-    const hex = await pickColorWithEyeDropper();
-    if (!hex) {
+    dropperBtn.disabled = true;
+    document.documentElement.classList.add("is-color-picking");
+    updateTooltip(dropperBtn, t("settings.theme.eyedropperHint"));
+    let failed = false;
+    try {
+      const hex = await pickColorWithEyeDropper();
+      if (!hex) {
+        if (wasOpen) setOpen(true);
+        return;
+      }
+      const next = rgbaToHsva(parseColor(hex));
+      next.a = hsva.a;
+      commit(next);
+    } catch (err) {
+      failed = true;
+      console.error("Eyedropper failed", err);
+      updateTooltip(dropperBtn, t("settings.theme.eyedropperFailed"));
+      window.setTimeout(() => {
+        updateTooltip(dropperBtn, t("settings.theme.eyedropper"));
+      }, 1600);
       if (wasOpen) setOpen(true);
-      return;
+    } finally {
+      document.documentElement.classList.remove("is-color-picking");
+      dropperBtn.disabled = false;
+      if (!failed) {
+        updateTooltip(dropperBtn, t("settings.theme.eyedropper"));
+      }
     }
-    const next = rgbaToHsva(parseColor(hex));
-    next.a = hsva.a;
-    commit(next);
   });
 
   group.append(swatch, text.el, dropperBtn, copyBtn);

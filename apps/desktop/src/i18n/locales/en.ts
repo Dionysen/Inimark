@@ -450,6 +450,8 @@ export const en: Dictionary = {
       copyColor: "Copy color",
       copied: "Copied!",
       eyedropper: "Pick color from screen",
+      eyedropperHint: "Click the screen to sample, Esc to cancel",
+      eyedropperFailed: "Color picker failed",
       editTheme: "Edit theme: {{name}}",
       editCodeTheme: "Edit code theme: {{name}}",
       nameThemePack: "Name theme pack",
