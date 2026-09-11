@@ -144,44 +144,6 @@
 }
 .ProseMirror blockquote > :first-child { margin-top: 0; }
 .ProseMirror blockquote > :last-child { margin-bottom: 0; }
-.ProseMirror blockquote.md-alert {
-  --md-alert-color: #6a737d;
-  --md-alert-bg: rgba(106, 115, 125, 0.08);
-  margin: 0 0 1em;
-  padding: 0.78em 1em 0.82em;
-  color: var(--text-primary, #2d333b);
-  background: var(--md-alert-bg);
-  border: 1px solid color-mix(in srgb, var(--md-alert-color) 18%, transparent);
-  border-left: 4px solid var(--md-alert-color);
-  border-radius: var(--radius-code-block, 4px);
-}
-
-.ProseMirror blockquote.md-alert::after {
-  font-size: 0.9em;
-  line-height: 1.35;
-}
-.ProseMirror blockquote.md-alert > :first-child { margin-top: 0; }
-.ProseMirror blockquote.md-alert > :last-child { margin-bottom: 0; }
-.ProseMirror blockquote.md-alert-note {
-  --md-alert-color: #6a737d;
-  --md-alert-bg: rgba(106, 115, 125, 0.08);
-}
-.ProseMirror blockquote.md-alert-tip {
-  --md-alert-color: #00a1a7;
-  --md-alert-bg: rgba(0, 161, 167, 0.08);
-}
-.ProseMirror blockquote.md-alert-important {
-  --md-alert-color: #8250df;
-  --md-alert-bg: rgba(130, 80, 223, 0.09);
-}
-.ProseMirror blockquote.md-alert-warning {
-  --md-alert-color: #9a6700;
-  --md-alert-bg: rgba(154, 103, 0, 0.1);
-}
-.ProseMirror blockquote.md-alert-danger {
-  --md-alert-color: var(--danger, #cf222e);
-  --md-alert-bg: color-mix(in srgb, var(--danger, #cf222e) 8%, transparent);
-}
 
 /* ─── lists ──────────────────────────────────────────────────────── */
 .ProseMirror ul,
