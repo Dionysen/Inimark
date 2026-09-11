@@ -101,6 +101,20 @@ function codeBlockPosAt(state: EditorState, pos: number): number | null {
   return null;
 }
 
+/** Successful Mermaid preview with source hidden — no editable hit target for vertical arrows. */
+function isCollapsedMermaidBlock(view: EditorView, blockPos: number): boolean {
+  // Feature-spec fake views have no nodeDOM; treat as not collapsed so the
+  // normal lang-focus ArrowUp path still runs in those tests.
+  if (typeof view.nodeDOM !== "function") return false;
+  const dom = view.nodeDOM(blockPos);
+  return (
+    dom instanceof HTMLElement &&
+    dom.classList.contains("has-diagram") &&
+    dom.classList.contains("diagram-success") &&
+    !dom.classList.contains("diagram-source-open")
+  );
+}
+
 export const FOCUS_CODE_BLOCK_META = "focus-code-block";
 
 /** Insert an empty code block and park the caret inside its body. */
@@ -137,6 +151,12 @@ export function insertCodeBlockTransaction(
 function focusCodeMirrorAt(view: EditorView, blockPos: number): void {
   const dom = view.nodeDOM(blockPos);
   if (!(dom instanceof HTMLElement)) return;
+  // Collapsed Mermaid source is display:none; reveal before focusing CM.
+  if (dom.classList.contains("has-diagram")) {
+    dom.classList.add("diagram-source-open");
+    const frame = dom.querySelector(":scope > pre.code-source-frame");
+    if (frame instanceof HTMLElement) frame.classList.add("diagram-source-open");
+  }
   const content = dom.querySelector<HTMLElement>(".typora-web-code-editor .cm-content");
   if (!content) return;
   requestAnimationFrame(() => {
@@ -434,6 +454,7 @@ class CodeBlockView implements NodeView {
     const ctx = this.blockContext();
     if (!ctx) return;
     this.hideLanguageMenu();
+    this.openDiagramSource();
     const endInside = ctx.blockPos + ctx.node.nodeSize - 1;
     this.view.dispatch(
       this.view.state.tr
@@ -476,6 +497,9 @@ class CodeBlockView implements NodeView {
       this.dom.removeAttribute("data-lang-focus");
       this.sourceFrameEl.removeAttribute("data-lang-focus");
     }
+    // Reveal Mermaid source before focusing CM — a display:none editor
+    // cannot take focus, which made arrow-key re-entry skip the block.
+    if (active || langFocus) this.openDiagramSource();
     if (!langFocus) {
       this.hideLanguageMenu();
       if (document.activeElement === this.inputEl) {
@@ -538,30 +562,61 @@ class CodeBlockView implements NodeView {
     this.chromeEl.style.top = `${top}px`;
   }
 
+  private closeDiagramSource(): void {
+    if (this.dom.classList.contains("diagram-error")) return;
+    this.dom.classList.remove("diagram-source-open");
+    this.sourceFrameEl.classList.remove("diagram-source-open");
+  }
+
+  private openDiagramSource(): void {
+    if (!this.dom.classList.contains("has-diagram")) return;
+    this.dom.classList.add("diagram-source-open");
+    this.sourceFrameEl.classList.add("diagram-source-open");
+  }
+
+  private isFocusInsideBlock(target: Node | null): boolean {
+    if (!target) return false;
+    return (
+      this.dom.contains(target) ||
+      this.codeMountEl.contains(target) ||
+      this.chromeEl.contains(target) ||
+      this.menuEl.contains(target)
+    );
+  }
+
+  private selectionInThisBlock(): boolean {
+    const pos = this.getPos();
+    if (pos == null) return false;
+    return codeBlockPosAt(this.view.state, this.view.state.selection.from) === pos;
+  }
+
   private onFocusIn = (): void => {
     this.dom.classList.add("cb-active");
+    this.openDiagramSource();
     this.refreshChromeVisibility();
     this.clearLangFocusIfActive();
   };
 
   private onFocusOut = (event: FocusEvent): void => {
     const next = event.relatedTarget as Node | null;
-    if (
-      next &&
-      (this.dom.contains(next) || this.chromeEl.contains(next) || this.menuEl.contains(next))
-    ) {
-      return;
-    }
-    this.dom.classList.remove("cb-active");
-    this.sourceFrameEl.classList.remove("cb-active");
-    this.refreshChromeVisibility();
+    if (this.isFocusInsideBlock(next)) return;
+    // Defer so ArrowDown → lang-input focus (via applyDecorations) can land
+    // before we decide the block was left. Also keep source open when PM
+    // selection is still in this block (keyboard re-entry / CM handoff).
+    window.setTimeout(() => {
+      if (this.isFocusInsideBlock(document.activeElement)) return;
+      if (this.selectionInThisBlock()) return;
+      this.dom.classList.remove("cb-active");
+      this.sourceFrameEl.classList.remove("cb-active");
+      this.closeDiagramSource();
+      this.refreshChromeVisibility();
+    }, 0);
   };
 
   private onDiagramClick = (): void => {
     if (!this.dom.classList.contains("has-diagram")) return;
     this.startPendingDiagramRender();
-    this.dom.classList.add("diagram-source-open");
-    this.sourceFrameEl.classList.add("diagram-source-open");
+    this.openDiagramSource();
     this.dom.classList.add("cb-active");
     this.sourceFrameEl.classList.add("cb-active");
     this.refreshChromeVisibility();
@@ -745,9 +800,14 @@ class CodeBlockView implements NodeView {
   private onInputBlur = (): void => {
     // Defer so mousedown on a menu item runs before we dismiss.
     window.setTimeout(() => {
-      const active = document.activeElement;
-      if (active === this.inputEl || this.menuEl.contains(active)) return;
+      if (this.isFocusInsideBlock(document.activeElement)) {
+        this.refreshChromeVisibility();
+        return;
+      }
       this.hideLanguageMenu();
+      // Selection may still sit in this code_block during CM/lang handoff —
+      // keep Mermaid source open so re-entry can focus; only close on leave.
+      if (!this.selectionInThisBlock()) this.closeDiagramSource();
       this.refreshChromeVisibility();
     }, 0);
   };
@@ -778,10 +838,7 @@ class CodeBlockView implements NodeView {
       return;
     }
     this.hideLanguageMenu();
-    if (!this.dom.classList.contains("diagram-error")) {
-      this.dom.classList.remove("diagram-source-open");
-      this.sourceFrameEl.classList.remove("diagram-source-open");
-    }
+    this.closeDiagramSource();
   };
 
   private onCodeChange = (code: string): void => {
@@ -1169,13 +1226,12 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
           return true;
         }
 
-        // Case E: cursor at START of a block whose previous sibling is a
-        // code_block → ArrowUp enters that preceding code_block's lang input.
-        if (
-          e.key === "ArrowUp" &&
-          $from.depth >= 1 &&
-          $from.parentOffset === 0
-        ) {
+        // Case E: ArrowUp into the preceding code_block.
+        // Normal fences: at start of the block below → lang input.
+        // Collapsed Mermaid: also when endOfTextblock("up") (mid-line on the
+        // first visual row) — enter the source body at the end so vertical
+        // motion cannot skip the display:none <pre>.
+        if (e.key === "ArrowUp" && $from.depth >= 1) {
           const parentPos = $from.before();
           if (parentPos > 0) {
             const $before = state.doc.resolve(parentPos);
@@ -1185,13 +1241,48 @@ function fencedCodeChromePlugin(): Plugin<LangFocus> {
               if (prev.type.name === "code_block") {
                 const prevPos = parentPos - prev.nodeSize;
                 const endInside = prevPos + prev.nodeSize - 1;
-                view.dispatch(
-                  state.tr
-                    .setSelection(TextSelection.create(state.doc, endInside))
-                    .setMeta(langFocusKey, { pos: prevPos }),
-                );
-                return true;
+                const atStart = $from.parentOffset === 0;
+                const collapsed = isCollapsedMermaidBlock(view, prevPos);
+                if (collapsed && (atStart || view.endOfTextblock("up"))) {
+                  view.dispatch(
+                    state.tr
+                      .setSelection(TextSelection.create(state.doc, endInside))
+                      .setMeta(langFocusKey, null),
+                  );
+                  return true;
+                }
+                if (atStart) {
+                  view.dispatch(
+                    state.tr
+                      .setSelection(TextSelection.create(state.doc, endInside))
+                      .setMeta(langFocusKey, { pos: prevPos }),
+                  );
+                  return true;
+                }
               }
+            }
+          }
+        }
+
+        // Case F: ArrowDown into a following collapsed Mermaid fence —
+        // vertical motion cannot land in a display:none <pre>, so enter
+        // the body explicitly. Decorations then open source + focus CM.
+        if (
+          e.key === "ArrowDown" &&
+          $from.depth >= 1 &&
+          $from.parent.type.name !== "code_block"
+        ) {
+          const after = $from.after();
+          const next = state.doc.nodeAt(after);
+          if (next?.type.name === "code_block" && isCollapsedMermaidBlock(view, after)) {
+            const atEnd = $from.parentOffset === $from.parent.content.size;
+            if (atEnd || view.endOfTextblock("down")) {
+              view.dispatch(
+                state.tr
+                  .setSelection(TextSelection.create(state.doc, after + 1))
+                  .setMeta(langFocusKey, null),
+              );
+              return true;
             }
           }
         }

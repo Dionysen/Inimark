@@ -172,7 +172,10 @@ function mermaidConfigForAppearance(appearance: MermaidRenderAppearance) {
     securityLevel: "strict",
     suppressErrorRendering: true,
     theme: appearance === "dark" ? "base" : "default",
-    themeVariables: appearance === "dark" ? DARK_MERMAID_THEME_VARIABLES : {},
+    themeVariables:
+      appearance === "dark"
+        ? DARK_MERMAID_THEME_VARIABLES
+        : { background: "transparent" },
   } as const;
 }
 

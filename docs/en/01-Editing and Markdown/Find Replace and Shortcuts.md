@@ -4,18 +4,16 @@ lang: en
 translationKey: find-replace
 ---
 
-
 # Find, Replace, and Shortcuts
-
 
 **中文:** [[查找替换与快捷键|中文]] · [[Editing Modes]] · [[Settings Overview]]
 
 ## Find and replace
 
-| Action | Windows / Linux | macOS |
-| --- | --- | --- |
-| Find | `Ctrl + F` | `⌘ + F` |
-| Replace | `Ctrl + H` | `⌘ + H` |
+| Action  | Windows / Linux | macOS   |
+| ------- | --------------- | ------- |
+| Find    | `Ctrl + F`      | `⌘ + F` |
+| Replace | `Ctrl + H`      | `⌘ + H` |
 
 Find bar supports:
 
@@ -28,17 +26,17 @@ Find bar supports:
 
 ## Editor shortcuts (common)
 
-| Action | Windows / Linux | macOS |
-| --- | --- | --- |
-| Bold | `Ctrl + B` | `⌘ + B` |
-| Italic | `Ctrl + I` | `⌘ + I` |
-| Underline | `Ctrl + U` | `⌘ + U` |
-| Link | `Ctrl + K` | `⌘ + K` |
-| Heading 1–6 | `Ctrl + 1…6` | `⌘ + 1…6` |
-| Paragraph | `Ctrl + 0` | `⌘ + 0` |
-| Source mode | `Ctrl + /` | `⌘ + /` |
+| Action      | Windows / Linux    | macOS           |
+| ----------- | ------------------ | --------------- |
+| Bold        | `Ctrl + B`         | `⌘ + B`         |
+| Italic      | `Ctrl + I`         | `⌘ + I`         |
+| Underline   | `Ctrl + U`         | `⌘ + U`         |
+| Link        | `Ctrl + K`         | `⌘ + K`         |
+| Heading 1–6 | `Ctrl + 1…6`       | `⌘ + 1…6`       |
+| Paragraph   | `Ctrl + 0`         | `⌘ + 0`         |
+| Source mode | `Ctrl + /`         | `⌘ + /`         |
 | Paste plain | `Ctrl + Shift + V` | `⌘ + Shift + V` |
-| Hard break | `Shift + Enter` | `Shift + Enter` |
+| Hard break  | `Shift + Enter`    | `Shift + Enter` |
 
 Lists, quotes, code, and math also use `Alt + Ctrl/⌘` chords — check **Settings → Shortcuts** and editor defaults.
 
@@ -46,13 +44,13 @@ Lists, quotes, code, and math also use `Alt + Ctrl/⌘` chords — check **Setti
 
 Under **Settings → Shortcuts**:
 
-| Group | Examples |
-| --- | --- |
-| File | Save, Save As, New, Close |
-| Open | Quick Open (often bound as Open) |
-| View | Toggle sidebar, search in files |
+| Group    | Examples                           |
+| -------- | ---------------------------------- |
+| File     | Save, Save As, New, Close          |
+| Open     | Quick Open (often bound as Open)   |
+| View     | Toggle sidebar, search in files    |
 | Explorer | Rename, delete, cut / copy / paste |
-| App | Open settings |
+| App      | Open settings                      |
 
 > [!NOTE]
 > “Open” in Inimark is often **Quick Open** (fuzzy note picker), not the OS file dialog. See [[Libraries and Files]].

@@ -431,11 +431,11 @@ describe("fenced code node view", () => {
       );
       feedEvent(editor.view, "<ArrowUp>");
 
-      const input = document.body.querySelector<HTMLInputElement>(".cb-lang-input");
-      expect(document.activeElement).toBe(input);
-
-      const panel = host.querySelector<HTMLElement>(".diagram-panel");
-      panel!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      // Collapsed Mermaid: ArrowUp from below enters the source body (not lang),
+      // so vertical navigation can edit the diagram instead of skipping it.
+      const wrapper = host.querySelector<HTMLElement>(".code-block-node");
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
+      expect(editor.view.state.selection.$from.parent.type.name).toBe("code_block");
 
       const cm = codeMirrorView(host);
       expect(document.activeElement).toBe(cm.contentDOM);

@@ -2,7 +2,7 @@ import type MarkdownIt from "markdown-it";
 import type StateBlock from "markdown-it/lib/rules_block/state_block.mjs";
 import type { Node as PMNode, Schema } from "prosemirror-model";
 import { Plugin, TextSelection } from "prosemirror-state";
-import { Decoration, DecorationSet, type NodeView } from "prosemirror-view";
+import { Decoration, DecorationSet, type EditorView, type NodeView } from "prosemirror-view";
 
 import { markConsumed, type InlineSpan } from "../inline-parse.ts";
 import { renderMathToHtml } from "../renderers/math.ts";
@@ -112,8 +112,16 @@ class MathBlockView implements NodeView {
   dom: HTMLElement;
   contentDOM: HTMLElement;
   private preview: HTMLElement;
+  private view: EditorView;
+  private getPos: () => number | undefined;
 
-  constructor(node: PMNode) {
+  constructor(
+    node: PMNode,
+    view: EditorView,
+    getPos: () => number | undefined,
+  ) {
+    this.view = view;
+    this.getPos = getPos;
     const root = document.createElement("math-block");
     const source = document.createElement("math-source");
     const preview = document.createElement("math-preview");
@@ -122,13 +130,26 @@ class MathBlockView implements NodeView {
     this.contentDOM = source;
     this.preview = preview;
     preview.setAttribute("contenteditable", "false");
+    preview.addEventListener("mousedown", this.onPreviewMouseDown);
+    preview.addEventListener("click", this.onPreviewClick);
     this.render(node);
+    // Selection may already sit in this block (e.g. $$ + Enter).
+    if (mathBlockPosAt(view.state, view.state.selection.from) === getPos()) {
+      this.openMathSource();
+    }
+  }
+
+  private openMathSource(): void {
+    this.dom.classList.add("math-source-open");
   }
 
   private render(node: PMNode): void {
     const result = renderMathToHtml(node.textContent, true);
     this.preview.dataset.mathState = result.ok ? "success" : "error";
     this.preview.innerHTML = result.html;
+    this.dom.classList.toggle("math-success", result.ok);
+    this.dom.classList.toggle("math-error", !result.ok);
+    this.dom.classList.toggle("math-empty", node.textContent.length === 0);
   }
 
   update(node: PMNode, _decorations: readonly Decoration[]): boolean {
@@ -137,17 +158,152 @@ class MathBlockView implements NodeView {
     return true;
   }
 
+  private onPreviewMouseDown = (event: MouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openAndFocus();
+  };
+
+  private onPreviewClick = (event: MouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.openAndFocus();
+  };
+
+  private openAndFocus(): void {
+    this.openMathSource();
+    const pos = this.getPos();
+    if (pos == null) return;
+    const node = this.view.state.doc.nodeAt(pos);
+    if (!node || node.type.name !== "math_block") return;
+    const end = pos + node.nodeSize - 1;
+    this.view.dispatch(
+      this.view.state.tr.setSelection(TextSelection.create(this.view.state.doc, end)),
+    );
+    this.view.focus();
+  }
+
   stopEvent(event: Event): boolean {
     const target = event.target as Node;
     return this.preview.contains(target);
   }
+
+  destroy(): void {
+    this.preview.removeEventListener("mousedown", this.onPreviewMouseDown);
+    this.preview.removeEventListener("click", this.onPreviewClick);
+  }
+}
+
+function mathBlockPosAt(state: import("prosemirror-state").EditorState, pos: number): number | null {
+  const $ = state.doc.resolve(pos);
+  for (let d = $.depth; d >= 0; d--) {
+    const node = $.node(d);
+    if (node.type.name === "math_block") return $.before(d);
+  }
+  return null;
+}
+
+function isCollapsedMathBlock(view: EditorView, blockPos: number): boolean {
+  if (typeof view.nodeDOM !== "function") return false;
+  const dom = view.nodeDOM(blockPos);
+  return (
+    dom instanceof HTMLElement &&
+    dom.classList.contains("math-success") &&
+    !dom.classList.contains("math-source-open")
+  );
+}
+
+function openMathBlockAt(view: EditorView, blockPos: number): void {
+  const dom = view.nodeDOM(blockPos);
+  if (!(dom instanceof HTMLElement)) return;
+  dom.classList.add("math-source-open");
+}
+
+function closeMathBlockAt(view: EditorView, blockPos: number): void {
+  const dom = view.nodeDOM(blockPos);
+  if (!(dom instanceof HTMLElement)) return;
+  if (dom.classList.contains("math-error") || dom.classList.contains("math-empty")) return;
+  dom.classList.remove("math-source-open");
 }
 
 function mathBlockNodeViewPlugin(): Plugin {
   return new Plugin({
     props: {
       nodeViews: {
-        math_block: (node) => new MathBlockView(node),
+        math_block: (node, view, getPos) =>
+          new MathBlockView(node, view, getPos as () => number | undefined),
+      },
+    },
+  });
+}
+
+/** Keep Mermaid-parity source visibility + arrow enter for collapsed math. */
+function mathBlockInteractionPlugin(): Plugin {
+  return new Plugin({
+    view(editorView) {
+      let prevPos: number | null = mathBlockPosAt(
+        editorView.state,
+        editorView.state.selection.from,
+      );
+      if (prevPos != null) openMathBlockAt(editorView, prevPos);
+      return {
+        update(view) {
+          const pos = mathBlockPosAt(view.state, view.state.selection.from);
+          if (pos === prevPos) return;
+          if (prevPos != null) closeMathBlockAt(view, prevPos);
+          if (pos != null) openMathBlockAt(view, pos);
+          prevPos = pos;
+        },
+        destroy() {
+          if (prevPos != null) closeMathBlockAt(editorView, prevPos);
+        },
+      };
+    },
+    props: {
+      handleKeyDown(view, e) {
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return false;
+        if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return false;
+        const { state } = view;
+        const sel = state.selection;
+        if (!sel.empty) return false;
+        const $from = sel.$from;
+        if ($from.depth < 1) return false;
+        if ($from.parent.type.name === "math_block") return false;
+
+        if (e.key === "ArrowDown") {
+          const after = $from.after();
+          const next = state.doc.nodeAt(after);
+          if (next?.type.name === "math_block" && isCollapsedMathBlock(view, after)) {
+            const atEnd = $from.parentOffset === $from.parent.content.size;
+            if (atEnd || view.endOfTextblock("down")) {
+              openMathBlockAt(view, after);
+              view.dispatch(
+                state.tr.setSelection(TextSelection.create(state.doc, after + 1)),
+              );
+              return true;
+            }
+          }
+          return false;
+        }
+
+        // ArrowUp into preceding collapsed math → end of source.
+        const parentPos = $from.before();
+        if (parentPos <= 0) return false;
+        const $before = state.doc.resolve(parentPos);
+        const index = $before.index();
+        if (index <= 0) return false;
+        const prev = $before.parent.child(index - 1);
+        if (prev.type.name !== "math_block") return false;
+        const prevPos = parentPos - prev.nodeSize;
+        if (!isCollapsedMathBlock(view, prevPos)) return false;
+        const atStart = $from.parentOffset === 0;
+        if (!(atStart || view.endOfTextblock("up"))) return false;
+        const endInside = prevPos + prev.nodeSize - 1;
+        openMathBlockAt(view, prevPos);
+        view.dispatch(
+          state.tr.setSelection(TextSelection.create(state.doc, endInside)),
+        );
+        return true;
       },
     },
   });
@@ -265,7 +421,7 @@ export const math: FeatureSpec = {
     },
   }),
 
-  plugins: () => [mathBlockNodeViewPlugin(), mathDraftPlugin()],
+  plugins: () => [mathBlockNodeViewPlugin(), mathBlockInteractionPlugin(), mathDraftPlugin()],
 
   inline: {
     priority: 0.8,

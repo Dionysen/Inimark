@@ -1,6 +1,8 @@
 ﻿import { describe, expect, test } from "vitest";
+import { TextSelection } from "prosemirror-state";
 
 import { createEditor } from "../src/lib.ts";
+import { feedEvent } from "../specs/events.ts";
 import {
   createMermaidRenderer,
   getMermaidRenderAppearance,
@@ -41,7 +43,7 @@ describe("mermaid renderer", () => {
       securityLevel: "strict",
       suppressErrorRendering: true,
       theme: "default",
-      themeVariables: {},
+      themeVariables: { background: "transparent" },
     }]);
   });
 
@@ -201,6 +203,150 @@ describe("mermaid source visibility policy", () => {
     } finally {
       editor.destroy();
       host.remove();
+    }
+  });
+
+  test("arrow-key exit from Mermaid source hides the source editor", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "```mermaid\nflowchart LR\n  A --> B\n```\n\nafter",
+    });
+
+    try {
+      const wrapper = host.querySelector<HTMLElement>(".code-block-node.has-diagram");
+      const panel = host.querySelector<HTMLElement>(".diagram-panel");
+      panel?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
+
+      type CodeMirrorElement = HTMLElement & {
+        __typoraWebCodeMirrorView?: {
+          focus(): void;
+          state: { doc: { length: number } };
+          dispatch(tr: { selection: { anchor: number } }): void;
+          contentDOM: HTMLElement;
+        };
+      };
+      const cmEl = host.querySelector<CodeMirrorElement>(
+        ".typora-web-code-editor .cm-editor",
+      );
+      const cm = cmEl?.__typoraWebCodeMirrorView;
+      expect(cm).toBeTruthy();
+      cm!.focus();
+      cm!.dispatch({ selection: { anchor: cm!.state.doc.length } });
+      cm!.contentDOM.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }),
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(editor.view.state.selection.$from.parent.textContent).toBe("after");
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("ArrowDown from above enters a collapsed Mermaid block instead of skipping it", async () => {
+    const originalRender = mermaidRenderer.render;
+    (mermaidRenderer as unknown as {
+      render: typeof originalRender;
+    }).render = async () => ({ state: "success", svg: "<svg><text>ok</text></svg>" });
+
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "above\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\nafter",
+    });
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 180));
+
+      const wrapper = host.querySelector<HTMLElement>(".code-block-node");
+      expect(wrapper?.classList.contains("diagram-success")).toBe(true);
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(false);
+
+      const doc = editor.view.state.doc;
+      let aboveEnd: number | null = null;
+      doc.descendants((node, pos) => {
+        if (node.type.name === "paragraph" && node.textContent === "above") {
+          aboveEnd = pos + 1 + node.content.size;
+          return false;
+        }
+      });
+      expect(aboveEnd).not.toBeNull();
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(TextSelection.create(doc, aboveEnd!)),
+      );
+      editor.view.focus();
+      feedEvent(editor.view, "<ArrowDown>");
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(editor.view.state.selection.$from.parent.type.name).toBe("code_block");
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
+      expect(editor.view.state.selection.$from.parent.textContent).not.toBe("after");
+    } finally {
+      (mermaidRenderer as unknown as {
+        render: typeof originalRender;
+      }).render = originalRender;
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("ArrowUp from below enters a collapsed Mermaid block instead of skipping it", async () => {
+    const originalRender = mermaidRenderer.render;
+    (mermaidRenderer as unknown as {
+      render: typeof originalRender;
+    }).render = async () => ({ state: "success", svg: "<svg><text>ok</text></svg>" });
+
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "above\n\n```mermaid\nflowchart LR\n  A --> B\n```\n\nafter",
+    });
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 180));
+
+      const wrapper = host.querySelector<HTMLElement>(".code-block-node");
+      expect(wrapper?.classList.contains("diagram-success")).toBe(true);
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(false);
+
+      const doc = editor.view.state.doc;
+      let afterStart: number | null = null;
+      doc.descendants((node, pos) => {
+        if (node.type.name === "paragraph" && node.textContent === "after") {
+          afterStart = pos + 1;
+          return false;
+        }
+      });
+      expect(afterStart).not.toBeNull();
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(TextSelection.create(doc, afterStart!)),
+      );
+      editor.view.focus();
+      feedEvent(editor.view, "<ArrowUp>");
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(editor.view.state.selection.$from.parent.type.name).toBe("code_block");
+      expect(wrapper?.classList.contains("diagram-source-open")).toBe(true);
+      expect(editor.view.state.selection.$from.parent.textContent).not.toBe("above");
+    } finally {
+      (mermaidRenderer as unknown as {
+        render: typeof originalRender;
+      }).render = originalRender;
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
     }
   });
 

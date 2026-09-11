@@ -27,6 +27,18 @@ function isInteractiveEditorTarget(target: Element): boolean {
   if (target.closest(".typora-web-code-editor .cm-editor")) return true;
   if (target.closest(".cb-lang-input, .cb-lang-menu")) return true;
   if (target.closest(".typora-web-html-source")) return true;
+  // Editable TeX source while revealed (open / error / empty draft).
+  if (target.closest("math-block math-source")) {
+    const block = target.closest("math-block");
+    if (
+      block &&
+      (block.classList.contains("math-source-open") ||
+        block.classList.contains("math-error") ||
+        block.classList.contains("math-empty"))
+    ) {
+      return true;
+    }
+  }
   if (target.closest(".table-toolbar, .table-resize-popup, .table-insert-dialog, .table-rc-toolbar, .table-rc-popup, .inimark-editor-context-menu, .inimark-editor-context-submenu")) return true;
   if (target.closest(".emoji-completion")) return true;
   if (target.closest(".file-input")) return true;
