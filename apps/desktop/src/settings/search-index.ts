@@ -161,6 +161,69 @@ function tokenizeQuery(query: string): string[] {
   return normalizeText(query).split(/\s+/).filter(Boolean);
 }
 
+/** Case-insensitive match ranges for query tokens within `text` (display string). */
+export function collectSearchHighlightRanges(
+  text: string,
+  query: string,
+): Array<[number, number]> {
+  const tokens = tokenizeQuery(query);
+  if (!tokens.length || !text) return [];
+
+  const lower = text.toLowerCase();
+  const ranges: Array<[number, number]> = [];
+  for (const token of tokens) {
+    let from = 0;
+    while (from < lower.length) {
+      const index = lower.indexOf(token, from);
+      if (index < 0) break;
+      ranges.push([index, index + token.length]);
+      from = index + Math.max(1, token.length);
+    }
+  }
+  if (!ranges.length) return [];
+
+  ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const merged: Array<[number, number]> = [];
+  for (const range of ranges) {
+    const last = merged[merged.length - 1];
+    if (last && range[0] <= last[1]) {
+      last[1] = Math.max(last[1], range[1]);
+    } else {
+      merged.push([range[0], range[1]]);
+    }
+  }
+  return merged;
+}
+
+/** Append `text` into `parent`, wrapping query matches in `<mark>`. */
+export function appendHighlightedSearchText(
+  parent: HTMLElement,
+  text: string,
+  query: string,
+): void {
+  parent.replaceChildren();
+  const ranges = collectSearchHighlightRanges(text, query);
+  if (!ranges.length) {
+    parent.textContent = text;
+    return;
+  }
+
+  let cursor = 0;
+  for (const [start, end] of ranges) {
+    if (start > cursor) {
+      parent.append(document.createTextNode(text.slice(cursor, start)));
+    }
+    const mark = document.createElement("mark");
+    mark.className = "inimark-settings-search-mark";
+    mark.textContent = text.slice(start, end);
+    parent.append(mark);
+    cursor = end;
+  }
+  if (cursor < text.length) {
+    parent.append(document.createTextNode(text.slice(cursor)));
+  }
+}
+
 function sectionLabel(section: SettingsSection): string {
   return t(`settings.nav.${section}`);
 }

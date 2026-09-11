@@ -171,6 +171,14 @@ html.platform-windows .inimark-settings-nav-topbar {
   opacity: 0.85;
 }
 
+.inimark-settings-search-mark {
+  padding: 0 0.12em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
+  color: inherit;
+  font: inherit;
+}
+
 .inimark-settings-row.is-search-highlight,
 .inimark-settings-shortcut-item.is-search-highlight,
 [data-setting-id].is-search-highlight {

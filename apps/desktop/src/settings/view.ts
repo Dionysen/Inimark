@@ -79,6 +79,7 @@ import {
 import {
   type SettingsSection,
   type SettingSearchItem,
+  appendHighlightedSearchText,
   searchSettings,
   sectionHasSearchMatch,
 } from "./search-index.ts";
@@ -413,16 +414,18 @@ export function mountSettingsView(
 
       const title = document.createElement("div");
       title.className = "inimark-settings-search-result-title";
-      title.textContent = settingLabel(item);
+      appendHighlightedSearchText(title, settingLabel(item), searchQuery);
 
       const desc = document.createElement("div");
       desc.className = "inimark-settings-search-result-desc";
       const description = settingDescription(item);
-      if (description) desc.textContent = description;
+      if (description) {
+        appendHighlightedSearchText(desc, description, searchQuery);
+      }
 
       const section = document.createElement("div");
       section.className = "inimark-settings-search-result-section";
-      section.textContent = sectionMeta(item.section).title;
+      appendHighlightedSearchText(section, sectionMeta(item.section).title, searchQuery);
 
       btn.append(title);
       if (description) btn.append(desc);

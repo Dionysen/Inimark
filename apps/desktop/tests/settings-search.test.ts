@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, test } from "vitest";
 
 import { setLocale } from "../src/i18n/index.ts";
-import { searchSettings, sectionHasSearchMatch } from "../src/settings/search-index.ts";
+import {
+  appendHighlightedSearchText,
+  collectSearchHighlightRanges,
+  searchSettings,
+  sectionHasSearchMatch,
+} from "../src/settings/search-index.ts";
 
 describe("settings search index", () => {
   beforeEach(() => {
@@ -30,5 +35,19 @@ describe("settings search index", () => {
   test("supports multi-token queries", () => {
     const matches = searchSettings("代码 字号");
     expect(matches.some(({ item }) => item.id === "editor.codeFontSize")).toBe(true);
+  });
+
+  test("collects highlight ranges for query tokens", () => {
+    expect(collectSearchHighlightRanges("Sidebar tabs", "ab")).toEqual([[9, 11]]);
+    expect(collectSearchHighlightRanges("About", "ab")).toEqual([[0, 2]]);
+    expect(collectSearchHighlightRanges("Site name", "ab")).toEqual([]);
+  });
+
+  test("renders highlighted mark nodes for matches", () => {
+    const host = document.createElement("div");
+    appendHighlightedSearchText(host, "Sidebar tabs", "ab");
+    const marks = [...host.querySelectorAll("mark.inimark-settings-search-mark")];
+    expect(marks.map((mark) => mark.textContent)).toEqual(["ab"]);
+    expect(host.textContent).toBe("Sidebar tabs");
   });
 });
