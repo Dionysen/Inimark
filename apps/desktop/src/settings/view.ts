@@ -60,6 +60,7 @@ import {
   type ImageFilenameFormat,
   type ImageStorageMode,
   type LinkUpdateMode,
+  type WikiLinkPreviewTrigger,
   type MenuDensity,
   EDITOR_WIDTH_MAX,
   EDITOR_WIDTH_MIN,
@@ -839,6 +840,26 @@ export function mountSettingsView(
         t("settings.editor.linkUpdateOnMoveDesc"),
         linkUpdate.el,
         "editor.linkUpdateOnMove",
+      ),
+    );
+
+    const wikiPreviewTrigger = createSelect({
+      value: settings.wikiLinkPreviewTrigger,
+      options: [
+        { value: "modifier", label: t("settings.editor.wikiPreviewModifier") },
+        { value: "hover", label: t("settings.editor.wikiPreviewHover") },
+      ],
+      minWidth: 220,
+      onChange(value) {
+        update({ wikiLinkPreviewTrigger: value as WikiLinkPreviewTrigger });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.wikiLinkPreviewTrigger"),
+        t("settings.editor.wikiLinkPreviewTriggerDesc"),
+        wikiPreviewTrigger.el,
+        "editor.wikiLinkPreviewTrigger",
       ),
     );
 

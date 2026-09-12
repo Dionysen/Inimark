@@ -2,6 +2,9 @@
 
 export type WikiNoteHit = { name: string; path: string };
 
+/** How wiki-link note previews are triggered in the editor. */
+export type WikiLinkPreviewTrigger = "modifier" | "hover";
+
 export interface WikiLinkBridge {
   resolveNote(noteName: string): string | null;
   resolveImage(name: string): string | null;
@@ -14,6 +17,11 @@ export interface WikiLinkBridge {
   createNote?(noteName: string): void;
   /** Markdown source for hover card (rendered by the editor). */
   previewNote?(noteName: string): Promise<string | null>;
+  /**
+   * Preview trigger mode. Defaults to `modifier` (Ctrl/⌘ + hover).
+   * Prefer a live getter so settings changes apply without rebinding the bridge.
+   */
+  previewTrigger?(): WikiLinkPreviewTrigger;
 }
 
 let bridge: WikiLinkBridge | null = null;

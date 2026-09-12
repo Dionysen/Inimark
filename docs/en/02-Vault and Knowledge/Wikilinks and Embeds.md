@@ -120,7 +120,15 @@ Compared with Obsidian:
 
 - [ ] Block refs `[[note#^id]]` as a full system
 - [ ] First-class `#tags` / tag pane (theme tokens exist; parsing is weak)
-- [ ] Hover preview as a fully documented product surface (editor has preview — trust the build)
+
+### Hover preview
+
+The editor can show a note preview card for `[[wikilinks]]`. Choose the trigger under **Settings → Editor → Wiki link preview**:
+
+| Option | Behavior |
+| --- | --- |
+| Hold Ctrl/⌘ + hover | Default; hold the modifier while hovering the link |
+| Hover only | Preview as soon as the pointer rests on the link (closer to Obsidian) |
 
 See [[Roadmap]] and [[Feature Comparison]].
 

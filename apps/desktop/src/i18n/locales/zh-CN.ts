@@ -433,6 +433,11 @@ export const zhCN: Dictionary = {
       linkUpdateAsk: "每次询问",
       linkUpdateAlways: "始终更新",
       linkUpdateNever: "从不更新",
+      wikiLinkPreviewTrigger: "双链预览",
+      wikiLinkPreviewTriggerDesc:
+        "悬停 [[双链]] 时显示笔记预览卡片：按住 Ctrl/⌘ 再悬停，或直接悬停即可。",
+      wikiPreviewModifier: "按住 Ctrl/⌘ + 悬停",
+      wikiPreviewHover: "直接悬停",
       formatOnSave: "保存时格式化",
       formatOnSaveDesc: "保存时应用 Markdown 整理选项。",
       cjkSpacing: "中西文空格",

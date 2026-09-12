@@ -37,6 +37,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | Editor width | Constrains line length | Prose-heavy notes |
 | Autosave + delay | Writes without Save panic | Everyday use |
 | Link update on move | `ask` / `always` / `never` | Start with `ask` |
+| Wiki link preview | Hold Ctrl/⌘ + hover, or hover only | Prefer modifier if previews feel noisy |
 | Format on save | CJK spacing, trim, final newline, collapse blank lines | Shared / published vaults |
 
 Focus and typewriter also have keyboard shortcuts (`F8` / `F9`); typewriter is on the status bar too. Immersive chrome and Focus are under **More → Immersive editing**.

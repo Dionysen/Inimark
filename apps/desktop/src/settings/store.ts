@@ -40,6 +40,8 @@ export type ImageFilenameFormat = "original" | "timestamp" | "both";
 export type AppLocale = "en" | "zh-CN" | "system";
 /** Wiki-link rewrite preference after move/rename. */
 export type LinkUpdateMode = "ask" | "always" | "never";
+/** Wiki-link note preview trigger (mirrors editor WikiLinkPreviewTrigger). */
+export type WikiLinkPreviewTrigger = "modifier" | "hover";
 
 export type { FontPresetId };
 export { FONT_PRESETS };
@@ -115,6 +117,8 @@ export interface AppSettings {
   autoSaveDelayMs: number;
   /** When notes are moved/renamed and other files link to them. */
   linkUpdateOnMove: LinkUpdateMode;
+  /** Wiki-link preview: Ctrl/⌘+hover, or plain hover. */
+  wikiLinkPreviewTrigger: WikiLinkPreviewTrigger;
   markdownFormat: MarkdownFormatSettings;
   menuDensity: MenuDensity;
   autoHideLibraryBar: boolean;
@@ -237,6 +241,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoSave: false,
   autoSaveDelayMs: AUTO_SAVE_DELAY_MS_DEFAULT,
   linkUpdateOnMove: "ask",
+  wikiLinkPreviewTrigger: "modifier",
   markdownFormat: { ...DEFAULT_MARKDOWN_FORMAT },
   menuDensity: "normal",
   autoHideLibraryBar: false,
@@ -458,6 +463,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     linkUpdateOnMove: isLinkUpdateMode(parsed.linkUpdateOnMove)
       ? parsed.linkUpdateOnMove
       : DEFAULT_SETTINGS.linkUpdateOnMove,
+    wikiLinkPreviewTrigger: isWikiLinkPreviewTrigger(parsed.wikiLinkPreviewTrigger)
+      ? parsed.wikiLinkPreviewTrigger
+      : DEFAULT_SETTINGS.wikiLinkPreviewTrigger,
     markdownFormat: {
       formatOnSave: Boolean(format.formatOnSave),
       cjkSpacing: Boolean(format.cjkSpacing),
@@ -630,6 +638,10 @@ function isMenuDensity(value: unknown): value is MenuDensity {
 
 function isLinkUpdateMode(value: unknown): value is LinkUpdateMode {
   return value === "ask" || value === "always" || value === "never";
+}
+
+function isWikiLinkPreviewTrigger(value: unknown): value is WikiLinkPreviewTrigger {
+  return value === "modifier" || value === "hover";
 }
 
 function isImageStorageMode(value: unknown): value is ImageStorageMode {

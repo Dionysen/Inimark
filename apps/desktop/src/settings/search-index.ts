@@ -74,6 +74,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "editor.autoSave", section: "editor", titleKey: "settings.editor.autoSave", descKey: "settings.editor.autoSaveDesc" },
   { id: "editor.autoSaveDelay", section: "editor", titleKey: "settings.editor.autoSaveDelay", descKey: "settings.editor.autoSaveDelayDesc" },
   { id: "editor.linkUpdateOnMove", section: "editor", titleKey: "settings.editor.linkUpdateOnMove", descKey: "settings.editor.linkUpdateOnMoveDesc" },
+  { id: "editor.wikiLinkPreviewTrigger", section: "editor", titleKey: "settings.editor.wikiLinkPreviewTrigger", descKey: "settings.editor.wikiLinkPreviewTriggerDesc" },
   { id: "editor.formatOnSave", section: "editor", titleKey: "settings.editor.formatOnSave", descKey: "settings.editor.formatOnSaveDesc" },
   { id: "editor.cjkSpacing", section: "editor", titleKey: "settings.editor.cjkSpacing", descKey: "settings.editor.cjkSpacingDesc" },
   { id: "editor.trimTrailing", section: "editor", titleKey: "settings.editor.trimTrailing", descKey: "settings.editor.trimTrailingDesc" },

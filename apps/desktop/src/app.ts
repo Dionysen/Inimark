@@ -335,6 +335,7 @@ export function mountApp(host: HTMLElement): AppController {
       if (opened.status !== "opened") return null;
       return opened.text.replace(/^---[\s\S]*?---\s*/, "").trim();
     },
+    previewTrigger: () => settings.wikiLinkPreviewTrigger,
   });
   cleanups.push(() => setWikiLinkBridge(null));
 

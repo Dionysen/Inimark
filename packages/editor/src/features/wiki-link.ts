@@ -487,14 +487,15 @@ function wikiInteractionPlugin(): Plugin {
   }
 
   function tryShowPreviewAt(view: EditorView, probe: PointerProbe): boolean {
-    if (!probe.ctrlKey && !probe.metaKey) {
+    const bridge = getWikiLinkBridge();
+    if (!bridge) return false;
+
+    const trigger = bridge.previewTrigger?.() ?? "modifier";
+    if (trigger === "modifier" && !probe.ctrlKey && !probe.metaKey) {
       if (previewEl) return false;
       cancelPendingPreview();
       return false;
     }
-
-    const bridge = getWikiLinkBridge();
-    if (!bridge) return false;
 
     const hit = wikiNoteFromPointer(view, probe as MouseEvent);
     if (!hit) {

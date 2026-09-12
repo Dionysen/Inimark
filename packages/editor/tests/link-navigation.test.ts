@@ -152,6 +152,86 @@ describe("link navigation", () => {
     }
   });
 
+  test("hover preview trigger shows unresolved hint without holding Ctrl", async () => {
+    vi.useFakeTimers();
+    setWikiLinkBridge({
+      resolveNote: () => null,
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote: vi.fn(),
+      createNote: vi.fn(),
+      previewTrigger: () => "hover",
+    });
+
+    const { host, view, cleanup } = mountView("See [[ghost-note]] here.");
+    try {
+      const wiki = host.querySelector<HTMLElement>(".wiki-link-widget.is-unresolved");
+      expect(wiki).not.toBeNull();
+
+      view.someProp("handleDOMEvents", (handlers) => {
+        handlers?.mouseover?.(
+          view,
+          {
+            target: wiki,
+            ctrlKey: false,
+            metaKey: false,
+            clientX: 0,
+            clientY: 0,
+          } as MouseEvent,
+        );
+        return false;
+      });
+
+      await vi.advanceTimersByTimeAsync(500);
+      const missing = document.querySelector(".wiki-link-preview-missing");
+      expect(missing?.textContent).toContain("ghost-note");
+    } finally {
+      vi.useRealTimers();
+      setWikiLinkBridge(null);
+      cleanup();
+      document.querySelector(".wiki-link-preview-missing")?.remove();
+    }
+  });
+
+  test("modifier preview trigger ignores plain hover", async () => {
+    vi.useFakeTimers();
+    setWikiLinkBridge({
+      resolveNote: () => null,
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote: vi.fn(),
+      createNote: vi.fn(),
+      previewTrigger: () => "modifier",
+    });
+
+    const { host, view, cleanup } = mountView("See [[quiet-note]] here.");
+    try {
+      const wiki = host.querySelector<HTMLElement>(".wiki-link-widget.is-unresolved");
+      expect(wiki).not.toBeNull();
+
+      view.someProp("handleDOMEvents", (handlers) => {
+        handlers?.mouseover?.(
+          view,
+          {
+            target: wiki,
+            ctrlKey: false,
+            metaKey: false,
+            clientX: 0,
+            clientY: 0,
+          } as MouseEvent,
+        );
+        return false;
+      });
+
+      await vi.advanceTimersByTimeAsync(500);
+      expect(document.querySelector(".wiki-link-preview-missing")).toBeNull();
+    } finally {
+      vi.useRealTimers();
+      setWikiLinkBridge(null);
+      cleanup();
+    }
+  });
+
   test("markdown links only navigate from bracketed label text", () => {
     const originalOpen = window.open;
     const calls: unknown[] = [];

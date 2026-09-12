@@ -25,7 +25,7 @@ export {
   setWikiLinkBridge,
   getWikiLinkBridge,
 } from "./wiki-link-bridge.ts";
-export type { WikiLinkBridge, WikiNoteHit } from "./wiki-link-bridge.ts";
+export type { WikiLinkBridge, WikiNoteHit, WikiLinkPreviewTrigger } from "./wiki-link-bridge.ts";
 export {
   setLinkNavigationBridge,
   getLinkNavigationBridge,

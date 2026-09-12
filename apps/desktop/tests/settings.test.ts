@@ -117,6 +117,14 @@ describe("settings store", () => {
     expect(document.documentElement.dataset.firstLineIndent).toBe("false");
   });
 
+  test("persists wiki link preview trigger", () => {
+    expect(DEFAULT_SETTINGS.wikiLinkPreviewTrigger).toBe("modifier");
+    saveSettings({ ...DEFAULT_SETTINGS, wikiLinkPreviewTrigger: "hover" });
+    expect(loadSettings().wikiLinkPreviewTrigger).toBe("hover");
+    saveSettings({ ...DEFAULT_SETTINGS, wikiLinkPreviewTrigger: "modifier" });
+    expect(loadSettings().wikiLinkPreviewTrigger).toBe("modifier");
+  });
+
   test("defaults update proxy preference to enabled", () => {
     expect(DEFAULT_SETTINGS.useSystemProxyForUpdates).toBe(true);
     saveSettings({ ...DEFAULT_SETTINGS, useSystemProxyForUpdates: false });

@@ -437,6 +437,11 @@ export const en: Dictionary = {
       linkUpdateAsk: "Ask each time",
       linkUpdateAlways: "Always update",
       linkUpdateNever: "Never update",
+      wikiLinkPreviewTrigger: "Wiki link preview",
+      wikiLinkPreviewTriggerDesc:
+        "Show a note preview card when hovering a [[wikilink]]: either while holding Ctrl/⌘, or on plain hover.",
+      wikiPreviewModifier: "Hold Ctrl/⌘ + hover",
+      wikiPreviewHover: "Hover only",
       formatOnSave: "Format on save",
       formatOnSaveDesc: "Apply Markdown hygiene options when saving.",
       cjkSpacing: "CJK spacing",
