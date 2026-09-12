@@ -164,8 +164,23 @@ async function main(): Promise<void> {
     );
   }
 
+  const { CODE_THEMES } = await import("../apps/desktop/src/themes/code-themes.ts");
+  const { buildPublishCodeThemeCss } = await import(
+    "../apps/desktop/src/themes/code-bridge.ts"
+  );
+
+  const lightCodeId = config.lightCodeTheme || "github-light";
+  const darkCodeId = config.darkCodeTheme || "github-dark";
+  const lightCode =
+    CODE_THEMES.find((t) => t.id === lightCodeId) ??
+    CODE_THEMES.find((t) => t.id === "github-light")!;
+  const darkCode =
+    CODE_THEMES.find((t) => t.id === darkCodeId) ??
+    CODE_THEMES.find((t) => t.id === "github-dark")!;
+
   const themeVariablesCss = [
     readCss(join(root, "apps/desktop/src/styles/themes.css")),
+    buildPublishCodeThemeCss(lightCode.variables, darkCode.variables),
     resolveKatexCss(),
   ].join("\n\n");
   const editorWidgetsCss = readCss(

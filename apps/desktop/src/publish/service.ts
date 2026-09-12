@@ -12,12 +12,23 @@ import themeTyporaCss from "../../../../packages/editor/src/styles/theme-typora.
 import katexCss from "katex/dist/katex.min.css?raw";
 import mermaidRuntimeJs from "mermaid/dist/mermaid.min.js?raw";
 
+import {
+  DEFAULT_CODE_THEME_PAIR,
+  loadAppearanceState,
+  resolveActiveFromPair,
+  resolveAppearanceMode,
+} from "../themes/appearance.ts";
 import { BUILTIN_THEMES, DEFAULT_DARK_BUILTIN } from "../themes/builtin.ts";
 import {
+  buildPublishCodeThemeCss,
+  parseCodeThemeVariablesFromCss,
+} from "../themes/code-bridge.ts";
+import { CODE_THEMES } from "../themes/code-themes.ts";
+import {
+  getCodeThemeCss,
   getCustomThemeCss,
   loadManifest,
 } from "../themes/custom-theme-manager.ts";
-import { loadAppearanceState, resolveActiveFromPair, resolveAppearanceMode } from "../themes/appearance.ts";
 import { isMarkdownFile, joinWorkspacePath } from "../platform/env.ts";
 import type { Workspace, WorkspaceTreeNode } from "../platform/types.ts";
 import { openWorkspaceByPath, readWorkspaceFile } from "../platform/workspace.ts";
@@ -86,6 +97,40 @@ async function packThemeCss(): Promise<{ css: string; themeIds: string[] }> {
   return { css, themeIds };
 }
 
+async function resolveCodeThemeVariables(
+  id: string | undefined,
+  fallbackId: string,
+): Promise<Record<string, string>> {
+  const pick = id || fallbackId;
+  const builtin = CODE_THEMES.find((t) => t.id === pick);
+  if (builtin) return builtin.variables;
+
+  try {
+    const css = await getCodeThemeCss(pick);
+    const vars = parseCodeThemeVariablesFromCss(css);
+    if (Object.keys(vars).length > 0) return vars;
+  } catch {
+    /* fall through */
+  }
+
+  return (
+    CODE_THEMES.find((t) => t.id === fallbackId)?.variables ??
+    CODE_THEMES[0]!.variables
+  );
+}
+
+async function packCodeThemeCss(config: PublishConfig): Promise<string> {
+  const light = await resolveCodeThemeVariables(
+    config.lightCodeTheme,
+    DEFAULT_CODE_THEME_PAIR.light,
+  );
+  const dark = await resolveCodeThemeVariables(
+    config.darkCodeTheme,
+    DEFAULT_CODE_THEME_PAIR.dark,
+  );
+  return buildPublishCodeThemeCss(light, dark);
+}
+
 export async function publishLibrary(
   vaultPath: string,
   config: PublishConfig,
@@ -152,7 +197,9 @@ export async function publishLibrary(
   const appearance = loadAppearanceState();
   const resolved = resolveAppearanceMode(appearance.appearanceMode);
   const preferred = resolveActiveFromPair(appearance.preferredAppTheme, resolved);
-  const { css: themeVariablesCss, themeIds } = await packThemeCss();
+  const { css: appThemeCss, themeIds } = await packThemeCss();
+  const codeThemeCss = await packCodeThemeCss(config);
+  const themeVariablesCss = [appThemeCss, codeThemeCss].join("\n\n");
 
   const lightTheme =
     config.lightTheme && themeIds.includes(config.lightTheme)
@@ -179,6 +226,8 @@ export async function publishLibrary(
     ...config,
     lightTheme,
     darkTheme,
+    lightCodeTheme: config.lightCodeTheme || DEFAULT_CODE_THEME_PAIR.light,
+    darkCodeTheme: config.darkCodeTheme || DEFAULT_CODE_THEME_PAIR.dark,
     defaultTheme,
   };
 

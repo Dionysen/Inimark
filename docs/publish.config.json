@@ -3,6 +3,8 @@
   "defaultTheme": "dark-modern",
   "lightTheme": "light",
   "darkTheme": "dark-modern",
+  "lightCodeTheme": "cursor-light",
+  "darkCodeTheme": "cursor-dark",
   "baseHref": "/Inimark/",
   "out": "dist",
   "siteDescription": "Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。",

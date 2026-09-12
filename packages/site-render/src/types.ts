@@ -10,6 +10,10 @@ export interface SiteConfig {
   lightTheme?: string;
   /** Theme id used when the site appearance is dark. */
   darkTheme?: string;
+  /** Code highlight theme id for light appearance (builtin or custom-*). */
+  lightCodeTheme?: string;
+  /** Code highlight theme id for dark appearance (builtin or custom-*). */
+  darkCodeTheme?: string;
   /** URL path prefix, e.g. `/repo/` or `/`. */
   baseHref: string;
   /** Output directory relative to vault root (default `dist`). */
@@ -81,6 +85,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
   defaultTheme: "ocean",
   lightTheme: "light",
   darkTheme: "ocean",
+  lightCodeTheme: "github-light",
+  darkCodeTheme: "github-dark",
   baseHref: "/",
   out: "dist",
 };

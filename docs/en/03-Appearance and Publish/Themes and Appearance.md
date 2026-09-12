@@ -87,12 +87,19 @@ Goal: **maximize the writing surface** — Typora-like focus with Obsidian-like 
 Static sites can reuse the app theme system. In `publish.config.json` you typically set:
 
 - `defaultTheme` — initial theme id
-- `lightTheme` / `darkTheme` — optional pair for the site toggle
+- `lightTheme` / `darkTheme` — optional pair for the site chrome toggle
+- `lightCodeTheme` / `darkCodeTheme` — optional pair for fenced-code highlighting
+
+In **Settings → Publish**, these theme fields sit in their own **Themes** group (separate from site name, output path, and home note).
 
 ```json
 {
   "siteName": "Inimark Docs",
   "defaultTheme": "light",
+  "lightTheme": "light",
+  "darkTheme": "dark-modern",
+  "lightCodeTheme": "github-light",
+  "darkCodeTheme": "github-dark",
   "baseHref": "/",
   "out": "dist"
 }

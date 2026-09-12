@@ -5,8 +5,13 @@ import { isMarkdownFile, isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
 import { openWorkspaceByPath } from "../platform/workspace.ts";
 import { collectMarkdownFiles } from "../sidebar/vault-search.ts";
+import { DEFAULT_CODE_THEME_PAIR } from "../themes/appearance.ts";
 import { BUILTIN_THEMES, DEFAULT_DARK_BUILTIN } from "../themes/builtin.ts";
-import { loadManifest } from "../themes/custom-theme-manager.ts";
+import { CODE_THEMES } from "../themes/code-themes.ts";
+import {
+  loadCodeThemeManifest,
+  loadManifest,
+} from "../themes/custom-theme-manager.ts";
 import {
   createButton,
   createSelect,
@@ -69,6 +74,13 @@ function homeNoteOptions(
   return options;
 }
 
+function createSectionTitle(i18nKey: string): HTMLElement {
+  const el = document.createElement("h3");
+  el.className = "inimark-settings-section-title";
+  el.dataset.i18n = i18nKey;
+  return el;
+}
+
 export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   host.classList.add("inimark-settings-publish");
 
@@ -77,6 +89,14 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   let themeOptions: Array<{ value: string; label: string }> = BUILTIN_THEMES.map((id) => ({
     value: id,
     label: id,
+  }));
+  let lightCodeOptions: SelectOption[] = CODE_THEMES.filter((t) => !t.isDark).map((t) => ({
+    value: t.id,
+    label: t.name,
+  }));
+  let darkCodeOptions: SelectOption[] = CODE_THEMES.filter((t) => t.isDark).map((t) => ({
+    value: t.id,
+    label: t.name,
   }));
   let homeNoteLoadToken = 0;
 
@@ -103,10 +123,16 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
 
   const lightThemeHost = document.createElement("div");
   const darkThemeHost = document.createElement("div");
+  const lightCodeThemeHost = document.createElement("div");
+  const darkCodeThemeHost = document.createElement("div");
   let lightThemeSelect: SelectController | null = null;
   let darkThemeSelect: SelectController | null = null;
+  let lightCodeThemeSelect: SelectController | null = null;
+  let darkCodeThemeSelect: SelectController | null = null;
   let lightThemeValue = "light";
   let darkThemeValue: string = DEFAULT_DARK_BUILTIN;
+  let lightCodeThemeValue = DEFAULT_CODE_THEME_PAIR.light;
+  let darkCodeThemeValue = DEFAULT_CODE_THEME_PAIR.dark;
 
   function makeRow(
     settingId: string,
@@ -132,6 +158,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     row.append(meta, wrap);
     return row;
   }
+
+  const siteTitle = createSectionTitle("settings.publish.group.site");
+  const themesTitle = createSectionTitle("settings.publish.group.themes");
 
   const status = document.createElement("p");
   status.className = "inimark-settings-publish-status";
@@ -226,19 +255,22 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     }
   }
 
+  function pickOptionValue(
+    options: SelectOption[],
+    current: string,
+    preferred: string,
+  ): string {
+    if (options.some((o) => o.value === current)) return current;
+    if (options.some((o) => o.value === preferred)) return preferred;
+    return options[0]?.value ?? preferred;
+  }
+
   function rebuildThemeSelects(): void {
     const options = themeOptions.length
       ? themeOptions
       : BUILTIN_THEMES.map((id) => ({ value: id, label: id }));
-    if (!options.some((o) => o.value === lightThemeValue)) {
-      lightThemeValue = options.find((o) => o.value === "light")?.value ?? options[0]!.value;
-    }
-    if (!options.some((o) => o.value === darkThemeValue)) {
-      darkThemeValue =
-        options.find((o) => o.value === DEFAULT_DARK_BUILTIN)?.value ??
-        options.find((o) => /dark|ocean|cursor|dracula/i.test(o.value))?.value ??
-        options[0]!.value;
-    }
+    lightThemeValue = pickOptionValue(options, lightThemeValue, "light");
+    darkThemeValue = pickOptionValue(options, darkThemeValue, DEFAULT_DARK_BUILTIN);
 
     lightThemeSelect?.destroy();
     darkThemeSelect?.destroy();
@@ -263,6 +295,50 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     darkThemeHost.append(darkThemeSelect.el);
   }
 
+  function rebuildCodeThemeSelects(): void {
+    const lightOpts =
+      lightCodeOptions.length > 0
+        ? lightCodeOptions
+        : CODE_THEMES.filter((t) => !t.isDark).map((t) => ({ value: t.id, label: t.name }));
+    const darkOpts =
+      darkCodeOptions.length > 0
+        ? darkCodeOptions
+        : CODE_THEMES.filter((t) => t.isDark).map((t) => ({ value: t.id, label: t.name }));
+
+    lightCodeThemeValue = pickOptionValue(
+      lightOpts,
+      lightCodeThemeValue,
+      DEFAULT_CODE_THEME_PAIR.light,
+    );
+    darkCodeThemeValue = pickOptionValue(
+      darkOpts,
+      darkCodeThemeValue,
+      DEFAULT_CODE_THEME_PAIR.dark,
+    );
+
+    lightCodeThemeSelect?.destroy();
+    darkCodeThemeSelect?.destroy();
+    lightCodeThemeHost.replaceChildren();
+    darkCodeThemeHost.replaceChildren();
+
+    lightCodeThemeSelect = createSelect({
+      options: lightOpts,
+      value: lightCodeThemeValue,
+      onChange: (value) => {
+        lightCodeThemeValue = value;
+      },
+    });
+    darkCodeThemeSelect = createSelect({
+      options: darkOpts,
+      value: darkCodeThemeValue,
+      onChange: (value) => {
+        darkCodeThemeValue = value;
+      },
+    });
+    lightCodeThemeHost.append(lightCodeThemeSelect.el);
+    darkCodeThemeHost.append(darkCodeThemeSelect.el);
+  }
+
   async function refreshThemeOptions(): Promise<void> {
     const manifests = await loadManifest().catch(() => []);
     themeOptions = [
@@ -275,6 +351,25 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     rebuildThemeSelects();
   }
 
+  async function refreshCodeThemeOptions(): Promise<void> {
+    const customs = await loadCodeThemeManifest().catch(() => []);
+    const customLight = customs
+      .filter((m) => !m.isDark)
+      .map((m) => ({ value: m.id, label: m.name?.trim() || m.id }));
+    const customDark = customs
+      .filter((m) => m.isDark)
+      .map((m) => ({ value: m.id, label: m.name?.trim() || m.id }));
+    lightCodeOptions = [
+      ...CODE_THEMES.filter((t) => !t.isDark).map((t) => ({ value: t.id, label: t.name })),
+      ...customLight,
+    ];
+    darkCodeOptions = [
+      ...CODE_THEMES.filter((t) => t.isDark).map((t) => ({ value: t.id, label: t.name })),
+      ...customDark,
+    ];
+    rebuildCodeThemeSelects();
+  }
+
   async function loadConfigIntoForm(): Promise<void> {
     const lib = selectedLibrary();
     if (!lib) {
@@ -285,7 +380,10 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       homeValue = "";
       lightThemeValue = "light";
       darkThemeValue = DEFAULT_DARK_BUILTIN;
+      lightCodeThemeValue = DEFAULT_CODE_THEME_PAIR.light;
+      darkCodeThemeValue = DEFAULT_CODE_THEME_PAIR.dark;
       rebuildThemeSelects();
+      rebuildCodeThemeSelects();
       await refreshHomeNoteOptions();
       return;
     }
@@ -297,11 +395,14 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     homeValue = cfg.home || "";
     lightThemeValue = cfg.lightTheme || "light";
     darkThemeValue = cfg.darkTheme || DEFAULT_DARK_BUILTIN;
+    lightCodeThemeValue = cfg.lightCodeTheme || DEFAULT_CODE_THEME_PAIR.light;
+    darkCodeThemeValue = cfg.darkCodeTheme || DEFAULT_CODE_THEME_PAIR.dark;
     if (!cfg.lightTheme && !cfg.darkTheme && cfg.defaultTheme) {
       if (/dark/i.test(cfg.defaultTheme)) darkThemeValue = cfg.defaultTheme;
       else lightThemeValue = cfg.defaultTheme;
     }
     rebuildThemeSelects();
+    rebuildCodeThemeSelects();
     await refreshHomeNoteOptions();
   }
 
@@ -316,6 +417,8 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       defaultTheme: DEFAULT_DARK_BUILTIN,
       lightTheme: "light",
       darkTheme: DEFAULT_DARK_BUILTIN,
+      lightCodeTheme: DEFAULT_CODE_THEME_PAIR.light,
+      darkCodeTheme: DEFAULT_CODE_THEME_PAIR.dark,
       baseHref: "/",
       out: "dist",
     };
@@ -327,6 +430,8 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       home: homeValue.trim() || undefined,
       lightTheme: lightThemeValue,
       darkTheme: darkThemeValue,
+      lightCodeTheme: lightCodeThemeValue,
+      darkCodeTheme: darkCodeThemeValue,
       defaultTheme: darkThemeValue,
     };
   }
@@ -424,6 +529,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   }
 
   host.replaceChildren(
+    siteTitle,
     libraryRow,
     makeRow(
       "publish.siteName",
@@ -431,6 +537,15 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       "settings.publish.siteNameDesc",
       siteNameField.el,
     ),
+    makeRow("publish.out", "settings.publish.out", "settings.publish.outDesc", outField.el),
+    makeRow(
+      "publish.baseHref",
+      "settings.publish.baseHref",
+      "settings.publish.baseHrefDesc",
+      baseHrefField.el,
+    ),
+    makeRow("publish.home", "settings.publish.home", "settings.publish.homeDesc", homeSelectHost),
+    themesTitle,
     makeRow(
       "publish.lightTheme",
       "settings.publish.lightTheme",
@@ -443,14 +558,18 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       "settings.publish.darkThemeDesc",
       darkThemeHost,
     ),
-    makeRow("publish.out", "settings.publish.out", "settings.publish.outDesc", outField.el),
     makeRow(
-      "publish.baseHref",
-      "settings.publish.baseHref",
-      "settings.publish.baseHrefDesc",
-      baseHrefField.el,
+      "publish.lightCodeTheme",
+      "settings.publish.lightCodeTheme",
+      "settings.publish.lightCodeThemeDesc",
+      lightCodeThemeHost,
     ),
-    makeRow("publish.home", "settings.publish.home", "settings.publish.homeDesc", homeSelectHost),
+    makeRow(
+      "publish.darkCodeTheme",
+      "settings.publish.darkCodeTheme",
+      "settings.publish.darkCodeThemeDesc",
+      darkCodeThemeHost,
+    ),
     actions,
     status,
   );
@@ -458,7 +577,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   function refresh(): void {
     rebuildLibrarySelect();
     applyI18n();
-    void refreshThemeOptions().then(() => loadConfigIntoForm());
+    void Promise.all([refreshThemeOptions(), refreshCodeThemeOptions()]).then(() =>
+      loadConfigIntoForm(),
+    );
     previewBtn.disabled = !lastOutDir;
     openDirBtn.disabled = !lastOutDir;
   }
@@ -472,6 +593,8 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       librarySelect?.destroy();
       lightThemeSelect?.destroy();
       darkThemeSelect?.destroy();
+      lightCodeThemeSelect?.destroy();
+      darkCodeThemeSelect?.destroy();
       homeSelect?.destroy();
       siteNameField.destroy();
       outField.destroy();

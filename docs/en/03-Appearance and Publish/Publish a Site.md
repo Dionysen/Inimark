@@ -46,7 +46,8 @@ With `locales` configured, notes **outside** every language `root` are not publi
 | `siteName` | Site title | `Inimark Docs` |
 | `siteDescription` | Meta description | see config |
 | `defaultTheme` | Initial theme | see config |
-| `lightTheme` / `darkTheme` | Site theme pair | see config |
+| `lightTheme` / `darkTheme` | Site chrome theme pair | see config |
+| `lightCodeTheme` / `darkCodeTheme` | Code block highlight theme pair | see config |
 | `baseHref` | Deploy prefix | `/Inimark/` for GitHub Pages |
 | `out` | Output dir | `dist` |
 | `home` | Top-level home note | may differ from locale homes |
@@ -90,7 +91,7 @@ translationKey: welcome
 - `translationKey`: shared key across languages; the switcher prefers the paired note, otherwise the locale `home`
 
 > [!NOTE]
-> The Publish **form** edits siteName / out / baseHref / home / themes. `locales` and `siteDescription` live in the config file and are **preserved** when you save the form.
+> The Publish **form** edits siteName / out / baseHref / home / app themes / code themes. `locales` and `siteDescription` live in the config file and are **preserved** when you save the form.
 
 ## Steps
 
