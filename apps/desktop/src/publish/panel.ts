@@ -38,6 +38,7 @@ const SKIP_HOME_DIR_NAMES = new Set([
   ".inimark",
   "node_modules",
   "dist",
+  "landing",
 ]);
 
 function homeNoteOptions(

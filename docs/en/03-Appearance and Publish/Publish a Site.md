@@ -150,13 +150,15 @@ Site URL: https://dionysen.github.io/Inimark/
 | Any nginx / object storage | Upload `dist/` as the web root (mind `baseHref`) |
 | USB / offline folder | Open `index.html` only if `baseHref` is compatible |
 
+For this repo on GitHub Pages, the **site root is the product marketing homepage** (`docs/landing`). Docs open from the homepage navigation (e.g. [[欢迎]] / [[Welcome]]). The docs sidebar includes a **Home** link back to that page. Each language still uses its own welcome note as the docs entry.
+
 ## Authoring conventions
 
 - Number folders for nav order (`00-`, `01-`, …)
 - Keep **unique titles** for clean `[[wikilinks]]`
 - Parallel trees: `zh/` and `en/`, pair with the same `translationKey`, and cross-link with aliases
 - Lean on clear headings, callouts, and tables — see [[Markdown Syntax]]
-- Each language starts from its own welcome note (this vault: [[欢迎]] / [[Welcome]])
+- Docs entry points are the locale welcome notes (this vault: [[欢迎]] / [[Welcome]]); the site-root homepage is separate (see above)
 
 ## Extending Publish later
 

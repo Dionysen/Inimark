@@ -178,6 +178,12 @@ export function renderNotePage(options: {
     localeHomeHtml.get(config.locales?.default ?? "") ||
     "index.html";
   const brandHref = relativeHref(page.htmlPath, brandTarget);
+  const siteHomeTarget = page.lang === "en" ? "en/index.html" : "index.html";
+  const siteHomeHref = relativeHref(page.htmlPath, siteHomeTarget);
+  const siteHomeLabel = page.lang === "en" ? "Home" : "返回主页";
+  const siteHomeLink = config.showSiteHome
+    ? `<a class="site-home-link" href="${escapeHtml(siteHomeHref)}">${escapeHtml(siteHomeLabel)}</a>`
+    : "";
   const mermaidScript = hasMermaidRuntime
     ? `  <script src="${escapeHtml(mermaidHref)}" defer data-inimark-mermaid></script>\n`
     : "";
@@ -202,6 +208,7 @@ export function renderNotePage(options: {
   <div class="site-layout">
     <aside class="site-sidebar" aria-label="Notes">
       <div class="site-sidebar-head">
+        ${siteHomeLink}
         <div class="site-sidebar-head-row">
           <a class="site-brand" href="${escapeHtml(brandHref)}">${escapeHtml(config.siteName)}</a>
           <button type="button" class="site-theme-toggle" id="site-theme-toggle" aria-label="Toggle light and dark theme" title="Theme">

@@ -9,3 +9,7 @@ export {
   type VaultNoteFile,
 } from "./vault-fs.ts";
 export { writeSiteToFs } from "./write-fs.ts";
+export {
+  loadMarketingLandingFromFs,
+  type LoadMarketingLandingFromFsOptions,
+} from "./landing-fs.ts";

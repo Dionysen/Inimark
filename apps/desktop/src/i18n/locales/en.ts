@@ -339,7 +339,7 @@ export const en: Dictionary = {
         previewReady: "Preview running at {{url}}",
         previewStopped: "Preview server stopped.",
         failed: "Failed: {{message}}",
-        futureHome: "Later: a special marketing homepage flow can plug in here.",
+        futureHome: "Marketing homepage: overlay from docs/landing when present.",
       },
       updateIntro:
         "Set a simulated current version lower than the remote release to trigger the About page update flow and the titlebar auto-update capsule. Leave empty to use the real version. On macOS dev builds, download can be tested but install is blocked.",

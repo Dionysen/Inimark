@@ -71,8 +71,8 @@ function pickOptionValue(
 
 /**
  * Dev-only docs build: same `publishLibrary` pipeline as Settings → Publish.
- * Deploy with CLI: `pnpm docs:deploy` (pushes existing docs/dist).
- * Extension point for a future marketing homepage.
+ * When `docs/landing/index.html` exists, the build overlays a marketing homepage
+ * on the site root (and `en/`). Deploy with CLI: `pnpm docs:deploy`.
  */
 export function mountDevDocsPublishPanel(): DevDocsPublishPanelController {
   const root = document.createElement("div");

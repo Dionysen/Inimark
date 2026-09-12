@@ -1,0 +1,16 @@
+/* Theme-aware screenshots: light / dark asset pairs */
+.theme-img-dark {
+  display: none;
+}
+
+html[data-site-theme="dark"] .theme-img-light {
+  display: none;
+}
+
+html[data-site-theme="dark"] .theme-img-dark {
+  display: block;
+}
+
+.theme-shot img {
+  width: 100%;
+}

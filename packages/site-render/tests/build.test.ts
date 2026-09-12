@@ -217,6 +217,49 @@ describe("buildSite", () => {
     expect(index.content).toContain("notes/zh/欢迎.html");
   });
 
+  it("shows a sidebar link back to the marketing homepage when enabled", async () => {
+    const result = await buildSite({
+      config: {
+        siteName: "Docs",
+        defaultTheme: "light",
+        baseHref: "/",
+        out: "dist",
+        showSiteHome: true,
+        locales: {
+          default: "zh",
+          languages: [
+            { id: "zh", label: "中文", root: "zh", home: "zh/欢迎.md" },
+            { id: "en", label: "English", root: "en", home: "en/Welcome.md" },
+          ],
+        },
+      },
+      notes: [
+        {
+          path: "zh/欢迎.md",
+          markdown: "---\nlang: zh\n---\n\n# 欢迎\n",
+        },
+        {
+          path: "en/Welcome.md",
+          markdown: "---\nlang: en\n---\n\n# Welcome\n",
+        },
+      ],
+      resolveNotePath: () => null,
+      resolveMediaAbsolutePath: () => null,
+      themeVariablesCss: "",
+      editorWidgetsCss: "",
+      editorThemeCss: "",
+      themeIds: ["light"],
+    });
+
+    const zh = result.files.find((f) => f.path === "notes/zh/欢迎.html")!;
+    const en = result.files.find((f) => f.path === "notes/en/Welcome.html")!;
+    expect(zh.content).toContain('class="site-home-link"');
+    expect(zh.content).toContain("返回主页");
+    expect(zh.content).toMatch(/href="[^"]*index\.html"/);
+    expect(en.content).toContain(">Home</a>");
+    expect(en.content).toMatch(/href="[^"]*en\/index\.html"/);
+  });
+
   it("emits Mermaid sources and ships the runtime for client hydration", async () => {
     const result = await buildSite({
       config: { siteName: "Diagrams", defaultTheme: "light", baseHref: "/", out: "dist" },

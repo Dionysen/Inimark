@@ -121,6 +121,27 @@ ${webkitScrollbar(".site-nav")}
   padding: 16px 4px 14px;
   border-bottom: none;
 }
+.site-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 10px 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.site-home-link::before {
+  content: "←";
+  font-weight: 700;
+}
+.site-home-link:hover {
+  color: var(--accent);
+  background: var(--bg-hover, transparent);
+}
 .site-sidebar-head-row {
   display: flex;
   align-items: flex-start;

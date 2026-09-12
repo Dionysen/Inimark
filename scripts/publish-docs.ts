@@ -56,6 +56,7 @@ Options:
 
 Typical flow (match Dev Publish Docs output):
   1. Settings → Dev → Publish Docs → Build
+     (applies docs/landing marketing homepage when present)
   2. pnpm docs:deploy
 `);
 }
@@ -130,10 +131,14 @@ async function main(): Promise<void> {
   );
 
   const vault = await loadVaultFromFs(opts.vault);
+  const { existsSync } = await import("node:fs");
+  const { LANDING_DIR_NAME } = await import("../packages/site-render/src/index.ts");
+  const showSiteHome = existsSync(join(opts.vault, LANDING_DIR_NAME, "index.html"));
   const config = {
     ...vault.config,
     ...(opts.base != null ? { baseHref: opts.base } : {}),
     ...(opts.out != null ? { out: opts.out } : {}),
+    ...(showSiteHome ? { showSiteHome: true } : {}),
   };
 
   // Project Pages require this prefix; keep config as source of truth.
@@ -174,7 +179,7 @@ async function main(): Promise<void> {
   console.log(`  baseHref=${config.baseHref}`);
   console.log(`  notes=${vault.notes.length}`);
 
-  const built = await buildSite({
+  let built = await buildSite({
     config,
     notes: vault.notes,
     tree: vault.tree,
@@ -195,6 +200,23 @@ async function main(): Promise<void> {
       "utf8",
     ),
   });
+
+  const { applyMarketingLanding } = await import("../packages/site-render/src/index.ts");
+  const { loadMarketingLandingFromFs } = await import(
+    "../packages/site-render/src/node.ts"
+  );
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+    version?: string;
+  };
+  const landing = await loadMarketingLandingFromFs({
+    vaultPath: opts.vault,
+    version: pkg.version || "0.0.0",
+    fallbackIconPath: join(root, "apps/desktop/src-tauri/icons/icon.png"),
+  });
+  if (landing) {
+    built = applyMarketingLanding(built, landing);
+    console.log("  marketing landing: applied (docs/landing)");
+  }
 
   const outDir = join(opts.vault, built.outRelative);
   await writeSiteToFs(outDir, built, { clean: true });

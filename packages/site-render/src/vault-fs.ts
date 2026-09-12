@@ -11,6 +11,7 @@ const SKIP_DIR_NAMES = new Set([
   ".inimark",
   "node_modules",
   "dist",
+  "landing",
 ]);
 
 const MD_EXT = /\.(md|markdown|mdown)$/i;

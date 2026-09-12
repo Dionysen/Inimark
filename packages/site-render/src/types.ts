@@ -21,6 +21,11 @@ export interface SiteConfig {
   /** Relative path of home note within vault, e.g. `README.md`. */
   home?: string;
   /**
+   * When true, the sidebar shows a link back to the marketing site root
+   * (`index.html` / `en/index.html`). Enable when a `landing/` overlay is published.
+   */
+  showSiteHome?: boolean;
+  /**
    * Optional multilingual publishing.
    * When set, the site chrome shows a language switcher and filters the nav
    * tree to the active locale folder.

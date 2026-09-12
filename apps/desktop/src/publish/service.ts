@@ -1,6 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import {
   buildSite,
+  applyMarketingLanding,
+  loadMarketingLandingBundle,
+  LANDING_DIR_NAME,
   type ManifestNode,
   type SiteBuildResult,
   type SiteConfig,
@@ -29,13 +32,14 @@ import {
   getCustomThemeCss,
   loadManifest,
 } from "../themes/custom-theme-manager.ts";
-import { isMarkdownFile, joinWorkspacePath } from "../platform/env.ts";
+import { isMarkdownFile, isTauri, joinWorkspacePath } from "../platform/env.ts";
 import type { Workspace, WorkspaceTreeNode } from "../platform/types.ts";
 import { openWorkspaceByPath, readWorkspaceFile } from "../platform/workspace.ts";
 import { collectMarkdownFiles } from "../sidebar/vault-search.ts";
 import { linkIndex } from "../wikilink/link-index.ts";
 import { buildLinkIndexForWorkspace } from "../wikilink/build-index.ts";
 import { ensureOutDirParent, type PublishConfig } from "./config.ts";
+import pkg from "../../../../package.json";
 
 export interface PublishProgress {
   phase: "indexing" | "rendering" | "writing" | "done";
@@ -50,8 +54,8 @@ const SKIP_DIR_NAMES = new Set([
   ".inimark",
   "node_modules",
   "dist",
+  "landing",
 ]);
-
 function filterTree(
   nodes: WorkspaceTreeNode[],
   outRel: string,
@@ -77,6 +81,32 @@ function filterTree(
     result.push({ name: node.name, path, kind: "file" });
   }
   return result;
+}
+
+/**
+ * Load docs vault marketing homepage when `landing/index.html` exists.
+ * Uses Tauri FS so binary screenshots/icons can be copied into dist.
+ */
+async function loadDocsMarketingLanding(vaultPath: string) {
+  if (!isTauri()) return null;
+
+  const joinPath = (...segments: string[]) => {
+    if (segments.length === 0) return "";
+    let abs = segments[0]!;
+    for (let i = 1; i < segments.length; i++) {
+      abs = joinWorkspacePath(abs, segments[i]!);
+    }
+    return abs;
+  };
+
+  const { exists, readTextFile } = await import("@tauri-apps/plugin-fs");
+  return loadMarketingLandingBundle({
+    vaultPath,
+    version: pkg.version || "0.0.0",
+    joinPath,
+    exists: (abs) => exists(abs),
+    readText: (abs) => readTextFile(abs),
+  });
 }
 
 async function packThemeCss(): Promise<{ css: string; themeIds: string[] }> {
@@ -231,6 +261,17 @@ export async function publishLibrary(
     defaultTheme,
   };
 
+  if (isTauri()) {
+    const { exists } = await import("@tauri-apps/plugin-fs");
+    const landingIndex = joinWorkspacePath(
+      joinWorkspacePath(vaultPath, LANDING_DIR_NAME),
+      "index.html",
+    );
+    if (await exists(landingIndex)) {
+      siteConfig.showSiteHome = true;
+    }
+  }
+
   onProgress?.({
     phase: "rendering",
     current: notes.length,
@@ -238,7 +279,7 @@ export async function publishLibrary(
     message: "Rendering HTML…",
   });
 
-  const built: SiteBuildResult = await buildSite({
+  let built: SiteBuildResult = await buildSite({
     config: siteConfig,
     notes,
     tree,
@@ -256,6 +297,11 @@ export async function publishLibrary(
     themeIds,
     mermaidRuntimeJs,
   });
+
+  const landing = await loadDocsMarketingLanding(vaultPath);
+  if (landing) {
+    built = applyMarketingLanding(built, landing);
+  }
 
   const outDir = joinWorkspacePath(vaultPath, built.outRelative);
   await ensureOutDirParent(outDir);

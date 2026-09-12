@@ -338,7 +338,7 @@ export const zhCN: Dictionary = {
         previewReady: "预览已启动：{{url}}",
         previewStopped: "预览服务已停止。",
         failed: "失败：{{message}}",
-        futureHome: "后续可在此接入网站营销主页的特殊发布流程。",
+        futureHome: "营销主页：存在 docs/landing 时会覆盖到站点根路径。",
       },
       updateIntro:
         "将模拟当前版本设为低于远程发布版本，即可触发关于页手动更新与顶栏自动更新提示。留空则使用真实版本。macOS 开发模式下仅可测试下载，不会执行安装。",
