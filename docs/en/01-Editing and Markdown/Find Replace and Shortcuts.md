@@ -28,11 +28,11 @@ Find bar supports:
 
 ### Regex ideas (in-note only)
 
-| Goal | Example pattern | Replace with |
-| --- | --- | --- |
-| Strip a draft prefix | `^## Draft:\s*` | `## ` |
-| Normalize a label | `TODO:` | `Next:` |
-| Cautious wiki stub | `\[\[Old Title` | `[[New Title` |
+| Goal                 | Example pattern | Replace with  |
+| -------------------- | --------------- | ------------- |
+| Strip a draft prefix | `^## Draft:\s*` | `## `         |
+| Normalize a label    | `TODO:`         | `Next:`       |
+| Cautious wiki stub   | `\[\[Old Title` | `[[New Title` |
 
 Review each hit. For real file renames, use the tree rename + link-rewrite policy instead of regex.
 

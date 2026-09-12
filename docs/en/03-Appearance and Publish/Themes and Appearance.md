@@ -27,6 +27,23 @@ Related chrome options live under **Settings → Appearance**: UI font, menu den
 - Frosted-glass style options (depending on theme/settings)
 - Eyedropper-assisted customization for custom themes
 
+### Built-in code themes
+
+Pick a code theme under **Settings → Theme** (independent from the app chrome theme). Light / dark pairs include:
+
+| Light | Dark |
+| --- | --- |
+| GitHub Light | GitHub Dark |
+| Atom One Light | Atom One Dark |
+| VS Code Light | VS Code Dark |
+| Solarized Light | Solarized Dark |
+| Cursor Light | Cursor Dark |
+| Rider Light | Rider Dark |
+
+Also dark-only classics: Nord, Monokai, Dracula.
+
+Open [[Code and Syntax Highlighting]] to preview highlighting while you switch themes.
+
 > [!TIP]
 > Export a theme you like and import it on another machine — appearance is a portable asset.
 

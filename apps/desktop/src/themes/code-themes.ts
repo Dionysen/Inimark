@@ -67,6 +67,30 @@ export const CODE_THEMES: CodeTheme[] = [
       "--hljs-built_in": "#cb4b16",
     },
   },
+  {
+    id: "cursor-light",
+    name: "Cursor Light",
+    isDark: false,
+    variables: {
+      "--hljs-keyword": "#0d7a6c",
+      "--hljs-string": "#a33d9a",
+      "--hljs-comment": "#6b7280",
+      "--hljs-number": "#9a6b20",
+      "--hljs-built_in": "#b45a20",
+    },
+  },
+  {
+    id: "rider-light",
+    name: "Rider Light",
+    isDark: false,
+    variables: {
+      "--hljs-keyword": "#0033b3",
+      "--hljs-string": "#067d17",
+      "--hljs-comment": "#8c8c8c",
+      "--hljs-number": "#1750eb",
+      "--hljs-built_in": "#00627a",
+    },
+  },
   // Dark themes
   {
     id: "github-dark",
@@ -150,6 +174,30 @@ export const CODE_THEMES: CodeTheme[] = [
       "--hljs-comment": "#586e75",
       "--hljs-number": "#d33682",
       "--hljs-built_in": "#cb4b16",
+    },
+  },
+  {
+    id: "cursor-dark",
+    name: "Cursor Dark",
+    isDark: true,
+    variables: {
+      "--hljs-keyword": "#83d6c5",
+      "--hljs-string": "#e394dc",
+      "--hljs-comment": "#6d6d6d",
+      "--hljs-number": "#ebc88d",
+      "--hljs-built_in": "#efb080",
+    },
+  },
+  {
+    id: "rider-dark",
+    name: "Rider Dark",
+    isDark: true,
+    variables: {
+      "--hljs-keyword": "#6c95eb",
+      "--hljs-string": "#c9a26d",
+      "--hljs-comment": "#85c46c",
+      "--hljs-number": "#ed94c0",
+      "--hljs-built_in": "#39cc9b",
     },
   },
 ];

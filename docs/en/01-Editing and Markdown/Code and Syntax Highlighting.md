@@ -222,7 +222,7 @@ pnpm test:editor
 | Tweak language tag | Click / focus the fence language field in WYSIWYG, or edit in source |
 | Large refactors | [[Editing Modes#Source mode|Source mode]] (`Ctrl/⌘ + /`) |
 | Keep paste clean | Plain-text paste |
-| Change colors | [[Themes and Appearance]] code theme |
+| Change colors | [[Themes and Appearance]] code theme (includes Cursor / Rider light & dark) |
 
 ## Related
 
