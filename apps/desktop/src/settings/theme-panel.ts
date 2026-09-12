@@ -1,5 +1,5 @@
 import { t } from "../i18n/index.ts";
-import { createToggle } from "../ui/widgets/index.ts";
+import { createToggle, createIconButton } from "../ui/widgets/index.ts";
 import { getThemeManager } from "../themes/manager.ts";
 import type { ThemePair } from "../themes/appearance.ts";
 import { BUILTIN_THEMES } from "../themes/builtin.ts";
@@ -1283,17 +1283,18 @@ export function renderThemePanel(
         const nameEl = document.createElement("span");
         nameEl.className = "settings-theme-name";
         nameEl.textContent = m.name;
-        const renameBtn = document.createElement("button");
-        renameBtn.type = "button";
-        renameBtn.className = "settings-theme-rename-btn";
-        renameBtn.title = t("settings.theme.rename");
-        renameBtn.innerHTML = SVG_EDIT;
-        renameBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          nameDialog = { open: true, mode: "rename-app", id: m.id, defaultName: m.name };
-          themeName = m.name;
-          render();
+        const renameBtn = createIconButton({
+          label: t("settings.theme.rename"),
+          title: t("settings.theme.rename"),
+          html: SVG_EDIT,
+          onClick(e) {
+            e.stopPropagation();
+            nameDialog = { open: true, mode: "rename-app", id: m.id, defaultName: m.name };
+            themeName = m.name;
+            render();
+          },
         });
+        renameBtn.classList.add("settings-theme-rename-btn");
         nameRow.append(nameEl, renameBtn);
         meta.append(nameRow);
         const slotLabel = renderThemeSlotLabel(themeId, preferredAppTheme);
@@ -1457,17 +1458,18 @@ export function renderThemePanel(
         const nameEl = document.createElement("span");
         nameEl.className = "settings-theme-name";
         nameEl.textContent = m.name;
-        const renameBtn = document.createElement("button");
-        renameBtn.type = "button";
-        renameBtn.className = "settings-theme-rename-btn";
-        renameBtn.title = t("settings.theme.rename");
-        renameBtn.innerHTML = SVG_EDIT;
-        renameBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          nameDialog = { open: true, mode: "rename-code", id: m.id, defaultName: m.name };
-          themeName = m.name;
-          render();
+        const renameBtn = createIconButton({
+          label: t("settings.theme.rename"),
+          title: t("settings.theme.rename"),
+          html: SVG_EDIT,
+          onClick(e) {
+            e.stopPropagation();
+            nameDialog = { open: true, mode: "rename-code", id: m.id, defaultName: m.name };
+            themeName = m.name;
+            render();
+          },
         });
+        renameBtn.classList.add("settings-theme-rename-btn");
         nameRow.append(nameEl, renameBtn);
         meta.append(nameRow);
         const slotLabel = renderThemeSlotLabel(m.id, preferredCodeTheme);
