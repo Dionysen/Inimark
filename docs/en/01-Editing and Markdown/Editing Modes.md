@@ -4,9 +4,7 @@ lang: en
 translationKey: editing-modes
 ---
 
-
 # Editing Modes
-
 
 **中文:** [[编辑模式|中文]] · [[MOC-English Docs]]
 
@@ -34,6 +32,17 @@ Example:
 > [!NOTE]
 > Callouts are covered in [[Markdown Syntax#Callouts|Markdown Syntax]].
 
+### When WYSIWYG shines
+
+- Drafting prose, outlines, and meeting notes
+- Light formatting while reading your own words
+- Following wikilinks without leaving the typeset view
+
+### Paste behavior
+
+- Normal paste may carry rich text from the clipboard.
+- **Paste as plain text** (`Ctrl/⌘ + Shift + V`) keeps indentation honest — preferred for code and CLI logs.
+
 ## Source mode
 
 Shortcut: `Ctrl + /` (macOS: `⌘ + /`)
@@ -46,19 +55,32 @@ Shortcut: `Ctrl + /` (macOS: `⌘ + /`)
 
 Switching back re-folds the document into the typeset view.
 
+### When to flip to source
+
+| Situation | Why source helps |
+| --- | --- |
+| Large Mermaid / KaTeX blocks | Edit raw fences without widget chrome |
+| Broken tables after a paste | See pipes and rows clearly |
+| Front matter / HTML comments | Precise character-level control |
+| Mystery formatting | Hunt stray markers |
+
 ## Typewriter mode
 
 Keeps the **current line near vertical center** to reduce vertical eye travel — great for long notes.
 
 - Enable under **Settings → Editor**
-- Or toggle from the **status bar** (see [[Interface Tour]])
+- Toggle with **`F9`** or the **status bar** (see [[Interface Tour]])
 
-## Focus mode (API ready, UI pending)
+Persists in settings when changed from the Editor section.
 
-The editor core exposes Focus Mode (dims inactive blocks). The desktop shell does **not** yet wire a shortcut or setting.
+## Focus mode
 
-> [!WARNING]
-> Docs only claim **wired** features. For Focus Mode status, see [[Roadmap]].
+Dims blocks away from the caret so the active paragraph stands out.
+
+- Toggle with **`F8`** while the editor is focused
+- Session-only (not a Settings checkbox today)
+
+Combine with auto-hidden title/status bars for a near-paper canvas — [[Themes and Appearance]].
 
 ## Mode matrix
 
@@ -66,16 +88,7 @@ The editor core exposes Focus Mode (dims inactive blocks). The desktop shell doe
 | --- | --- | --- |
 | WYSIWYG | ✅ | Default |
 | Source | ✅ | `Ctrl/⌘+/` |
-| Typewriter | ✅ | Settings / status bar |
-| Focus | 🟡 API | [[Roadmap]] |
+| Typewriter | ✅ | `F9` / Settings / status bar |
+| Focus | ✅ | `F8` |
 
-```mermaid
-stateDiagram-v2
-  [*] --> WYSIWYG
-  WYSIWYG --> Source: Ctrl/Cmd+/
-  Source --> WYSIWYG: Ctrl/Cmd+/
-  WYSIWYG --> Typewriter: toggle
-  Typewriter --> WYSIWYG: toggle
-```
-
-Related: [[Markdown Syntax]] · [[Find Replace and Shortcuts]] · [[Math and Diagrams]]
+Related: [[Markdown Syntax]] · [[Find Replace and Shortcuts]] · [[Math and Diagrams]] · [[Everyday Workflows]]

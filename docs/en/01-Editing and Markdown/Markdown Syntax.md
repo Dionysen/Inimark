@@ -52,7 +52,7 @@ Escape marks with `\`, e.g. `\*\*not bold\*\*`.
 
 - External: [example link](https://example.com/)
 - Autolink: https://help.obsidian.md/
-- Image: `![alt](path/or/url.png)`
+- Image: `![alt](path/or/url.png)` — durable paths and paste status: [[Images and Attachments]]
 - Wikilinks: see [[Wikilinks and Embeds]] — e.g. [[Relationship Graph]]
 
 Reference-style links are supported for advanced layouts.
@@ -78,6 +78,18 @@ Tasks:
 - [x] Write a `[[wikilink]]`
 - [ ] Publish the help site
 
+### List keyboard habits
+
+| Action | Default |
+| --- | --- |
+| Bullet list | `Alt + Ctrl/⌘ + U` |
+| Ordered list | `Alt + Ctrl/⌘ + O` |
+| Task list | `Alt + Ctrl/⌘ + X` |
+| Indent / outdent | `Tab` / `Shift + Tab` (in lists) |
+| Soft continue | `Enter` follows list “staircase” rules |
+
+Leave a list by pressing Enter on an empty item (Typora-like).
+
 ## Quotes and Callouts
 
 Plain quote:
@@ -96,12 +108,16 @@ Plain quote:
 > Critical: when renaming files, mind [[Wikilinks and Embeds#Rename and rewrite|link rewrite]].
 
 > [!WARNING]
-> Warning: image “paste to disk” settings may not be fully wired — see [[Roadmap]].
+> Warning: image paste-to-disk is not a finished pipeline — see [[Images and Attachments]] and [[Roadmap]].
 
 > [!DANGER]
 > Danger: do not casually hand-edit `.inimark/link-index.json`.
 
 Aliases: `WARN` / `CAUTION` map to warning.
+
+Chooser card:
+
+![[Callout Chooser Card]]
 
 ## Code fences
 
@@ -132,6 +148,8 @@ Language `mermaid` goes to diagram rendering → [[Math and Diagrams]].
 | Graph | ✅ | [[Relationship Graph]] |
 | Tag pane | ❌ | [[Roadmap]] |
 
+Insert a starter table with `Alt + Ctrl/⌘ + T`. Move rows/columns with `Alt + Ctrl/⌘ + Arrow` (or `Ctrl/⌘ + Ctrl + Arrow` variants depending on platform). For heavily broken tables after a paste, switch to [[Editing Modes#Source mode|source mode]], fix the pipes, then return.
+
 ## Horizontal rule
 
 Content above.
@@ -156,7 +174,9 @@ Used for titles and similar metadata; Publish reads `title`, and for multilingua
 
 ## TOC
 
-The editor can generate an in-note table of contents from headings when you insert its TOC marker on its own line. This help vault relies on the Outline sidebar instead, so the marker is not used in these pages.
+Exact marker: put **`[toc]`** or **`[TOC]` alone on a line**, then press **Enter**. The editor turns it into a live table-of-contents atom (Typora-style). Before Enter, it is still plain text.
+
+This help vault relies on the Outline sidebar instead, so these pages do not embed the marker.
 
 ## HTML and comments
 
@@ -181,6 +201,7 @@ A shortcut can insert `[^]`; **full footnote rendering is incomplete** — see [
 | Goal | Read |
 | --- | --- |
 | Math / diagrams | [[Math and Diagrams]] |
+| Images | [[Images and Attachments]] |
 | Keys | [[Find Replace and Shortcuts]] |
 | Wikilinks | [[Wikilinks and Embeds]] |
 | Themes | [[Themes and Appearance]] |

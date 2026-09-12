@@ -10,6 +10,29 @@ translationKey: math-diagrams
 
 Inimark ships **KaTeX** and **Mermaid**, with familiar academic / engineering markup. Each example below shows **source first, then the rendered result**.
 
+## How to write (methods first)
+
+| Need | Use |
+| --- | --- |
+| A symbol inside a sentence | Inline `$…$` |
+| A displayed equation | Block `$$…$$` on its own lines |
+| Architecture / flow / sequence | ` ```mermaid ` fence |
+| Fine-tune a large block | [[Editing Modes#Source mode|Source mode]], then flip back |
+
+Shortcuts: insert a math block with `Alt + Ctrl/⌘ + B`. After editing dense LaTeX or Mermaid, preview in WYSIWYG; if a fence fails to render, check spelling and diagram type support for your Mermaid build.
+
+### Pick a diagram by scenario
+
+| Scenario | Mermaid type |
+| --- | --- |
+| Process / decision | `flowchart` |
+| API or user journey over time | `sequenceDiagram` / `journey` |
+| Domain model | `classDiagram` / `erDiagram` |
+| Release plan | `gantt` / `timeline` |
+| Brainstorm structure | `mindmap` |
+
+Publish packs KaTeX assets so formulas stay consistent on the static site — see [[Publish a Site]].
+
 ## Inline math
 
 Source:

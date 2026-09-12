@@ -4,9 +4,7 @@ lang: en
 translationKey: data-directory
 ---
 
-
 # Data Directory
-
 
 **中文:** [[数据目录|中文]] · [[Libraries and Files]] · [[Publish a Site]]
 
@@ -22,28 +20,37 @@ translationKey: data-directory
 
 Under each library root:
 
-| File | Role |
-| --- | --- |
-| `bookmarks.json` | Bookmarks and groups |
-| `session.json` | Session: open files, caret/scroll, source mode, … |
-| `recent.json` | Recents |
-| `link-index.json` | Wikilink index cache |
+| File | Role | Safe to delete? |
+| --- | --- | --- |
+| `bookmarks.json` | Bookmarks and groups | Yes — you lose pins |
+| `session.json` | Open files, caret/scroll, source mode, expanded dirs | Yes — session resets |
+| `recent.json` | Recents | Yes — recents clear |
+| `link-index.json` | Wikilink index cache | Yes — app rebuilds it |
 
-```mermaid
-flowchart TB
-  Vault[Library root]
-  Vault --> Notes[*.md and assets]
-  Vault --> Dot[.inimark/]
-  Vault --> PubCfg[publish.config.json]
-  Vault --> Dist[dist/ build output]
-  Dot --> BM[bookmarks.json]
-  Dot --> SE[session.json]
-  Dot --> RE[recent.json]
-  Dot --> LI[link-index.json]
-```
+Typical library root layout:
+
+- `*.md` and assets
+- `.inimark/`
+  - `bookmarks.json`
+  - `session.json`
+  - `recent.json`
+  - `link-index.json`
+- `publish.config.json`
+- `dist/` (build output)
 
 > [!DANGER]
 > `link-index.json` can be rebuilt by the app. **Do not** treat it as a hand-written database.
+
+### Git tips
+
+| Path | Suggestion |
+| --- | --- |
+| Notes + assets | Commit |
+| `publish.config.json` | Commit |
+| `.inimark/bookmarks.json` | Optional (nice for shared hubs) |
+| `.inimark/session.json` / `recent.json` | Usually ignore (personal) |
+| `link-index.json` | Optional; rebuildable |
+| `dist/` | Ignore — build artifact |
 
 ## Extra files in this help vault
 
@@ -52,6 +59,7 @@ flowchart TB
 | `publish.config.json` | Publish config (optional `locales`) |
 | `README.md` | Bilingual portal |
 | `zh/` · `en/` | Parallel doc trees |
+| `snippets/` · `片段/` | Embeddable cards |
 | `dist/` | Build output (usually ignored via global `dist/`) |
 
-Related: [[Publish a Site]] · [[Wikilinks and Embeds]]
+Related: [[Publish a Site]] · [[Wikilinks and Embeds]] · [[FAQ and Troubleshooting]]

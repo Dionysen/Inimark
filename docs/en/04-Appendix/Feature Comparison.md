@@ -4,11 +4,9 @@ lang: en
 translationKey: feature-comparison
 ---
 
-
 # Feature Comparison
 
-
-**中文:** [[功能对照表|中文]] · [[Roadmap]] · [[Welcome]]
+**中文:** [[功能对照表|中文]] · [[Roadmap]] · [[Migrate from Typora and Obsidian]]
 
 > Goal: set expectations when migrating from Typora / Obsidian. **Not** a scoreboard.
 
@@ -18,12 +16,20 @@ translationKey: feature-comparison
 | --- | --- | --- |
 | WYSIWYG | ✅ | ✅ see [[Editing Modes]] |
 | Source mode | ✅ | ✅ |
-| Typewriter / Focus | ✅ / ✅ | ✅ / 🟡 (Focus API) |
+| Typewriter / Focus | ✅ / ✅ | ✅ / ✅ (`F9` / `F8`) |
 | Outline | ✅ | ✅ [[Search Bookmarks Outline]] |
 | Pandoc export suite | ✅ strong | 🟡 Publish/static-first |
 | Wikilink vault | ❌ weak | ✅ [[Wikilinks and Embeds]] |
 | Graph | ❌ | ✅ [[Relationship Graph]] |
 | Multi-root | Open folders | ✅ Libraries |
+
+### Operational differences (Typora → Inimark)
+
+| You used to… | Now you… |
+| --- | --- |
+| Export via Pandoc flavors | Build a static site with [[Publish a Site]] |
+| Keep one folder open | Manage multiple [[Libraries and Files|libraries]] |
+| Live in one long file | Split ideas and `[[link]]` them |
 
 ## vs Obsidian
 
@@ -39,28 +45,20 @@ translationKey: feature-comparison
 | Editing | Source + live preview | **Typora-style WYSIWYG** |
 | Publish | Hosted / third-party | ✅ local SSG [[Publish a Site]] |
 
-## Mental map
+### Operational differences (Obsidian → Inimark)
 
-```mermaid
-quadrantChart
-  title Editing x Knowledge
-  x-axis Weak knowledge --> Strong knowledge
-  y-axis Weak WYSIWYG --> Strong WYSIWYG
-  quadrant-1 Inimark aim
-  quadrant-2 Typora-like
-  quadrant-3 Plain editors
-  quadrant-4 Obsidian-like
-  Typora: [0.35, 0.85]
-  Obsidian: [0.85, 0.35]
-  Inimark: [0.75, 0.80]
-```
+| You used to… | Now you… |
+| --- | --- |
+| Rely on Community plugins | Use built-in Outline / Bookmarks / Graph / format-on-save |
+| Query with Dataview | Curate MOCs + vault Search |
+| Preview beside source | Stay in WYSIWYG; peek source with `Ctrl/⌘+/` |
+| Image-heavy file tree | Keep assets on disk; tree shows Markdown |
 
-> [!NOTE]
-> If `quadrantChart` fails in your Mermaid build, ignore the diagram — the tables stand alone.
+Step-by-step: [[Migrate from Typora and Obsidian]].
 
 ## One-liners
 
 - From **Typora**: familiar writing surface, plus vault + graph.
 - From **Obsidian**: familiar links, plus a more typeset writing surface.
 
-Next: [[Roadmap]] · [[Data Directory]]
+Next: [[Roadmap]] · [[FAQ and Troubleshooting]] · [[Data Directory]]

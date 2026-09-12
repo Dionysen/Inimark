@@ -20,11 +20,11 @@ Think of the main window as three columns:
 
 ## Title bar
 
-| Area            | Role                                            |
-| --------------- | ----------------------------------------------- |
-| Back / Forward  | [[Libraries and Files                           |
-| Window controls | Min / max / close (macOS traffic lights)        |
-| More menu       | Immersive options: auto-hide title / status bar |
+| Area | Role |
+| --- | --- |
+| Back / Forward | [[Libraries and Files#Navigation history|Navigation history]] across opened notes |
+| Window controls | Min / max / close (macOS traffic lights) |
+| More menu | Immersive chrome: auto-hide title bar / status bar, and related focus options |
 
 > [!TIP]
 > For distraction-free writing, auto-hide the title and status bars so the UI feels closer to “a single sheet of paper”. See [[Themes and Appearance]].
@@ -33,19 +33,21 @@ Think of the main window as three columns:
 
 Left and right **tabs are configurable** (Files / Search / Bookmarks / Outline / Graph).
 
-| Tab       | One-liner                        | Deep dive                    |
-| --------- | -------------------------------- | ---------------------------- |
-| Files     | Vault file tree                  | [[Libraries and Files]]      |
-| Search    | Name + content search            | [[Search Bookmarks Outline]] |
-| Bookmarks | Bookmarks and groups             | [[Search Bookmarks Outline]] |
-| Outline   | Heading tree for the active note | [[Search Bookmarks Outline]] |
-| Graph     | Graph plus outlinks / backlinks  | [[Relationship Graph]]       |
+| Tab | One-liner | Deep dive |
+| --- | --- | --- |
+| Files | Vault file tree | [[Libraries and Files]] |
+| Search | Name + content search | [[Search Bookmarks Outline]] |
+| Bookmarks | Bookmarks and groups | [[Search Bookmarks Outline]] |
+| Outline | Heading tree for the active note | [[Search Bookmarks Outline]] |
+| Graph | Graph plus outlinks / backlinks | [[Relationship Graph]] |
 
-Sidebars support:
+### How to arrange tabs
 
-- **Collapse / expand**
-- **Drag to resize**
-- **Tab placement** (left vs right) in settings
+1. Open **Settings → Appearance**.
+2. Assign each tab to the **left** or **right** sidebar list.
+3. Resize by dragging the sidebar edge; collapse when you want a wider writing column.
+
+Both sidebars can be collapsed — the editor keeps the full middle. Toggle visibility with the sidebar shortcut (default `Ctrl/⌘ + B`, rebindable).
 
 ## Editor host
 
@@ -53,7 +55,7 @@ The center is `@inimark/editor`:
 
 - Default [[Editing Modes#WYSIWYG|WYSIWYG]]
 - `Ctrl/⌘ + /` toggles [[Editing Modes#Source mode|source mode]]
-- Optional [[Editing Modes#Typewriter mode|typewriter mode]]
+- [[Editing Modes#Typewriter mode|Typewriter]] (`F9` / status bar) and [[Editing Modes#Focus mode|Focus]] (`F8`)
 
 Context menus insert formatting, links, callouts — see [[Markdown Syntax]].
 
@@ -74,16 +76,4 @@ Editor · Appearance · Theme · Shortcuts · Libraries · Publish · Images · 
 
 ---
 
-```mermaid
-sequenceDiagram
-  participant U as You
-  participant T as Title bar
-  participant S as Sidebar
-  participant E as Editor
-  U->>T: Open library / navigate
-  U->>S: Pick a file or search
-  S->>E: Load note
-  U->>E: Write · link · publish
-```
-
-Prev: [[Install Inimark]] · Next: [[Editing Modes]]
+Prev: [[Install Inimark]] · Next: [[Editing Modes]] · Scenarios: [[Everyday Workflows]]

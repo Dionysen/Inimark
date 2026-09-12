@@ -4,9 +4,7 @@ lang: en
 translationKey: moc
 ---
 
-
 # English Docs · Map of Content
-
 
 > [!NOTE]
 > This is the English **MOC**. Topics are wired with `[[wikilinks]]` so the vault reads like a site *and* a graph.
@@ -20,13 +18,16 @@ translationKey: moc
 - [[Welcome]] — positioning and reading path
 - [[Install Inimark]] — GitHub Releases · build from source
 - [[Interface Tour]] — title bar, dual sidebars, status bar
+- [[Everyday Workflows]] — writing · PKM · tech notes · publish scenarios
+- [[Migrate from Typora and Obsidian]] — expectations and checklists
 
 ## 01 · Editing and Markdown
 
-- [[Editing Modes]] — WYSIWYG / source / typewriter
+- [[Editing Modes]] — WYSIWYG / source / typewriter / focus
 - [[Markdown Syntax]] — full format showcase
 - [[Math and Diagrams]] — KaTeX · Mermaid
-- [[Find Replace and Shortcuts]] — search and keybindings
+- [[Images and Attachments]] — paths, embeds, honest paste status
+- [[Find Replace and Shortcuts]] — search scopes and keybindings
 
 ## 02 · Vault and Knowledge
 
@@ -44,6 +45,7 @@ translationKey: moc
 ## 04 · Appendix
 
 - [[Feature Comparison]] — vs Typora / Obsidian
+- [[FAQ and Troubleshooting]] — install · links · publish
 - [[Data Directory]] — `.inimark/` layout
 - [[Roadmap]] — shipped vs planned
 
@@ -51,18 +53,19 @@ translationKey: moc
 
 ## Suggested path
 
-```mermaid
-flowchart TD
-  W[Welcome] --> I[Install Inimark]
-  I --> U[Interface Tour]
-  U --> E[Editing Modes]
-  E --> M[Markdown Syntax]
-  M --> L[Libraries and Files]
-  L --> K[Wikilinks and Embeds]
-  K --> G[Relationship Graph]
-  G --> P[Publish a Site]
-```
+1. [[Welcome]]
+2. [[Install Inimark]]
+3. [[Interface Tour]]
+4. [[Editing Modes]]
+5. [[Markdown Syntax]]
+6. [[Libraries and Files]]
+7. [[Wikilinks and Embeds]]
+8. [[Relationship Graph]]
+9. [[Publish a Site]]
+
+Alternate: [[Everyday Workflows]] or [[Migrate from Typora and Obsidian]] first if that matches your week.
 
 - [x] Open this vault
 - [x] Start at [[Welcome]]
 - [ ] Try [[Publish a Site]] once from Settings
+- [ ] Skim [[FAQ and Troubleshooting]] once

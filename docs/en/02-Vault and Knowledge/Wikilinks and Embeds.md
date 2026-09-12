@@ -10,6 +10,8 @@ translationKey: wikilinks
 
 Wikilinks are the core of Inimark’s “thinking” layer, with Obsidian-familiar syntax.
 
+![[Wikilink Three Minutes Card]]
+
 ## Basic links
 
 ```markdown
@@ -26,9 +28,23 @@ Live:
 - Cross-language: [[欢迎|中文欢迎]]
 
 > [!TIP]
-> Typing `[[` opens autocomplete. Notes are indexed by **path without extension**, and also resolve by **basename** (shallower paths win on ties).
+> Typing `[[` opens autocomplete (not inside `![[` image/note embeds). Notes are indexed by **path without extension**, and also resolve by **basename** (shallower paths win on ties).
+
+### Autocomplete habits
+
+| Input | Behavior |
+| --- | --- |
+| Empty `[[` | Recent notes (a few) + broader list |
+| Typed query | Filtered candidates (capped) |
+| ↑ ↓ / Enter / Tab | Navigate and accept |
+| Enter with no match | Can create a new note |
+| `|` or `#` | Stops the name query — add alias or heading after |
+
+Unresolved links use a stronger / dashed underline treatment so you can spot missing targets. Fix the title, create the note, or remove the link.
 
 ## Embeds
+
+### Note embeds
 
 ```markdown
 ![[Markdown Showcase Card]]
@@ -40,44 +56,56 @@ Rendered:
 
 Use embeds for reusable snippets, MOCs, and definition cards inside long notes.
 
+### Image embeds
+
+```markdown
+![[photo.png]]
+```
+
+Common raster/vector types render as image embeds when the file resolves in the library. Prefer vault-relative assets — [[Images and Attachments]].
+
 > [!WARNING]
 > Avoid **cyclic embeds** (A embeds B embeds A) — painful to read and publish.
 
+## Light PKM pattern
+
+1. One **hub / MOC** note that mostly lists `[[children]]`.
+2. Concept notes stay short; link outward instead of duplicating.
+3. Embed a “definition card” where a long essay needs the same block.
+4. Review neighbors in [[Relationship Graph]] local mode weekly.
+
+This help vault’s [[MOC-English Docs]] is the living example.
+
 ## Outlinks and backlinks
 
-| Term      | Meaning                   |
-| --------- | ------------------------- |
-| Outlinks  | Notes this note points to |
-| Backlinks | Notes that point here     |
+| Term | Meaning |
+| --- | --- |
+| Outlinks | Notes this note points to |
+| Backlinks | Notes that point here |
 
-Lists appear in the [[Relationship Graph]] panel; the graph visualizes the same index.
+Lists appear in the [[Relationship Graph]] panel; unresolved outlinks are marked. The graph visualizes the same index.
 
 ## Index
 
 The library keeps a link index (cached as `.inimark/link-index.json`):
 
-```mermaid
-flowchart LR
-  MD[Markdown files] --> Parse[Parse [[…]]]
-  Parse --> Idx[link-index]
-  Idx --> AC[Autocomplete]
-  Idx --> G[Graph]
-  Idx --> Pub[Publish hrefs]
-```
+1. Parse `[[…]]` from Markdown files
+2. Build / refresh `link-index`
+3. Feed autocomplete, Graph, and Publish href resolution
 
 See [[Data Directory]].
 
 ## Rename and rewrite
 
-On **rename / move**, Inimark can rewrite `[[links]]` elsewhere:
+On **rename / move**, Inimark can rewrite `[[links]]` elsewhere (including `#heading` and `|alias` suffixes):
 
-| Policy | When                |
-| ------ | ------------------- |
-| ask    | Safe default        |
-| always | Large refactors     |
-| never  | Full manual control |
+| Policy | When |
+| --- | --- |
+| ask | Safe default |
+| always | Large refactors |
+| never | Full manual control |
 
-Configured with library / link-update options; operations start from [[Libraries and Files]].
+Configured under Settings → Editor (link update on move); operations start from [[Libraries and Files]].
 
 ## Not (fully) there yet
 
