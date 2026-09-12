@@ -29,6 +29,19 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.5 — 2026-09-12
+
+**Release page:** [v1.0.5](https://github.com/Dionysen/Inimark/releases/tag/v1.0.5)
+
+### What's new
+
+- Marketing homepage for Publish: bilingual landing, screenshots, and site chrome
+- Docs site layout: public root is the home page; help notes live under `/docs`
+- README rewrite (EN + 中文) focused on editing craft and restrained design
+- Version History in the help vault; tag releases can pull “What’s new” into GitHub Release notes
+
+---
+
 ## 1.0.4 — 2026-09-12
 
 **Release page:** [v1.0.4](https://github.com/Dionysen/Inimark/releases/tag/v1.0.4)
