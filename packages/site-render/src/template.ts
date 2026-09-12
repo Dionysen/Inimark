@@ -184,6 +184,14 @@ export function renderNotePage(options: {
   const siteHomeLink = config.showSiteHome
     ? `<a class="site-home-link" href="${escapeHtml(siteHomeHref)}">${escapeHtml(siteHomeLabel)}</a>`
     : "";
+  const iconHref = relativeHref(page.htmlPath, "icon.png");
+  const faviconHref = relativeHref(page.htmlPath, "favicon.png");
+  const brandInner = config.showSiteHome
+    ? `<img class="site-brand-icon" src="${escapeHtml(iconHref)}" alt="" width="28" height="28" /><span>${escapeHtml(config.siteName)}</span>`
+    : escapeHtml(config.siteName);
+  const faviconLink = config.showSiteHome
+    ? `  <link rel="icon" href="${escapeHtml(faviconHref)}" type="image/png">\n`
+    : "";
   const mermaidScript = hasMermaidRuntime
     ? `  <script src="${escapeHtml(mermaidHref)}" defer data-inimark-mermaid></script>\n`
     : "";
@@ -202,7 +210,7 @@ export function renderNotePage(options: {
   <script>${SITE_THEME_BOOT_JS}</script>
   <title>${escapeHtml(page.title)} · ${escapeHtml(config.siteName)}</title>
   ${config.siteDescription ? `<meta name="description" content="${escapeHtml(config.siteDescription)}">` : ""}
-  <link rel="stylesheet" href="${escapeHtml(cssHref)}">
+${faviconLink}  <link rel="stylesheet" href="${escapeHtml(cssHref)}">
 </head>
 <body class="site-body">
   <div class="site-layout">
@@ -210,7 +218,7 @@ export function renderNotePage(options: {
       <div class="site-sidebar-head">
         ${siteHomeLink}
         <div class="site-sidebar-head-row">
-          <a class="site-brand" href="${escapeHtml(brandHref)}">${escapeHtml(config.siteName)}</a>
+          <a class="site-brand" href="${escapeHtml(brandHref)}">${brandInner}</a>
           <button type="button" class="site-theme-toggle" id="site-theme-toggle" aria-label="Toggle light and dark theme" title="Theme">
             ${sunIcon}${moonIcon}
           </button>

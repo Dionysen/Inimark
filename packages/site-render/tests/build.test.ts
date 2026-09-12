@@ -256,8 +256,11 @@ describe("buildSite", () => {
     expect(zh.content).toContain('class="site-home-link"');
     expect(zh.content).toContain("返回主页");
     expect(zh.content).toMatch(/href="[^"]*index\.html"/);
+    expect(zh.content).toContain('class="site-brand-icon"');
+    expect(zh.content).toMatch(/rel="icon"[^>]*favicon\.png/);
     expect(en.content).toContain(">Home</a>");
     expect(en.content).toMatch(/href="[^"]*en\/index\.html"/);
+    expect(en.content).toContain('class="site-brand-icon"');
   });
 
   it("emits Mermaid sources and ships the runtime for client hydration", async () => {

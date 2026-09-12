@@ -1,4 +1,5 @@
 import { readdir, readFile, stat } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import { join, relative } from "node:path";
 
 import type { ManifestNode, SiteConfig } from "./types.ts";
@@ -83,7 +84,9 @@ async function walkDir(
   outRel: string,
 ): Promise<{ files: string[]; tree: ManifestNode[] }> {
   const entries = await readdir(absDir, { withFileTypes: true });
-  entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  entries.sort((a: Dirent, b: Dirent) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+  );
 
   const files: string[] = [];
   const tree: ManifestNode[] = [];

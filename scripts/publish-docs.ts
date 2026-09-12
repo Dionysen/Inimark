@@ -125,14 +125,14 @@ async function main(): Promise<void> {
     return;
   }
 
-  const { buildSite } = await import("../packages/site-render/src/index.ts");
+  const { buildSite, LANDING_DIR_NAME } = await import(
+    "../packages/site-render/src/index.ts"
+  );
   const { loadVaultFromFs, writeSiteToFs } = await import(
     "../packages/site-render/src/node.ts"
   );
 
   const vault = await loadVaultFromFs(opts.vault);
-  const { existsSync } = await import("node:fs");
-  const { LANDING_DIR_NAME } = await import("../packages/site-render/src/index.ts");
   const showSiteHome = existsSync(join(opts.vault, LANDING_DIR_NAME, "index.html"));
   const config = {
     ...vault.config,

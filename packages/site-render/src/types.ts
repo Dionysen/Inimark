@@ -22,7 +22,9 @@ export interface SiteConfig {
   home?: string;
   /**
    * When true, the sidebar shows a link back to the marketing site root
-   * (`index.html` / `en/index.html`). Enable when a `landing/` overlay is published.
+   * (`index.html` / `en/index.html`), plus brand icon / favicon from the
+   * landing overlay (`icon.png` / `favicon.png`). Enable when a `landing/`
+   * overlay is published.
    */
   showSiteHome?: boolean;
   /**
