@@ -139,6 +139,8 @@ export function hello(name: string): string {
 
 Language `mermaid` goes to diagram rendering → [[Math and Diagrams]].
 
+More languages and highlighting details → [[Code and Syntax Highlighting]].
+
 ## Tables
 
 | Module | Status | Docs |
@@ -200,6 +202,7 @@ A shortcut can insert `[^]`; **full footnote rendering is incomplete** — see [
 
 | Goal | Read |
 | --- | --- |
+| Code highlighting | [[Code and Syntax Highlighting]] |
 | Math / diagrams | [[Math and Diagrams]] |
 | Images | [[Images and Attachments]] |
 | Keys | [[Find Replace and Shortcuts]] |
@@ -208,4 +211,4 @@ A shortcut can insert `[^]`; **full footnote rendering is incomplete** — see [
 
 ---
 
-Prev: [[Editing Modes]] · Next: [[Math and Diagrams]]
+Prev: [[Editing Modes]] · Next: [[Code and Syntax Highlighting]]

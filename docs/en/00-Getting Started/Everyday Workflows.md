@@ -49,7 +49,7 @@ Feature pages tell you *what* Inimark can do. This page shows *how people actual
 
 **Goal:** keep code and diagrams readable while the prose stays Typora-smooth.
 
-1. Fenced code blocks for snippets; language tags for highlighting.
+1. Fenced code blocks for snippets; language tags for highlighting — see [[Code and Syntax Highlighting]].
 2. Architecture / sequence / state → Mermaid in a `mermaid` fence — cookbook in [[Math and Diagrams]].
 3. Equations → `$…$` / `$$…$$` with KaTeX. Prefer source mode when editing long alignments.
 4. Link related RFCs or design docs with wikilinks so Graph shows “this decision depends on…”.

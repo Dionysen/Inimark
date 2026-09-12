@@ -40,7 +40,7 @@ $$
 
 | Pillar | Start here |
 | --- | --- |
-| Editing | [[Editing Modes]] · [[Markdown Syntax]] · [[Images and Attachments]] |
+| Editing | [[Editing Modes]] · [[Markdown Syntax]] · [[Code and Syntax Highlighting]] · [[Images and Attachments]] |
 | Knowledge | [[Libraries and Files]] · [[Wikilinks and Embeds]] · [[Relationship Graph]] |
 | Ship | [[Themes and Appearance]] · [[Publish a Site]] |
 

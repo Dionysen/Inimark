@@ -683,4 +683,4 @@ Publish packs KaTeX assets so formulas survive on the static site. See [[Publish
 
 ---
 
-Prev: [[Markdown Syntax]] · Next: [[Find Replace and Shortcuts]]
+Prev: [[Code and Syntax Highlighting]] · Next: [[Find Replace and Shortcuts]]

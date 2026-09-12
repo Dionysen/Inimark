@@ -25,6 +25,7 @@ translationKey: moc
 
 - [[Editing Modes]] — WYSIWYG / source / typewriter / focus
 - [[Markdown Syntax]] — full format showcase
+- [[Code and Syntax Highlighting]] — inline code · fences · language samples
 - [[Math and Diagrams]] — KaTeX · Mermaid
 - [[Images and Attachments]] — paths, embeds, honest paste status
 - [[Find Replace and Shortcuts]] — search scopes and keybindings
