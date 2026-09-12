@@ -1,0 +1,125 @@
+{
+  "default": "zh",
+  "languages": [
+    {
+      "id": "zh",
+      "label": "中文",
+      "home": "docs/zh/00-由此开始/欢迎.html"
+    },
+    {
+      "id": "en",
+      "label": "English",
+      "home": "docs/en/00-Getting Started/Welcome.html"
+    }
+  ],
+  "translations": {
+    "everyday-workflows": {
+      "en": "docs/en/00-Getting Started/Everyday Workflows.html",
+      "zh": "docs/zh/00-由此开始/日常场景.html"
+    },
+    "install": {
+      "en": "docs/en/00-Getting Started/Install Inimark.html",
+      "zh": "docs/zh/00-由此开始/安装与启动.html"
+    },
+    "interface-tour": {
+      "en": "docs/en/00-Getting Started/Interface Tour.html",
+      "zh": "docs/zh/00-由此开始/界面导览.html"
+    },
+    "migrate": {
+      "en": "docs/en/00-Getting Started/Migrate from Typora and Obsidian.html",
+      "zh": "docs/zh/00-由此开始/从Typora与Obsidian迁移.html"
+    },
+    "welcome": {
+      "en": "docs/en/00-Getting Started/Welcome.html",
+      "zh": "docs/zh/00-由此开始/欢迎.html"
+    },
+    "code-highlighting": {
+      "en": "docs/en/01-Editing and Markdown/Code and Syntax Highlighting.html",
+      "zh": "docs/zh/01-编辑与Markdown/代码与语法高亮.html"
+    },
+    "editing-modes": {
+      "en": "docs/en/01-Editing and Markdown/Editing Modes.html",
+      "zh": "docs/zh/01-编辑与Markdown/编辑模式.html"
+    },
+    "find-replace": {
+      "en": "docs/en/01-Editing and Markdown/Find Replace and Shortcuts.html",
+      "zh": "docs/zh/01-编辑与Markdown/查找替换与快捷键.html"
+    },
+    "images-attachments": {
+      "en": "docs/en/01-Editing and Markdown/Images and Attachments.html",
+      "zh": "docs/zh/01-编辑与Markdown/图片与附件.html"
+    },
+    "markdown-syntax": {
+      "en": "docs/en/01-Editing and Markdown/Markdown Syntax.html",
+      "zh": "docs/zh/01-编辑与Markdown/Markdown语法.html"
+    },
+    "math-diagrams": {
+      "en": "docs/en/01-Editing and Markdown/Math and Diagrams.html",
+      "zh": "docs/zh/01-编辑与Markdown/数学公式与图表.html"
+    },
+    "libraries-files": {
+      "en": "docs/en/02-Vault and Knowledge/Libraries and Files.html",
+      "zh": "docs/zh/02-库与知识网络/库与文件.html"
+    },
+    "relationship-graph": {
+      "en": "docs/en/02-Vault and Knowledge/Relationship Graph.html",
+      "zh": "docs/zh/02-库与知识网络/关系图谱.html"
+    },
+    "search-bookmarks": {
+      "en": "docs/en/02-Vault and Knowledge/Search Bookmarks Outline.html",
+      "zh": "docs/zh/02-库与知识网络/搜索书签与大纲.html"
+    },
+    "wikilinks": {
+      "en": "docs/en/02-Vault and Knowledge/Wikilinks and Embeds.html",
+      "zh": "docs/zh/02-库与知识网络/双链与嵌入.html"
+    },
+    "publish-site": {
+      "en": "docs/en/03-Appearance and Publish/Publish a Site.html",
+      "zh": "docs/zh/03-外观与发布/发布为网站.html"
+    },
+    "settings-overview": {
+      "en": "docs/en/03-Appearance and Publish/Settings Overview.html",
+      "zh": "docs/zh/03-外观与发布/设置总览.html"
+    },
+    "themes": {
+      "en": "docs/en/03-Appearance and Publish/Themes and Appearance.html",
+      "zh": "docs/zh/03-外观与发布/主题与外观.html"
+    },
+    "data-directory": {
+      "en": "docs/en/04-Appendix/Data Directory.html",
+      "zh": "docs/zh/04-附录/数据目录.html"
+    },
+    "faq": {
+      "en": "docs/en/04-Appendix/FAQ and Troubleshooting.html",
+      "zh": "docs/zh/04-附录/常见问题.html"
+    },
+    "feature-comparison": {
+      "en": "docs/en/04-Appendix/Feature Comparison.html",
+      "zh": "docs/zh/04-附录/功能对照表.html"
+    },
+    "roadmap": {
+      "en": "docs/en/04-Appendix/Roadmap.html",
+      "zh": "docs/zh/04-附录/路线图.html"
+    },
+    "callout-chooser-card": {
+      "en": "docs/en/snippets/Callout Chooser Card.html",
+      "zh": "docs/zh/片段/Callout选型卡片.html"
+    },
+    "showcase-card": {
+      "en": "docs/en/snippets/Markdown Showcase Card.html",
+      "zh": "docs/zh/片段/语法速览卡片.html"
+    },
+    "publish-checklist-card": {
+      "en": "docs/en/snippets/Publish Checklist Card.html",
+      "zh": "docs/zh/片段/发布检查清单卡片.html"
+    },
+    "wikilink-three-minutes-card": {
+      "en": "docs/en/snippets/Wikilink Three Minutes Card.html",
+      "zh": "docs/zh/片段/双链三分钟卡片.html"
+    },
+    "moc": {
+      "en": "docs/en/MOC-English Docs.html",
+      "zh": "docs/zh/MOC-中文文档.html"
+    }
+  }
+}

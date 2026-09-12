@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark-modern" data-appearance="dark" data-theme-light="light" data-theme-dark="dark-modern" data-page-lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(() => {
+  try {
+    const root = document.documentElement;
+    const light = root.getAttribute("data-theme-light") || "light";
+    const dark = root.getAttribute("data-theme-dark") || "ocean";
+    const saved = localStorage.getItem("inimark-site-theme");
+    let mode = root.getAttribute("data-appearance") === "dark" ? "dark" : "light";
+    if (saved === "dark" || saved === dark) mode = "dark";
+    else if (saved === "light" || saved === light) mode = "light";
+    else if (saved && /dark/i.test(saved)) mode = "dark";
+    else if (saved) mode = "light";
+    root.setAttribute("data-theme", mode === "dark" ? dark : light);
+    root.dataset.appearance = mode;
+  } catch (_) {}
+})();</script>
+  <title>代码与语法高亮 · Inimark Docs</title>
+  <meta name="description" content="Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。">
+  <link rel="icon" href="../../../favicon.png" type="image/png">
+  <link rel="stylesheet" href="../../../assets/site.css">
+</head>
+<body class="site-body">
+  <div class="site-layout">
+    <aside class="site-sidebar" aria-label="Notes">
+      <div class="site-sidebar-head">
+        <a class="site-home-link" href="../../../index.html">返回主页</a>
+        <div class="site-sidebar-head-row">
+          <a class="site-brand" href="../00-由此开始/欢迎.html"><img class="site-brand-icon" src="../../../icon.png" alt="" width="28" height="28" /><span>Inimark Docs</span></a>
+          <button type="button" class="site-theme-toggle" id="site-theme-toggle" aria-label="Toggle light and dark theme" title="Theme">
+            <svg class="site-theme-icon site-theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><svg class="site-theme-icon site-theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="site-lang" role="navigation" aria-label="Language" data-translation-key="code-highlighting" data-lang="zh"><a class="site-lang-btn is-active" href="代码与语法高亮.html" data-lang="zh" hreflang="zh" aria-current="page">中文</a><a class="site-lang-btn" href="../../en/01-Editing and Markdown/Code and Syntax Highlighting.html" data-lang="en" hreflang="en">English</a></div>
+      </div>
+      <nav class="site-nav"><ul class="site-tree" data-depth="0"><li class="site-tree-dir is-collapsed" data-tree-path="zh/00-由此开始"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">00-由此开始</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../00-由此开始/安装与启动.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">安装与启动</span></a></li><li class="site-tree-file"><a href="../00-由此开始/从Typora与Obsidian迁移.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">从Typora与Obsidian迁移</span></a></li><li class="site-tree-file"><a href="../00-由此开始/欢迎.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">欢迎</span></a></li><li class="site-tree-file"><a href="../00-由此开始/界面导览.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">界面导览</span></a></li><li class="site-tree-file"><a href="../00-由此开始/日常场景.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">日常场景</span></a></li></ul></li><li class="site-tree-dir" data-tree-path="zh/01-编辑与Markdown"><button type="button" class="site-tree-toggle" aria-expanded="true"><span class="site-tree-chevron is-expanded" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">01-编辑与Markdown</span></button><ul class="site-tree" data-depth="1"><li class="site-tree-file"><a href="编辑模式.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">编辑模式</span></a></li><li class="site-tree-file"><a href="查找替换与快捷键.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">查找替换与快捷键</span></a></li><li class="site-tree-file is-active"><a href="代码与语法高亮.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">代码与语法高亮</span></a></li><li class="site-tree-file"><a href="数学公式与图表.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">数学公式与图表</span></a></li><li class="site-tree-file"><a href="图片与附件.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">图片与附件</span></a></li><li class="site-tree-file"><a href="Markdown语法.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">Markdown语法</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/02-库与知识网络"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">02-库与知识网络</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../02-库与知识网络/关系图谱.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">关系图谱</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/库与文件.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">库与文件</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/双链与嵌入.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">双链与嵌入</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/搜索书签与大纲.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">搜索书签与大纲</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/03-外观与发布"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">03-外观与发布</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../03-外观与发布/发布为网站.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">发布为网站</span></a></li><li class="site-tree-file"><a href="../03-外观与发布/设置总览.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">设置总览</span></a></li><li class="site-tree-file"><a href="../03-外观与发布/主题与外观.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">主题与外观</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/04-附录"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">04-附录</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../04-附录/常见问题.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">常见问题</span></a></li><li class="site-tree-file"><a href="../04-附录/功能对照表.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">功能对照表</span></a></li><li class="site-tree-file"><a href="../04-附录/路线图.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">路线图</span></a></li><li class="site-tree-file"><a href="../04-附录/数据目录.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">数据目录</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/片段"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">片段</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../片段/发布检查清单卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">发布检查清单卡片</span></a></li><li class="site-tree-file"><a href="../片段/双链三分钟卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">双链三分钟卡片</span></a></li><li class="site-tree-file"><a href="../片段/语法速览卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">语法速览卡片</span></a></li><li class="site-tree-file"><a href="../片段/Callout选型卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">Callout选型卡片</span></a></li></ul></li><li class="site-tree-file"><a href="../MOC-中文文档.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">中文文档 · 内容地图</span></a></li></ul></nav>
+      <script>(() => {
+  const TREE_KEY = "inimark-site-tree";
+  const root = document.documentElement;
+  const loadTreeState = () => {
+    try {
+      const raw = localStorage.getItem(TREE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  };
+  const saveTreeState = (state) => {
+    try {
+      localStorage.setItem(TREE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  };
+  const setDirOpen = (li, open) => {
+    const btn = li.querySelector(":scope > .site-tree-toggle");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    li.classList.toggle("is-collapsed", !open);
+    btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", open);
+    const nested = li.querySelector(":scope > .site-tree");
+    if (nested) nested.hidden = !open;
+  };
+  try {
+    const state = loadTreeState();
+    let changed = false;
+    document.querySelectorAll(".site-tree-dir").forEach((li) => {
+      const path = li.getAttribute("data-tree-path");
+      const containsActive = Boolean(li.querySelector(".site-tree-file.is-active"));
+      let open = containsActive;
+      if (!containsActive && path && Object.prototype.hasOwnProperty.call(state, path)) {
+        open = Boolean(state[path]);
+      } else if (!containsActive) {
+        const btn = li.querySelector(":scope > .site-tree-toggle");
+        open = btn?.getAttribute("aria-expanded") !== "false";
+      }
+      setDirOpen(li, open);
+      if (path && state[path] !== open) {
+        state[path] = open;
+        changed = true;
+      }
+    });
+    if (changed) saveTreeState(state);
+  } catch (_) {}
+  root.setAttribute("data-tree-ready", "1");
+})();</script>
+    </aside>
+    <main class="site-main">
+      <article class="ProseMirror site-article"><h1 id="代码与语法高亮">代码与语法高亮</h1><p><strong>English:</strong> <a class="wiki-link-widget" href="../../en/01-Editing and Markdown/Code and Syntax Highlighting.html" data-note="Code and Syntax Highlighting">English</a> · <a class="wiki-link-widget" href="Markdown语法.html" data-note="Markdown语法">Markdown语法</a> · <a class="wiki-link-widget" href="数学公式与图表.html" data-note="数学公式与图表">数学公式与图表</a></p><p>技术笔记好不好读，常常取决于代码是否清楚。Inimark 支持 <strong>行内代码</strong>、<strong>围栏代码块</strong>，以及由 CodeMirror 语言包驱动的 <strong>语法高亮</strong>（配色来自 <a class="wiki-link-widget" href="../03-外观与发布/主题与外观.html" data-note="主题与外观">主题与外观</a>）。</p><blockquote class="md-alert md-alert-tip" data-alert="tip" data-alert-source="TIP"><p>在 Inimark 里打开本页，即可直接看到高亮效果。若语言标签不被识别，仍会显示等宽代码块，只是没有着色。<strong>发布站点</strong>也会在构建时用同一套语言包生成高亮（无需浏览器再跑一遍高亮脚本）。</p></blockquote><h2 id="行内代码">行内代码</h2><p>用反引号包住短片段：</p><pre data-lang="markdown"><code class="language-markdown">C++ 里常用 <span class="tok-meta">`</span>std::vector<span class="tok-meta">`</span>，Rust 里常见 <span class="tok-meta">`</span>Path<span class="tok-meta">`</span>。</code></pre><p>渲染效果：C++ 里常用 <code>std::vector</code>，Rust 里常见 <code>Path</code>。</p><p>行内代码快捷键：<code>Ctrl/⌘ + Shift + `</code>（见 <a class="wiki-link-widget" href="查找替换与快捷键.html" data-note="查找替换与快捷键">查找替换与快捷键</a>）。</p><p>适合：API 名、文件名、命令行参数、不宜做成整块的短标记。</p><h2 id="围栏代码块">围栏代码块</h2><h3 id="怎么插入">怎么插入</h3><ol><li><p>快捷键：<code>Alt + Ctrl/⌘ + C</code> 插入代码块。</p></li><li><p>或在 <a class="wiki-link-widget" href="编辑模式.html#源码模式" data-note="编辑模式">源码模式</a> 里手写围栏：</p></li></ol><pre data-lang="markdown"><code class="language-markdown"><span class="tok-meta">```</span>python
+print("hello")
+<span class="tok-meta">```</span></code></pre><ol start="3"><li><p>在起始围栏写上 <strong>语言标签</strong>（<code>python</code>、<code>cpp</code>、<code>rust</code>…），用来选择高亮。</p></li></ol><blockquote class="md-alert md-alert-tip" data-alert="tip" data-alert-source="TIP"><p>从浏览器粘贴容易带上乱七八糟的格式时，用 <strong>纯文本粘贴</strong>（<code>Ctrl/⌘ + Shift + V</code>），缩进更稳。</p></blockquote><h3 id="常用语言标签">常用语言标签</h3><table><tbody><tr><th>语言</th><th>常见标签</th></tr><tr><td>C++</td><td><code>cpp</code>、<code>c++</code></td></tr><tr><td>C</td><td><code>c</code></td></tr><tr><td>Python</td><td><code>python</code>、<code>py</code></td></tr><tr><td>Java</td><td><code>java</code></td></tr><tr><td>Rust</td><td><code>rust</code></td></tr><tr><td>R</td><td><code>r</code></td></tr><tr><td>Swift</td><td><code>swift</code></td></tr><tr><td>TypeScript / JavaScript</td><td><code>ts</code>、<code>typescript</code>、<code>js</code>、<code>javascript</code></td></tr><tr><td>Go</td><td><code>go</code></td></tr><tr><td>SQL</td><td><code>sql</code></td></tr><tr><td>JSON</td><td><code>json</code></td></tr><tr><td>Shell</td><td><code>bash</code>、<code>shell</code>、<code>sh</code></td></tr></tbody></table><p>具体别名以内置 CodeMirror 语言数据为准。标签未知时仍可读，只是没有颜色。</p><p>特殊围栏：<code>mermaid</code> 会渲染成图表，而不是高亮源码 → <a class="wiki-link-widget" href="数学公式与图表.html" data-note="数学公式与图表">数学公式与图表</a>。</p><h2 id="按语言展示">按语言展示</h2><p>下面每段都是可复制的短示例。</p><h3 id="c">C++</h3><pre data-lang="cpp"><code class="language-cpp"><span class="tok-meta">#include</span> <span class="tok-string">&lt;iostream&gt;</span>
+<span class="tok-meta">#include</span> <span class="tok-string">&lt;vector&gt;</span>
+
+<span class="tok-type">int</span> <span class="tok-function">main</span><span class="tok-punctuation">(</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+  <span class="tok-type">std</span>::<span class="tok-type">vector</span><span class="tok-punctuation">&lt;</span><span class="tok-type">int</span><span class="tok-punctuation">&gt;</span> <span class="tok-name">xs</span><span class="tok-punctuation">{</span><span class="tok-literal">1</span><span class="tok-punctuation">,</span> <span class="tok-literal">2</span><span class="tok-punctuation">,</span> <span class="tok-literal">3</span><span class="tok-punctuation">}</span>;
+  <span class="tok-keyword">for</span> <span class="tok-punctuation">(</span><span class="tok-type">int</span> <span class="tok-name">x</span> : <span class="tok-name">xs</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+    <span class="tok-type">std</span>::<span class="tok-name">cout</span> <span class="tok-punctuation">&lt;&lt;</span> <span class="tok-name">x</span> <span class="tok-punctuation">&lt;&lt;</span> <span class="tok-string">'</span>\n<span class="tok-string">'</span>;
+  <span class="tok-punctuation">}</span>
+  <span class="tok-keyword">return</span> <span class="tok-literal">0</span>;
+<span class="tok-punctuation">}</span></code></pre><h3 id="python">Python</h3><pre data-lang="python"><code class="language-python"><span class="tok-keyword">from</span> <span class="tok-name">dataclasses</span> <span class="tok-keyword">import</span> <span class="tok-name">dataclass</span>
+
+<span class="tok-meta">@</span><span class="tok-name">dataclass</span>
+<span class="tok-keyword">class</span> <span class="tok-type">Point</span>:
+    <span class="tok-name">x</span>: <span class="tok-name">float</span>
+    <span class="tok-name">y</span>: <span class="tok-name">float</span>
+
+<span class="tok-keyword">def</span> <span class="tok-function">length</span><span class="tok-punctuation">(</span><span class="tok-name">p</span>: <span class="tok-name">Point</span><span class="tok-punctuation">)</span> -&gt; <span class="tok-name">float</span>:
+    <span class="tok-keyword">return</span> <span class="tok-punctuation">(</span><span class="tok-name">p</span><span class="tok-punctuation">.</span><span class="tok-name">x</span> <span class="tok-punctuation">**</span> <span class="tok-literal">2</span> <span class="tok-punctuation">+</span> <span class="tok-name">p</span><span class="tok-punctuation">.</span><span class="tok-name">y</span> <span class="tok-punctuation">**</span> <span class="tok-literal">2</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">**</span> <span class="tok-literal">0.5</span>
+
+<span class="tok-function">print</span><span class="tok-punctuation">(</span><span class="tok-function">length</span><span class="tok-punctuation">(</span><span class="tok-function">Point</span><span class="tok-punctuation">(</span><span class="tok-literal">3</span><span class="tok-punctuation">,</span> <span class="tok-literal">4</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span></code></pre><h3 id="java">Java</h3><pre data-lang="java"><code class="language-java"><span class="tok-keyword">import</span> <span class="tok-name">java</span><span class="tok-punctuation">.</span><span class="tok-name">util</span><span class="tok-punctuation">.</span><span class="tok-name">List</span><span class="tok-punctuation">;</span>
+
+<span class="tok-keyword">public</span> <span class="tok-keyword">final</span> <span class="tok-keyword">class</span> <span class="tok-name">Greeter</span> <span class="tok-punctuation">{</span>
+  <span class="tok-keyword">public</span> <span class="tok-keyword">static</span> <span class="tok-type">String</span> <span class="tok-name">join</span><span class="tok-punctuation">(</span><span class="tok-type">List</span>&lt;<span class="tok-type">String</span>&gt; <span class="tok-name">parts</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+    <span class="tok-keyword">return</span> <span class="tok-name">String</span><span class="tok-punctuation">.</span><span class="tok-function">join</span><span class="tok-punctuation">(</span><span class="tok-string">" · "</span><span class="tok-punctuation">,</span> <span class="tok-name">parts</span><span class="tok-punctuation">)</span><span class="tok-punctuation">;</span>
+  <span class="tok-punctuation">}</span>
+
+  <span class="tok-keyword">public</span> <span class="tok-keyword">static</span> <span class="tok-keyword">void</span> <span class="tok-name">main</span><span class="tok-punctuation">(</span><span class="tok-type">String</span><span class="tok-punctuation">[</span><span class="tok-punctuation">]</span> <span class="tok-name">args</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+    <span class="tok-name">System</span><span class="tok-punctuation">.</span><span class="tok-name">out</span><span class="tok-punctuation">.</span><span class="tok-function">println</span><span class="tok-punctuation">(</span><span class="tok-function">join</span><span class="tok-punctuation">(</span><span class="tok-name">List</span><span class="tok-punctuation">.</span><span class="tok-function">of</span><span class="tok-punctuation">(</span><span class="tok-string">"Inimark"</span><span class="tok-punctuation">,</span> <span class="tok-string">"Java"</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span><span class="tok-punctuation">;</span>
+  <span class="tok-punctuation">}</span>
+<span class="tok-punctuation">}</span></code></pre><h3 id="rust">Rust</h3><pre data-lang="rust"><code class="language-rust"><span class="tok-keyword">fn</span> <span class="tok-function">factorial</span><span class="tok-punctuation">(</span><span class="tok-name">n</span>: <span class="tok-type">u64</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">-&gt;</span> <span class="tok-type">u64</span> <span class="tok-punctuation">{</span>
+    <span class="tok-punctuation">(</span><span class="tok-literal">1</span>..=<span class="tok-name">n</span><span class="tok-punctuation">)</span>.<span class="tok-function">product</span><span class="tok-punctuation">(</span><span class="tok-punctuation">)</span>
+<span class="tok-punctuation">}</span>
+
+<span class="tok-keyword">fn</span> <span class="tok-function">main</span><span class="tok-punctuation">(</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+    <span class="tok-keyword">let</span> <span class="tok-name">n</span> <span class="tok-punctuation">=</span> <span class="tok-literal">6</span><span class="tok-punctuation">;</span>
+    println!<span class="tok-punctuation">(</span><span class="tok-string">"{n}! = {}"</span><span class="tok-punctuation">,</span> <span class="tok-name">factorial</span><span class="tok-punctuation">(</span><span class="tok-name">n</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span><span class="tok-punctuation">;</span>
+<span class="tok-punctuation">}</span></code></pre><h3 id="r">R</h3><pre data-lang="r"><code class="language-r"><span class="tok-name">mean_sd</span> <span class="tok-punctuation">&lt;-</span> <span class="tok-keyword">function</span>(<span class="tok-name">x</span>) {
+  <span class="tok-name">c</span>(<span class="tok-name">mean</span> <span class="tok-punctuation">=</span> <span class="tok-name">mean</span>(<span class="tok-name">x</span>), <span class="tok-name">sd</span> <span class="tok-punctuation">=</span> <span class="tok-name">sd</span>(<span class="tok-name">x</span>))
+}
+
+<span class="tok-name">xs</span> <span class="tok-punctuation">&lt;-</span> <span class="tok-name">c</span>(<span class="tok-literal">1.2</span>, <span class="tok-literal">3.4</span>, <span class="tok-literal">5.6</span>, <span class="tok-literal">7.8</span>)
+<span class="tok-name">print</span>(<span class="tok-name">mean_sd</span>(<span class="tok-name">xs</span>))</code></pre><h3 id="swift">Swift</h3><pre data-lang="swift"><code class="language-swift"><span class="tok-keyword">struct</span> <span class="tok-name">User</span> <span class="tok-punctuation">{</span>
+  <span class="tok-keyword">let</span> <span class="tok-name">id</span><span class="tok-punctuation">:</span> <span class="tok-type">Int</span>
+  <span class="tok-keyword">var</span> <span class="tok-name">name</span><span class="tok-punctuation">:</span> <span class="tok-type">String</span>
+<span class="tok-punctuation">}</span>
+
+<span class="tok-keyword">func</span> <span class="tok-name">greet</span><span class="tok-punctuation">(</span><span class="tok-literal">_</span> <span class="tok-name">user</span><span class="tok-punctuation">:</span> <span class="tok-name">User</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">-&gt;</span> <span class="tok-type">String</span> <span class="tok-punctuation">{</span>
+  <span class="tok-string">"Hello, \(</span><span class="tok-name">user</span><span class="tok-name">.name</span><span class="tok-string">) (#\(</span><span class="tok-name">user</span><span class="tok-name">.id</span><span class="tok-string">))"</span>
+<span class="tok-punctuation">}</span>
+
+<span class="tok-keyword">let</span> <span class="tok-name">alice</span> <span class="tok-punctuation">=</span> <span class="tok-name">User</span><span class="tok-punctuation">(</span><span class="tok-name">id</span><span class="tok-punctuation">:</span> <span class="tok-literal">1</span><span class="tok-punctuation">,</span> <span class="tok-name">name</span><span class="tok-punctuation">:</span> <span class="tok-string">"Alice"</span><span class="tok-punctuation">)</span>
+<span class="tok-name">print</span><span class="tok-punctuation">(</span><span class="tok-name">greet</span><span class="tok-punctuation">(</span><span class="tok-name">alice</span><span class="tok-punctuation">))</span></code></pre><h3 id="typescript">TypeScript</h3><pre data-lang="ts"><code class="language-ts"><span class="tok-keyword">type</span> <span class="tok-type">Note</span> <span class="tok-punctuation">=</span> <span class="tok-punctuation">{</span> <span class="tok-name">path</span><span class="tok-punctuation">:</span> <span class="tok-type">string</span><span class="tok-punctuation">;</span> <span class="tok-name">title</span><span class="tok-punctuation">:</span> <span class="tok-type">string</span> <span class="tok-punctuation">}</span><span class="tok-punctuation">;</span>
+
+<span class="tok-keyword">export</span> <span class="tok-keyword">function</span> <span class="tok-function">displayTitle</span><span class="tok-punctuation">(</span><span class="tok-name">note</span><span class="tok-punctuation">:</span> <span class="tok-type">Note</span><span class="tok-punctuation">)</span><span class="tok-punctuation">:</span> <span class="tok-type">string</span> <span class="tok-punctuation">{</span>
+  <span class="tok-keyword">return</span> <span class="tok-name">note</span><span class="tok-punctuation">.</span><span class="tok-name">title</span><span class="tok-punctuation">.</span><span class="tok-function">trim</span><span class="tok-punctuation">(</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">||</span> <span class="tok-name">note</span><span class="tok-punctuation">.</span><span class="tok-name">path</span><span class="tok-punctuation">;</span>
+<span class="tok-punctuation">}</span></code></pre><h3 id="go">Go</h3><pre data-lang="go"><code class="language-go"><span class="tok-keyword">package</span> <span class="tok-name">main</span>
+
+<span class="tok-keyword">import</span> <span class="tok-string">"fmt"</span>
+
+<span class="tok-keyword">func</span> <span class="tok-function">sum</span><span class="tok-punctuation">(</span><span class="tok-name">xs</span> <span class="tok-punctuation">[</span><span class="tok-punctuation">]</span><span class="tok-type">int</span><span class="tok-punctuation">)</span> <span class="tok-type">int</span> <span class="tok-punctuation">{</span>
+  <span class="tok-name">total</span> <span class="tok-punctuation">:=</span> <span class="tok-literal">0</span>
+  <span class="tok-keyword">for</span> <span class="tok-name">_</span><span class="tok-punctuation">,</span> <span class="tok-name">x</span> <span class="tok-punctuation">:=</span> <span class="tok-keyword">range</span> <span class="tok-name">xs</span> <span class="tok-punctuation">{</span>
+    <span class="tok-name">total</span> <span class="tok-punctuation">+=</span> <span class="tok-name">x</span>
+  <span class="tok-punctuation">}</span>
+  <span class="tok-keyword">return</span> <span class="tok-name">total</span>
+<span class="tok-punctuation">}</span>
+
+<span class="tok-keyword">func</span> <span class="tok-function">main</span><span class="tok-punctuation">(</span><span class="tok-punctuation">)</span> <span class="tok-punctuation">{</span>
+  <span class="tok-name">fmt</span><span class="tok-punctuation">.</span><span class="tok-name">Println</span><span class="tok-punctuation">(</span><span class="tok-function">sum</span><span class="tok-punctuation">(</span><span class="tok-punctuation">[</span><span class="tok-punctuation">]</span><span class="tok-type">int</span><span class="tok-punctuation">{</span><span class="tok-literal">1</span><span class="tok-punctuation">,</span> <span class="tok-literal">2</span><span class="tok-punctuation">,</span> <span class="tok-literal">3</span><span class="tok-punctuation">}</span><span class="tok-punctuation">)</span><span class="tok-punctuation">)</span>
+<span class="tok-punctuation">}</span></code></pre><h3 id="sql">SQL</h3><pre data-lang="sql"><code class="language-sql"><span class="tok-keyword">SELECT</span> title<span class="tok-punctuation">,</span> updated_at
+<span class="tok-keyword">FROM</span> notes
+<span class="tok-keyword">WHERE</span> library_id <span class="tok-punctuation">=</span> $<span class="tok-literal">1</span>
+<span class="tok-keyword">ORDER</span> <span class="tok-keyword">BY</span> updated_at <span class="tok-keyword">DESC</span>
+<span class="tok-keyword">LIMIT</span> <span class="tok-literal">20</span>;</code></pre><h3 id="json">JSON</h3><pre data-lang="json"><code class="language-json"><span class="tok-punctuation">{</span>
+  <span class="tok-name">"siteName"</span><span class="tok-punctuation">:</span> <span class="tok-string">"Inimark Docs"</span><span class="tok-punctuation">,</span>
+  <span class="tok-name">"defaultTheme"</span><span class="tok-punctuation">:</span> <span class="tok-string">"light"</span><span class="tok-punctuation">,</span>
+  <span class="tok-name">"out"</span><span class="tok-punctuation">:</span> <span class="tok-string">"dist"</span>
+<span class="tok-punctuation">}</span></code></pre><h3 id="shell">Shell</h3><pre data-lang="bash"><code class="language-bash">pnpm docs:build
+pnpm test:editor</code></pre><h2 id="编辑习惯">编辑习惯</h2><table><tbody><tr><th>目标</th><th>做法</th></tr><tr><td>快速插入</td><td><code>Alt + Ctrl/⌘ + C</code></td></tr><tr><td>改语言标签</td><td>在所见即所得里点语言框，或到源码模式改</td></tr><tr><td>大段整理</td><td>[[编辑模式#源码模式</td></tr><tr><td>粘贴保持干净</td><td>纯文本粘贴</td></tr><tr><td>换配色</td><td><a class="wiki-link-widget" href="../03-外观与发布/主题与外观.html" data-note="主题与外观">主题与外观</a> 的代码主题（含 Cursor / Rider 明暗）</td></tr></tbody></table><h2 id="相关">相关</h2><ul><li><p>语法总览：<a class="wiki-link-widget" href="Markdown语法.html" data-note="Markdown语法">Markdown语法</a></p></li><li><p>图表示例：<a class="wiki-link-widget" href="数学公式与图表.html" data-note="数学公式与图表">数学公式与图表</a></p></li><li><p>技术笔记场景：<a class="wiki-link-widget" href="../00-由此开始/日常场景.html#技术笔记代码图表api" data-note="日常场景">日常场景 › 技术笔记（代码、图表、API）</a></p></li></ul><hr><p>上一篇：<a class="wiki-link-widget" href="Markdown语法.html" data-note="Markdown语法">Markdown语法</a> · 下一篇：<a class="wiki-link-widget" href="数学公式与图表.html" data-note="数学公式与图表">数学公式与图表</a></p></article>
+      <section class="site-links-footer" aria-label="Links">
+      <h2 class="site-links-footer-title">Links</h2>
+      <div class="site-links-footer-grid">
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Outgoing <span class="site-links-count">7</span></div>
+          <ul class="site-links-list"><li class="site-links-item"><a href="../../en/01-Editing and Markdown/Code and Syntax Highlighting.html">Code and Syntax Highlighting</a></li><li class="site-links-item"><a href="Markdown语法.html">Markdown语法</a></li><li class="site-links-item"><a href="数学公式与图表.html">数学公式与图表</a></li><li class="site-links-item"><a href="../03-外观与发布/主题与外观.html">主题与外观</a></li><li class="site-links-item"><a href="查找替换与快捷键.html">查找替换与快捷键</a></li><li class="site-links-item"><a href="编辑模式.html">编辑模式</a></li><li class="site-links-item"><a href="../00-由此开始/日常场景.html">日常场景</a></li></ul>
+        </div>
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Backlinks <span class="site-links-count">6</span></div>
+          <ul class="site-links-list"><li class="site-links-item"><a href="../../en/01-Editing and Markdown/Code and Syntax Highlighting.html">Code and Syntax Highlighting</a></li><li class="site-links-item"><a href="../00-由此开始/日常场景.html">日常场景</a></li><li class="site-links-item"><a href="数学公式与图表.html">数学公式与图表</a></li><li class="site-links-item"><a href="Markdown语法.html">Markdown语法</a></li><li class="site-links-item"><a href="../03-外观与发布/主题与外观.html">主题与外观</a></li><li class="site-links-item"><a href="../MOC-中文文档.html">中文文档 · 内容地图</a></li></ul>
+        </div>
+      </div>
+    </section>
+    </main>
+    <aside class="site-rail" aria-label="Page tools">
+      <section class="site-graph" aria-label="Graph">
+      <div class="site-graph-head">
+        <div class="site-rail-title">Graph</div>
+        <div class="site-graph-actions">
+          <button type="button" class="site-graph-btn" data-graph-mode="local" title="Local graph" aria-label="Open local graph"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="5" cy="7" r="2" fill="currentColor" opacity=".85"/><circle cx="19" cy="8" r="2" fill="currentColor" opacity=".85"/><circle cx="7" cy="18" r="2" fill="currentColor" opacity=".85"/><circle cx="18" cy="17" r="2" fill="currentColor" opacity=".85"/><path d="M9.2 9.2L10.8 10.8M14.8 10.2L16.8 9M9.6 14.8L8.2 16.4M14.2 14.2L16.2 15.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+          <button type="button" class="site-graph-btn" data-graph-mode="global" title="Global graph" aria-label="Open global graph"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.4 2.6 3.6 5.4 3.6 8.5s-1.2 5.9-3.6 8.5c-2.4-2.6-3.6-5.4-3.6-8.5S9.6 6.1 12 3.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+        </div>
+      </div>
+      <div class="site-graph-host" data-graph-preview data-page-html="docs/zh/01-编辑与Markdown/代码与语法高亮.html" data-global-graph="../../../assets/graph.json">
+        <canvas class="site-graph-canvas" width="320" height="280" aria-label="Local relationship graph"></canvas>
+        <script type="application/json" class="site-graph-data">{"centerId":"zh/01-编辑与Markdown/代码与语法高亮.md","nodes":[{"id":"zh/01-编辑与Markdown/代码与语法高亮.md","label":"代码与语法高亮","href":"","center":true},{"id":"en/01-Editing and Markdown/Code and Syntax Highlighting.md","label":"Code and Syntax Highlighting","href":"../../en/01-Editing and Markdown/Code and Syntax Highlighting.html","center":false},{"id":"zh/00-由此开始/日常场景.md","label":"日常场景","href":"../00-由此开始/日常场景.html","center":false},{"id":"zh/01-编辑与Markdown/Markdown语法.md","label":"Markdown语法","href":"Markdown语法.html","center":false},{"id":"zh/01-编辑与Markdown/数学公式与图表.md","label":"数学公式与图表","href":"数学公式与图表.html","center":false},{"id":"zh/03-外观与发布/主题与外观.md","label":"主题与外观","href":"../03-外观与发布/主题与外观.html","center":false},{"id":"zh/01-编辑与Markdown/查找替换与快捷键.md","label":"查找替换与快捷键","href":"查找替换与快捷键.html","center":false},{"id":"zh/01-编辑与Markdown/编辑模式.md","label":"编辑模式","href":"编辑模式.html","center":false},{"id":"zh/MOC-中文文档.md","label":"中文文档 · 内容地图","href":"../MOC-中文文档.html","center":false}],"edges":[{"source":"en/01-Editing and Markdown/Code and Syntax Highlighting.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/00-由此开始/日常场景.md","target":"zh/MOC-中文文档.md"},{"source":"zh/00-由此开始/日常场景.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/00-由此开始/日常场景.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/00-由此开始/日常场景.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/00-由此开始/日常场景.md","target":"zh/01-编辑与Markdown/数学公式与图表.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/MOC-中文文档.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/03-外观与发布/主题与外观.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/01-编辑与Markdown/数学公式与图表.md"},{"source":"zh/01-编辑与Markdown/编辑模式.md","target":"zh/00-由此开始/日常场景.md"},{"source":"zh/01-编辑与Markdown/查找替换与快捷键.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/01-编辑与Markdown/查找替换与快捷键.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"en/01-Editing and Markdown/Code and Syntax Highlighting.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/01-编辑与Markdown/数学公式与图表.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/03-外观与发布/主题与外观.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/01-编辑与Markdown/代码与语法高亮.md","target":"zh/00-由此开始/日常场景.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/MOC-中文文档.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/03-外观与发布/主题与外观.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/01-编辑与Markdown/数学公式与图表.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/01-编辑与Markdown/数学公式与图表.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/03-外观与发布/主题与外观.md"},{"source":"zh/03-外观与发布/主题与外观.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/03-外观与发布/主题与外观.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/03-外观与发布/主题与外观.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/MOC-中文文档.md","target":"zh/00-由此开始/日常场景.md"},{"source":"zh/MOC-中文文档.md","target":"zh/01-编辑与Markdown/编辑模式.md"},{"source":"zh/MOC-中文文档.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/MOC-中文文档.md","target":"zh/01-编辑与Markdown/代码与语法高亮.md"},{"source":"zh/MOC-中文文档.md","target":"zh/01-编辑与Markdown/数学公式与图表.md"},{"source":"zh/MOC-中文文档.md","target":"zh/01-编辑与Markdown/查找替换与快捷键.md"},{"source":"zh/MOC-中文文档.md","target":"zh/03-外观与发布/主题与外观.md"}]}</script>
+      </div>
+    </section>
+      <section class="site-outline" aria-label="Outline">
+        <div class="site-rail-title">Outline</div>
+        <ul class="site-outline-list"><li class="site-outline-item level-1"><a href="#代码与语法高亮">代码与语法高亮</a></li><li class="site-outline-item level-2"><a href="#行内代码">行内代码</a></li><li class="site-outline-item level-2"><a href="#围栏代码块">围栏代码块</a></li><li class="site-outline-item level-3"><a href="#怎么插入">怎么插入</a></li><li class="site-outline-item level-3"><a href="#常用语言标签">常用语言标签</a></li><li class="site-outline-item level-2"><a href="#按语言展示">按语言展示</a></li><li class="site-outline-item level-3"><a href="#c">C++</a></li><li class="site-outline-item level-3"><a href="#python">Python</a></li><li class="site-outline-item level-3"><a href="#java">Java</a></li><li class="site-outline-item level-3"><a href="#rust">Rust</a></li><li class="site-outline-item level-3"><a href="#r">R</a></li><li class="site-outline-item level-3"><a href="#swift">Swift</a></li><li class="site-outline-item level-3"><a href="#typescript">TypeScript</a></li><li class="site-outline-item level-3"><a href="#go">Go</a></li><li class="site-outline-item level-3"><a href="#sql">SQL</a></li><li class="site-outline-item level-3"><a href="#json">JSON</a></li><li class="site-outline-item level-3"><a href="#shell">Shell</a></li><li class="site-outline-item level-2"><a href="#编辑习惯">编辑习惯</a></li><li class="site-outline-item level-2"><a href="#相关">相关</a></li></ul>
+      </section>
+    </aside>
+  </div>
+  <script src="../../../assets/mermaid.min.js" defer data-inimark-mermaid></script>
+  <script src="../../../assets/site.js" defer></script>
+</body>
+</html>

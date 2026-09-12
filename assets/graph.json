@@ -1,0 +1,2288 @@
+{
+  "nodes": [
+    {
+      "id": "en/00-Getting Started/Everyday Workflows.md",
+      "label": "Everyday Workflows",
+      "htmlPath": "docs/en/00-Getting Started/Everyday Workflows.html"
+    },
+    {
+      "id": "en/00-Getting Started/Install Inimark.md",
+      "label": "Install Inimark",
+      "htmlPath": "docs/en/00-Getting Started/Install Inimark.html"
+    },
+    {
+      "id": "en/00-Getting Started/Interface Tour.md",
+      "label": "Interface Tour",
+      "htmlPath": "docs/en/00-Getting Started/Interface Tour.html"
+    },
+    {
+      "id": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "label": "Migrate from Typora and Obsidian",
+      "htmlPath": "docs/en/00-Getting Started/Migrate from Typora and Obsidian.html"
+    },
+    {
+      "id": "en/00-Getting Started/Welcome.md",
+      "label": "Welcome",
+      "htmlPath": "docs/en/00-Getting Started/Welcome.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "label": "Code and Syntax Highlighting",
+      "htmlPath": "docs/en/01-Editing and Markdown/Code and Syntax Highlighting.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Editing Modes.md",
+      "label": "Editing Modes",
+      "htmlPath": "docs/en/01-Editing and Markdown/Editing Modes.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "label": "Find Replace and Shortcuts",
+      "htmlPath": "docs/en/01-Editing and Markdown/Find Replace and Shortcuts.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Images and Attachments.md",
+      "label": "Images and Attachments",
+      "htmlPath": "docs/en/01-Editing and Markdown/Images and Attachments.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "label": "Markdown Syntax",
+      "htmlPath": "docs/en/01-Editing and Markdown/Markdown Syntax.html"
+    },
+    {
+      "id": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "label": "Math and Diagrams",
+      "htmlPath": "docs/en/01-Editing and Markdown/Math and Diagrams.html"
+    },
+    {
+      "id": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "label": "Libraries and Files",
+      "htmlPath": "docs/en/02-Vault and Knowledge/Libraries and Files.html"
+    },
+    {
+      "id": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "label": "Relationship Graph",
+      "htmlPath": "docs/en/02-Vault and Knowledge/Relationship Graph.html"
+    },
+    {
+      "id": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "label": "Search Bookmarks Outline",
+      "htmlPath": "docs/en/02-Vault and Knowledge/Search Bookmarks Outline.html"
+    },
+    {
+      "id": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "label": "Wikilinks and Embeds",
+      "htmlPath": "docs/en/02-Vault and Knowledge/Wikilinks and Embeds.html"
+    },
+    {
+      "id": "en/03-Appearance and Publish/Publish a Site.md",
+      "label": "Publish a Site",
+      "htmlPath": "docs/en/03-Appearance and Publish/Publish a Site.html"
+    },
+    {
+      "id": "en/03-Appearance and Publish/Settings Overview.md",
+      "label": "Settings Overview",
+      "htmlPath": "docs/en/03-Appearance and Publish/Settings Overview.html"
+    },
+    {
+      "id": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "label": "Themes and Appearance",
+      "htmlPath": "docs/en/03-Appearance and Publish/Themes and Appearance.html"
+    },
+    {
+      "id": "en/04-Appendix/Data Directory.md",
+      "label": "Data Directory",
+      "htmlPath": "docs/en/04-Appendix/Data Directory.html"
+    },
+    {
+      "id": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "label": "FAQ and Troubleshooting",
+      "htmlPath": "docs/en/04-Appendix/FAQ and Troubleshooting.html"
+    },
+    {
+      "id": "en/04-Appendix/Feature Comparison.md",
+      "label": "Feature Comparison",
+      "htmlPath": "docs/en/04-Appendix/Feature Comparison.html"
+    },
+    {
+      "id": "en/04-Appendix/Roadmap.md",
+      "label": "Roadmap",
+      "htmlPath": "docs/en/04-Appendix/Roadmap.html"
+    },
+    {
+      "id": "en/snippets/Callout Chooser Card.md",
+      "label": "Callout Chooser Card",
+      "htmlPath": "docs/en/snippets/Callout Chooser Card.html"
+    },
+    {
+      "id": "en/snippets/Markdown Showcase Card.md",
+      "label": "Markdown Showcase Card",
+      "htmlPath": "docs/en/snippets/Markdown Showcase Card.html"
+    },
+    {
+      "id": "en/snippets/Publish Checklist Card.md",
+      "label": "Publish Checklist Card",
+      "htmlPath": "docs/en/snippets/Publish Checklist Card.html"
+    },
+    {
+      "id": "en/snippets/Wikilink Three Minutes Card.md",
+      "label": "Wikilink Three Minutes Card",
+      "htmlPath": "docs/en/snippets/Wikilink Three Minutes Card.html"
+    },
+    {
+      "id": "en/MOC-English Docs.md",
+      "label": "English Docs · Map of Content",
+      "htmlPath": "docs/en/MOC-English Docs.html"
+    },
+    {
+      "id": "zh/00-由此开始/安装与启动.md",
+      "label": "安装与启动",
+      "htmlPath": "docs/zh/00-由此开始/安装与启动.html"
+    },
+    {
+      "id": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "label": "从Typora与Obsidian迁移",
+      "htmlPath": "docs/zh/00-由此开始/从Typora与Obsidian迁移.html"
+    },
+    {
+      "id": "zh/00-由此开始/欢迎.md",
+      "label": "欢迎",
+      "htmlPath": "docs/zh/00-由此开始/欢迎.html"
+    },
+    {
+      "id": "zh/00-由此开始/界面导览.md",
+      "label": "界面导览",
+      "htmlPath": "docs/zh/00-由此开始/界面导览.html"
+    },
+    {
+      "id": "zh/00-由此开始/日常场景.md",
+      "label": "日常场景",
+      "htmlPath": "docs/zh/00-由此开始/日常场景.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/编辑模式.md",
+      "label": "编辑模式",
+      "htmlPath": "docs/zh/01-编辑与Markdown/编辑模式.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "label": "查找替换与快捷键",
+      "htmlPath": "docs/zh/01-编辑与Markdown/查找替换与快捷键.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "label": "代码与语法高亮",
+      "htmlPath": "docs/zh/01-编辑与Markdown/代码与语法高亮.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "label": "数学公式与图表",
+      "htmlPath": "docs/zh/01-编辑与Markdown/数学公式与图表.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/图片与附件.md",
+      "label": "图片与附件",
+      "htmlPath": "docs/zh/01-编辑与Markdown/图片与附件.html"
+    },
+    {
+      "id": "zh/01-编辑与Markdown/Markdown语法.md",
+      "label": "Markdown语法",
+      "htmlPath": "docs/zh/01-编辑与Markdown/Markdown语法.html"
+    },
+    {
+      "id": "zh/02-库与知识网络/关系图谱.md",
+      "label": "关系图谱",
+      "htmlPath": "docs/zh/02-库与知识网络/关系图谱.html"
+    },
+    {
+      "id": "zh/02-库与知识网络/库与文件.md",
+      "label": "库与文件",
+      "htmlPath": "docs/zh/02-库与知识网络/库与文件.html"
+    },
+    {
+      "id": "zh/02-库与知识网络/双链与嵌入.md",
+      "label": "双链与嵌入",
+      "htmlPath": "docs/zh/02-库与知识网络/双链与嵌入.html"
+    },
+    {
+      "id": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "label": "搜索书签与大纲",
+      "htmlPath": "docs/zh/02-库与知识网络/搜索书签与大纲.html"
+    },
+    {
+      "id": "zh/03-外观与发布/发布为网站.md",
+      "label": "发布为网站",
+      "htmlPath": "docs/zh/03-外观与发布/发布为网站.html"
+    },
+    {
+      "id": "zh/03-外观与发布/设置总览.md",
+      "label": "设置总览",
+      "htmlPath": "docs/zh/03-外观与发布/设置总览.html"
+    },
+    {
+      "id": "zh/03-外观与发布/主题与外观.md",
+      "label": "主题与外观",
+      "htmlPath": "docs/zh/03-外观与发布/主题与外观.html"
+    },
+    {
+      "id": "zh/04-附录/常见问题.md",
+      "label": "常见问题",
+      "htmlPath": "docs/zh/04-附录/常见问题.html"
+    },
+    {
+      "id": "zh/04-附录/功能对照表.md",
+      "label": "功能对照表",
+      "htmlPath": "docs/zh/04-附录/功能对照表.html"
+    },
+    {
+      "id": "zh/04-附录/路线图.md",
+      "label": "路线图",
+      "htmlPath": "docs/zh/04-附录/路线图.html"
+    },
+    {
+      "id": "zh/04-附录/数据目录.md",
+      "label": "数据目录",
+      "htmlPath": "docs/zh/04-附录/数据目录.html"
+    },
+    {
+      "id": "zh/片段/发布检查清单卡片.md",
+      "label": "发布检查清单卡片",
+      "htmlPath": "docs/zh/片段/发布检查清单卡片.html"
+    },
+    {
+      "id": "zh/片段/双链三分钟卡片.md",
+      "label": "双链三分钟卡片",
+      "htmlPath": "docs/zh/片段/双链三分钟卡片.html"
+    },
+    {
+      "id": "zh/片段/语法速览卡片.md",
+      "label": "语法速览卡片",
+      "htmlPath": "docs/zh/片段/语法速览卡片.html"
+    },
+    {
+      "id": "zh/片段/Callout选型卡片.md",
+      "label": "Callout选型卡片",
+      "htmlPath": "docs/zh/片段/Callout选型卡片.html"
+    },
+    {
+      "id": "zh/MOC-中文文档.md",
+      "label": "中文文档 · 内容地图",
+      "htmlPath": "docs/zh/MOC-中文文档.html"
+    }
+  ],
+  "edges": [
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/snippets/Publish Checklist Card.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/00-Getting Started/Migrate from Typora and Obsidian.md"
+    },
+    {
+      "source": "en/00-Getting Started/Everyday Workflows.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/00-Getting Started/Install Inimark.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "en/00-Getting Started/Interface Tour.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "zh/00-由此开始/从Typora与Obsidian迁移.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/00-Getting Started/Migrate from Typora and Obsidian.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/00-Getting Started/Migrate from Typora and Obsidian.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/snippets/Markdown Showcase Card.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/snippets/Wikilink Three Minutes Card.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/00-Getting Started/Welcome.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Code and Syntax Highlighting.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Editing Modes.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Find Replace and Shortcuts.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Images and Attachments.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/snippets/Markdown Showcase Card.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/snippets/Callout Chooser Card.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Markdown Syntax.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/01-Editing and Markdown/Math and Diagrams.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Libraries and Files.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Relationship Graph.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Search Bookmarks Outline.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/snippets/Wikilink Three Minutes Card.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/snippets/Markdown Showcase Card.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/02-Vault and Knowledge/Wikilinks and Embeds.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/snippets/Publish Checklist Card.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Publish a Site.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Settings Overview.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/03-Appearance and Publish/Themes and Appearance.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/04-Appendix/Data Directory.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "en/04-Appendix/Data Directory.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/04-Appendix/Data Directory.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/04-Appendix/Data Directory.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/04-Appendix/Data Directory.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/04-Appendix/FAQ and Troubleshooting.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/00-Getting Started/Migrate from Typora and Obsidian.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/04-Appendix/Feature Comparison.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/04-Appendix/Roadmap.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/snippets/Callout Chooser Card.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/snippets/Markdown Showcase Card.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/snippets/Publish Checklist Card.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/snippets/Wikilink Three Minutes Card.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/snippets/Wikilink Three Minutes Card.md",
+      "target": "en/snippets/Markdown Showcase Card.md"
+    },
+    {
+      "source": "en/snippets/Wikilink Three Minutes Card.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/00-Getting Started/Migrate from Typora and Obsidian.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "en/MOC-English Docs.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "en/00-Getting Started/Install Inimark.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/00-由此开始/安装与启动.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "en/00-Getting Started/Migrate from Typora and Obsidian.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/00-由此开始/从Typora与Obsidian迁移.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/00-由此开始/从Typora与Obsidian迁移.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/片段/语法速览卡片.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/片段/双链三分钟卡片.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/00-由此开始/欢迎.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "en/00-Getting Started/Interface Tour.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "zh/00-由此开始/界面导览.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "en/00-Getting Started/Everyday Workflows.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/片段/发布检查清单卡片.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/00-由此开始/从Typora与Obsidian迁移.md"
+    },
+    {
+      "source": "zh/00-由此开始/日常场景.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "en/01-Editing and Markdown/Editing Modes.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/编辑模式.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "en/01-Editing and Markdown/Find Replace and Shortcuts.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/查找替换与快捷键.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "en/01-Editing and Markdown/Code and Syntax Highlighting.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/代码与语法高亮.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "en/01-Editing and Markdown/Math and Diagrams.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/数学公式与图表.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "en/01-Editing and Markdown/Images and Attachments.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/图片与附件.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "en/01-Editing and Markdown/Markdown Syntax.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/片段/语法速览卡片.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/片段/Callout选型卡片.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/01-编辑与Markdown/Markdown语法.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "en/02-Vault and Knowledge/Relationship Graph.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/关系图谱.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "en/02-Vault and Knowledge/Libraries and Files.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/库与文件.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "en/02-Vault and Knowledge/Wikilinks and Embeds.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/片段/双链三分钟卡片.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/片段/语法速览卡片.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/双链与嵌入.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "en/02-Vault and Knowledge/Search Bookmarks Outline.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/02-库与知识网络/搜索书签与大纲.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "en/03-Appearance and Publish/Publish a Site.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/片段/发布检查清单卡片.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "en/00-Getting Started/Welcome.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/03-外观与发布/发布为网站.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "en/03-Appearance and Publish/Settings Overview.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/03-外观与发布/设置总览.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "en/03-Appearance and Publish/Themes and Appearance.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/03-外观与发布/主题与外观.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "en/04-Appendix/FAQ and Troubleshooting.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/04-附录/常见问题.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "en/04-Appendix/Feature Comparison.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/04-附录/路线图.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/00-由此开始/从Typora与Obsidian迁移.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/04-附录/功能对照表.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "en/04-Appendix/Roadmap.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/MOC-中文文档.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/04-附录/路线图.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/04-附录/数据目录.md",
+      "target": "en/04-Appendix/Data Directory.md"
+    },
+    {
+      "source": "zh/04-附录/数据目录.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/04-附录/数据目录.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/04-附录/数据目录.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/04-附录/数据目录.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/片段/发布检查清单卡片.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/片段/双链三分钟卡片.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/片段/双链三分钟卡片.md",
+      "target": "zh/片段/语法速览卡片.md"
+    },
+    {
+      "source": "zh/片段/双链三分钟卡片.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/片段/语法速览卡片.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/片段/Callout选型卡片.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "en/MOC-English Docs.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/00-由此开始/欢迎.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/00-由此开始/安装与启动.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/00-由此开始/界面导览.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/00-由此开始/日常场景.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/00-由此开始/从Typora与Obsidian迁移.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/编辑模式.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/Markdown语法.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/代码与语法高亮.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/数学公式与图表.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/图片与附件.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/01-编辑与Markdown/查找替换与快捷键.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/02-库与知识网络/库与文件.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/02-库与知识网络/双链与嵌入.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/02-库与知识网络/搜索书签与大纲.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/02-库与知识网络/关系图谱.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/03-外观与发布/主题与外观.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/03-外观与发布/发布为网站.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/03-外观与发布/设置总览.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/04-附录/功能对照表.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/04-附录/常见问题.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/04-附录/数据目录.md"
+    },
+    {
+      "source": "zh/MOC-中文文档.md",
+      "target": "zh/04-附录/路线图.md"
+    }
+  ]
+}

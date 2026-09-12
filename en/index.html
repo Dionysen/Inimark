@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inimark — Where Writing Never Ends</title>
+  <meta name="description" content="Inimark — Write without end, think without bounds. A small, beautiful desktop Markdown editor.">
+  <base href="./">
+  <link rel="icon" href="../favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a;
+      --ink-soft: #2a2a2a;
+      --plate-top: #f4f4f4;
+      --plate: #e8e8e8;
+      --bg: #fafafa;
+      --bg-alt: #f0f0f0;
+      --surface: #ffffff;
+      --border: #e0e0e0;
+      --border-strong: #c8c8c8;
+      --text: #0a0a0a;
+      --text-muted: #5c5c5c;
+      --text-faint: #8a8a8a;
+      --text-on-ink: #f5f5f5;
+      --radius-sm: 8px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.08);
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --nav-h: 64px;
+      --max: 1120px;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html[data-site-theme="dark"] {
+      --ink: #0a0a0a;
+      --ink-soft: #262626;
+      --plate-top: #1c1c1c;
+      --plate: #262626;
+      --bg: #0a0a0a;
+      --bg-alt: #111111;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --border-strong: #3d3d3d;
+      --text: #f0f0f0;
+      --text-muted: #a3a3a3;
+      --text-faint: #737373;
+      --text-on-ink: #f5f5f5;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    html[data-site-theme="dark"] .hero-badge .dot,
+    html[data-site-theme="dark"] .feature-list li::before {
+      background: var(--text-muted);
+    }
+
+    html[data-site-theme="dark"] .section-link:hover,
+    html[data-site-theme="dark"] .btn-secondary:hover {
+      border-color: var(--text-muted);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; height: auto; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all .2s var(--ease);
+    }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { background: var(--ink); color: var(--text-on-ink); }
+    .btn-primary:hover {
+      background: var(--ink-soft);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-secondary:hover {
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      padding: calc(var(--nav-h) + 56px) 24px 48px;
+      background: linear-gradient(180deg, var(--plate-top) 0%, var(--plate) 100%);
+    }
+    .hero-inner { max-width: var(--max); margin: 0 auto; text-align: center; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      margin-bottom: 22px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hero-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--ink);
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.12;
+      margin-bottom: 16px;
+    }
+    .hero-subtitle {
+      max-width: 640px;
+      margin: 0 auto 28px;
+      font-size: 1.12rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--text-faint);
+      margin-bottom: 40px;
+    }
+    .hero-shot {
+      max-width: var(--max);
+      margin: 0 auto;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-md);
+      background: var(--surface);
+    }
+    .hero-shot img { width: 100%; }
+
+    .section { padding: 88px 24px; }
+    .section-alt { background: var(--bg-alt); }
+    .section-inner { max-width: var(--max); margin: 0 auto; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 12px;
+    }
+    .section h2 {
+      font-size: clamp(1.7rem, 3.5vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .section-desc {
+      max-width: 560px;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+    .feature-list { display: grid; gap: 10px; margin-bottom: 20px; }
+    .feature-list li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .feature-list li::before {
+      content: "";
+      flex: 0 0 6px;
+      height: 6px;
+      margin-top: 8px;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+    .section-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 1px solid var(--border-strong);
+      padding-bottom: 2px;
+    }
+    .section-link:hover { border-color: var(--ink); }
+    .section-link svg { width: 16px; height: 16px; }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .split.reverse { grid-template-columns: 1.15fr 1fr; }
+    .split.reverse .split-text { order: 2; }
+    .split.reverse .split-media { order: 1; }
+    .media-frame {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      background: var(--surface);
+    }
+    .media-frame img { width: 100%; }
+
+    .extras {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .extra-chip {
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .cta {
+      padding: 96px 24px;
+      background: var(--ink);
+      color: var(--text-on-ink);
+      text-align: center;
+    }
+    .cta h2 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .cta p {
+      color: rgba(245, 245, 245, 0.7);
+      max-width: 480px;
+      margin: 0 auto 28px;
+    }
+    .cta .btn-primary { background: var(--surface); color: var(--text); }
+    .cta .btn-primary:hover { background: var(--plate); }
+    .cta .btn-secondary {
+      background: transparent;
+      color: var(--text-on-ink);
+      border-color: rgba(245, 245, 245, 0.28);
+    }
+    .cta .btn-secondary:hover { border-color: var(--text-on-ink); }
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .cta-meta { font-size: 0.85rem; color: rgba(245, 245, 245, 0.5); }
+
+    .footer {
+      background: var(--ink);
+      color: rgba(245, 245, 245, 0.72);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 56px 24px 28px;
+    }
+    .footer-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 32px;
+    }
+    .footer-brand { display: flex; flex-direction: column; gap: 12px; }
+    .footer-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-on-ink);
+      font-weight: 700;
+    }
+    .footer-brand img { width: 28px; height: 28px; border-radius: 7px; }
+    .footer-brand p { font-size: 0.9rem; line-height: 1.6; max-width: 280px; }
+    .footer-col h4 {
+      color: var(--text-on-ink);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .footer-col a {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: rgba(245, 245, 245, 0.6);
+    }
+    .footer-col a:hover { color: var(--text-on-ink); }
+    .footer-bottom {
+      max-width: var(--max);
+      margin: 36px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      color: rgba(245, 245, 245, 0.45);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity .6s var(--ease), transform .6s var(--ease);
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media (max-width: 900px) {
+      .split, .split.reverse { grid-template-columns: 1fr; gap: 28px; }
+      .split.reverse .split-text, .split.reverse .split-media { order: unset; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 720px) {
+      .footer-inner { grid-template-columns: 1fr; }
+      .hero { padding-top: calc(var(--nav-h) + 40px); }
+      .section { padding: 64px 20px; }
+    }
+  </style>
+  <link rel="stylesheet" href="../site-topbar.css">
+  <link rel="stylesheet" href="../site-theme.css">
+  <script src="../site-theme.js"></script>
+</head>
+
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="../" class="nav-logo">
+        <img src="../icon.png" alt="Inimark" width="28" height="28" />
+        <span>Inimark</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="./" class="active">Home</a>
+        <a href="../docs/en/00-Getting Started/Welcome.html">Docs</a>
+      </div>
+      <div class="nav-right">
+        <div class="nav-lang">
+          <a href="../">中文</a>
+          <a href="./" class="active">EN</a>
+        </div>
+        <button type="button" class="nav-theme-btn" data-theme-toggle data-theme-pref
+          aria-label="Toggle theme" title="Dark mode"
+          data-label-light="Light mode" data-label-dark="Dark mode" data-label-system="Dark mode">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+        <a href="https://github.com/Dionysen/Inimark" class="nav-github" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+        </a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        v1.0.4 — Windows · macOS · Linux
+      </div>
+      <h1>Where Writing Never Ends</h1>
+      <p class="hero-subtitle">Write without end, think without bounds. A quiet desk, waiting for your next line.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/Dionysen/Inimark/releases" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download
+        </a>
+        <a class="btn btn-secondary" href="../docs/en/00-Getting Started/Welcome.html">Browse docs</a>
+      </div>
+      <div class="hero-meta">
+        <span>Open source</span>
+        <span>Free</span>
+        <span>Cross-platform</span>
+      </div>
+    </div>
+    <div class="hero-shot theme-shot">
+      <img class="theme-img-light" src="../assets/note-light.png" alt="Inimark editor" width="1920" height="1080" loading="eager" />
+      <img class="theme-img-dark" src="../assets/note-dark.png" alt="Inimark editor" width="1920" height="1080" loading="eager" />
+    </div>
+  </section>
+
+  <section class="section" id="writing">
+    <div class="section-inner split reveal">
+      <div class="split-text">
+        <div class="section-label">Write</div>
+        <h2>Where the pen lands, you see</h2>
+        <p class="section-desc">WYSIWYG and source, one keystroke apart. An interface pared to the words — the tool steps back, leaving you and the thought at hand.</p>
+        <ul class="feature-list">
+          <li>Toggle WYSIWYG and source instantly</li>
+          <li>Code, math, Mermaid, callouts, tables</li>
+          <li>Typewriter mode keeps the flow</li>
+        </ul>
+        <a class="section-link" href="../docs/en/01-Editing and Markdown/Editing Modes.html">
+          Editing modes
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <div class="split-media media-frame theme-shot">
+        <img class="theme-img-light" src="../assets/note-light.png" alt="Writing experience" width="1920" height="1080" loading="lazy" />
+        <img class="theme-img-dark" src="../assets/note-dark.png" alt="Writing experience" width="1920" height="1080" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="graph">
+    <div class="section-inner split reverse reveal">
+      <div class="split-text">
+        <div class="section-label">Graph</div>
+        <h2>Between ideas, paths appear</h2>
+        <p class="section-desc">[[Wiki links]] let notes answer each other. Open the relationship graph and see the structure — connections grow as you write.</p>
+        <ul class="feature-list">
+          <li>WikiLinks and embeds</li>
+          <li>Global and local relationship graphs</li>
+          <li>Backlinks panel</li>
+        </ul>
+        <a class="section-link" href="../docs/en/02-Vault and Knowledge/Relationship Graph.html">
+          Relationship graph
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <div class="split-media media-frame theme-shot">
+        <img class="theme-img-light" src="../assets/graph-light.png" alt="Relationship graph" width="1920" height="1080" loading="lazy" />
+        <img class="theme-img-dark" src="../assets/graph-dark.png" alt="Relationship graph" width="1920" height="1080" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="outline">
+    <div class="section-inner split reveal">
+      <div class="split-text">
+        <div class="section-label">Navigate</div>
+        <h2>Outline in hand, whole page in view</h2>
+        <p class="section-desc">Search, bookmarks, and outline stay ready. Jump while writing long pieces; find your place when organizing knowledge.</p>
+        <ul class="feature-list">
+          <li>Full-text search and quick open</li>
+          <li>Live heading outline</li>
+          <li>Bookmarks for frequent spots</li>
+        </ul>
+        <a class="section-link" href="../docs/en/02-Vault and Knowledge/Search Bookmarks Outline.html">
+          Search and outline
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <div class="split-media media-frame theme-shot">
+        <img class="theme-img-light" src="../assets/outline-light.png" alt="Outline and navigation" width="1920" height="1080" loading="lazy" />
+        <img class="theme-img-dark" src="../assets/outline-dark.png" alt="Outline and navigation" width="1920" height="1080" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="settings">
+    <div class="section-inner split reverse reveal">
+      <div class="split-text">
+        <div class="section-label">Appearance</div>
+        <h2>Settled the way you like</h2>
+        <p class="section-desc">Themes, editor, and publish options in one place. Change looks without breaking flow; publish the same notes as a static site.</p>
+        <ul class="feature-list">
+          <li>Built-in light and dark themes</li>
+          <li>Editor and appearance preferences</li>
+          <li>One-click static site publish</li>
+        </ul>
+        <a class="section-link" href="../docs/en/03-Appearance and Publish/Settings Overview.html">
+          Settings overview
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+      <div class="split-media media-frame theme-shot">
+        <img class="theme-img-light" src="../assets/setting-light.png" alt="Settings and appearance" width="1920" height="1080" loading="lazy" />
+        <img class="theme-img-dark" src="../assets/setting-dark.png" alt="Settings and appearance" width="1920" height="1080" loading="lazy" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-inner reveal" style="text-align:center">
+      <div class="section-label">Just enough</div>
+      <h2 style="margin-bottom:28px">Nothing extra, nothing missing</h2>
+      <div class="extras">
+        <span class="extra-chip">Local-first</span>
+        <span class="extra-chip">Multi-vault</span>
+        <span class="extra-chip">Built-in themes</span>
+        <span class="extra-chip">Command palette</span>
+        <span class="extra-chip">Wikilinks &amp; graph</span>
+        <span class="extra-chip">Cross-platform</span>
+        <span class="extra-chip">Open source</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>Sit down. Keep writing.</h2>
+    <p>Writing has no end — and thinking need not be fenced in.</p>
+    <div class="cta-actions">
+      <a class="btn btn-primary" href="https://github.com/Dionysen/Inimark/releases" target="_blank" rel="noopener">Download</a>
+      <a class="btn btn-secondary" href="https://github.com/Dionysen/Inimark" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="cta-meta">Open source · Cross-platform · Free</div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-brand-row">
+          <img src="../icon.png" alt="" width="28" height="28" />
+          <span>Inimark</span>
+        </div>
+        <p>Write without end, think without bounds. Local-first, quietly restrained.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="./">Home</a>
+        <a href="../docs/en/00-Getting Started/Welcome.html">Docs</a>
+        <a href="https://github.com/Dionysen/Inimark/releases" target="_blank" rel="noopener">Download</a>
+      </div>
+      <div class="footer-col">
+        <h4>Docs</h4>
+        <a href="../docs/en/00-Getting Started/Install Inimark.html">Install</a>
+        <a href="../docs/en/01-Editing and Markdown/Editing Modes.html">Editing modes</a>
+        <a href="../docs/en/03-Appearance and Publish/Themes and Appearance.html">Themes</a>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <a href="https://github.com/Dionysen/Inimark" target="_blank" rel="noopener">GitHub</a>
+        <a href="../docs/en/00-Getting Started/Welcome.html">Welcome</a>
+        <a href="../docs/en/04-Appendix/FAQ and Troubleshooting.html">FAQ</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Inimark</span>
+      <span>Open Source</span>
+    </div>
+  </footer>
+
+  <script>
+    const navbar = document.getElementById('navbar');
+    const toggle = document.getElementById('navToggle');
+    toggle?.addEventListener('click', () => navbar.classList.toggle('open'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  </script>
+</body>
+
+</html>

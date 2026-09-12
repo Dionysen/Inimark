@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="dark-modern" data-appearance="dark" data-theme-light="light" data-theme-dark="dark-modern" data-page-lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>(() => {
+  try {
+    const root = document.documentElement;
+    const light = root.getAttribute("data-theme-light") || "light";
+    const dark = root.getAttribute("data-theme-dark") || "ocean";
+    const saved = localStorage.getItem("inimark-site-theme");
+    let mode = root.getAttribute("data-appearance") === "dark" ? "dark" : "light";
+    if (saved === "dark" || saved === dark) mode = "dark";
+    else if (saved === "light" || saved === light) mode = "light";
+    else if (saved && /dark/i.test(saved)) mode = "dark";
+    else if (saved) mode = "light";
+    root.setAttribute("data-theme", mode === "dark" ? dark : light);
+    root.dataset.appearance = mode;
+  } catch (_) {}
+})();</script>
+  <title>双链三分钟卡片 · Inimark Docs</title>
+  <meta name="description" content="Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。">
+  <link rel="icon" href="../../../favicon.png" type="image/png">
+  <link rel="stylesheet" href="../../../assets/site.css">
+</head>
+<body class="site-body">
+  <div class="site-layout">
+    <aside class="site-sidebar" aria-label="Notes">
+      <div class="site-sidebar-head">
+        <a class="site-home-link" href="../../../index.html">返回主页</a>
+        <div class="site-sidebar-head-row">
+          <a class="site-brand" href="../00-由此开始/欢迎.html"><img class="site-brand-icon" src="../../../icon.png" alt="" width="28" height="28" /><span>Inimark Docs</span></a>
+          <button type="button" class="site-theme-toggle" id="site-theme-toggle" aria-label="Toggle light and dark theme" title="Theme">
+            <svg class="site-theme-icon site-theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M12 2v2.5M12 19.5V22M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07l1.77-1.77M17.3 6.7l1.77-1.77" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><svg class="site-theme-icon site-theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="site-lang" role="navigation" aria-label="Language" data-translation-key="wikilink-three-minutes-card" data-lang="zh"><a class="site-lang-btn is-active" href="双链三分钟卡片.html" data-lang="zh" hreflang="zh" aria-current="page">中文</a><a class="site-lang-btn" href="../../en/snippets/Wikilink Three Minutes Card.html" data-lang="en" hreflang="en">English</a></div>
+      </div>
+      <nav class="site-nav"><ul class="site-tree" data-depth="0"><li class="site-tree-dir is-collapsed" data-tree-path="zh/00-由此开始"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">00-由此开始</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../00-由此开始/安装与启动.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">安装与启动</span></a></li><li class="site-tree-file"><a href="../00-由此开始/从Typora与Obsidian迁移.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">从Typora与Obsidian迁移</span></a></li><li class="site-tree-file"><a href="../00-由此开始/欢迎.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">欢迎</span></a></li><li class="site-tree-file"><a href="../00-由此开始/界面导览.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">界面导览</span></a></li><li class="site-tree-file"><a href="../00-由此开始/日常场景.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">日常场景</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/01-编辑与Markdown"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">01-编辑与Markdown</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../01-编辑与Markdown/编辑模式.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">编辑模式</span></a></li><li class="site-tree-file"><a href="../01-编辑与Markdown/查找替换与快捷键.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">查找替换与快捷键</span></a></li><li class="site-tree-file"><a href="../01-编辑与Markdown/代码与语法高亮.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">代码与语法高亮</span></a></li><li class="site-tree-file"><a href="../01-编辑与Markdown/数学公式与图表.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">数学公式与图表</span></a></li><li class="site-tree-file"><a href="../01-编辑与Markdown/图片与附件.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">图片与附件</span></a></li><li class="site-tree-file"><a href="../01-编辑与Markdown/Markdown语法.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">Markdown语法</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/02-库与知识网络"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">02-库与知识网络</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../02-库与知识网络/关系图谱.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">关系图谱</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/库与文件.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">库与文件</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/双链与嵌入.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">双链与嵌入</span></a></li><li class="site-tree-file"><a href="../02-库与知识网络/搜索书签与大纲.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">搜索书签与大纲</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/03-外观与发布"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">03-外观与发布</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../03-外观与发布/发布为网站.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">发布为网站</span></a></li><li class="site-tree-file"><a href="../03-外观与发布/设置总览.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">设置总览</span></a></li><li class="site-tree-file"><a href="../03-外观与发布/主题与外观.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">主题与外观</span></a></li></ul></li><li class="site-tree-dir is-collapsed" data-tree-path="zh/04-附录"><button type="button" class="site-tree-toggle" aria-expanded="false"><span class="site-tree-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">04-附录</span></button><ul hidden class="site-tree" data-depth="1"><li class="site-tree-file"><a href="../04-附录/常见问题.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">常见问题</span></a></li><li class="site-tree-file"><a href="../04-附录/功能对照表.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">功能对照表</span></a></li><li class="site-tree-file"><a href="../04-附录/路线图.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">路线图</span></a></li><li class="site-tree-file"><a href="../04-附录/数据目录.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">数据目录</span></a></li></ul></li><li class="site-tree-dir" data-tree-path="zh/片段"><button type="button" class="site-tree-toggle" aria-expanded="true"><span class="site-tree-chevron is-expanded" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="site-tree-label">片段</span></button><ul class="site-tree" data-depth="1"><li class="site-tree-file"><a href="发布检查清单卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">发布检查清单卡片</span></a></li><li class="site-tree-file is-active"><a href="双链三分钟卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">双链三分钟卡片</span></a></li><li class="site-tree-file"><a href="语法速览卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">语法速览卡片</span></a></li><li class="site-tree-file"><a href="Callout选型卡片.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">Callout选型卡片</span></a></li></ul></li><li class="site-tree-file"><a href="../MOC-中文文档.html"><span class="site-tree-chevron-spacer" aria-hidden="true"></span><span class="site-tree-label">中文文档 · 内容地图</span></a></li></ul></nav>
+      <script>(() => {
+  const TREE_KEY = "inimark-site-tree";
+  const root = document.documentElement;
+  const loadTreeState = () => {
+    try {
+      const raw = localStorage.getItem(TREE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  };
+  const saveTreeState = (state) => {
+    try {
+      localStorage.setItem(TREE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  };
+  const setDirOpen = (li, open) => {
+    const btn = li.querySelector(":scope > .site-tree-toggle");
+    if (!btn) return;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    li.classList.toggle("is-collapsed", !open);
+    btn.querySelector(".site-tree-chevron")?.classList.toggle("is-expanded", open);
+    const nested = li.querySelector(":scope > .site-tree");
+    if (nested) nested.hidden = !open;
+  };
+  try {
+    const state = loadTreeState();
+    let changed = false;
+    document.querySelectorAll(".site-tree-dir").forEach((li) => {
+      const path = li.getAttribute("data-tree-path");
+      const containsActive = Boolean(li.querySelector(".site-tree-file.is-active"));
+      let open = containsActive;
+      if (!containsActive && path && Object.prototype.hasOwnProperty.call(state, path)) {
+        open = Boolean(state[path]);
+      } else if (!containsActive) {
+        const btn = li.querySelector(":scope > .site-tree-toggle");
+        open = btn?.getAttribute("aria-expanded") !== "false";
+      }
+      setDirOpen(li, open);
+      if (path && state[path] !== open) {
+        state[path] = open;
+        changed = true;
+      }
+    });
+    if (changed) saveTreeState(state);
+  } catch (_) {}
+  root.setAttribute("data-tree-ready", "1");
+})();</script>
+    </aside>
+    <main class="site-main">
+      <article class="ProseMirror site-article"><h3 id="三分钟学会双链">三分钟学会双链</h3><ol><li><p>输入 <code>[[</code> → 选一篇笔记（或新建）。</p></li><li><p>别名：<code>[[欢迎|首页]]</code>。</p></li><li><p>标题：<code>[[Markdown语法#表格]]</code>。</p></li><li><p>嵌入卡片：<code>![[语法速览卡片]]</code>。</p></li><li><p>打开图谱 → 先看局部邻居，再看整库地图。</p></li></ol><p>深入：<a class="wiki-link-widget" href="../02-库与知识网络/双链与嵌入.html" data-note="双链与嵌入">双链与嵌入</a>。</p></article>
+      <section class="site-links-footer" aria-label="Links">
+      <h2 class="site-links-footer-title">Links</h2>
+      <div class="site-links-footer-grid">
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Outgoing <span class="site-links-count">3</span></div>
+          <ul class="site-links-list"><li class="site-links-item"><a href="../01-编辑与Markdown/Markdown语法.html">Markdown语法</a></li><li class="site-links-item"><a href="语法速览卡片.html">语法速览卡片</a></li><li class="site-links-item"><a href="../02-库与知识网络/双链与嵌入.html">双链与嵌入</a></li></ul>
+        </div>
+        <div class="site-links-group">
+          <div class="site-links-subtitle">Backlinks <span class="site-links-count">2</span></div>
+          <ul class="site-links-list"><li class="site-links-item"><a href="../00-由此开始/欢迎.html">欢迎</a></li><li class="site-links-item"><a href="../02-库与知识网络/双链与嵌入.html">双链与嵌入</a></li></ul>
+        </div>
+      </div>
+    </section>
+    </main>
+    <aside class="site-rail" aria-label="Page tools">
+      <section class="site-graph" aria-label="Graph">
+      <div class="site-graph-head">
+        <div class="site-rail-title">Graph</div>
+        <div class="site-graph-actions">
+          <button type="button" class="site-graph-btn" data-graph-mode="local" title="Local graph" aria-label="Open local graph"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="5" cy="7" r="2" fill="currentColor" opacity=".85"/><circle cx="19" cy="8" r="2" fill="currentColor" opacity=".85"/><circle cx="7" cy="18" r="2" fill="currentColor" opacity=".85"/><circle cx="18" cy="17" r="2" fill="currentColor" opacity=".85"/><path d="M9.2 9.2L10.8 10.8M14.8 10.2L16.8 9M9.6 14.8L8.2 16.4M14.2 14.2L16.2 15.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+          <button type="button" class="site-graph-btn" data-graph-mode="global" title="Global graph" aria-label="Open global graph"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.4 2.6 3.6 5.4 3.6 8.5s-1.2 5.9-3.6 8.5c-2.4-2.6-3.6-5.4-3.6-8.5S9.6 6.1 12 3.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+        </div>
+      </div>
+      <div class="site-graph-host" data-graph-preview data-page-html="docs/zh/片段/双链三分钟卡片.html" data-global-graph="../../../assets/graph.json">
+        <canvas class="site-graph-canvas" width="320" height="280" aria-label="Local relationship graph"></canvas>
+        <script type="application/json" class="site-graph-data">{"centerId":"zh/片段/双链三分钟卡片.md","nodes":[{"id":"zh/片段/双链三分钟卡片.md","label":"双链三分钟卡片","href":"","center":true},{"id":"zh/00-由此开始/欢迎.md","label":"欢迎","href":"../00-由此开始/欢迎.html","center":false},{"id":"zh/02-库与知识网络/双链与嵌入.md","label":"双链与嵌入","href":"../02-库与知识网络/双链与嵌入.html","center":false},{"id":"zh/01-编辑与Markdown/Markdown语法.md","label":"Markdown语法","href":"../01-编辑与Markdown/Markdown语法.html","center":false},{"id":"zh/片段/语法速览卡片.md","label":"语法速览卡片","href":"语法速览卡片.html","center":false}],"edges":[{"source":"zh/00-由此开始/欢迎.md","target":"zh/02-库与知识网络/双链与嵌入.md"},{"source":"zh/00-由此开始/欢迎.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/00-由此开始/欢迎.md","target":"zh/片段/语法速览卡片.md"},{"source":"zh/00-由此开始/欢迎.md","target":"zh/片段/双链三分钟卡片.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/片段/语法速览卡片.md"},{"source":"zh/01-编辑与Markdown/Markdown语法.md","target":"zh/02-库与知识网络/双链与嵌入.md"},{"source":"zh/02-库与知识网络/双链与嵌入.md","target":"zh/片段/双链三分钟卡片.md"},{"source":"zh/02-库与知识网络/双链与嵌入.md","target":"zh/00-由此开始/欢迎.md"},{"source":"zh/02-库与知识网络/双链与嵌入.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/02-库与知识网络/双链与嵌入.md","target":"zh/片段/语法速览卡片.md"},{"source":"zh/片段/双链三分钟卡片.md","target":"zh/01-编辑与Markdown/Markdown语法.md"},{"source":"zh/片段/双链三分钟卡片.md","target":"zh/片段/语法速览卡片.md"},{"source":"zh/片段/双链三分钟卡片.md","target":"zh/02-库与知识网络/双链与嵌入.md"}]}</script>
+      </div>
+    </section>
+      <section class="site-outline" aria-label="Outline">
+        <div class="site-rail-title">Outline</div>
+        <ul class="site-outline-list"><li class="site-outline-item level-3"><a href="#三分钟学会双链">三分钟学会双链</a></li></ul>
+      </section>
+    </aside>
+  </div>
+  <script src="../../../assets/mermaid.min.js" defer data-inimark-mermaid></script>
+  <script src="../../../assets/site.js" defer></script>
+</body>
+</html>
