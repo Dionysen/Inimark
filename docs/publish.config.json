@@ -6,7 +6,7 @@
   "baseHref": "/Inimark/",
   "out": "dist",
   "siteDescription": "Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。",
-  "home": "zh/00-由此开始/欢迎.md",
+  "home": "zh/00-由此开始/安装与启动.md",
   "locales": {
     "default": "zh",
     "languages": [

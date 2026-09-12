@@ -514,6 +514,55 @@ html[data-glass="true"] .inimark-select-panel {
   color: var(--inimark-muted-fg);
 }
 
+.inimark-select-panel--searchable {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  min-width: 200px;
+  max-height: 320px;
+}
+
+.inimark-select-search {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.55rem var(--inimark-control-padding-x);
+  border: none;
+  border-bottom: 1px solid var(--inimark-border);
+  background: var(--inimark-bg, var(--bg-primary, #fff));
+  color: inherit;
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.inimark-select-search::placeholder {
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-select-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--inimark-menu-padding);
+}
+
+.inimark-select-panel:not(.inimark-select-panel--searchable) .inimark-select-list {
+  padding: 0;
+  overflow: visible;
+}
+
+.inimark-select-empty {
+  padding: 0.9rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--inimark-muted-fg);
+  text-align: center;
+}
+
 .inimark-font-picker-panel {
   display: flex;
   flex-direction: column;

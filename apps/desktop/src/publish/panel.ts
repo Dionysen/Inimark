@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { t } from "../i18n/index.ts";
 import { listLibraries, type LibraryRecord } from "../libraries/store.ts";
-import { isTauri } from "../platform/env.ts";
+import { isMarkdownFile, isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
+import { openWorkspaceByPath } from "../platform/workspace.ts";
+import { collectMarkdownFiles } from "../sidebar/vault-search.ts";
 import { BUILTIN_THEMES } from "../themes/builtin.ts";
 import { loadManifest } from "../themes/custom-theme-manager.ts";
 import {
@@ -10,6 +12,7 @@ import {
   createSelect,
   createTextField,
   type SelectController,
+  type SelectOption,
 } from "../ui/widgets/index.ts";
 import { loadPublishConfig, savePublishConfig, type PublishConfig } from "./config.ts";
 import {
@@ -24,6 +27,48 @@ export interface PublishPanelController {
   destroy(): void;
 }
 
+const SKIP_HOME_DIR_NAMES = new Set([
+  ".git",
+  ".obsidian",
+  ".inimark",
+  "node_modules",
+  "dist",
+]);
+
+function homeNoteOptions(
+  files: Array<{ name: string; path: string }>,
+  outRel: string,
+  currentHome: string,
+): SelectOption[] {
+  const outNorm = outRel.replace(/\\/g, "/").replace(/\/$/, "") || "dist";
+  const options: SelectOption[] = [
+    { value: "", label: t("settings.publish.homeDefault") },
+  ];
+  const seen = new Set<string>([""]);
+
+  for (const file of files) {
+    if (!isMarkdownFile(file.name)) continue;
+    const path = file.path.replace(/\\/g, "/");
+    if (path === outNorm || path.startsWith(`${outNorm}/`)) continue;
+    if (path.split("/").some((part) => SKIP_HOME_DIR_NAMES.has(part))) continue;
+    if (seen.has(path)) continue;
+    seen.add(path);
+    options.push({ value: path, label: path });
+  }
+
+  options.sort((a, b) => {
+    if (a.value === "") return -1;
+    if (b.value === "") return 1;
+    return a.label.localeCompare(b.label);
+  });
+
+  if (currentHome && !seen.has(currentHome)) {
+    options.splice(1, 0, { value: currentHome, label: currentHome });
+  }
+
+  return options;
+}
+
 export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   host.classList.add("inimark-settings-publish");
 
@@ -33,6 +78,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     value: id,
     label: id,
   }));
+  let homeNoteLoadToken = 0;
 
   const libraryRow = document.createElement("div");
   libraryRow.className = "inimark-settings-row";
@@ -51,7 +97,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   const siteNameField = createTextField({ value: "" });
   const outField = createTextField({ value: "dist" });
   const baseHrefField = createTextField({ value: "/" });
-  const homeField = createTextField({ value: "" });
+  const homeSelectHost = document.createElement("div");
+  let homeSelect: SelectController | null = null;
+  let homeValue = "";
 
   const lightThemeHost = document.createElement("div");
   const darkThemeHost = document.createElement("div");
@@ -132,6 +180,52 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     return libraries.find((l) => l.id === selectedId) ?? null;
   }
 
+  function rebuildHomeSelect(noteOptions: SelectOption[]): void {
+    homeSelect?.destroy();
+    homeSelectHost.replaceChildren();
+    homeSelect = createSelect({
+      options: noteOptions,
+      value: homeValue,
+      searchable: true,
+      matchTriggerWidth: true,
+      searchPlaceholder: t("settings.publish.homeSearch"),
+      emptyMessage: t("settings.publish.homeNoMatch"),
+      onChange: (value) => {
+        homeValue = value;
+      },
+    });
+    homeSelectHost.append(homeSelect.el);
+  }
+
+  async function refreshHomeNoteOptions(): Promise<void> {
+    const token = ++homeNoteLoadToken;
+    const lib = selectedLibrary();
+    const outRel = outField.getValue().trim() || "dist";
+    if (!lib) {
+      rebuildHomeSelect(homeNoteOptions([], outRel, homeValue));
+      return;
+    }
+
+    rebuildHomeSelect([
+      { value: "", label: t("settings.publish.homeDefault") },
+      ...(homeValue ? [{ value: homeValue, label: homeValue }] : []),
+    ]);
+
+    try {
+      const opened = await openWorkspaceByPath(lib.rootPath);
+      if (token !== homeNoteLoadToken) return;
+      if (opened.status !== "picked") {
+        rebuildHomeSelect(homeNoteOptions([], outRel, homeValue));
+        return;
+      }
+      const files = collectMarkdownFiles(opened.workspace.tree);
+      rebuildHomeSelect(homeNoteOptions(files, outRel, homeValue));
+    } catch {
+      if (token !== homeNoteLoadToken) return;
+      rebuildHomeSelect(homeNoteOptions([], outRel, homeValue));
+    }
+  }
+
   function rebuildThemeSelects(): void {
     const options = themeOptions.length
       ? themeOptions
@@ -185,10 +279,11 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       siteNameField.setValue("");
       outField.setValue("dist");
       baseHrefField.setValue("/");
-      homeField.setValue("");
+      homeValue = "";
       lightThemeValue = "light";
       darkThemeValue = "dark";
       rebuildThemeSelects();
+      await refreshHomeNoteOptions();
       return;
     }
     const cfg = await loadPublishConfig(lib.rootPath);
@@ -196,7 +291,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     siteNameField.setValue(cfg.siteName);
     outField.setValue(cfg.out || "dist");
     baseHrefField.setValue(cfg.baseHref || "/");
-    homeField.setValue(cfg.home || "");
+    homeValue = cfg.home || "";
     lightThemeValue = cfg.lightTheme || "light";
     darkThemeValue = cfg.darkTheme || "dark";
     if (!cfg.lightTheme && !cfg.darkTheme && cfg.defaultTheme) {
@@ -204,6 +299,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       else lightThemeValue = cfg.defaultTheme;
     }
     rebuildThemeSelects();
+    await refreshHomeNoteOptions();
   }
 
   /**
@@ -225,7 +321,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       siteName: siteNameField.getValue().trim() || lib?.rootName || "Notes",
       baseHref: baseHrefField.getValue().trim() || "/",
       out: outField.getValue().trim() || "dist",
-      home: homeField.getValue().trim() || undefined,
+      home: homeValue.trim() || undefined,
       lightTheme: lightThemeValue,
       darkTheme: darkThemeValue,
       defaultTheme: darkThemeValue,
@@ -351,7 +447,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       "settings.publish.baseHrefDesc",
       baseHrefField.el,
     ),
-    makeRow("publish.home", "settings.publish.home", "settings.publish.homeDesc", homeField.el),
+    makeRow("publish.home", "settings.publish.home", "settings.publish.homeDesc", homeSelectHost),
     actions,
     status,
   );
@@ -369,13 +465,14 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   return {
     refresh,
     destroy() {
+      homeNoteLoadToken += 1;
       librarySelect?.destroy();
       lightThemeSelect?.destroy();
       darkThemeSelect?.destroy();
+      homeSelect?.destroy();
       siteNameField.destroy();
       outField.destroy();
       baseHrefField.destroy();
-      homeField.destroy();
       host.replaceChildren();
     },
   };

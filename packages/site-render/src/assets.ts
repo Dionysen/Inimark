@@ -68,7 +68,7 @@ ${webkitScrollbar(".site-nav")}
 /* Centered three-column cluster; sidebars are fixed on wide screens. */
 .site-layout {
   --site-gutter: 20px;
-  --site-sidebar-w: 325px;
+  --site-sidebar-w: 260px;
   --site-rail-w: 312px;
   --site-main-max: 48rem;
   --site-main-w: min(var(--site-main-max), calc(100vw - var(--site-sidebar-w) - var(--site-rail-w) - 2 * var(--site-gutter)));
@@ -634,7 +634,7 @@ a.wiki-link-widget:hover { border-bottom-color: var(--accent); }
 
 @media (max-width: 1100px) {
   .site-layout {
-    --site-sidebar-w: 299px;
+    --site-sidebar-w: 240px;
     --site-rail-w: 273px;
     --site-main-max: 44rem;
     --site-main-w: min(var(--site-main-max), calc(100vw - var(--site-sidebar-w) - var(--site-rail-w) - 2 * var(--site-gutter)));
