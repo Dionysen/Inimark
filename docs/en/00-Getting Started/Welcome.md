@@ -31,9 +31,9 @@ $$
 
 | You are… | Read next |
 | --- | --- |
-| A long-form writer who wants focus | [[Everyday Workflows#Long-form writing|Everyday Workflows → writing]] · [[Editing Modes]] |
-| Building a personal knowledge network | [[Everyday Workflows#Personal knowledge base|Everyday Workflows → PKM]] · [[Wikilinks and Embeds]] |
-| Shipping notes as a site / handbook | [[Publish a Site]] · [[Everyday Workflows#Publish a handbook or course notes|workflows]] |
+| A long-form writer who wants focus | [[Everyday Workflows#Long-form writing (essays, reports, chapters)]] · [[Editing Modes]] |
+| Building a personal knowledge network | [[Everyday Workflows#Personal knowledge base (notes that link)]] · [[Wikilinks and Embeds]] |
+| Shipping notes as a site / handbook | [[Publish a Site]] · [[Everyday Workflows#Publish a handbook or course notes]] |
 | Migrating from Typora or Obsidian | [[Migrate from Typora and Obsidian]] |
 
 ## Doc structure

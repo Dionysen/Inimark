@@ -28,7 +28,7 @@ translationKey: feature-comparison
 | You used to… | Now you… |
 | --- | --- |
 | Export via Pandoc flavors | Build a static site with [[Publish a Site]] |
-| Keep one folder open | Manage multiple [[Libraries and Files|libraries]] |
+| Keep one folder open | Manage multiple [[Libraries and Files]] |
 | Live in one long file | Split ideas and `[[link]]` them |
 
 ## vs Obsidian

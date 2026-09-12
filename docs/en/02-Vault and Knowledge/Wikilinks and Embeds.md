@@ -18,6 +18,7 @@ Wikilinks are the core of Inimark’s “thinking” layer, with Obsidian-famili
 [[Welcome]]
 [[Welcome|custom label]]
 [[Markdown Syntax#Tables]]
+[[Markdown Syntax#Callouts|jump to Callouts]]
 ```
 
 Live:
@@ -25,10 +26,14 @@ Live:
 - Plain: [[Welcome]]
 - Alias: [[MOC-English Docs|Open English MOC]]
 - Heading: [[Markdown Syntax#Callouts]]
+- Heading + alias (outside tables): works as `[[Note#Heading|label]]`
 - Cross-language: [[欢迎|中文欢迎]]
 
 > [!TIP]
-> Typing `[[` opens autocomplete (not inside `![[` image/note embeds). Notes are indexed by **path without extension**, and also resolve by **basename** (shallower paths win on ties).
+> Typing `[[` opens autocomplete (not inside `![[` image/note embeds). Notes are indexed by **path without extension**, and also resolve by **basename** (shallower paths win on ties). Heading anchors should match the **full heading text** exactly (including parentheticals), e.g. `[[Everyday Workflows#Long-form writing (essays, reports, chapters)]]`.
+
+> [!WARNING]
+> Do **not** put `[[note|alias]]` or `[[note#h|alias]]` inside a Markdown **table** cell. The alias `|` is also the table column separator, so the link is split mid-way and looks “broken”. Use a link without an alias in tables, or write the aliased link in normal paragraphs / lists.
 
 ### Autocomplete habits
 

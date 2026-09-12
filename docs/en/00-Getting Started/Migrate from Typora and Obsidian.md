@@ -72,12 +72,12 @@ Read the honest matrix in [[Feature Comparison]], then use the checklist below.
 
 ## Folder and link hygiene before switching
 
-| Check | Why |
-| --- | --- |
-| Unique note titles where possible | Cleaner `[[wikilink]]` resolution |
-| Prefer relative image paths | Survives folder moves and Publish |
-| Avoid depending on block refs `^id` | Not a full system yet |
-| Keep a backup / git commit | Renames + rewrite are powerful |
+| Check                               | Why                               |
+| ----------------------------------- | --------------------------------- |
+| Unique note titles where possible   | Cleaner `[[wikilink]]` resolution |
+| Prefer relative image paths         | Survives folder moves and Publish |
+| Avoid depending on block refs `^id` | Not a full system yet             |
+| Keep a backup / git commit          | Renames + rewrite are powerful    |
 
 ## Side-by-side habit map
 

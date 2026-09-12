@@ -17,7 +17,7 @@ Inimark ships **KaTeX** and **Mermaid**, with familiar academic / engineering ma
 | A symbol inside a sentence | Inline `$…$` |
 | A displayed equation | Block `$$…$$` on its own lines |
 | Architecture / flow / sequence | ` ```mermaid ` fence |
-| Fine-tune a large block | [[Editing Modes#Source mode|Source mode]], then flip back |
+| Fine-tune a large block | [[Editing Modes#Source mode]], then flip back |
 
 Shortcuts: insert a math block with `Alt + Ctrl/⌘ + B`. After editing dense LaTeX or Mermaid, preview in WYSIWYG; if a fence fails to render, check spelling and diagram type support for your Mermaid build.
 

@@ -22,7 +22,7 @@ Think of the main window as three columns:
 
 | Area | Role |
 | --- | --- |
-| Back / Forward | [[Libraries and Files#Navigation history|Navigation history]] across opened notes |
+| Back / Forward | [[Libraries and Files#Navigation history]] across opened notes |
 | Window controls | Min / max / close (macOS traffic lights) |
 | More menu | Immersive chrome: auto-hide title bar / status bar, and related focus options |
 
