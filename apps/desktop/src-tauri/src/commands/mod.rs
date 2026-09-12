@@ -1,4 +1,5 @@
 pub mod color_commands;
+pub mod docs_deploy_commands;
 pub mod font_commands;
 pub mod proxy_commands;
 pub mod publish_commands;

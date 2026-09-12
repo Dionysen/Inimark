@@ -7,6 +7,7 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 use tauri::TitleBarStyle;
 
 use commands::color_commands::pick_screen_color;
+use commands::docs_deploy_commands::resolve_inimark_docs_vault;
 use commands::font_commands::list_system_fonts;
 use commands::proxy_commands::get_system_proxy_url;
 use commands::publish_commands::{
@@ -64,7 +65,8 @@ pub fn run() {
             toggle_settings_window,
             publish_write_site,
             publish_start_preview,
-            publish_stop_preview
+            publish_stop_preview,
+            resolve_inimark_docs_vault
         ])
         .setup(|app| {
             for label in WINDOW_LABELS {

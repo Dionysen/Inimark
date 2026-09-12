@@ -127,6 +127,11 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "about.email", section: "about", titleKey: "settings.about.email", descKey: "settings.about.desc" },
   { id: "about.showDev", section: "about", titleKey: "settings.about.showDevSection", descKey: "settings.about.showDevSectionDesc" },
   // Dev (dev builds only)
+  { id: "dev.docs.publish", section: "dev", titleKey: "settings.dev.docs.group", descKey: "settings.dev.docs.intro" },
+  { id: "dev.docs.lightTheme", section: "dev", titleKey: "settings.publish.lightTheme", descKey: "settings.publish.lightThemeDesc" },
+  { id: "dev.docs.darkTheme", section: "dev", titleKey: "settings.publish.darkTheme", descKey: "settings.publish.darkThemeDesc" },
+  { id: "dev.docs.lightCodeTheme", section: "dev", titleKey: "settings.publish.lightCodeTheme", descKey: "settings.publish.lightCodeThemeDesc" },
+  { id: "dev.docs.darkCodeTheme", section: "dev", titleKey: "settings.publish.darkCodeTheme", descKey: "settings.publish.darkCodeThemeDesc" },
   { id: "dev.updateOverride", section: "dev", titleKey: "settings.dev.updateOverrideTitle", descKey: "settings.dev.updateOverrideDesc" },
   { id: "dev.triggerBackgroundCheck", section: "dev", titleKey: "settings.dev.triggerBackgroundCheck", descKey: "settings.dev.updateIntro" },
   { id: "dev.runLocalCheck", section: "dev", titleKey: "settings.dev.runLocalCheck", descKey: "settings.dev.checkStatusTitle" },

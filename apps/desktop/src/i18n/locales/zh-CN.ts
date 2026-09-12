@@ -321,6 +321,25 @@ export const zhCN: Dictionary = {
         simulation: "更新模拟",
         checks: "更新检查",
       },
+      docs: {
+        group: "发布 Docs",
+        intro:
+          "用与「设置 → 发布」相同的管线构建仓库 docs/ 文库。构建完成后在终端执行：pnpm docs:deploy",
+        vaultPath: "文库：{{path}}",
+        vaultMissing:
+          "找不到 monorepo 的 docs 文库（{{message}}）。请用 pnpm dev 打开本仓库，或将 docs/ 加成文库后使用「设置 → 发布」。",
+        tauriOnly: "Docs 构建需要桌面应用（Tauri）。",
+        build: "构建",
+        preview: "预览",
+        stopPreview: "停止预览",
+        building: "正在构建 docs…",
+        buildDone: "已构建 {{count}} 页 → {{dir}}。部署请执行：pnpm docs:deploy",
+        previewNeedBuild: "请先构建再预览。",
+        previewReady: "预览已启动：{{url}}",
+        previewStopped: "预览服务已停止。",
+        failed: "失败：{{message}}",
+        futureHome: "后续可在此接入网站营销主页的特殊发布流程。",
+      },
       updateIntro:
         "将模拟当前版本设为低于远程发布版本，即可触发关于页手动更新与顶栏自动更新提示。留空则使用真实版本。macOS 开发模式下仅可测试下载，不会执行安装。",
       installBlockedOnMacDev:

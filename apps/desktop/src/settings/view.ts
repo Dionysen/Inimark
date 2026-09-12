@@ -12,6 +12,7 @@ import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
 import { mountAboutUpdateControl } from "./about-update-control.ts";
 import { mountDevUpdatePanel } from "./dev-update-panel.ts";
+import { mountDevDocsPublishPanel } from "./dev-docs-publish-panel.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
@@ -487,6 +488,7 @@ export function mountSettingsView(
   let graphControlsCleanup: (() => void) | null = null;
   let publishCleanup: (() => void) | null = null;
   let devUpdateCleanup: (() => void) | null = null;
+  let devDocsCleanup: (() => void) | null = null;
   let libraryDropCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
@@ -1256,6 +1258,8 @@ export function mountSettingsView(
     publishCleanup = null;
     devUpdateCleanup?.();
     devUpdateCleanup = null;
+    devDocsCleanup?.();
+    devDocsCleanup = null;
     libraryDropCleanup?.();
     libraryDropCleanup = null;
     content.replaceChildren();
@@ -1425,6 +1429,10 @@ export function mountSettingsView(
     }
 
     if (activeSection === "dev" && isDevSettingsVisible()) {
+      const docsPanel = mountDevDocsPublishPanel();
+      body.append(docsPanel.el);
+      devDocsCleanup = () => docsPanel.destroy();
+
       const panel = mountDevUpdatePanel();
       body.append(panel.el);
       devUpdateCleanup = () => panel.destroy();
@@ -1480,6 +1488,7 @@ export function mountSettingsView(
       graphControlsCleanup?.();
       publishCleanup?.();
       devUpdateCleanup?.();
+      devDocsCleanup?.();
       libraryDropCleanup?.();
       host.replaceChildren();
       host.className = "";

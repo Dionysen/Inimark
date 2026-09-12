@@ -4,7 +4,8 @@
  *
  * Usage:
  *   pnpm docs:build
- *   pnpm docs:deploy
+ *   pnpm docs:deploy              # push existing docs/dist (after Dev build)
+ *   pnpm docs:deploy -- --rebuild # CLI build then push
  *   pnpm docs:build -- --base=/
  *   pnpm docs:deploy -- --dry-run
  *
@@ -12,14 +13,13 @@
  * https://dionysen.github.io/Inimark/ can serve it (project Pages).
  */
 
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync, execSync } from "node:child_process";
 
 import { installHappyDom } from "./lib/install-happy-dom.ts";
+import { deployDistToGhPages } from "./lib/deploy-gh-pages.ts";
 
 installHappyDom();
 
@@ -49,8 +49,14 @@ Options:
   --base <href>    Override baseHref (default: from publish.config.json)
   --out <dir>      Override output dir relative to vault (default: dist)
   --deploy         Push docs/dist to origin gh-pages (force)
-  --dry-run        Build only; with --deploy, skip the git push
+  --skip-build     With --deploy, push existing dist only (default for pnpm docs:deploy)
+  --rebuild        With --deploy, build via CLI then push
+  --dry-run        With --deploy, prepare commit but skip git push
   --help           Show this help
+
+Typical flow (match Dev Publish Docs output):
+  1. Settings → Dev → Publish Docs → Build
+  2. pnpm docs:deploy
 `);
 }
 
@@ -60,6 +66,8 @@ function parseArgs(argv: string[]) {
     base: undefined as string | undefined,
     out: undefined as string | undefined,
     deploy: false,
+    skipBuild: false,
+    rebuild: false,
     dryRun: false,
     help: false,
   };
@@ -68,6 +76,8 @@ function parseArgs(argv: string[]) {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") opts.help = true;
     else if (arg === "--deploy") opts.deploy = true;
+    else if (arg === "--skip-build") opts.skipBuild = true;
+    else if (arg === "--rebuild") opts.rebuild = true;
     else if (arg === "--dry-run") opts.dryRun = true;
     else if (arg === "--vault") opts.vault = resolve(argv[++i] ?? "");
     else if (arg === "--base") opts.base = argv[++i];
@@ -88,60 +98,29 @@ function resolveKatexCss(): string {
   return readCss(join(dirname(katexPkg), "dist", "katex.min.css"));
 }
 
-function git(args: string[], cwd: string): string {
-  return execFileSync("git", args, {
-    cwd,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
-}
-
-function deployToGhPages(distDir: string, dryRun: boolean): void {
-  const remote = git(["remote", "get-url", "origin"], root);
-  const stamp = new Date().toISOString();
-
-  const work = mkdtempSync(join(tmpdir(), "inimark-gh-pages-"));
-  try {
-    cpSync(distDir, work, { recursive: true });
-    writeFileSync(join(work, ".nojekyll"), "");
-
-    execSync("git init", { cwd: work, stdio: "ignore" });
-    execFileSync("git", ["checkout", "-b", "gh-pages"], { cwd: work, stdio: "ignore" });
-    execFileSync("git", ["add", "-A"], { cwd: work, stdio: "ignore" });
-    execFileSync(
-      "git",
-      [
-        "-c",
-        "user.name=Inimark Docs",
-        "-c",
-        "user.email=docs@inimark.local",
-        "commit",
-        "-m",
-        `docs: publish site (${stamp})`,
-      ],
-      { cwd: work, stdio: "inherit" },
-    );
-
-    if (dryRun) {
-      console.log(`[dry-run] would push ${work} → ${remote} gh-pages --force`);
-      return;
-    }
-
-    console.log(`Pushing to ${remote} (branch gh-pages)…`);
-    execFileSync("git", ["push", remote, "gh-pages", "--force"], {
-      cwd: work,
-      stdio: "inherit",
-    });
-    console.log("Deployed. Site: https://dionysen.github.io/Inimark/");
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
-}
-
 async function main(): Promise<void> {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
     printHelp();
+    return;
+  }
+
+  // `pnpm docs:deploy` passes --skip-build: push Dev (or prior) dist only.
+  const deployOnly = opts.deploy && opts.skipBuild && !opts.rebuild;
+  if (deployOnly) {
+    const outRel = opts.out || "dist";
+    const outDir = join(opts.vault, outRel);
+    if (!existsSync(outDir)) {
+      throw new Error(
+        `Missing ${outDir}. Build first in Settings → Dev → Publish Docs, or run: pnpm docs:build`,
+      );
+    }
+    console.log(`Deploying existing site: ${outDir}`);
+    deployDistToGhPages({
+      distDir: outDir,
+      repoRoot: root,
+      dryRun: opts.dryRun,
+    });
     return;
   }
 
@@ -222,9 +201,13 @@ async function main(): Promise<void> {
   console.log(`Wrote ${built.pageCount} pages → ${outDir}`);
 
   if (opts.deploy) {
-    deployToGhPages(outDir, opts.dryRun);
+    deployDistToGhPages({
+      distDir: outDir,
+      repoRoot: root,
+      dryRun: opts.dryRun,
+    });
   } else {
-    console.log("Build only. Deploy with: pnpm docs:deploy");
+    console.log("Build only. Deploy existing dist with: pnpm docs:deploy");
   }
 }
 

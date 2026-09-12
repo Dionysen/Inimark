@@ -95,14 +95,45 @@ translationKey: welcome
 
 ## Steps
 
-### CLI (recommended for GitHub Pages)
+How the three entry points relate:
+
+| Entry | What it does | Same site output? |
+| --- | --- | --- |
+| **Settings → Publish** | Build / preview any library (including `docs/`) | Yes — `publishLibrary` |
+| **Settings → Dev → Publish Docs** | Build docs with that same pipeline (themes → `publish.config.json`) | Yes — same `publishLibrary` |
+| **`pnpm docs:deploy`** | Force-push existing `docs/dist` to `gh-pages` | Uses whatever was built last (prefer Dev build) |
+| **`pnpm docs:build`** | CLI-only rebuild of `docs/dist` | Same SSG; app custom themes only when built from Dev/Publish |
+
+### In-app Publish (any library)
+
+1. Open the vault (for this help site: `docs/`) as a library
+2. Open **Settings → Publish**
+3. Confirm site name, themes (app + code), `out`, `baseHref`, home
+4. **Publish** to write `dist/`, then **Preview** locally
+5. Upload `dist/` to any static host — or use the Dev + CLI flow for GitHub Pages
+
+### Dev build + CLI deploy (GitHub Pages for this repo)
+
+Development builds only (**About → Show Dev settings**):
+
+1. Open **Settings → Dev → Publish Docs**
+2. Pick light/dark app and code themes (saved to `docs/publish.config.json`)
+3. **Build** (and optionally **Preview**)
+4. In the repo root terminal: `pnpm docs:deploy` — pushes the existing `docs/dist` (no rebuild, so it keeps the Dev output)
+
+Needs local GitHub auth for `git push`. To rebuild via CLI then push: `pnpm docs:deploy -- --rebuild`.
+
+### CLI
 
 ```bash
-# Build only → docs/dist
+# Build only → docs/dist (CLI pipeline)
 pnpm docs:build
 
-# Build and force-push to origin/gh-pages
+# Push existing docs/dist → origin/gh-pages (after Dev Build)
 pnpm docs:deploy
+
+# Optional: CLI rebuild + push
+pnpm docs:deploy -- --rebuild
 ```
 
 Site URL: https://dionysen.github.io/Inimark/
@@ -110,14 +141,6 @@ Site URL: https://dionysen.github.io/Inimark/
 
 > [!TIP]
 > After the first deploy, set GitHub **Settings → Pages** → Source: **Deploy from a branch** → `gh-pages` / root.
-
-### In-app Publish
-
-1. Open `docs/` as a library in Inimark
-2. Open **Settings → Publish**
-3. Confirm `siteName` / `out` / `baseHref` / `home`
-4. **Preview** locally, or build
-5. Deploy `dist/` to any static host
 
 ### Other hosts
 

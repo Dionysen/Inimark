@@ -27,3 +27,4 @@ packages/editor/dist/
 .cursor
 docs/.inimark/
 .obsidian
+apps/desktop/tests/.tmp-docs-deploy/

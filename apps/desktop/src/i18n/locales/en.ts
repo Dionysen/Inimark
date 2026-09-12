@@ -321,6 +321,26 @@ export const en: Dictionary = {
         simulation: "Update simulation",
         checks: "Update checks",
       },
+      docs: {
+        group: "Publish Docs",
+        intro:
+          "Build the repo docs/ vault with the same Publish pipeline as Settings → Publish. After Build, deploy from the terminal with: pnpm docs:deploy",
+        vaultPath: "Vault: {{path}}",
+        vaultMissing:
+          "Could not find the monorepo docs vault ({{message}}). Open the repo with pnpm dev, or add docs/ as a library and use Settings → Publish.",
+        tauriOnly: "Docs build requires the desktop app (Tauri).",
+        build: "Build",
+        preview: "Preview",
+        stopPreview: "Stop preview",
+        building: "Building docs…",
+        buildDone:
+          "Built {{count}} pages → {{dir}}. Deploy with: pnpm docs:deploy",
+        previewNeedBuild: "Build once before previewing.",
+        previewReady: "Preview running at {{url}}",
+        previewStopped: "Preview server stopped.",
+        failed: "Failed: {{message}}",
+        futureHome: "Later: a special marketing homepage flow can plug in here.",
+      },
       updateIntro:
         "Set a simulated current version lower than the remote release to trigger the About page update flow and the titlebar auto-update capsule. Leave empty to use the real version. On macOS dev builds, download can be tested but install is blocked.",
       installBlockedOnMacDev:

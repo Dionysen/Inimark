@@ -14,7 +14,7 @@
     "bump-version": "node scripts/bump-version.mjs",
     "replace-icon": "node scripts/replace-icon.mjs",
     "docs:build": "tsx scripts/publish-docs.ts",
-    "docs:deploy": "tsx scripts/publish-docs.ts --deploy"
+    "docs:deploy": "tsx scripts/publish-docs.ts --deploy --skip-build"
   },
   "devDependencies": {
     "happy-dom": "^20.9.0",
