@@ -54,10 +54,13 @@ describe("CodeMirror 6 code editing and highlighting", () => {
 
   test("uses the Typora-Web code highlight palette instead of CodeMirror defaults", () => {
     const highlighterSource = readFileSync("src/code-highlighter.ts", "utf8");
+    const tokenStyleSource = readFileSync("src/code-token-style.ts", "utf8");
 
     expect(highlighterSource).toContain("const typoraWebHighlightStyle = HighlightStyle.define");
     expect(highlighterSource).toContain("syntaxHighlighting(typoraWebHighlightStyle");
-    expect(highlighterSource).toContain("--tw-code-keyword");
+    expect(highlighterSource).toContain("CODE_TOKEN_CSS_VARS");
+    expect(tokenStyleSource).toContain("--tw-code-keyword");
+    expect(tokenStyleSource).toContain("tags.standard(tags.variableName)");
     expect(highlighterSource).not.toContain("defaultHighlightStyle");
   });
 
@@ -215,9 +218,11 @@ describe("CodeMirror 6 code editing and highlighting", () => {
 
   test("code highlighter inherits --tw-code-* instead of hardcoding them on .cm-editor", () => {
     const highlighterSource = readFileSync("src/code-highlighter.ts", "utf8");
+    const tokenStyleSource = readFileSync("src/code-token-style.ts", "utf8");
 
-    expect(highlighterSource).toContain('color: "var(--tw-code-keyword');
-    expect(highlighterSource).toContain('color: "var(--tw-code-string');
+    expect(tokenStyleSource).toContain("var(--tw-code-keyword");
+    expect(tokenStyleSource).toContain("var(--tw-code-string");
+    expect(highlighterSource).toContain("CODE_TOKEN_CSS_VARS");
     // Must not re-declare palette on the CM root (that blocks document code themes).
     expect(highlighterSource).not.toMatch(
       /CodeMirrorView\.theme\(\{[\s\S]*?"--tw-code-keyword"\s*:/,

@@ -19,12 +19,16 @@ import {
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { markdown } from "@codemirror/lang-markdown";
-import { tags } from "@lezer/highlight";
 import {
   EditorView as CodeMirrorView,
   keymap,
   type ViewUpdate,
 } from "@codemirror/view";
+
+import {
+  CODE_TOKEN_CSS_VARS,
+  CODE_TOKEN_TAG_CLASSES,
+} from "./code-token-style.ts";
 
 export type CodeLanguageOption = {
   name: string;
@@ -68,18 +72,12 @@ const codeMirrorLanguages = languages.some((language) => language.name === "Leze
   ? languages
   : [...languages, lezerDescription];
 
-const typoraWebHighlightStyle = HighlightStyle.define([
-  { tag: tags.comment, color: "var(--tw-code-comment, #77736c)" },
-  { tag: [tags.keyword, tags.operatorKeyword, tags.modifier], color: "var(--tw-code-keyword, #7b4f9d)" },
-  { tag: [tags.string, tags.character, tags.attributeValue], color: "var(--tw-code-string, #8a5a28)" },
-  { tag: [tags.number, tags.bool, tags.null, tags.atom], color: "var(--tw-code-literal, #6c6f1f)" },
-  { tag: [tags.typeName, tags.className, tags.namespace], color: "var(--tw-code-type, #0f766e)" },
-  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "var(--tw-code-function, #2468a2)" },
-  { tag: [tags.variableName, tags.propertyName, tags.attributeName], color: "var(--tw-code-name, inherit)" },
-  { tag: [tags.operator, tags.punctuation, tags.bracket, tags.separator], color: "var(--tw-code-punctuation, #6f6a64)" },
-  { tag: [tags.meta, tags.annotation], color: "var(--tw-code-meta, #77736c)" },
-  { tag: tags.invalid, color: "var(--tw-code-invalid, #b42318)" },
-]);
+const typoraWebHighlightStyle = HighlightStyle.define(
+  CODE_TOKEN_TAG_CLASSES.map(({ tag, class: cls }) => ({
+    tag,
+    color: CODE_TOKEN_CSS_VARS[cls],
+  })),
+);
 
 export const CODE_LANGUAGE_OPTIONS: readonly CodeLanguageOption[] = codeMirrorLanguages
   .map((language) => ({

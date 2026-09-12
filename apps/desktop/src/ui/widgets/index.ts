@@ -30,6 +30,7 @@ export {
   settingsThemeIcon,
   settingsShortcutsIcon,
   settingsImageIcon,
+  settingsPublishIcon,
   settingsGraphIcon,
   settingsAboutIcon,
   settingsDevIcon,

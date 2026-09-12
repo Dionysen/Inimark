@@ -76,4 +76,15 @@ describe("highlightCodeToHtml", () => {
     const html = await highlightCodeToHtml("not-a-real-lang", "a < b");
     expect(html).toBe("a &lt; b");
   });
+
+  it("colors shell commands (standard identifiers) as functions", async () => {
+    const html = await highlightCodeToHtml(
+      "bash",
+      'echo "hello"\nif true; then cd /tmp; fi\n',
+    );
+    expect(html).toMatch(/<span class="tok-function">echo<\/span>/);
+    expect(html).toMatch(/<span class="tok-function">cd<\/span>/);
+    expect(html).toContain("tok-keyword");
+    expect(html).toContain("tok-string");
+  });
 });

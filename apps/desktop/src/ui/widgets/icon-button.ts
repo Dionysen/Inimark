@@ -167,6 +167,11 @@ export function settingsImageIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><circle cx="9" cy="10" r="1.75" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m21 16-4.5-4.5L7 21"/></svg>`;
 }
 
+/** Settings nav — publish / static site. */
+export function settingsPublishIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 12h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 3a14.5 14.5 0 0 1 0 18 14.5 14.5 0 0 1 0-18"/></svg>`;
+}
+
 /** Settings nav — relationship graph. */
 export function settingsGraphIcon(): string {
   return graphTabIcon();

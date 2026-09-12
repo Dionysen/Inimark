@@ -1,32 +1,15 @@
 /** Build-time Lezer highlighting for published fenced code (KaTeX-style). */
 
 import { HighlightStyle } from "@codemirror/language";
-import { highlightTree, tags } from "@lezer/highlight";
+import { highlightTree } from "@lezer/highlight";
 import type { LanguageSupport } from "@codemirror/language";
 
 import { loadCodeLanguage } from "./code-highlighter.ts";
+import { CODE_TOKEN_TAG_CLASSES } from "./code-token-style.ts";
 
-const siteTokenHighlightStyle = HighlightStyle.define([
-  { tag: tags.comment, class: "tok-comment" },
-  { tag: [tags.keyword, tags.operatorKeyword, tags.modifier], class: "tok-keyword" },
-  { tag: [tags.string, tags.character, tags.attributeValue], class: "tok-string" },
-  { tag: [tags.number, tags.bool, tags.null, tags.atom], class: "tok-literal" },
-  { tag: [tags.typeName, tags.className, tags.namespace], class: "tok-type" },
-  {
-    tag: [tags.function(tags.variableName), tags.function(tags.propertyName)],
-    class: "tok-function",
-  },
-  {
-    tag: [tags.variableName, tags.propertyName, tags.attributeName],
-    class: "tok-name",
-  },
-  {
-    tag: [tags.operator, tags.punctuation, tags.bracket, tags.separator],
-    class: "tok-punctuation",
-  },
-  { tag: [tags.meta, tags.annotation], class: "tok-meta" },
-  { tag: tags.invalid, class: "tok-invalid" },
-]);
+const siteTokenHighlightStyle = HighlightStyle.define(
+  CODE_TOKEN_TAG_CLASSES.map(({ tag, class: cls }) => ({ tag, class: cls })),
+);
 
 const languageCache = new Map<string, Promise<LanguageSupport | null>>();
 
