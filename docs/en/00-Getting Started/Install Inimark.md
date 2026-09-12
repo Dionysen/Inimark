@@ -65,6 +65,8 @@ More: [[FAQ and Troubleshooting]].
 
 Inimark can check GitHub Releases for updates (see **Settings → About**). Prefer staying on Latest unless you are debugging a specific build.
 
+Per-version download links and changelogs: [[Version History]].
+
 ## Build from source (contributors)
 
 For development builds you need a local toolchain:

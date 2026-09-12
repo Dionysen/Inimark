@@ -14,10 +14,13 @@
  *   - apps/desktop/src-tauri/Cargo.toml
  *   - apps/desktop/src/settings/view.ts (web fallbacks)
  *
- * Then commit and tag:
- *   git commit -am "chore: release v0.1.4"
- *   git tag v0.1.4
- *   git push origin main --tags
+ * Then:
+ *   1. Update docs/en/04-Appendix/Version History.md (and zh 版本历史)
+ *      with ## X.Y.Z and ### What's new — CI uses that for the GitHub Release body
+ *   2. Commit and tag:
+ *        git commit -am "chore: release v0.1.4"
+ *        git tag v0.1.4
+ *        git push origin main --tags
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -120,8 +123,10 @@ updateViewFallbacks("apps/desktop/src/settings/view.ts");
 
 console.log(`
 Done. Next:
-  git add -A
-  git commit -m "chore: release v${version}"
-  git tag v${version}
-  git push origin HEAD --tags
+  1. Add ## ${version} + ### What's new to docs/en/04-Appendix/Version History.md
+     (and sync docs/zh/04-附录/版本历史.md)
+  2. git add -A
+  3. git commit -m "chore: release v${version}"
+  4. git tag v${version}
+  5. git push origin HEAD --tags
 `);

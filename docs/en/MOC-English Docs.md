@@ -48,6 +48,7 @@ translationKey: moc
 - [[Feature Comparison]] — vs Typora / Obsidian
 - [[FAQ and Troubleshooting]] — install · links · publish
 - [[Data Directory]] — `.inimark/` layout
+- [[Version History]] — downloads · changelogs · release notes
 - [[Roadmap]] — shipped vs planned
 
 ---
