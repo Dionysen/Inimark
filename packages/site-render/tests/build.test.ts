@@ -49,8 +49,8 @@ describe("buildSite", () => {
 
     expect(result.pageCount).toBe(2);
 
-    const welcome = result.files.find((f) => f.path === "notes/folder/Welcome.html")!;
-    const other = result.files.find((f) => f.path === "notes/folder/Other.html")!;
+    const welcome = result.files.find((f) => f.path === "docs/folder/Welcome.html")!;
+    const other = result.files.find((f) => f.path === "docs/folder/Other.html")!;
     expect(welcome.content).toContain("Welcome Home");
     expect(welcome.content).not.toContain("<yaml-block");
     expect(welcome.content).toContain('aria-expanded="true"'); // ancestor of active
@@ -121,7 +121,7 @@ describe("buildSite", () => {
       themeIds: ["ocean"],
     });
 
-    const one = result.files.find((f) => f.path === "notes/a/One.html")!;
+    const one = result.files.find((f) => f.path === "docs/a/One.html")!;
     expect(one.content).toMatch(/site-tree-dir[^>]*>[\s\S]*aria-expanded="true"/);
     expect(one.content).toContain('aria-expanded="false"');
   });
@@ -188,16 +188,16 @@ describe("buildSite", () => {
     });
 
     expect(result.pageCount).toBe(2);
-    expect(result.files.find((f) => f.path === "notes/README.html")).toBeUndefined();
+    expect(result.files.find((f) => f.path === "docs/README.html")).toBeUndefined();
 
     const localeMap = result.files.find((f) => f.path === "assets/locale-map.json")!;
     expect(JSON.parse(localeMap.content).translations.welcome).toEqual({
-      zh: "notes/zh/欢迎.html",
-      en: "notes/en/Welcome.html",
+      zh: "docs/zh/欢迎.html",
+      en: "docs/en/Welcome.html",
     });
 
-    const zh = result.files.find((f) => f.path === "notes/zh/欢迎.html")!;
-    const en = result.files.find((f) => f.path === "notes/en/Welcome.html")!;
+    const zh = result.files.find((f) => f.path === "docs/zh/欢迎.html")!;
+    const en = result.files.find((f) => f.path === "docs/en/Welcome.html")!;
     const index = result.files.find((f) => f.path === "index.html")!;
 
     expect(zh.content).toContain('html lang="zh"');
@@ -214,7 +214,7 @@ describe("buildSite", () => {
     expect(en.content).not.toMatch(/site-tree-label">zh</);
     expect(en.content).not.toMatch(/site-tree-label">en</);
 
-    expect(index.content).toContain("notes/zh/欢迎.html");
+    expect(index.content).toContain("docs/zh/欢迎.html");
   });
 
   it("shows a sidebar link back to the marketing homepage when enabled", async () => {
@@ -251,8 +251,8 @@ describe("buildSite", () => {
       themeIds: ["light"],
     });
 
-    const zh = result.files.find((f) => f.path === "notes/zh/欢迎.html")!;
-    const en = result.files.find((f) => f.path === "notes/en/Welcome.html")!;
+    const zh = result.files.find((f) => f.path === "docs/zh/欢迎.html")!;
+    const en = result.files.find((f) => f.path === "docs/en/Welcome.html")!;
     expect(zh.content).toContain('class="site-home-link"');
     expect(zh.content).toContain("返回主页");
     expect(zh.content).toMatch(/href="[^"]*index\.html"/);
@@ -281,7 +281,7 @@ describe("buildSite", () => {
       mermaidRuntimeJs: "/* mermaid stub */\nwindow.mermaid = {};",
     });
 
-    const page = result.files.find((f) => f.path === "notes/Chart.html")!;
+    const page = result.files.find((f) => f.path === "docs/Chart.html")!;
     expect(page.content).toContain('pre class="mermaid"');
     expect(page.content).toContain("flowchart LR");
     expect(page.content).toContain("assets/mermaid.min.js");
@@ -319,7 +319,7 @@ describe("buildSite", () => {
       themeIds: ["light"],
     });
 
-    const page = result.files.find((f) => f.path === "notes/Snippet.html")!;
+    const page = result.files.find((f) => f.path === "docs/Snippet.html")!;
     expect(page.content).toContain('data-lang="python"');
     expect(page.content).toContain("language-python");
     expect(page.content).toMatch(/tok-(keyword|function|literal)/);

@@ -6,7 +6,7 @@ describe("mediaOutPath", () => {
     expect(
       mediaOutPath(
         "C:/Users/zhaoys-c/Desktop/imgimage-20240905094448319.png",
-        "notes/a.md",
+        "docs/a.md",
       ),
     ).toBe("media/ext/C/Users/zhaoys-c/Desktop/imgimage-20240905094448319.png");
   });

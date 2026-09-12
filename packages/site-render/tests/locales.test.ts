@@ -16,7 +16,7 @@ const locales: SiteLocalesConfig = {
 };
 
 const tree: ManifestNode[] = [
-  { name: "README.md", path: "README.md", kind: "file", href: "notes/README.html" },
+  { name: "README.md", path: "README.md", kind: "file", href: "docs/README.html" },
   {
     name: "zh",
     path: "zh",
@@ -27,7 +27,7 @@ const tree: ManifestNode[] = [
         path: "zh/00-start",
         kind: "directory",
         children: [
-          { name: "欢迎.md", path: "zh/00-start/欢迎.md", kind: "file", href: "notes/zh/00-start/欢迎.html" },
+          { name: "欢迎.md", path: "zh/00-start/欢迎.md", kind: "file", href: "docs/zh/00-start/欢迎.html" },
         ],
       },
     ],
@@ -42,7 +42,7 @@ const tree: ManifestNode[] = [
         path: "en/00-start",
         kind: "directory",
         children: [
-          { name: "Welcome.md", path: "en/00-start/Welcome.md", kind: "file", href: "notes/en/00-start/Welcome.html" },
+          { name: "Welcome.md", path: "en/00-start/Welcome.md", kind: "file", href: "docs/en/00-start/Welcome.html" },
         ],
       },
     ],
@@ -84,14 +84,14 @@ describe("filterManifestForLocale", () => {
 describe("buildLocaleMap", () => {
   it("pairs pages by translationKey", () => {
     const map = buildLocaleMap([
-      { translationKey: "welcome", lang: "zh", htmlPath: "notes/zh/欢迎.html" },
-      { translationKey: "welcome", lang: "en", htmlPath: "notes/en/Welcome.html" },
-      { translationKey: "solo", lang: "zh", htmlPath: "notes/zh/solo.html" },
+      { translationKey: "welcome", lang: "zh", htmlPath: "docs/zh/欢迎.html" },
+      { translationKey: "welcome", lang: "en", htmlPath: "docs/en/Welcome.html" },
+      { translationKey: "solo", lang: "zh", htmlPath: "docs/zh/solo.html" },
     ]);
     expect(map.welcome).toEqual({
-      zh: "notes/zh/欢迎.html",
-      en: "notes/en/Welcome.html",
+      zh: "docs/zh/欢迎.html",
+      en: "docs/en/Welcome.html",
     });
-    expect(map.solo).toEqual({ zh: "notes/zh/solo.html" });
+    expect(map.solo).toEqual({ zh: "docs/zh/solo.html" });
   });
 });

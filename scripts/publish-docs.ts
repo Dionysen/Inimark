@@ -196,7 +196,9 @@ async function main(): Promise<void> {
     editorThemeCss,
     themeIds: [...BUILTIN_THEMES],
     mermaidRuntimeJs: readFileSync(
-      require.resolve("mermaid/dist/mermaid.min.js"),
+      require.resolve("mermaid/dist/mermaid.min.js", {
+        paths: [join(root, "packages/editor"), join(root, "apps/desktop")],
+      }),
       "utf8",
     ),
   });

@@ -165,7 +165,7 @@ export interface SiteGraphPayload {
 export interface BuiltPage {
   /** Vault-relative markdown path, forward slashes. */
   sourcePath: string;
-  /** Site-relative HTML path under out, e.g. `notes/foo.html`. */
+  /** Site-relative HTML path under out, e.g. `docs/foo.html`. */
   htmlPath: string;
   title: string;
   bodyHtml: string;

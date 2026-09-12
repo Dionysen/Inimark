@@ -16,11 +16,11 @@ export function joinUrl(baseHref: string, rel: string): string {
   return `${base}${clean}`;
 }
 
-/** `folder/note.md` → `notes/folder/note.html` */
+/** `folder/note.md` → `docs/folder/note.html` (site docs URL prefix). */
 export function noteHtmlPath(sourcePath: string): string {
   const norm = normalizeSlashes(sourcePath).replace(/^\.\//, "");
   const withoutExt = norm.replace(/\.(md|markdown|mdown)$/i, "");
-  return `notes/${withoutExt}.html`;
+  return `docs/${withoutExt}.html`;
 }
 
 export function noteTitleFromPath(sourcePath: string): string {

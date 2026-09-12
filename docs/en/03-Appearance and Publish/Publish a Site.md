@@ -150,7 +150,7 @@ Site URL: https://dionysen.github.io/Inimark/
 | Any nginx / object storage | Upload `dist/` as the web root (mind `baseHref`) |
 | USB / offline folder | Open `index.html` only if `baseHref` is compatible |
 
-For this repo on GitHub Pages, the **site root is the product marketing homepage** (`docs/landing`). Docs open from the homepage navigation (e.g. [[欢迎]] / [[Welcome]]). The docs sidebar includes a **Home** link back to that page. Each language still uses its own welcome note as the docs entry.
+For this repo on GitHub Pages, the **site root is the product marketing homepage** (`docs/landing`). Documentation lives under `/docs/` (e.g. [[欢迎]] / [[Welcome]]). The docs sidebar includes a **Home** link back to that page. Each language still uses its own welcome note as the docs entry.
 
 ## Authoring conventions
 
