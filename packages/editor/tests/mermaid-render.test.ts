@@ -68,6 +68,7 @@ describe("mermaid renderer", () => {
           titleColor: "#ff6600",
         },
       });
+      expect(vars.fontSize).toMatch(/^\d+px$/);
       // Translucent theme borders must be flattened to opaque hex for Mermaid.
       expect(vars.primaryBorderColor).toMatch(/^#[0-9a-f]{6}$/i);
       expect(vars.primaryBorderColor).not.toContain("rgba");

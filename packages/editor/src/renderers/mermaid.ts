@@ -5,6 +5,16 @@ export type MermaidLike = {
     suppressErrorRendering: true;
     theme: "base";
     themeVariables?: MermaidThemeVariables;
+    flowchart?: Record<string, unknown>;
+    sequence?: Record<string, unknown>;
+    gantt?: Record<string, unknown>;
+    journey?: Record<string, unknown>;
+    class?: Record<string, unknown>;
+    state?: Record<string, unknown>;
+    er?: Record<string, unknown>;
+    pie?: Record<string, unknown>;
+    quadrantChart?: Record<string, unknown>;
+    xyChart?: Record<string, unknown>;
   }): void;
   render(id: string, code: string): Promise<{ svg: string }>;
 };
@@ -223,6 +233,26 @@ function readThemeSeeds(appearance: MermaidRenderAppearance): ThemeSeedFallbacks
   };
 }
 
+/** Body text size minus 1–2px so diagram labels sit just under prose. */
+export function resolveMermaidFontSizePx(): number {
+  if (typeof document === "undefined") return 14;
+  const el =
+    document.querySelector(".ProseMirror") ||
+    document.querySelector(".site-article") ||
+    document.body;
+  try {
+    const px = Number.parseFloat(getComputedStyle(el).fontSize);
+    if (Number.isFinite(px) && px > 0) return Math.max(10, Math.round(px) - 2);
+  } catch {
+    /* ignore */
+  }
+  const fromVar = Number.parseFloat(
+    readCssVar("--editor-font-size", readCssVar("--inimark-editor-font-size", "16")),
+  );
+  if (Number.isFinite(fromVar) && fromVar > 0) return Math.max(10, Math.round(fromVar) - 2);
+  return 14;
+}
+
 /** Build Mermaid `themeVariables` from the active Inimark theme CSS tokens. */
 export function buildMermaidThemeVariables(
   appearance: MermaidRenderAppearance = getMermaidRenderAppearance(),
@@ -231,10 +261,12 @@ export function buildMermaidThemeVariables(
   const dark = appearance === "dark";
   // Pie slice labels sit on pastel fills — keep them dark for contrast.
   const pieSectionText = dark ? s.contentBg : s.fg;
+  const fontSize = resolveMermaidFontSizePx();
 
   return {
     darkMode: dark,
     background: "transparent",
+    fontSize: `${fontSize}px`,
     primaryColor: s.surface,
     secondaryColor: s.secondary,
     tertiaryColor: s.tertiary,
@@ -375,19 +407,97 @@ export function getMermaidThemeFingerprint(): string {
   if (typeof document === "undefined") return appearance;
   const styles = getComputedStyle(document.documentElement);
   const parts = MERMAID_THEME_CSS_VARS.map((name) => styles.getPropertyValue(name).trim());
-  return `${appearance}\u0000${parts.join("\u0001")}`;
+  return `${appearance}\u0000${parts.join("\u0001")}\u0000fs:${resolveMermaidFontSizePx()}`;
 }
 
 export function mermaidConfigForAppearance(
   appearance: MermaidRenderAppearance = getMermaidRenderAppearance(),
 ) {
+  const fontPx = resolveMermaidFontSizePx();
+  let chartSize = 560;
+  if (typeof document !== "undefined") {
+    const host =
+      document.querySelector(".ProseMirror .diagram-panel") ||
+      document.querySelector(".ProseMirror") ||
+      document.querySelector(".site-article");
+    const w = host instanceof HTMLElement ? host.clientWidth : 0;
+    if (w > 0) chartSize = Math.max(320, Math.min(w, 900));
+  }
   return {
     startOnLoad: false as const,
     securityLevel: "strict" as const,
     suppressErrorRendering: true as const,
     theme: "base" as const,
     themeVariables: buildMermaidThemeVariables(appearance),
+    // Absolute px sizing keeps themeVariables.fontSize 1:1 with CSS px.
+    flowchart: { useMaxWidth: false, htmlLabels: true },
+    sequence: { useMaxWidth: false },
+    gantt: { useMaxWidth: false },
+    journey: { useMaxWidth: false },
+    class: { useMaxWidth: false },
+    state: { useMaxWidth: false },
+    er: { useMaxWidth: false },
+    pie: { useMaxWidth: false },
+    quadrantChart: {
+      useMaxWidth: false,
+      chartWidth: chartSize,
+      chartHeight: chartSize,
+      pointLabelFontSize: fontPx,
+      quadrantLabelFontSize: fontPx,
+      xAxisLabelFontSize: fontPx,
+      yAxisLabelFontSize: fontPx,
+      titleFontSize: fontPx + 4,
+    },
+    xyChart: {
+      useMaxWidth: false,
+      width: chartSize,
+      height: Math.round(chartSize * 0.62),
+      titleFontSize: fontPx + 2,
+    },
   };
+}
+
+/** Keep Mermaid SVG at intrinsic size so baked fontSize ≈ on-screen body−2px. */
+export function fitMermaidSvgElement(svg: SVGElement, _bakedFontPx = resolveMermaidFontSizePx()): void {
+  let intrinsicW = 0;
+  let intrinsicH = 0;
+  const vb = svg.getAttribute("viewBox");
+  if (vb) {
+    const parts = vb.trim().split(/[\s,]+/).map(Number);
+    if (parts.length === 4 && parts[2]! > 0 && parts[3]! > 0) {
+      intrinsicW = parts[2]!;
+      intrinsicH = parts[3]!;
+    }
+  }
+  const style = svg.getAttribute("style") || "";
+  const maxW = /max-width:\s*([\d.]+)px/i.exec(style);
+  if (maxW) intrinsicW = intrinsicW || Number.parseFloat(maxW[1]!);
+  const attrW = Number.parseFloat(svg.getAttribute("width") || "");
+  const attrH = Number.parseFloat(svg.getAttribute("height") || "");
+  if (Number.isFinite(attrW) && attrW > 0) intrinsicW = intrinsicW || attrW;
+  if (Number.isFinite(attrH) && attrH > 0) intrinsicH = intrinsicH || attrH;
+  if (!(intrinsicW > 0) || !(intrinsicH > 0)) {
+    try {
+      const bbox = svg.getBBox();
+      if (bbox.width > 0 && bbox.height > 0) {
+        intrinsicW = intrinsicW || bbox.width;
+        intrinsicH = intrinsicH || bbox.height;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  if (!(intrinsicW > 0)) return;
+  if (!(intrinsicH > 0)) intrinsicH = intrinsicW;
+  if (!svg.getAttribute("viewBox")) {
+    svg.setAttribute("viewBox", `0 0 ${intrinsicW} ${intrinsicH}`);
+  }
+
+  svg.removeAttribute("height");
+  svg.setAttribute("width", String(intrinsicW));
+  svg.style.width = `${intrinsicW}px`;
+  svg.style.maxWidth = "100%";
+  svg.style.height = "auto";
 }
 
 function shouldPadMermaidNewline(prev: string | undefined, next: string | undefined): boolean {

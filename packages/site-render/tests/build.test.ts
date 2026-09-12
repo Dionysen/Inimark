@@ -248,5 +248,11 @@ describe("buildSite", () => {
     expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
       'theme: "base"',
     );
+    expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
+      "resolveMermaidFontSize",
+    );
+    expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
+      "fitMermaidSvg",
+    );
   });
 });

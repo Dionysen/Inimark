@@ -24,6 +24,8 @@ import { createLatestTaskScheduler } from "../renderers/latest-task.ts";
 import {
   getMermaidThemeFingerprint,
   mermaidRenderer,
+  fitMermaidSvgElement,
+  resolveMermaidFontSizePx,
 } from "../renderers/mermaid.ts";
 import { setCaretInTextblock } from "../selection-utils.ts";
 import type { FeatureSpec } from "./_types.ts";
@@ -968,6 +970,8 @@ class CodeBlockView implements NodeView {
           this.diagramEl.hidden = false;
           this.diagramEl.dataset.diagramState = "success";
           this.diagramEl.innerHTML = result.svg;
+          const svg = this.diagramEl.querySelector("svg");
+          if (svg) fitMermaidSvgElement(svg, resolveMermaidFontSizePx());
         } else {
           this.dom.classList.add("diagram-error");
           this.dom.classList.remove("diagram-success");

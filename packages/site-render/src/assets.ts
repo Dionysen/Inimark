@@ -385,6 +385,7 @@ html.site-graph-modal-open body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
   margin: 8px 0 16px;
   overflow-x: auto;
   text-align: center;
@@ -393,6 +394,7 @@ html.site-graph-modal-open body {
 .site-article .code-block-node.has-diagram .diagram-panel .mermaid > svg {
   display: block;
   margin-inline: auto;
+  width: auto;
   max-width: 100%;
   height: auto;
 }
@@ -403,6 +405,8 @@ html.site-graph-modal-open body {
   background: transparent;
   box-shadow: none;
   overflow: visible;
+  width: auto;
+  max-width: 100%;
   font: inherit;
   color: inherit;
   white-space: pre-wrap;
@@ -937,6 +941,29 @@ export const SITE_JS = `(() => {
     root.dataset.appearance = isDarkAppearance() ? "dark" : "light";
   };
 
+  const resolveArticleFontSize = () => {
+    const el =
+      document.querySelector(".site-article .ProseMirror") ||
+      document.querySelector(".site-article") ||
+      document.body;
+    try {
+      const px = parseFloat(getComputedStyle(el).fontSize);
+      if (Number.isFinite(px) && px > 0) return px;
+    } catch (_) {}
+    const fromVar = parseFloat(readCssVar("--editor-font-size", readCssVar("--inimark-editor-font-size", "16")));
+    return Number.isFinite(fromVar) && fromVar > 0 ? fromVar : 16;
+  };
+
+  const resolveMermaidFontSize = () => Math.max(10, Math.round(resolveArticleFontSize()) - 2);
+
+  const resolveDiagramContainerWidth = () => {
+    const panel = document.querySelector(".site-article .diagram-panel");
+    if (panel && panel.clientWidth > 0) return panel.clientWidth;
+    const article = document.querySelector(".site-article");
+    if (article && article.clientWidth > 0) return Math.max(280, article.clientWidth);
+    return 640;
+  };
+
   const buildMermaidThemeVariables = () => {
     const dark = isDarkAppearance();
     const fb = dark ? DARK_FALLBACKS : LIGHT_FALLBACKS;
@@ -962,9 +989,11 @@ export const SITE_JS = `(() => {
       blockquoteBorder: solid(readCssVar("--blockquote-border", fb.blockquoteBorder), fb.blockquoteBorder),
     };
     const pieSectionText = dark ? s.contentBg : s.fg;
+    const fontSize = resolveMermaidFontSize() + "px";
     return {
       darkMode: dark,
       background: "transparent",
+      fontSize,
       primaryColor: s.surface,
       secondaryColor: s.secondary,
       tertiaryColor: s.tertiary,
@@ -1129,21 +1158,105 @@ export const SITE_JS = `(() => {
     }
   };
 
+  const readSvgIntrinsicSize = (svg) => {
+    let w = 0;
+    let h = 0;
+    const vb = svg.getAttribute("viewBox");
+    if (vb) {
+      const parts = vb.trim().split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+        w = parts[2];
+        h = parts[3];
+      }
+    }
+    const style = svg.getAttribute("style") || "";
+    const maxW = /max-width:\s*([\d.]+)px/i.exec(style);
+    if (maxW) w = w || parseFloat(maxW[1]);
+    const attrW = parseFloat(svg.getAttribute("width") || "");
+    const attrH = parseFloat(svg.getAttribute("height") || "");
+    if (Number.isFinite(attrW) && attrW > 0) w = w || attrW;
+    if (Number.isFinite(attrH) && attrH > 0) h = h || attrH;
+    if (!(w > 0) || !(h > 0)) {
+      try {
+        const bbox = svg.getBBox();
+        if (bbox.width > 0 && bbox.height > 0) {
+          w = w || bbox.width;
+          h = h || bbox.height;
+        }
+      } catch (_) {}
+    }
+    return { w, h };
+  };
+
+  // Keep SVG at Mermaid's intrinsic size so themeVariables.fontSize (body−2px)
+  // maps 1:1 to on-screen px. Only shrink when wider than the column.
+  const fitMermaidSvg = (svg) => {
+    let { w: intrinsicW, h: intrinsicH } = readSvgIntrinsicSize(svg);
+    if (!(intrinsicW > 0)) return;
+    if (!(intrinsicH > 0)) intrinsicH = intrinsicW;
+    if (!svg.getAttribute("viewBox")) {
+      svg.setAttribute("viewBox", "0 0 " + intrinsicW + " " + intrinsicH);
+    }
+    svg.removeAttribute("height");
+    svg.setAttribute("width", String(intrinsicW));
+    svg.style.width = intrinsicW + "px";
+    svg.style.maxWidth = "100%";
+    svg.style.height = "auto";
+  };
+
+  const fitMermaidDiagrams = (roots) => {
+    roots.forEach((rootEl) => {
+      const svgs = rootEl.tagName === "svg"
+        ? [rootEl]
+        : Array.from(rootEl.querySelectorAll("svg"));
+      svgs.forEach((svg) => fitMermaidSvg(svg));
+    });
+  };
+
   const renderMermaidDiagrams = async () => {
     const nodes = Array.from(document.querySelectorAll("pre.mermaid"));
     if (!nodes.length) return;
     try {
       syncAppearance();
       const mermaid = await waitForMermaid();
+      const fontPx = resolveMermaidFontSize();
+      const containerW = resolveDiagramContainerWidth();
+      const chartSize = Math.max(320, Math.min(containerW, 900));
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "strict",
         suppressErrorRendering: true,
         theme: "base",
         themeVariables: buildMermaidThemeVariables(),
+        // useMaxWidth:false → absolute px size so fontSize stays 1:1 on screen
+        flowchart: { useMaxWidth: false, htmlLabels: true },
+        sequence: { useMaxWidth: false },
+        gantt: { useMaxWidth: false },
+        journey: { useMaxWidth: false },
+        class: { useMaxWidth: false },
+        state: { useMaxWidth: false },
+        er: { useMaxWidth: false },
+        pie: { useMaxWidth: false },
+        quadrantChart: {
+          useMaxWidth: false,
+          chartWidth: chartSize,
+          chartHeight: chartSize,
+          pointLabelFontSize: fontPx,
+          quadrantLabelFontSize: fontPx,
+          xAxisLabelFontSize: fontPx,
+          yAxisLabelFontSize: fontPx,
+          titleFontSize: fontPx + 4,
+        },
+        xyChart: {
+          useMaxWidth: false,
+          width: chartSize,
+          height: Math.round(chartSize * 0.62),
+          titleFontSize: fontPx + 2,
+        },
       });
       await mermaid.run({ nodes });
       nodes.forEach(markDiagramSuccess);
+      fitMermaidDiagrams(nodes);
     } catch (error) {
       console.warn("Inimark site: Mermaid render failed", error);
     }
