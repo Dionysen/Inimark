@@ -107,6 +107,16 @@ describe("settings store", () => {
     expect(document.documentElement.dataset.focusMode).toBe("false");
   });
 
+  test("persists first-line indent and applies data-first-line-indent", () => {
+    expect(DEFAULT_SETTINGS.firstLineIndent).toBe(false);
+    saveSettings({ ...DEFAULT_SETTINGS, firstLineIndent: true });
+    expect(loadSettings().firstLineIndent).toBe(true);
+    applySettings(loadSettings());
+    expect(document.documentElement.dataset.firstLineIndent).toBe("true");
+    applySettings({ ...DEFAULT_SETTINGS, firstLineIndent: false });
+    expect(document.documentElement.dataset.firstLineIndent).toBe("false");
+  });
+
   test("defaults update proxy preference to enabled", () => {
     expect(DEFAULT_SETTINGS.useSystemProxyForUpdates).toBe(true);
     saveSettings({ ...DEFAULT_SETTINGS, useSystemProxyForUpdates: false });

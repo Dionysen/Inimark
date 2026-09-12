@@ -31,6 +31,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | --- | --- | --- |
 | Typewriter | Keeps the caret line centered | Long writing sessions |
 | Focus | Dims inactive blocks around the caret | Dense notes / less visual noise |
+| First-line indent | Indents the first line of top-level paragraphs by ~2 characters (display only) | Chinese prose / formal essays |
 | Auto-hide title / status | More canvas, less chrome | Focused drafting |
 | Editor / code fonts & sizes | Typography comfort | You care about reading feel |
 | Editor width | Constrains line length | Prose-heavy notes |

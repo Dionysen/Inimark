@@ -85,6 +85,15 @@ Persists in settings (same as typewriter).
 
 Combine with auto-hidden title/status bars for a near-paper canvas — [[Themes and Appearance]].
 
+## First-line indent
+
+When enabled, each **top-level paragraph** shows a first-line indent of about **two character widths** (`2em`). It is **display only** — nothing is inserted into the Markdown file.
+
+- Enable under **Settings → Editor**
+- Does **not** indent list items, blockquotes, headings, or code blocks
+
+Useful for Chinese prose and formal essays.
+
 ## Mode matrix
 
 | Mode | Maturity | Entry |
@@ -93,5 +102,6 @@ Combine with auto-hidden title/status bars for a near-paper canvas — [[Themes 
 | Source | ✅ | `Ctrl/⌘+/` |
 | Typewriter | ✅ | `F9` / Settings / status bar |
 | Focus | ✅ | `F8` / Settings / More → Immersive |
+| First-line indent | ✅ | Settings → Editor |
 
 Related: [[Markdown Syntax]] · [[Find Replace and Shortcuts]] · [[Math and Diagrams]] · [[Everyday Workflows]]

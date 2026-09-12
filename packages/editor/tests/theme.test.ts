@@ -28,4 +28,10 @@ describe("built-in editor themes", () => {
     expect(typoraThemeCss).toContain(".ProseMirror pre");
     expect(typoraThemeCss).toContain("var(--bg-code");
   });
+
+  test("first-line indent is display-only CSS gated by html data attribute", () => {
+    const typoraThemeCss = readFileSync("src/styles/theme-typora.css", "utf8");
+    expect(typoraThemeCss).toContain('html[data-first-line-indent="true"] .ProseMirror > p');
+    expect(typoraThemeCss).toContain("text-indent: 2em");
+  });
 });

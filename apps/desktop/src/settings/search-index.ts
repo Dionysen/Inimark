@@ -68,6 +68,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "editor.editorWidth", section: "editor", titleKey: "settings.editor.editorWidth", descKey: "settings.editor.editorWidthDesc" },
   { id: "editor.typewriter", section: "editor", titleKey: "settings.editor.typewriter", descKey: "settings.editor.typewriterDesc" },
   { id: "editor.focus", section: "editor", titleKey: "settings.editor.focus", descKey: "settings.editor.focusDesc" },
+  { id: "editor.firstLineIndent", section: "editor", titleKey: "settings.editor.firstLineIndent", descKey: "settings.editor.firstLineIndentDesc" },
   { id: "editor.autoHideStatusbar", section: "editor", titleKey: "settings.editor.autoHideStatusbar", descKey: "settings.editor.autoHideStatusbarDesc" },
   { id: "editor.autoHideTitlebar", section: "editor", titleKey: "settings.editor.autoHideTitlebar", descKey: "settings.editor.autoHideTitlebarDesc" },
   { id: "editor.autoSave", section: "editor", titleKey: "settings.editor.autoSave", descKey: "settings.editor.autoSaveDesc" },

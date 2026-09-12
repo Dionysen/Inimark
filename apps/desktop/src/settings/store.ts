@@ -101,6 +101,11 @@ export interface AppSettings {
   typewriterMode: boolean;
   /** Dim blocks away from the caret so the active paragraph stands out. */
   focusMode: boolean;
+  /**
+   * Display-only first-line indent (~2 CJK em) on top-level paragraphs.
+   * Not stored in Markdown; lists / quotes stay unindented.
+   */
+  firstLineIndent: boolean;
   /** Hide bottom-right status bar tools until the pointer enters that corner. */
   autoHideStatusbar: boolean;
   /** Collapse the editor titlebar until the pointer enters the top edge. */
@@ -226,6 +231,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   codeLineHeight: 1.5,
   typewriterMode: false,
   focusMode: false,
+  firstLineIndent: false,
   autoHideStatusbar: false,
   autoHideTitlebar: false,
   autoSave: false,
@@ -347,6 +353,7 @@ export function applySettings(settings: AppSettings): void {
 
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
   root.dataset.focusMode = settings.focusMode ? "true" : "false";
+  root.dataset.firstLineIndent = settings.firstLineIndent ? "true" : "false";
   root.dataset.autoHideStatusbar = settings.autoHideStatusbar ? "true" : "false";
   root.dataset.autoHideTitlebar = settings.autoHideTitlebar ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
@@ -437,6 +444,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
     focusMode: Boolean(parsed.focusMode ?? DEFAULT_SETTINGS.focusMode),
+    firstLineIndent: Boolean(parsed.firstLineIndent ?? DEFAULT_SETTINGS.firstLineIndent),
     autoHideStatusbar: Boolean(
       parsed.autoHideStatusbar ??
         (parsed as { immersiveEditing?: boolean }).immersiveEditing ??

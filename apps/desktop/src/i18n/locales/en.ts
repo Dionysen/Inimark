@@ -399,6 +399,9 @@ export const en: Dictionary = {
       typewriterDesc: "Keep the caret line vertically centered while writing.",
       focus: "Focus mode",
       focusDesc: "Dim blocks away from the caret so the active paragraph stands out.",
+      firstLineIndent: "First-line indent",
+      firstLineIndentDesc:
+        "Indent the first line of each top-level paragraph by two character widths (display only; not saved in Markdown). Lists and quotes are unchanged.",
       autoHideStatusbar: "Auto-hide status bar tools",
       autoHideStatusbarDesc:
         "Hide the bottom-right status bar tools until the pointer enters that area.",

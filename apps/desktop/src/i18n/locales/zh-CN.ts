@@ -398,6 +398,9 @@ export const zhCN: Dictionary = {
       typewriterDesc: "写作时将光标行垂直居中。",
       focus: "专注模式",
       focusDesc: "淡化光标以外的块，让当前段落更突出。",
+      firstLineIndent: "首行缩进",
+      firstLineIndentDesc:
+        "顶层段落首行缩进约两个汉字宽度（仅显示，不写入 Markdown）。列表与引用不受影响。",
       autoHideStatusbar: "状态栏工具自动隐藏",
       autoHideStatusbarDesc: "自动隐藏右下角状态栏工具，鼠标移入该区域时再显示。",
       autoHideTitlebar: "顶栏自动隐藏",

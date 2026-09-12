@@ -696,6 +696,22 @@ export function mountSettingsView(
       ),
     );
 
+    const firstLineIndent = createToggle({
+      checked: settings.firstLineIndent,
+      title: t("settings.editor.firstLineIndent"),
+      onChange(checked) {
+        update({ firstLineIndent: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.firstLineIndent"),
+        t("settings.editor.firstLineIndentDesc"),
+        firstLineIndent.el,
+        "editor.firstLineIndent",
+      ),
+    );
+
     const autoHideStatusbar = createToggle({
       checked: settings.autoHideStatusbar,
       title: t("settings.editor.autoHideStatusbar"),

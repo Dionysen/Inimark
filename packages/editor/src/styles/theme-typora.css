@@ -57,6 +57,11 @@
 
 /* ─── paragraphs ─────────────────────────────────────────────────── */
 .ProseMirror p { margin: 0 0 var(--editor-paragraph-spacing, 1.05em); }
+
+/* Display-only first-line indent (~2 CJK character widths). Markdown unchanged. */
+html[data-first-line-indent="true"] .ProseMirror > p {
+  text-indent: 2em;
+}
 .ProseMirror p:last-child { margin-bottom: 0; }
 
 /* ─── links ──────────────────────────────────────────────────────── */
