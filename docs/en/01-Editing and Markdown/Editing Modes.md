@@ -77,8 +77,11 @@ Persists in settings when changed from the Editor section.
 
 Dims blocks away from the caret so the active paragraph stands out.
 
-- Toggle with **`F8`** while the editor is focused
-- Session-only (not a Settings checkbox today)
+- Enable under **Settings → Editor**
+- Toggle from **More → Immersive editing**
+- Or press **`F8`** while the editor is focused
+
+Persists in settings (same as typewriter).
 
 Combine with auto-hidden title/status bars for a near-paper canvas — [[Themes and Appearance]].
 
@@ -89,6 +92,6 @@ Combine with auto-hidden title/status bars for a near-paper canvas — [[Themes 
 | WYSIWYG | ✅ | Default |
 | Source | ✅ | `Ctrl/⌘+/` |
 | Typewriter | ✅ | `F9` / Settings / status bar |
-| Focus | ✅ | `F8` |
+| Focus | ✅ | `F8` / Settings / More → Immersive |
 
 Related: [[Markdown Syntax]] · [[Find Replace and Shortcuts]] · [[Math and Diagrams]] · [[Everyday Workflows]]

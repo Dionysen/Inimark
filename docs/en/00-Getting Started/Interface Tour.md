@@ -8,15 +8,15 @@ translationKey: interface-tour
 
 **中文:** [[界面导览|中文]] · [[MOC-English Docs]]
 
-Think of the main window as three columns:
+The main window is a writing column flanked by sidebars: title bar on top, status bar at the bottom, editor in the middle; Files, Outline, and other tabs can sit on either side (and collapse when you want more canvas).
 
-```text
-┌──────────┬─────────────────────┬──────────┐
-│ Left     │     Editor          │  Right   │
-│ Files…   │  WYSIWYG / Source   │ Outline… │
-└──────────┴─────────────────────┴──────────┘
-               Status / Title bar
-```
+| Region | Typical contents |
+| --- | --- |
+| Top | Back / Forward, window controls, More menu |
+| Left sidebar | Files, Search, Bookmarks, Outline, Graph (configurable) |
+| Center | Editor: WYSIWYG or source |
+| Right sidebar | Same tab set; left/right assignment is customizable |
+| Bottom | Word count, typewriter, and other status |
 
 ## Title bar
 
@@ -55,7 +55,7 @@ The center is `@inimark/editor`:
 
 - Default [[Editing Modes#WYSIWYG|WYSIWYG]]
 - `Ctrl/⌘ + /` toggles [[Editing Modes#Source mode|source mode]]
-- [[Editing Modes#Typewriter mode|Typewriter]] (`F9` / status bar) and [[Editing Modes#Focus mode|Focus]] (`F8`)
+- [[Editing Modes#Typewriter mode|Typewriter]] (`F9` / status bar) and [[Editing Modes#Focus mode|Focus]] (`F8` / Settings / More → Immersive)
 
 Context menus insert formatting, links, callouts — see [[Markdown Syntax]].
 

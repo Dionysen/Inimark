@@ -96,6 +96,17 @@ describe("settings store", () => {
     applySettings({ ...DEFAULT_SETTINGS, glassEffect: false });
     expect(document.documentElement.dataset.glass).toBe("false");
   });
+
+  test("persists focus mode and applies data-focus-mode", () => {
+    expect(DEFAULT_SETTINGS.focusMode).toBe(false);
+    saveSettings({ ...DEFAULT_SETTINGS, focusMode: true });
+    expect(loadSettings().focusMode).toBe(true);
+    applySettings(loadSettings());
+    expect(document.documentElement.dataset.focusMode).toBe("true");
+    applySettings({ ...DEFAULT_SETTINGS, focusMode: false });
+    expect(document.documentElement.dataset.focusMode).toBe("false");
+  });
+
   test("defaults update proxy preference to enabled", () => {
     expect(DEFAULT_SETTINGS.useSystemProxyForUpdates).toBe(true);
     saveSettings({ ...DEFAULT_SETTINGS, useSystemProxyForUpdates: false });

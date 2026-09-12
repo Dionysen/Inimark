@@ -171,4 +171,41 @@ describe("titlebar", () => {
 
     titlebar.destroy();
   });
+
+  test("immersive submenu exposes focus mode and toggles it", () => {
+    let focusMode = false;
+    const host = document.createElement("header");
+    document.body.append(host);
+    const titlebar = mountTitleBar(host, {
+      showWindowControls: false,
+      showMoreMenu: true,
+      immersiveMenuActions: {
+        getFocusMode: () => focusMode,
+        getAutoHideTitlebar: () => false,
+        getAutoHideStatusbar: () => false,
+        onFocusModeChange(enabled) {
+          focusMode = enabled;
+        },
+        onAutoHideTitlebarChange() {},
+        onAutoHideStatusbarChange() {},
+      },
+    });
+
+    host.querySelector<HTMLButtonElement>(".inimark-titlebar-more-btn")?.click();
+
+    const focusItem = [...document.body.querySelectorAll<HTMLButtonElement>(".inimark-menu-item")]
+      .find((item) => item.textContent?.includes("Focus mode"));
+    expect(focusItem).toBeDefined();
+    expect(focusItem?.classList.contains("is-checked")).toBe(false);
+
+    focusItem?.click();
+    expect(focusMode).toBe(true);
+
+    const checked = [...document.body.querySelectorAll<HTMLButtonElement>(".inimark-menu-item")]
+      .find((item) => item.textContent?.includes("Focus mode"));
+    expect(checked?.classList.contains("is-checked")).toBe(true);
+
+    titlebar.destroy();
+    host.remove();
+  });
 });

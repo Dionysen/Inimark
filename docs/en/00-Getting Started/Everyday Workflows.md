@@ -19,7 +19,7 @@ Feature pages tell you *what* Inimark can do. This page shows *how people actual
 
 1. Start in [[Editing Modes#WYSIWYG|WYSIWYG]]. Type headings with `Ctrl/⌘ + 1…6`.
 2. Keep [[Search Bookmarks Outline#Outline|Outline]] on the right so you can jump sections without scrolling blindly.
-3. Turn on [[Editing Modes#Typewriter mode|typewriter]] (`F9` or status bar) for long sessions; use [[Editing Modes#Focus mode|focus]] (`F8`) when surrounding blocks distract you.
+3. Turn on [[Editing Modes#Typewriter mode|typewriter]] (`F9` or status bar) for long sessions; use [[Editing Modes#Focus mode|focus]] (`F8`, Settings, or More → Immersive) when surrounding blocks distract you.
 4. When a paragraph needs messy surgery (pasted HTML, broken tables), flip to [[Editing Modes#Source mode|source]] with `Ctrl/⌘ + /`, fix it, flip back.
 5. Bookmark the draft under [[Search Bookmarks Outline#Bookmarks|Bookmarks]] if you leave and return all week.
 

@@ -677,6 +677,22 @@ export function mountSettingsView(
       ),
     );
 
+    const focusMode = createToggle({
+      checked: settings.focusMode,
+      title: t("settings.editor.focus"),
+      onChange(checked) {
+        update({ focusMode: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.focus"),
+        t("settings.editor.focusDesc"),
+        focusMode.el,
+        "editor.focus",
+      ),
+    );
+
     const autoHideStatusbar = createToggle({
       checked: settings.autoHideStatusbar,
       title: t("settings.editor.autoHideStatusbar"),

@@ -152,8 +152,12 @@ export function mountApp(host: HTMLElement): AppController {
       onOpenSearch: () => openDocumentSearch?.(),
     },
     immersiveMenuActions: {
+      getFocusMode: () => settings.focusMode,
       getAutoHideTitlebar: () => settings.autoHideTitlebar,
       getAutoHideStatusbar: () => settings.autoHideStatusbar,
+      onFocusModeChange(enabled) {
+        editor.setFocusMode(enabled);
+      },
       onAutoHideTitlebarChange(enabled) {
         settings = { ...settings, autoHideTitlebar: enabled };
         saveSettings(settings);
@@ -210,8 +214,15 @@ export function mountApp(host: HTMLElement): AppController {
       wordCount?.scheduleUpdate();
       wordCount?.syncChrome();
     },
+    onFocusModeChange(enabled) {
+      if (settings.focusMode === enabled) return;
+      settings = { ...settings, focusMode: enabled };
+      saveSettings(settings);
+      applySettings(settings);
+    },
   });
   editor.setTypewriterMode(settings.typewriterMode);
+  editor.setFocusMode(settings.focusMode);
 
   wordCount = mountWordCount({
     host: shell.editorPane,
@@ -920,6 +931,7 @@ export function mountApp(host: HTMLElement): AppController {
     settings = next;
     applySettings(settings);
     editor.setTypewriterMode(settings.typewriterMode);
+    editor.setFocusMode(settings.focusMode);
     shell.applySidebarTabLayout(settings);
     shell.graph.applyGraphSettings(settings.graph);
     wordCount?.syncChrome();

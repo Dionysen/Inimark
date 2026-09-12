@@ -20,6 +20,27 @@ describe("editor modes", () => {
     }
   });
 
+  test("focus mode change notifies once when the value actually flips", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const changes: boolean[] = [];
+    const editor = createEditor(host, {
+      initialContent: "one\n\ntwo",
+      onFocusModeChange(enabled) {
+        changes.push(enabled);
+      },
+    });
+    try {
+      editor.setFocusMode(true);
+      editor.setFocusMode(true);
+      editor.setFocusMode(false);
+      expect(changes).toEqual([true, false]);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
   test("focus mode toggles with F8 and marks active and muted blocks", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);

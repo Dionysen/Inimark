@@ -46,7 +46,7 @@ You may be in [[Editing Modes#Source mode|source mode]]. Press `Ctrl/⌘ + /` to
 
 ### Focus / typewriter
 
-- **Focus** (dim inactive blocks): `F8` while the editor is focused (session toggle).
+- **Focus** (dim inactive blocks): Settings → Editor, **More → Immersive editing**, or `F8` while the editor is focused.
 - **Typewriter**: `F9`, status bar, or Settings → Editor.
 
 ### Find vs Search

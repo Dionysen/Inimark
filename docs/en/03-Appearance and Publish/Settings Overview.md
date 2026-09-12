@@ -30,6 +30,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | Option | Effect | Good default when… |
 | --- | --- | --- |
 | Typewriter | Keeps the caret line centered | Long writing sessions |
+| Focus | Dims inactive blocks around the caret | Dense notes / less visual noise |
 | Auto-hide title / status | More canvas, less chrome | Focused drafting |
 | Editor / code fonts & sizes | Typography comfort | You care about reading feel |
 | Editor width | Constrains line length | Prose-heavy notes |
@@ -37,7 +38,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | Link update on move | `ask` / `always` / `never` | Start with `ask` |
 | Format on save | CJK spacing, trim, final newline, collapse blank lines | Shared / published vaults |
 
-Focus mode is toggled with `F8` (not a Settings checkbox). Typewriter also has `F9` / status bar.
+Focus and typewriter also have keyboard shortcuts (`F8` / `F9`); typewriter is on the status bar too. Immersive chrome and Focus are under **More → Immersive editing**.
 
 ## Appearance options
 

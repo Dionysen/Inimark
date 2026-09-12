@@ -60,8 +60,10 @@ export interface TitleBarMoreMenuActions {
 }
 
 export interface TitleBarImmersiveMenuActions {
+  getFocusMode: () => boolean;
   getAutoHideTitlebar: () => boolean;
   getAutoHideStatusbar: () => boolean;
+  onFocusModeChange: (enabled: boolean) => void;
   onAutoHideTitlebarChange: (enabled: boolean) => void;
   onAutoHideStatusbarChange: (enabled: boolean) => void;
 }
@@ -417,6 +419,15 @@ export function mountTitleBar(
         label: t("titlebar.more.immersiveEditing"),
         icon: menuIcons.immersive,
         items: [
+          {
+            label: t("titlebar.more.focusMode"),
+            checked: immersiveActions.getFocusMode(),
+            meta: formatShortcutDisplay(["F8"]),
+            onClick() {
+              immersiveActions.onFocusModeChange(!immersiveActions.getFocusMode());
+              renderMoreMenu();
+            },
+          },
           {
             label: t("titlebar.more.autoHideTitlebar"),
             checked: immersiveActions.getAutoHideTitlebar(),

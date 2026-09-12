@@ -92,6 +92,8 @@ export interface EditorOptions {
   onFocus?: () => void;
   /** Fired when the editor surface loses focus. */
   onBlur?: () => void;
+  /** Fired when focus mode is toggled (F8 / API), after the mode actually changes. */
+  onFocusModeChange?: (enabled: boolean) => void;
 }
 
 export interface Editor {
@@ -679,8 +681,13 @@ export function createEditor(
       this.setFocusMode(!this.isFocusMode());
     },
     setFocusMode(enabled: boolean): void {
+      if (this.isFocusMode() === enabled) {
+        syncModeClasses();
+        return;
+      }
       dispatchFocusMode(view.state, (tr) => view.dispatch(tr), enabled);
       syncModeClasses();
+      options.onFocusModeChange?.(enabled);
     },
     isFocusMode(): boolean {
       return readFocusMode(view.state);

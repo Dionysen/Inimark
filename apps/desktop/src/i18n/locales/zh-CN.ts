@@ -45,6 +45,7 @@ export const zhCN: Dictionary = {
       sourceMode: "源码模式",
       exitSourceMode: "退出源码模式",
       immersiveEditing: "沉浸编辑",
+      focusMode: "专注模式",
       autoHideTitlebar: "自动隐藏顶栏",
       autoHideStatusbar: "自动隐藏状态栏",
       themeSettings: "主题设置",
@@ -368,6 +369,8 @@ export const zhCN: Dictionary = {
     editor: {
       typewriter: "打字机模式",
       typewriterDesc: "写作时将光标行垂直居中。",
+      focus: "专注模式",
+      focusDesc: "淡化光标以外的块，让当前段落更突出。",
       autoHideStatusbar: "状态栏工具自动隐藏",
       autoHideStatusbarDesc: "自动隐藏右下角状态栏工具，鼠标移入该区域时再显示。",
       autoHideTitlebar: "顶栏自动隐藏",

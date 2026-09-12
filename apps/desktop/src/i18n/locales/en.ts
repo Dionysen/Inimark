@@ -45,6 +45,7 @@ export const en: Dictionary = {
       sourceMode: "Source mode",
       exitSourceMode: "Exit source mode",
       immersiveEditing: "Immersive editing",
+      focusMode: "Focus mode",
       autoHideTitlebar: "Auto-hide title bar",
       autoHideStatusbar: "Auto-hide status bar",
       themeSettings: "Theme",
@@ -368,6 +369,8 @@ export const en: Dictionary = {
     editor: {
       typewriter: "Typewriter mode",
       typewriterDesc: "Keep the caret line vertically centered while writing.",
+      focus: "Focus mode",
+      focusDesc: "Dim blocks away from the caret so the active paragraph stands out.",
       autoHideStatusbar: "Auto-hide status bar tools",
       autoHideStatusbarDesc:
         "Hide the bottom-right status bar tools until the pointer enters that area.",

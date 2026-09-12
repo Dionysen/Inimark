@@ -99,6 +99,8 @@ export interface AppSettings {
   paragraphSpacing: number;
   codeLineHeight: number;
   typewriterMode: boolean;
+  /** Dim blocks away from the caret so the active paragraph stands out. */
+  focusMode: boolean;
   /** Hide bottom-right status bar tools until the pointer enters that corner. */
   autoHideStatusbar: boolean;
   /** Collapse the editor titlebar until the pointer enters the top edge. */
@@ -223,6 +225,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paragraphSpacing: 1.05,
   codeLineHeight: 1.5,
   typewriterMode: false,
+  focusMode: false,
   autoHideStatusbar: false,
   autoHideTitlebar: false,
   autoSave: false,
@@ -343,6 +346,7 @@ export function applySettings(settings: AppSettings): void {
   root.style.setProperty("--tree-item-padding-y", density.treeItemPaddingY);
 
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
+  root.dataset.focusMode = settings.focusMode ? "true" : "false";
   root.dataset.autoHideStatusbar = settings.autoHideStatusbar ? "true" : "false";
   root.dataset.autoHideTitlebar = settings.autoHideTitlebar ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
@@ -432,6 +436,7 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       2.4,
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
+    focusMode: Boolean(parsed.focusMode ?? DEFAULT_SETTINGS.focusMode),
     autoHideStatusbar: Boolean(
       parsed.autoHideStatusbar ??
         (parsed as { immersiveEditing?: boolean }).immersiveEditing ??
