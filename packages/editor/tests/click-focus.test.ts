@@ -6,6 +6,60 @@ import { focusEditorAtPoint, focusPosFromClick, handleEditorSurfaceMouseDown, ne
 import { createEditor } from "../src/lib.ts";
 import { setup } from "./utils.ts";
 
+/** happy-dom often returns zero-size rects; stub vertical geometry for Y-nearest tests. */
+function stubVerticalLayout(view: EditorView, lineHeight = 36): void {
+  const doc = view.state.doc;
+  const ranges: Array<{ from: number; to: number; top: number; bottom: number }> = [];
+  let pos = 0;
+  for (let i = 0; i < doc.childCount; i++) {
+    const node = doc.child(i);
+    const top = 20 + i * lineHeight;
+    ranges.push({
+      from: pos + 1,
+      to: pos + node.nodeSize - 1,
+      top,
+      bottom: top + lineHeight - 8,
+    });
+    pos += node.nodeSize;
+  }
+
+  view.coordsAtPos = ((p: number) => {
+    const range =
+      ranges.find((r) => p >= r.from && p <= r.to) ??
+      ranges.find((r) => p >= r.from - 1 && p <= r.to + 1) ??
+      ranges[ranges.length - 1]!;
+    return {
+      top: range.top,
+      bottom: range.bottom,
+      left: 100,
+      right: 520,
+    };
+  }) as EditorView["coordsAtPos"];
+
+  view.posAtCoords = ((coords: { left: number; top: number }) => {
+    const range =
+      ranges.find((r) => coords.top >= r.top && coords.top <= r.bottom) ?? null;
+    if (!range) return null;
+    const atEnd = coords.left >= 300;
+    return { pos: atEnd ? range.to : range.from, inside: range.from };
+  }) as EditorView["posAtCoords"];
+
+  view.dom.getBoundingClientRect = () =>
+    ({
+      top: 20,
+      bottom: 20 + ranges.length * lineHeight,
+      left: 100,
+      right: 520,
+      width: 420,
+      height: ranges.length * lineHeight,
+      x: 100,
+      y: 20,
+      toJSON() {
+        return this;
+      },
+    }) as DOMRect;
+}
+
 function click(view: EditorView, clientX: number, clientY: number): void {
   view.dom.dispatchEvent(
     new MouseEvent("mousedown", {
@@ -144,6 +198,60 @@ describe("click focus", () => {
       expect(
         needsClickRedirect(view, rect.left + 4, rect.top + 4, sentinel),
       ).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("click beside content width maps caret to the same-Y text line", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "first line of the note\n\nsecond line of the note\n\nthird line of the note",
+    });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      // Mid of first paragraph (index 0 → top 20, bottom 48 → mid 34).
+      const clientY = 34;
+      const clientX = 640; // to the right of stubbed content (right=520)
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX,
+        clientY,
+        button: 0,
+      });
+      Object.defineProperty(down, "target", { value: host });
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      const $pos = view.state.doc.resolve(view.state.selection.from);
+      expect($pos.parent.type.name).toBe("paragraph");
+      expect($pos.parent.textContent).toContain("first line");
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("focusPosFromClick with host target beside mid content does not jump to sentinel", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "alpha paragraph here\n\nbeta paragraph here",
+    });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      const pos = focusPosFromClick(view, 640, 34, host);
+      expect(pos).not.toBeNull();
+      const $pos = view.state.doc.resolve(pos!);
+      expect($pos.parent.textContent).toContain("alpha");
     } finally {
       editor.destroy();
       host.remove();

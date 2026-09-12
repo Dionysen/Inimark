@@ -230,27 +230,31 @@ export function focusPosFromClick(
   clientY: number,
   target: Element | null = null,
 ): number | null {
-  const sentinelStart = trailingSentinelStart(view.state.doc);
-  if (target && !view.dom.contains(target) && sentinelStart != null) {
-    return sentinelStart;
-  }
+  // Host / wrap margin clicks are outside `view.dom`. Do not force the trailing
+  // sentinel — map by Y (and clamp X into the content column) like Typora.
+  const inEditorTarget =
+    target && view.dom.contains(target) ? target : null;
 
   const blocks = collectBlockRects(view);
   if (blocks.length === 0) return 1;
 
-  if (sentinelStart != null && shouldFocusTrailingSentinel(view, clientY, blocks, target)) {
+  const sentinelStart = trailingSentinelStart(view.state.doc);
+  if (
+    sentinelStart != null &&
+    shouldFocusTrailingSentinel(view, clientY, blocks, inEditorTarget)
+  ) {
     return sentinelStart;
   }
 
-  const opaqueChrome = target ? isOpaqueChromeClick(target) : false;
+  const opaqueChrome = inEditorTarget ? isOpaqueChromeClick(inEditorTarget) : false;
 
   if (!opaqueChrome) {
-    const hit = posFromCoordsHit(view, clientX, clientY, blocks, target);
+    const hit = posFromCoordsHit(view, clientX, clientY, blocks, inEditorTarget);
     if (hit != null) return hit;
   }
 
   for (const dy of [0, -8, 8, -16, 16, -32, 32]) {
-    const probe = posFromCoordsHit(view, clientX, clientY + dy, blocks, target);
+    const probe = posFromCoordsHit(view, clientX, clientY + dy, blocks, inEditorTarget);
     if (probe != null) return probe;
   }
 
@@ -258,7 +262,7 @@ export function focusPosFromClick(
   const x = Math.max(editorRect.left + 4, Math.min(clientX, editorRect.right - 4));
 
   for (const dy of [0, -8, 8, -16, 16]) {
-    const probe = posFromCoordsHit(view, x, clientY + dy, blocks, target);
+    const probe = posFromCoordsHit(view, x, clientY + dy, blocks, inEditorTarget);
     if (probe != null) return probe;
   }
 
@@ -369,8 +373,7 @@ function clearSelectionDrag(): void {
 function applyNearestSelection(view: EditorView, anchor: number, clientX: number, clientY: number): void {
   if (!view.editable || view.isDestroyed) return;
   const el = document.elementFromPoint(clientX, clientY);
-  // Only pass in-editor targets. Host/chrome hits must use Y-based nearest
-  // mapping — otherwise focusPosFromClick forces the trailing sentinel.
+  // Only pass in-editor targets so host/chrome hits use Y-based nearest mapping.
   const target = el && view.dom.contains(el) ? el : null;
   const head = focusPosFromClick(view, clientX, clientY, target) ?? anchor;
   if (head === anchor) {
