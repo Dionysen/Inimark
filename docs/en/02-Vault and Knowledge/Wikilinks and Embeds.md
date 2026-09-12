@@ -37,6 +37,8 @@ Live:
 
 ### Autocomplete habits
 
+Typing `[[` (or inserting an empty wikilink via command) opens candidates immediately. Moving the caret into an existing `[[…]]` later does **not** reopen the list — it appears again only when you edit inside the brackets.
+
 | Input | Behavior |
 | --- | --- |
 | Empty `[[` | Recent notes (a few) + broader list |

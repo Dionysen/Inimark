@@ -260,6 +260,9 @@ function wikiAutocompletePlugin(): Plugin<AutoState> {
         if (prev.dismissedFor && dismissKey(hit.partial) === prev.dismissedFor) {
           return { ...CLOSED, dismissedFor: prev.dismissedFor };
         }
+        // Open on create / in-link edits only — not when the caret merely
+        // enters an existing `[[…]]`.
+        if (!prev.open && !tr.docChanged) return CLOSED;
         const bridge = getWikiLinkBridge();
         if (!bridge) return CLOSED;
         const { matches, recentCount } = resolveWikiAutocompleteMatches(

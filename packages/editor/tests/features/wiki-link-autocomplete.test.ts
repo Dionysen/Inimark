@@ -177,6 +177,69 @@ describe("wiki-link autocomplete", () => {
       executeEditorCommand(editor.view, "wiki-link");
       expect(editor.view.state.doc.textContent).toBe("[[]]");
       expect(editor.view.state.selection.from).toBe(3);
+      expect(document.body.querySelector(".wiki-link-autocomplete")).not.toBeNull();
+    } finally {
+      editor.destroy();
+      setWikiLinkBridge(null);
+      host.remove();
+    }
+  });
+
+  test("moving the caret into an existing [[…]] does not open autocomplete", () => {
+    const host = createHost();
+    setWikiLinkBridge(
+      mockBridge([
+        { name: "Alpha", path: "Alpha.md" },
+        { name: "Beta", path: "Beta.md" },
+      ]),
+    );
+    const editor = createEditor(host);
+
+    try {
+      editor.view.dispatch(
+        editor.view.state.tr.insertText("See [[Alpha]] today"),
+      );
+      const inside = 1 + editor.view.state.doc.textContent.indexOf("[[") + 2;
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(editor.view.state.doc, inside),
+        ),
+      );
+
+      expect(detectWikiLinkPartial(editor.view.state)).not.toBeNull();
+      expect(document.body.querySelector(".wiki-link-autocomplete")).toBeNull();
+    } finally {
+      editor.destroy();
+      setWikiLinkBridge(null);
+      host.remove();
+    }
+  });
+
+  test("editing inside an existing [[…]] opens autocomplete", () => {
+    const host = createHost();
+    setWikiLinkBridge(
+      mockBridge([
+        { name: "Alpha", path: "Alpha.md" },
+        { name: "Beta", path: "Beta.md" },
+      ]),
+    );
+    const editor = createEditor(host);
+
+    try {
+      editor.view.dispatch(
+        editor.view.state.tr.insertText("See [[Alpha]] today"),
+      );
+      const afterOpen = 1 + editor.view.state.doc.textContent.indexOf("[[") + 2;
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(editor.view.state.doc, afterOpen),
+        ),
+      );
+      expect(document.body.querySelector(".wiki-link-autocomplete")).toBeNull();
+
+      typeText(editor, "B");
+      expect(document.body.querySelector(".wiki-link-autocomplete")).not.toBeNull();
+      expect(editor.view.state.doc.textContent).toBe("See [[BAlpha]] today");
     } finally {
       editor.destroy();
       setWikiLinkBridge(null);
