@@ -21,7 +21,7 @@ export interface AppearanceState {
 
 export const DEFAULT_APP_THEME_PAIR: ThemePair = {
   light: "light",
-  dark: "dark",
+  dark: "ocean",
 };
 
 export const DEFAULT_CODE_THEME_PAIR: ThemePair = {
@@ -33,7 +33,8 @@ export const DEFAULT_CODE_THEME_PAIR: ThemePair = {
 export const BUILTIN_THEME_IS_DARK: Record<BuiltinThemeName, boolean> = {
   light: false,
   grey: false,
-  dark: true,
+  ocean: true,
+  "dark-modern": true,
 };
 
 export const APPEARANCE_MODE_KEY = "inimark-appearance-mode";

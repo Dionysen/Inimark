@@ -257,7 +257,7 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--bg-primary": "#1b1d24",
   "--bg-secondary": "#111217",
   "--bg-surface": "#1b1d24",
-  "--bg-menu": "#1b1d24",
+  "--bg-menu": "#101116",
   "--bg-hover": "rgba(255, 255, 255, 0.08)",
   "--bg-tertiary": "#1b1d24",
   "--bg-code": "#1f2129",
@@ -364,11 +364,11 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#e2e8f0",
   },
-  dark: {
+  ocean: {
     "--bg-primary": "#1b1d24",
     "--bg-secondary": "#111217",
     "--bg-surface": "#1b1d24",
-    "--bg-menu": "#1b1d24",
+    "--bg-menu": "#101116",
     "--bg-hover": "rgba(255, 255, 255, 0.08)",
     "--bg-tertiary": "#1b1d24",
     "--bg-code": "#1f2129",
@@ -397,6 +397,42 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--tag-border": "rgba(16, 111, 255, 0.345)",
     "--scrollbar-thumb": "#aaaaaa",
     "--scrollbar-thumb-hover": "#6B6B6B",
+    "--scrollbar-track": "transparent",
+    "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
+  },
+  "dark-modern": {
+    "--bg-primary": "#1f1f1f",
+    "--bg-secondary": "#181818",
+    "--bg-surface": "#181818",
+    "--bg-menu": "#181818",
+    "--bg-hover": "rgba(255, 255, 255, 0.08)",
+    "--bg-tertiary": "#1b1d24",
+    "--bg-code": "#27292c",
+    "--bg-code-inline": "#34373b",
+    "--bg-input": "#181818",
+    "--text-primary": "#e0e0e0",
+    "--text-secondary": "#c4c4c6",
+    "--text-tertiary": "#5c5e63",
+    "--text-strong": "#ffffff",
+    "--text-code": "#ebebeb",
+    "--accent": "#74a7fe",
+    "--accent-rgb": "116, 167, 254",
+    "--accent-hover": "#3a88fe",
+    "--danger": "#e06c75",
+    "--border": "rgba(164, 164, 164, 0.092)",
+    "--code-inline-border": "rgba(110, 115, 121, 0.277)",
+    "--blockquote-border": "rgba(255, 255, 255, 0.15)",
+    "--blockquote-bg": "rgba(48, 51, 55, 0.327)",
+    "--blockquote-text": "#9e9e9e",
+    "--metadata-bg": "#27292c",
+    "--metadata-border": "rgba(68, 68, 68, 0.509)",
+    "--table-header-bg": "#1c1c1c",
+    "--table-cell-bg": "#262626",
+    "--tag-bg": "rgba(16, 111, 255, 0.171)",
+    "--tag-text": "#6390d4",
+    "--tag-border": "rgba(16, 111, 255, 0.345)",
+    "--scrollbar-thumb": "rgba(107, 107, 107, 0.294)",
+    "--scrollbar-thumb-hover": "rgba(107, 107, 107, 0.294)",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
   },
@@ -451,6 +487,27 @@ const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--scrollbar-size", value: "6px", type: "size" },
 ];
 
+/** Per-builtin chrome size overrides (keep in sync with themes.css). */
+const BUILTIN_THEME_SIZE_OVERRIDES: Partial<
+  Record<BuiltinThemeName, Record<string, string>>
+> = {
+  "dark-modern": {
+    "--padding-code-inline-y": "0px",
+    "--blockquote-border-width": "4px",
+    "--padding-blockquote-y": "13px",
+    "--scrollbar-size": "9px",
+  },
+};
+
+function sizesForBuiltin(builtinId: BuiltinThemeName): ThemeVariable[] {
+  const overrides = BUILTIN_THEME_SIZE_OVERRIDES[builtinId];
+  if (!overrides) return DEFAULT_SIZES;
+  return DEFAULT_SIZES.map((token) => {
+    const value = overrides[token.name];
+    return value ? { ...token, value } : token;
+  });
+}
+
 function resolveColorTokenValue(
   token: ThemeColorToken,
   colors: Record<string, string>,
@@ -504,7 +561,11 @@ export function colorMapToVariables(colors: Record<string, string>): ThemeVariab
 export function getBuiltinThemeVariables(builtinId: string): ThemeVariable[] | null {
   const colors = getBuiltinColorMap(builtinId);
   if (!colors) return null;
-  return [...colorMapToVariables(colors), ...DEFAULT_FONTS, ...DEFAULT_SIZES];
+  return [
+    ...colorMapToVariables(colors),
+    ...DEFAULT_FONTS,
+    ...sizesForBuiltin(builtinId as BuiltinThemeName),
+  ];
 }
 
 export function getTemplateVariables(kind: "light" | "dark"): ThemeVariable[] {

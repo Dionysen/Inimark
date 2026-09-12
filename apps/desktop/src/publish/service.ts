@@ -12,7 +12,7 @@ import themeTyporaCss from "../../../../packages/editor/src/styles/theme-typora.
 import katexCss from "katex/dist/katex.min.css?raw";
 import mermaidRuntimeJs from "mermaid/dist/mermaid.min.js?raw";
 
-import { BUILTIN_THEMES } from "../themes/builtin.ts";
+import { BUILTIN_THEMES, DEFAULT_DARK_BUILTIN } from "../themes/builtin.ts";
 import {
   getCustomThemeCss,
   loadManifest,
@@ -163,8 +163,8 @@ export async function publishLibrary(
   const darkTheme =
     config.darkTheme && themeIds.includes(config.darkTheme)
       ? config.darkTheme
-      : themeIds.includes("dark")
-        ? "dark"
+      : themeIds.includes(DEFAULT_DARK_BUILTIN)
+        ? DEFAULT_DARK_BUILTIN
         : themeIds[themeIds.length - 1]!;
   const defaultTheme =
     config.defaultTheme && themeIds.includes(config.defaultTheme)

@@ -41,14 +41,14 @@ function pickThemeId(id: string | undefined, fallback: string, available: string
 /** Resolve the light/dark theme pair for a published site (with legacy defaults). */
 export function resolveSiteThemePair(
   config: Pick<SiteConfig, "defaultTheme" | "lightTheme" | "darkTheme">,
-  availableIds: string[] = ["light", "grey", "dark"],
+  availableIds: string[] = ["light", "grey", "ocean", "dark-modern"],
 ): ResolvedSiteThemes {
-  const available = availableIds.length ? availableIds : ["light", "dark"];
+  const available = availableIds.length ? availableIds : ["light", "ocean"];
   let lightTheme = pickThemeId(config.lightTheme, "light", available);
-  let darkTheme = pickThemeId(config.darkTheme, "dark", available);
+  let darkTheme = pickThemeId(config.darkTheme, "ocean", available);
 
   if (!config.lightTheme && !config.darkTheme && config.defaultTheme) {
-    if (/dark/i.test(config.defaultTheme)) {
+    if (/dark|ocean/i.test(config.defaultTheme)) {
       darkTheme = pickThemeId(config.defaultTheme, darkTheme, available);
     } else {
       lightTheme = pickThemeId(config.defaultTheme, lightTheme, available);
@@ -56,7 +56,7 @@ export function resolveSiteThemePair(
   }
 
   const defaultAppearance: SiteAppearance =
-    config.defaultTheme === darkTheme || /dark/i.test(config.defaultTheme || "")
+    config.defaultTheme === darkTheme || /dark|ocean/i.test(config.defaultTheme || "")
       ? "dark"
       : "light";
 
@@ -65,9 +65,9 @@ export function resolveSiteThemePair(
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
   siteName: "Notes",
-  defaultTheme: "dark",
+  defaultTheme: "ocean",
   lightTheme: "light",
-  darkTheme: "dark",
+  darkTheme: "ocean",
   baseHref: "/",
   out: "dist",
 };

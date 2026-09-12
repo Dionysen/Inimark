@@ -5,7 +5,7 @@ import { isMarkdownFile, isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
 import { openWorkspaceByPath } from "../platform/workspace.ts";
 import { collectMarkdownFiles } from "../sidebar/vault-search.ts";
-import { BUILTIN_THEMES } from "../themes/builtin.ts";
+import { BUILTIN_THEMES, DEFAULT_DARK_BUILTIN } from "../themes/builtin.ts";
 import { loadManifest } from "../themes/custom-theme-manager.ts";
 import {
   createButton,
@@ -106,7 +106,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
   let lightThemeSelect: SelectController | null = null;
   let darkThemeSelect: SelectController | null = null;
   let lightThemeValue = "light";
-  let darkThemeValue = "dark";
+  let darkThemeValue: string = DEFAULT_DARK_BUILTIN;
 
   function makeRow(
     settingId: string,
@@ -234,7 +234,10 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       lightThemeValue = options.find((o) => o.value === "light")?.value ?? options[0]!.value;
     }
     if (!options.some((o) => o.value === darkThemeValue)) {
-      darkThemeValue = options.find((o) => o.value === "dark")?.value ?? options[0]!.value;
+      darkThemeValue =
+        options.find((o) => o.value === DEFAULT_DARK_BUILTIN)?.value ??
+        options.find((o) => /dark|ocean/i.test(o.value))?.value ??
+        options[0]!.value;
     }
 
     lightThemeSelect?.destroy();
@@ -281,7 +284,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
       baseHrefField.setValue("/");
       homeValue = "";
       lightThemeValue = "light";
-      darkThemeValue = "dark";
+      darkThemeValue = DEFAULT_DARK_BUILTIN;
       rebuildThemeSelects();
       await refreshHomeNoteOptions();
       return;
@@ -293,7 +296,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     baseHrefField.setValue(cfg.baseHref || "/");
     homeValue = cfg.home || "";
     lightThemeValue = cfg.lightTheme || "light";
-    darkThemeValue = cfg.darkTheme || "dark";
+    darkThemeValue = cfg.darkTheme || DEFAULT_DARK_BUILTIN;
     if (!cfg.lightTheme && !cfg.darkTheme && cfg.defaultTheme) {
       if (/dark/i.test(cfg.defaultTheme)) darkThemeValue = cfg.defaultTheme;
       else lightThemeValue = cfg.defaultTheme;
@@ -310,9 +313,9 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     const lib = selectedLibrary();
     const base = lastLoadedConfig ?? {
       siteName: lib?.rootName || "Notes",
-      defaultTheme: "dark",
+      defaultTheme: DEFAULT_DARK_BUILTIN,
       lightTheme: "light",
-      darkTheme: "dark",
+      darkTheme: DEFAULT_DARK_BUILTIN,
       baseHref: "/",
       out: "dist",
     };

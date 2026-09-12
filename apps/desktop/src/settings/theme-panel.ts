@@ -50,11 +50,17 @@ export function getThemeSlotSelection(
   return "none";
 }
 
-const BUILTIN_PREVIEW_COLORS: Record<string, string[]> = {
-  light: ["#ffffff", "#2563eb", "#1e293b", "#d1d9e6"],
-  grey: ["#f8fafc", "#475569", "#0f172a", "#e2e8f0"],
-  dark: ["#1b1d24", "#74a7fe", "#cccccc", "#111217"],
-};
+/** Thumbnail palette from builtin color maps — stays in sync with themes.css. */
+function builtinPreviewColors(id: string): string[] {
+  const colors = getBuiltinColorMap(id);
+  if (!colors) return ["#ffffff", "#4eb289", "#1e293b", "#e2e8f0"];
+  return [
+    colors["--bg-primary"] ?? "#ffffff",
+    colors["--accent"] ?? "#4eb289",
+    colors["--text-primary"] ?? "#1e293b",
+    colors["--bg-secondary"] ?? colors["--border"] ?? "#e2e8f0",
+  ];
+}
 
 const CODE_SAMPLE_LABELS: Record<string, string> = {
   codeSampleJs: "JavaScript",
@@ -206,7 +212,7 @@ export function renderThemePanel(
   }
 
   function resolveAppDisplayName(id: string, customThemes: ThemeManifest[]): string {
-    if (id === "light" || id === "grey" || id === "dark") return builtinThemeLabel(id);
+    if ((BUILTIN_THEMES as readonly string[]).includes(id)) return builtinThemeLabel(id);
     if (id.startsWith("custom-")) {
       const mid = id.replace("custom-", "");
       return customThemes.find((m) => m.id === mid)?.name || id;
@@ -1177,7 +1183,7 @@ export function renderThemePanel(
       grid.className = "settings-theme-grid";
 
       for (const value of BUILTIN_THEMES) {
-        const colors = BUILTIN_PREVIEW_COLORS[value] ?? ["#ffffff", "#4eb289", "#1e293b", "#e2e8f0"];
+        const colors = builtinPreviewColors(value);
         const label = builtinThemeLabel(value);
         const preferred = theme === value;
 

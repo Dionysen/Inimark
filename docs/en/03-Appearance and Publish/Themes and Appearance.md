@@ -16,7 +16,7 @@ translationKey: themes
 | Dark | Dark UI |
 | System | Follow OS |
 
-Built-ins include Light / Grey / Dark; you can also import **custom theme packs** (`.inimark-theme.json`).
+Built-ins include Light / Grey / Ocean / Dark Modern; you can also import **custom theme packs** (`.inimark-theme.json`).
 
 Related chrome options live under **Settings → Appearance**: UI font, menu density, auto-hide library bar, file-tree icons, and **left/right sidebar tab assignment**.
 

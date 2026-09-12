@@ -490,7 +490,8 @@ export const zhCN: Dictionary = {
       builtin: {
         light: "浅色",
         grey: "灰色",
-        dark: "深色",
+        ocean: "Ocean",
+        "dark-modern": "Dark Modern",
       },
       sections: {
         groupChrome: "界面与表面",

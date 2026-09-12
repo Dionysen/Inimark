@@ -1,8 +1,8 @@
 {
   "siteName": "Inimark Docs",
-  "defaultTheme": "custom-vz8ojnvc",
+  "defaultTheme": "dark-modern",
   "lightTheme": "custom-3tvad4v6",
-  "darkTheme": "custom-vz8ojnvc",
+  "darkTheme": "dark-modern",
   "baseHref": "/Inimark/",
   "out": "dist",
   "siteDescription": "Inimark help — Typora-class WYSIWYG editing, Obsidian-style knowledge graphs, one-click static publish. 中英双语。",

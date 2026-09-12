@@ -500,7 +500,8 @@ export const en: Dictionary = {
       builtin: {
         light: "Light",
         grey: "Grey",
-        dark: "Dark",
+        ocean: "Ocean",
+        "dark-modern": "Dark Modern",
       },
       sections: {
         groupChrome: "Chrome & surfaces",

@@ -55,7 +55,8 @@ body {
 html { color-scheme: dark; }
 html[data-theme="light"],
 html[data-theme="grey"] { color-scheme: light; }
-html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="ocean"],
+html[data-theme="dark-modern"] { color-scheme: dark; }
 
 ${webkitScrollbar("html")}
 ${webkitScrollbar(".site-nav")}
@@ -722,7 +723,7 @@ export const SITE_THEME_BOOT_JS = `(() => {
   try {
     const root = document.documentElement;
     const light = root.getAttribute("data-theme-light") || "light";
-    const dark = root.getAttribute("data-theme-dark") || "dark";
+    const dark = root.getAttribute("data-theme-dark") || "ocean";
     const saved = localStorage.getItem("inimark-site-theme");
     let mode = root.getAttribute("data-appearance") === "dark" ? "dark" : "light";
     if (saved === "dark" || saved === dark) mode = "dark";
@@ -790,7 +791,7 @@ export const SITE_JS = `(() => {
   const root = document.documentElement;
   const toggle = document.getElementById("site-theme-toggle");
   const lightTheme = root.getAttribute("data-theme-light") || "light";
-  const darkTheme = root.getAttribute("data-theme-dark") || "dark";
+  const darkTheme = root.getAttribute("data-theme-dark") || "ocean";
 
   const currentMode = () =>
     root.dataset.appearance === "dark" || root.getAttribute("data-theme") === darkTheme

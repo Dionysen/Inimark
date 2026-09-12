@@ -16,7 +16,7 @@ describe("buildSite", () => {
     ];
 
     const result = buildSite({
-      config: { siteName: "Test Vault", defaultTheme: "dark", baseHref: "/", out: "dist" },
+      config: { siteName: "Test Vault", defaultTheme: "ocean", baseHref: "/", out: "dist" },
       notes,
       tree: [
         {
@@ -41,10 +41,10 @@ describe("buildSite", () => {
       },
       resolveMediaAbsolutePath: () => null,
       themeVariablesCss:
-        ':root { --bg-primary: #111; }\n[data-theme="dark"] { --bg-primary: #111; }\n[data-theme="light"] { --bg-primary: #fff; }',
+        ':root { --bg-primary: #111; }\n[data-theme="ocean"] { --bg-primary: #111; }\n[data-theme="light"] { --bg-primary: #fff; }',
       editorWidgetsCss: "/* widgets */",
       editorThemeCss: "/* typora */",
-      themeIds: ["light", "dark"],
+      themeIds: ["light", "ocean"],
     });
 
     expect(result.pageCount).toBe(2);
@@ -56,7 +56,7 @@ describe("buildSite", () => {
     expect(welcome.content).toContain('aria-expanded="true"'); // ancestor of active
     expect(welcome.content).toContain("site-theme-toggle");
     expect(welcome.content).toContain('data-theme-light="light"');
-    expect(welcome.content).toContain('data-theme-dark="dark"');
+    expect(welcome.content).toContain('data-theme-dark="ocean"');
     expect(welcome.content).toContain("data-tree-path=");
     expect(welcome.content).not.toContain('id="site-theme"');
     expect(welcome.content).toContain("inimark-site-tree");
@@ -97,7 +97,7 @@ describe("buildSite", () => {
       { path: "b/Two.md", markdown: "# Two" },
     ];
     const result = buildSite({
-      config: { siteName: "T", defaultTheme: "dark", baseHref: "/", out: "dist" },
+      config: { siteName: "T", defaultTheme: "ocean", baseHref: "/", out: "dist" },
       notes,
       tree: [
         {
@@ -118,7 +118,7 @@ describe("buildSite", () => {
       themeVariablesCss: "",
       editorWidgetsCss: "",
       editorThemeCss: "",
-      themeIds: ["dark"],
+      themeIds: ["ocean"],
     });
 
     const one = result.files.find((f) => f.path === "notes/a/One.html")!;

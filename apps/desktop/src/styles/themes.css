@@ -1,18 +1,17 @@
 /* ========== 主题 CSS 变量 ========== */
 
 /*
- * Shared chrome (fonts / radii / spacing) comes from Modern Dark.
- * Per-theme blocks only override what they need — light keeps its colors,
- * dark uses the full Modern Dark palette.
+ * Shared chrome (fonts / radii / spacing) comes from Ocean.
+ * Per-theme blocks override colors; Dark Modern also overrides a few chrome sizes.
  */
 
-/* ── Base (:root) — Modern Dark chrome + dark color fallback ── */
+/* ── Base (:root) — Ocean chrome + dark color fallback ── */
 :root {
-  /* Colors (Modern Dark) */
+  /* Colors (Ocean) */
   --bg-primary: #1b1d24;
   --bg-secondary: #111217;
   --bg-surface: #1b1d24;
-  --bg-menu: #1b1d24;
+  --bg-menu: #101116;
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-tertiary: #1b1d24;
   --bg-code: #1f2129;
@@ -44,7 +43,7 @@
   --scrollbar-track: transparent;
   --tree-indent-hint-color: rgba(145, 145, 145, 0.159);
 
-  /* Non-color chrome (Modern Dark) — shared by light / grey / dark */
+  /* Non-color chrome (Ocean) — shared by light / grey / ocean */
   --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -91,7 +90,7 @@
   --tw-code-invalid: var(--danger, #ff8f86);
 }
 
-/* ── Light — colors only (chrome inherited from :root / Modern Dark) ── */
+/* ── Light — colors only (chrome inherited from :root / Ocean) ── */
 [data-theme="light"] {
   --bg-primary: #ffffff;
   --bg-secondary: #f5f7fa;
@@ -167,12 +166,12 @@
   --tree-indent-hint-color: #e2e8f0;
 }
 
-/* ── Dark — Modern Dark palette (chrome already on :root) ── */
-[data-theme="dark"] {
+/* ── Ocean — promoted from Dark (fork); chrome already on :root ── */
+[data-theme="ocean"] {
   --bg-primary: #1b1d24;
   --bg-secondary: #111217;
   --bg-surface: #1b1d24;
-  --bg-menu: #1b1d24;
+  --bg-menu: #101116;
   --bg-hover: rgba(255, 255, 255, 0.08);
   --bg-tertiary: #1b1d24;
   --bg-code: #1f2129;
@@ -203,4 +202,46 @@
   --scrollbar-thumb-hover: #6b6b6b;
   --scrollbar-track: transparent;
   --tree-indent-hint-color: rgba(145, 145, 145, 0.159);
+}
+
+/* ── Dark Modern — colors + chrome size deltas ── */
+[data-theme="dark-modern"] {
+  --bg-primary: #1f1f1f;
+  --bg-secondary: #181818;
+  --bg-surface: #181818;
+  --bg-menu: #181818;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-tertiary: #1b1d24;
+  --bg-code: #27292c;
+  --bg-code-inline: #34373b;
+  --bg-input: #181818;
+  --text-primary: #e0e0e0;
+  --text-secondary: #c4c4c6;
+  --text-tertiary: #5c5e63;
+  --text-strong: #ffffff;
+  --text-code: #ebebeb;
+  --accent: #74a7fe;
+  --accent-rgb: 116, 167, 254;
+  --accent-hover: #3a88fe;
+  --border: rgba(164, 164, 164, 0.092);
+  --danger: #e06c75;
+  --code-inline-border: rgba(110, 115, 121, 0.277);
+  --blockquote-border: rgba(255, 255, 255, 0.15);
+  --blockquote-bg: rgba(48, 51, 55, 0.327);
+  --blockquote-text: #9e9e9e;
+  --metadata-bg: #27292c;
+  --metadata-border: rgba(68, 68, 68, 0.509);
+  --table-header-bg: #1c1c1c;
+  --table-cell-bg: #262626;
+  --tag-bg: rgba(16, 111, 255, 0.171);
+  --tag-text: #6390d4;
+  --tag-border: rgba(16, 111, 255, 0.345);
+  --scrollbar-thumb: rgba(107, 107, 107, 0.294);
+  --scrollbar-thumb-hover: rgba(107, 107, 107, 0.294);
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: rgba(145, 145, 145, 0.159);
+  --padding-code-inline-y: 0px;
+  --blockquote-border-width: 4px;
+  --padding-blockquote-y: 13px;
+  --scrollbar-size: 9px;
 }
