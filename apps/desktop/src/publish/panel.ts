@@ -236,7 +236,7 @@ export function mountPublishPanel(host: HTMLElement): PublishPanelController {
     if (!options.some((o) => o.value === darkThemeValue)) {
       darkThemeValue =
         options.find((o) => o.value === DEFAULT_DARK_BUILTIN)?.value ??
-        options.find((o) => /dark|ocean/i.test(o.value))?.value ??
+        options.find((o) => /dark|ocean|cursor|dracula/i.test(o.value))?.value ??
         options[0]!.value;
     }
 

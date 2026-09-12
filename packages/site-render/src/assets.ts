@@ -54,9 +54,16 @@ body {
    the pointer sits on the bar (overlay -> always-visible switch). */
 html { color-scheme: dark; }
 html[data-theme="light"],
-html[data-theme="grey"] { color-scheme: light; }
+html[data-theme="grey"],
+html[data-theme="slate"],
+html[data-theme="claude-code"],
+html[data-theme="mint"],
+html[data-theme="purple"],
+html[data-theme="hermes"] { color-scheme: light; }
 html[data-theme="ocean"],
-html[data-theme="dark-modern"] { color-scheme: dark; }
+html[data-theme="dark-modern"],
+html[data-theme="cursor"],
+html[data-theme="dracula"] { color-scheme: dark; }
 
 ${webkitScrollbar("html")}
 ${webkitScrollbar(".site-nav")}

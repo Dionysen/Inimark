@@ -245,3 +245,269 @@
   --padding-blockquote-y: 13px;
   --scrollbar-size: 9px;
 }
+
+/* ── Slate — cool zinc light (distinct from Grey) ── */
+[data-theme="slate"] {
+  --bg-primary: #fafafa;
+  --bg-secondary: #f4f4f5;
+  --bg-surface: #f4f4f5;
+  --bg-menu: #e4e4e7;
+  --bg-hover: rgba(24, 24, 27, 0.06);
+  --bg-tertiary: #e4e4e7;
+  --bg-code: #f4f4f5;
+  --bg-code-inline: rgba(63, 63, 70, 0.08);
+  --bg-input: #fafafa;
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-tertiary: #a1a1aa;
+  --text-strong: #bd387d;
+  --text-code: #e83e8c;
+  --accent: #52525b;
+  --accent-rgb: 82, 82, 91;
+  --accent-hover: #3f3f46;
+  --border: #e4e4e7;
+  --danger: #dc2626;
+  --code-inline-border: #e4e4e7;
+  --blockquote-border: #d4d4d8;
+  --blockquote-bg: transparent;
+  --blockquote-text: #71717a;
+  --metadata-bg: #f4f4f5;
+  --metadata-border: #e4e4e7;
+  --table-header-bg: #f4f4f5;
+  --table-cell-bg: transparent;
+  --tag-bg: rgba(82, 82, 91, 0.15);
+  --tag-text: #52525b;
+  --tag-border: rgba(82, 82, 91, 0.2);
+  --scrollbar-thumb: #d4d4d8;
+  --scrollbar-thumb-hover: #a1a1aa;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: #e4e4e7;
+}
+
+/* ── Claude Code — warm Anthropic light ── */
+[data-theme="claude-code"] {
+  --bg-primary: #faf8f5;
+  --bg-secondary: #f0ece6;
+  --bg-surface: #f5f1eb;
+  --bg-menu: #e8e2d8;
+  --bg-hover: rgba(196, 122, 42, 0.1);
+  --bg-tertiary: #e8e2d8;
+  --bg-code: #f0ece6;
+  --bg-code-inline: rgba(196, 122, 42, 0.08);
+  --bg-input: #faf8f5;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6560;
+  --text-tertiary: #9a948c;
+  --text-strong: #bd387d;
+  --text-code: #c47a2a;
+  --accent: #c47a2a;
+  --accent-rgb: 196, 122, 42;
+  --accent-hover: #a86420;
+  --border: #ddd6cc;
+  --danger: #c94432;
+  --code-inline-border: #ddd6cc;
+  --blockquote-border: #ddd6cc;
+  --blockquote-bg: transparent;
+  --blockquote-text: #6b6560;
+  --metadata-bg: #f0ece6;
+  --metadata-border: #ddd6cc;
+  --table-header-bg: #f0ece6;
+  --table-cell-bg: transparent;
+  --tag-bg: rgba(196, 122, 42, 0.15);
+  --tag-text: #c47a2a;
+  --tag-border: rgba(196, 122, 42, 0.2);
+  --scrollbar-thumb: #ddd6cc;
+  --scrollbar-thumb-hover: #9a948c;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: #ddd6cc;
+}
+
+/* ── Mint — green eye-care light ── */
+[data-theme="mint"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #d9ede5;
+  --bg-surface: #ecf6f2;
+  --bg-menu: #c5e3d7;
+  --bg-hover: rgba(78, 178, 137, 0.12);
+  --bg-tertiary: #c5e3d7;
+  --bg-code: #f0f7f4;
+  --bg-code-inline: rgba(78, 178, 137, 0.08);
+  --bg-input: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #6b6b6b;
+  --text-tertiary: #9ca3af;
+  --text-strong: #bd387d;
+  --text-code: #e83e8c;
+  --accent: #4eb289;
+  --accent-rgb: 78, 178, 137;
+  --accent-hover: #3a9e6e;
+  --border: #a5cfc0;
+  --danger: #e06c75;
+  --code-inline-border: #a5cfc0;
+  --blockquote-border: #a5cfc0;
+  --blockquote-bg: transparent;
+  --blockquote-text: #6b6b6b;
+  --metadata-bg: #f0f7f4;
+  --metadata-border: #a5cfc0;
+  --table-header-bg: #d9ede5;
+  --table-cell-bg: transparent;
+  --tag-bg: rgba(78, 178, 137, 0.15);
+  --tag-text: #4eb289;
+  --tag-border: rgba(78, 178, 137, 0.2);
+  --scrollbar-thumb: #a5cfc0;
+  --scrollbar-thumb-hover: #6b6b6b;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: #a5cfc0;
+}
+
+/* ── Purple — soft violet light ── */
+[data-theme="purple"] {
+  --bg-primary: #faf5ff;
+  --bg-secondary: #f3e8ff;
+  --bg-surface: #f5f0ff;
+  --bg-menu: #ebe0ff;
+  --bg-hover: rgba(124, 58, 237, 0.1);
+  --bg-tertiary: #ebe0ff;
+  --bg-code: #f3f0ff;
+  --bg-code-inline: rgba(124, 58, 237, 0.08);
+  --bg-input: #faf5ff;
+  --text-primary: #1e1b2e;
+  --text-secondary: #6b6580;
+  --text-tertiary: #9b95b0;
+  --text-strong: #bd387d;
+  --text-code: #7c3aed;
+  --accent: #7c3aed;
+  --accent-rgb: 124, 58, 237;
+  --accent-hover: #6d28d9;
+  --border: #ddd6ee;
+  --danger: #dc2626;
+  --code-inline-border: #ddd6ee;
+  --blockquote-border: #ddd6ee;
+  --blockquote-bg: transparent;
+  --blockquote-text: #6b6580;
+  --metadata-bg: #f3f0ff;
+  --metadata-border: #ddd6ee;
+  --table-header-bg: #f3e8ff;
+  --table-cell-bg: transparent;
+  --tag-bg: rgba(124, 58, 237, 0.15);
+  --tag-text: #7c3aed;
+  --tag-border: rgba(124, 58, 237, 0.2);
+  --scrollbar-thumb: #ddd6ee;
+  --scrollbar-thumb-hover: #9b95b0;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: #ddd6ee;
+}
+
+/* ── Hermes — Nous Research blue light ── */
+[data-theme="hermes"] {
+  --bg-primary: #f0f1ff;
+  --bg-secondary: #e4e6ff;
+  --bg-surface: #eaeaff;
+  --bg-menu: #d8dbff;
+  --bg-hover: rgba(0, 0, 242, 0.08);
+  --bg-tertiary: #d8dbff;
+  --bg-code: #eaeaff;
+  --bg-code-inline: rgba(0, 0, 242, 0.08);
+  --bg-input: #f0f1ff;
+  --text-primary: #1a1a4e;
+  --text-secondary: #5a5a8a;
+  --text-tertiary: #8a8ab0;
+  --text-strong: #bd387d;
+  --text-code: #0000f2;
+  --accent: #0000f2;
+  --accent-rgb: 0, 0, 242;
+  --accent-hover: #2020ff;
+  --border: rgba(0, 0, 242, 0.12);
+  --danger: #dc2626;
+  --code-inline-border: rgba(0, 0, 242, 0.12);
+  --blockquote-border: rgba(0, 0, 242, 0.12);
+  --blockquote-bg: transparent;
+  --blockquote-text: #5a5a8a;
+  --metadata-bg: #eaeaff;
+  --metadata-border: rgba(0, 0, 242, 0.12);
+  --table-header-bg: #e4e6ff;
+  --table-cell-bg: transparent;
+  --tag-bg: rgba(0, 0, 242, 0.12);
+  --tag-text: #0000f2;
+  --tag-border: rgba(0, 0, 242, 0.2);
+  --scrollbar-thumb: #d8dbff;
+  --scrollbar-thumb-hover: #8a8ab0;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: rgba(0, 0, 242, 0.12);
+}
+
+/* ── Cursor — near-black IDE dark ── */
+[data-theme="cursor"] {
+  --bg-primary: #141414;
+  --bg-secondary: #0f0f0f;
+  --bg-surface: #1a1a1a;
+  --bg-menu: #1a1a1a;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-tertiary: #222222;
+  --bg-code: #1e1e1e;
+  --bg-code-inline: #2a2a2a;
+  --bg-input: #0f0f0f;
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --text-strong: #ffffff;
+  --text-code: #e4e4e7;
+  --accent: #3b82f6;
+  --accent-rgb: 59, 130, 246;
+  --accent-hover: #2563eb;
+  --border: rgba(161, 161, 170, 0.14);
+  --danger: #ef4444;
+  --code-inline-border: rgba(110, 115, 121, 0.277);
+  --blockquote-border: rgba(255, 255, 255, 0.12);
+  --blockquote-bg: rgba(59, 130, 246, 0.08);
+  --blockquote-text: #a1a1aa;
+  --metadata-bg: #1e1e1e;
+  --metadata-border: rgba(68, 68, 68, 0.509);
+  --table-header-bg: #0f0f0f;
+  --table-cell-bg: #1a1a1a;
+  --tag-bg: rgba(59, 130, 246, 0.171);
+  --tag-text: #60a5fa;
+  --tag-border: rgba(59, 130, 246, 0.345);
+  --scrollbar-thumb: rgba(161, 161, 170, 0.35);
+  --scrollbar-thumb-hover: rgba(161, 161, 170, 0.55);
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: rgba(161, 161, 170, 0.14);
+}
+
+/* ── Dracula — classic dark ── */
+[data-theme="dracula"] {
+  --bg-primary: #282a36;
+  --bg-secondary: #21222c;
+  --bg-surface: #343746;
+  --bg-menu: #21222c;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-tertiary: #44475a;
+  --bg-code: #21222c;
+  --bg-code-inline: #44475a;
+  --bg-input: #21222c;
+  --text-primary: #f8f8f2;
+  --text-secondary: #bd93f9;
+  --text-tertiary: #6272a4;
+  --text-strong: #ffffff;
+  --text-code: #f1fa8c;
+  --accent: #bd93f9;
+  --accent-rgb: 189, 147, 249;
+  --accent-hover: #ff79c6;
+  --border: rgba(68, 71, 90, 0.85);
+  --danger: #ff5555;
+  --code-inline-border: rgba(98, 114, 164, 0.45);
+  --blockquote-border: #6272a4;
+  --blockquote-bg: rgba(68, 71, 90, 0.45);
+  --blockquote-text: #bd93f9;
+  --metadata-bg: #21222c;
+  --metadata-border: rgba(68, 71, 90, 0.85);
+  --table-header-bg: #21222c;
+  --table-cell-bg: #282a36;
+  --tag-bg: rgba(189, 147, 249, 0.18);
+  --tag-text: #bd93f9;
+  --tag-border: rgba(189, 147, 249, 0.35);
+  --scrollbar-thumb: #44475a;
+  --scrollbar-thumb-hover: #6272a4;
+  --scrollbar-track: transparent;
+  --tree-indent-hint-color: rgba(68, 71, 90, 0.85);
+}

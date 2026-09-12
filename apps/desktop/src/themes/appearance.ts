@@ -33,8 +33,15 @@ export const DEFAULT_CODE_THEME_PAIR: ThemePair = {
 export const BUILTIN_THEME_IS_DARK: Record<BuiltinThemeName, boolean> = {
   light: false,
   grey: false,
+  slate: false,
+  "claude-code": false,
+  mint: false,
+  purple: false,
+  hermes: false,
   ocean: true,
   "dark-modern": true,
+  cursor: true,
+  dracula: true,
 };
 
 export const APPEARANCE_MODE_KEY = "inimark-appearance-mode";

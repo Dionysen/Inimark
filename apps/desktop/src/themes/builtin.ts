@@ -1,4 +1,16 @@
-export const BUILTIN_THEMES = ["light", "grey", "ocean", "dark-modern"] as const;
+export const BUILTIN_THEMES = [
+  "light",
+  "grey",
+  "slate",
+  "claude-code",
+  "mint",
+  "purple",
+  "hermes",
+  "ocean",
+  "dark-modern",
+  "cursor",
+  "dracula",
+] as const;
 
 export type BuiltinThemeName = (typeof BUILTIN_THEMES)[number];
 
@@ -8,15 +20,10 @@ export const DEFAULT_DARK_BUILTIN: BuiltinThemeName = "ocean";
 /** Old ids → current ids (kept for localStorage / preferred-theme migration). */
 const LEGACY_THEME_IDS: Record<string, BuiltinThemeName> = {
   white: "light",
-  slate: "grey",
   dark: "ocean",
   "modern-dark": "dark-modern",
-  mint: "light",
   "mint-dark": "ocean",
-  "claude-code": "light",
-  purple: "light",
-  hermes: "light",
-  next: "light",
+  next: "mint",
   // Promoted customs → builtins
   "custom-er44d9pe": "ocean",
   "custom-vz8ojnvc": "dark-modern",

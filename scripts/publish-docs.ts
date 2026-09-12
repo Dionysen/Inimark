@@ -27,7 +27,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const require = createRequire(import.meta.url);
 
-const BUILTIN_THEMES = ["light", "grey", "ocean", "dark-modern"] as const;
+const BUILTIN_THEMES = [
+  "light",
+  "grey",
+  "slate",
+  "claude-code",
+  "mint",
+  "purple",
+  "hermes",
+  "ocean",
+  "dark-modern",
+  "cursor",
+  "dracula",
+] as const;
 
 function printHelp(): void {
   console.log(`Usage: pnpm docs:build|docs:deploy [-- options]
