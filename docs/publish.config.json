@@ -1,7 +1,7 @@
 {
   "siteName": "Inimark Docs",
   "defaultTheme": "dark-modern",
-  "lightTheme": "custom-3tvad4v6",
+  "lightTheme": "light",
   "darkTheme": "dark-modern",
   "baseHref": "/Inimark/",
   "out": "dist",

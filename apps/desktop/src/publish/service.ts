@@ -189,7 +189,7 @@ export async function publishLibrary(
     message: "Rendering HTML…",
   });
 
-  const built: SiteBuildResult = buildSite({
+  const built: SiteBuildResult = await buildSite({
     config: siteConfig,
     notes,
     tree,

@@ -11,7 +11,7 @@ translationKey: code-highlighting
 Technical notes live or die by readable code. Inimark supports **inline code**, **fenced code blocks**, and **syntax highlighting** driven by CodeMirror language packs (theme colors come from [[Themes and Appearance]]).
 
 > [!TIP]
-> Open this page in Inimark to see highlighting live. Unknown language tags still render as plain preformatted text.
+> Open this page in Inimark to see highlighting live. Unknown language tags still render as plain preformatted text. **Published sites** get the same languages highlighted at build time (no client-side highlighter required).
 
 ## Inline code
 

@@ -168,7 +168,7 @@ function pickHome(notes: VaultNoteInput[], config: SiteConfig): VaultNoteInput {
  * Build a complete static site artifact (HTML/CSS/JS + media copy plan).
  * Runs in a DOM environment (Tauri webview or happy-dom).
  */
-export function buildSite(options: BuildSiteOptions): SiteBuildResult {
+export async function buildSite(options: BuildSiteOptions): Promise<SiteBuildResult> {
   const baseConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG, ...options.config };
   const themePair = resolveSiteThemePair(baseConfig, options.themeIds);
   const config: SiteConfig = {
@@ -242,7 +242,7 @@ export function buildSite(options: BuildSiteOptions): SiteBuildResult {
         return relativeHref(noteHtmlPath(note.path), outRel);
       };
 
-      const exported = renderMarkdownToStaticHtml(note.markdown, {
+      const exported = await renderMarkdownToStaticHtml(note.markdown, {
         rewriteSrc,
         resolveWikiHref: resolveWikiHref(note.path),
       });

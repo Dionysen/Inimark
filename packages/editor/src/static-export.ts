@@ -279,15 +279,18 @@ function escapeAttr(s: string): string {
     .replace(/</g, "&lt;");
 }
 
+import { highlightFencedCodeInHtml } from "./code-highlight-html.ts";
+
 /**
  * Render markdown to static reading-mode HTML using the live editor pipeline.
  * Must run in a DOM environment (browser / happy-dom).
  * Mermaid fences are emitted for client-side hydration on the published site.
+ * Other fenced languages are syntax-highlighted at build time (Lezer).
  */
-export function renderMarkdownToStaticHtml(
+export async function renderMarkdownToStaticHtml(
   markdown: string,
   options: StaticExportOptions = {},
-): StaticExportResult {
+): Promise<StaticExportResult> {
   const host = document.createElement("div");
   host.style.position = "fixed";
   host.style.left = "-10000px";
@@ -317,7 +320,7 @@ export function renderMarkdownToStaticHtml(
     const assetSrcs: string[] = [];
     const outline: OutlineItem[] = [];
     const slugUsed = new Map<string, number>();
-    const html = serializeChildren(
+    const rawHtml = serializeChildren(
       view.dom,
       options,
       assetSrcs,
@@ -325,6 +328,8 @@ export function renderMarkdownToStaticHtml(
       slugUsed,
     );
     view.destroy();
+
+    const html = await highlightFencedCodeInHtml(rawHtml);
 
     return {
       html,

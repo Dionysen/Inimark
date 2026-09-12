@@ -180,7 +180,7 @@ async function main(): Promise<void> {
   console.log(`  baseHref=${config.baseHref}`);
   console.log(`  notes=${vault.notes.length}`);
 
-  const built = buildSite({
+  const built = await buildSite({
     config,
     notes: vault.notes,
     tree: vault.tree,

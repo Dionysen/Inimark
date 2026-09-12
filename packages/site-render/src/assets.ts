@@ -389,6 +389,17 @@ html.site-graph-modal-open body {
   width: 100%;
   margin: 0;
 }
+/* Build-time Lezer token colors (same --tw-code-* vars as the editor). */
+.site-article pre code .tok-comment { color: var(--tw-code-comment); }
+.site-article pre code .tok-keyword { color: var(--tw-code-keyword); }
+.site-article pre code .tok-string { color: var(--tw-code-string); }
+.site-article pre code .tok-literal { color: var(--tw-code-literal); }
+.site-article pre code .tok-type { color: var(--tw-code-type); }
+.site-article pre code .tok-function { color: var(--tw-code-function); }
+.site-article pre code .tok-name { color: var(--tw-code-name); }
+.site-article pre code .tok-punctuation { color: var(--tw-code-punctuation); }
+.site-article pre code .tok-meta { color: var(--tw-code-meta); }
+.site-article pre code .tok-invalid { color: var(--tw-code-invalid); }
 .site-article .code-block-node.has-diagram .diagram-panel {
   display: flex;
   flex-direction: column;

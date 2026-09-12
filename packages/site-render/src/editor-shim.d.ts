@@ -22,7 +22,7 @@ declare module "@inimark/editor" {
   export function renderMarkdownToStaticHtml(
     markdown: string,
     options?: StaticExportOptions,
-  ): StaticExportResult;
+  ): Promise<StaticExportResult>;
 
   export interface WikiLinkBridge {
     resolveNote(noteName: string): string | null;

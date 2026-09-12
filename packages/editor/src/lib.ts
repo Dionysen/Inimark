@@ -44,6 +44,10 @@ export {
   type StaticExportResult,
 } from "./static-export.ts";
 export {
+  highlightCodeToHtml,
+  highlightFencedCodeInHtml,
+} from "./code-highlight-html.ts";
+export {
   attachImePositionGuard,
   isImeComposing,
   refreshImeCaretPosition,

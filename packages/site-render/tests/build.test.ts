@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildSite } from "../src/index.ts";
 
 describe("buildSite", () => {
-  it("renders notes with outline, wiki links, titles, and collapsed folders", () => {
+  it("renders notes with outline, wiki links, titles, and collapsed folders", async () => {
     const notes = [
       {
         path: "folder/Welcome.md",
@@ -15,7 +15,7 @@ describe("buildSite", () => {
       },
     ];
 
-    const result = buildSite({
+    const result = await buildSite({
       config: { siteName: "Test Vault", defaultTheme: "ocean", baseHref: "/", out: "dist" },
       notes,
       tree: [
@@ -91,12 +91,12 @@ describe("buildSite", () => {
     expect(other.content).toContain('aria-expanded="true"');
   });
 
-  it("keeps folders collapsed when they do not contain the active note", () => {
+  it("keeps folders collapsed when they do not contain the active note", async () => {
     const notes = [
       { path: "a/One.md", markdown: "# One" },
       { path: "b/Two.md", markdown: "# Two" },
     ];
-    const result = buildSite({
+    const result = await buildSite({
       config: { siteName: "T", defaultTheme: "ocean", baseHref: "/", out: "dist" },
       notes,
       tree: [
@@ -126,7 +126,7 @@ describe("buildSite", () => {
     expect(one.content).toContain('aria-expanded="false"');
   });
 
-  it("builds bilingual sites with language switcher and unwrapped nav", () => {
+  it("builds bilingual sites with language switcher and unwrapped nav", async () => {
     const locales = {
       default: "zh",
       languages: [
@@ -150,7 +150,7 @@ describe("buildSite", () => {
           "---\ntitle: Welcome\nlang: en\ntranslationKey: welcome\n---\n\n# Welcome\n\nSee [[欢迎]].",
       },
     ];
-    const result = buildSite({
+    const result = await buildSite({
       config: {
         siteName: "Docs",
         defaultTheme: "light",
@@ -217,8 +217,8 @@ describe("buildSite", () => {
     expect(index.content).toContain("notes/zh/欢迎.html");
   });
 
-  it("emits Mermaid sources and ships the runtime for client hydration", () => {
-    const result = buildSite({
+  it("emits Mermaid sources and ships the runtime for client hydration", async () => {
+    const result = await buildSite({
       config: { siteName: "Diagrams", defaultTheme: "light", baseHref: "/", out: "dist" },
       notes: [
         {
@@ -253,6 +253,33 @@ describe("buildSite", () => {
     );
     expect(result.files.find((f) => f.path === "assets/site.js")!.content).toContain(
       "fitMermaidSvg",
+    );
+  });
+
+  it("syntax-highlights fenced code in published HTML", async () => {
+    const result = await buildSite({
+      config: { siteName: "Code", defaultTheme: "light", baseHref: "/", out: "dist" },
+      notes: [
+        {
+          path: "Snippet.md",
+          markdown: "# Snippet\n\n```python\ndef hello():\n  return 1\n```\n",
+        },
+      ],
+      resolveNotePath: () => null,
+      resolveMediaAbsolutePath: () => null,
+      themeVariablesCss: ":root { --tw-code-keyword: #c9a7e8; }",
+      editorWidgetsCss: "",
+      editorThemeCss: "",
+      themeIds: ["light"],
+    });
+
+    const page = result.files.find((f) => f.path === "notes/Snippet.html")!;
+    expect(page.content).toContain('data-lang="python"');
+    expect(page.content).toContain("language-python");
+    expect(page.content).toMatch(/tok-(keyword|function|literal)/);
+    expect(page.content).toContain("tok-keyword");
+    expect(result.files.find((f) => f.path === "assets/site.css")!.content).toContain(
+      ".tok-keyword",
     );
   });
 });
