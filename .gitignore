@@ -26,3 +26,4 @@ packages/editor/dist/
 
 .cursor
 docs/.inimark/
+.obsidian
