@@ -22,7 +22,19 @@ import {
   type GraphSettings,
 } from "../settings/store.ts";
 import { mountGraphControls } from "../settings/graph-controls.ts";
-import { graphLabelAlpha, nodeLabelAlpha } from "./graph-label.ts";
+import { graphLabelAlpha } from "./graph-label.ts";
+import {
+  createGraphHoverAmounts,
+  edgeHoverKey,
+  edgeStrokeAlpha,
+  edgeWidthMul,
+  mixCssColor,
+  nodeFillAlpha,
+  nodeHoverScale,
+  nodeLabelAlpha,
+  resetGraphHoverAmounts,
+  stepGraphHover,
+} from "./graph-hover.ts";
 
 export type GraphMode = "local" | "vault";
 
@@ -242,6 +254,7 @@ export function mountGraphPanel(
   let edges: GraphEdge[] = [];
   let dragId: string | null = null;
   let hoverId: string | null = null;
+  const hoverVisual = createGraphHoverAmounts();
   let adjacency = new Map<string, Set<string>>();
   let downX = 0;
   let downY = 0;
@@ -921,16 +934,6 @@ export function mountGraphPanel(
     }
   }
 
-  function hoverFocus(): Set<string> | null {
-    if (!hoverId) return null;
-    const focus = new Set<string>([hoverId]);
-    const neighbors = adjacency.get(hoverId);
-    if (neighbors) {
-      for (const id of neighbors) focus.add(id);
-    }
-    return focus;
-  }
-
   function nodeRadius(node: GraphNode, maxDeg: number, scaleClamp: number, nodeScale: number): number {
     const degreeBoost = 5 + (node.degree / maxDeg) * 9;
     return degreeBoost * scaleClamp * nodeScale;
@@ -996,8 +999,6 @@ export function mountGraphPanel(
     const nodeScale = graphSettingFactor(graphSettings.nodeSize);
     const linkScale = graphSettingFactor(graphSettings.linkThickness);
     const textAlpha = graphLabelAlpha(graphSettings.textOpacity, scale);
-    const focus = hoverFocus();
-    const dimming = focus != null;
 
     const byId = new Map(nodes.map((node) => [node.id, node]));
     const baseLine = Math.max(0.75, 1.25 * linkScale);
@@ -1041,59 +1042,53 @@ export function mountGraphPanel(
       }
     };
 
-    // Pass 1: dim / normal edges
+    const scene = hoverVisual.scene;
+
+    // Pass 1: idle / dimming edges
     for (const edge of edges) {
-      const hot =
-        focus != null &&
-        hoverId != null &&
-        ((edge.source === hoverId && focus.has(edge.target)) ||
-          (edge.target === hoverId && focus.has(edge.source)));
-      if (hot) continue;
-      drawEdge(edge, linkColor, dimming ? 0.18 : 0.85, 1);
+      const hotAmt = hoverVisual.edge.get(edgeHoverKey(edge.source, edge.target)) ?? 0;
+      if (hotAmt > 0.02) continue;
+      drawEdge(edge, linkColor, edgeStrokeAlpha(scene, 0), 1);
     }
-    // Pass 2: highlighted edges on top
-    if (focus && hoverId) {
-      for (const edge of edges) {
-        const hot =
-          (edge.source === hoverId && focus.has(edge.target)) ||
-          (edge.target === hoverId && focus.has(edge.source));
-        if (!hot) continue;
-        drawEdge(edge, accent, 1, 1.85);
-      }
+    // Pass 2: highlighted edges on top (amount may still be catching up)
+    for (const edge of edges) {
+      const hotAmt = hoverVisual.edge.get(edgeHoverKey(edge.source, edge.target)) ?? 0;
+      if (hotAmt <= 0.02) continue;
+      drawEdge(
+        edge,
+        mixCssColor(linkColor, accent, hotAmt),
+        edgeStrokeAlpha(scene, hotAmt),
+        edgeWidthMul(hotAmt),
+      );
     }
     ctx.globalAlpha = 1;
 
     const maxDeg = Math.max(1, ...nodes.map((node) => node.degree));
     const scaleClamp = nodeScaleClamp();
 
-    const drawNode = (node: GraphNode, highlighted: boolean) => {
+    const drawNode = (node: GraphNode) => {
       const s = worldToScreen(node.x, node.y);
       if (s.x < -40 || s.y < -40 || s.x > width + 40 || s.y > height + 40) {
         return;
       }
+      const focusAmt = hoverVisual.focus.get(node.id) ?? 0;
+      const centerAmt = hoverVisual.center.get(node.id) ?? 0;
       const r = nodeRadius(node, maxDeg, scaleClamp, nodeScale);
-      const isHover = node.id === hoverId;
-      const drawR = r * (isHover ? 1.15 : 1);
+      const drawR = r * nodeHoverScale(centerAmt);
       const fontSize = labelFontSize(drawR);
+      const baseFill = node.center ? nodeActive : nodeColor;
+      const litFill = mixCssColor(baseFill, nodeActive, focusAmt);
       ctx.beginPath();
-      if (highlighted) {
-        ctx.fillStyle = isHover ? accent : nodeActive;
-        ctx.globalAlpha = 1;
-      } else if (dimming) {
-        ctx.fillStyle = node.center ? nodeActive : nodeColor;
-        ctx.globalAlpha = 0.22;
-      } else {
-        ctx.fillStyle = node.center ? nodeActive : nodeColor;
-        ctx.globalAlpha = 1;
-      }
+      ctx.fillStyle = mixCssColor(litFill, accent, centerAmt);
+      ctx.globalAlpha = nodeFillAlpha(scene, focusAmt);
       ctx.arc(s.x, s.y, drawR, 0, Math.PI * 2);
       ctx.fill();
 
-      const labelA = nodeLabelAlpha(textAlpha, isHover, highlighted, dimming);
+      const labelA = nodeLabelAlpha(textAlpha, centerAmt, focusAmt, scene);
       if (labelA > 0.02) {
         ctx.globalAlpha = labelA;
-        ctx.fillStyle = highlighted ? (isHover ? accent : labelColor) : labelColor;
-        ctx.font = `${isHover ? "600 " : ""}${fontSize}px ${uiFont}`;
+        ctx.fillStyle = mixCssColor(labelColor, accent, centerAmt);
+        ctx.font = `${centerAmt > 0.35 ? "600 " : ""}${fontSize}px ${uiFont}`;
         ctx.textAlign = "center";
         ctx.fillText(node.label.slice(0, 24), s.x, s.y + drawR + fontSize + 2);
       }
@@ -1101,16 +1096,20 @@ export function mountGraphPanel(
     };
 
     for (const node of nodes) {
-      if (focus?.has(node.id)) continue;
-      drawNode(node, false);
+      const focusAmt = hoverVisual.focus.get(node.id) ?? 0;
+      const centerAmt = hoverVisual.center.get(node.id) ?? 0;
+      if (focusAmt > 0.02 || centerAmt > 0.02) continue;
+      drawNode(node);
     }
-    if (focus) {
-      for (const node of nodes) {
-        if (!focus.has(node.id) || node.id === hoverId) continue;
-        drawNode(node, true);
-      }
-      const hovered = hoverId ? byId.get(hoverId) : null;
-      if (hovered) drawNode(hovered, true);
+    for (const node of nodes) {
+      const focusAmt = hoverVisual.focus.get(node.id) ?? 0;
+      const centerAmt = hoverVisual.center.get(node.id) ?? 0;
+      if (focusAmt <= 0.02 || centerAmt > 0.02) continue;
+      drawNode(node);
+    }
+    for (const node of nodes) {
+      if ((hoverVisual.center.get(node.id) ?? 0) <= 0.02) continue;
+      drawNode(node);
     }
   }
 
@@ -1125,7 +1124,8 @@ export function mountGraphPanel(
     }
     const zooming = updateZoom();
     const coasting = applyPanInertia();
-    if (dirty || simulating || zooming || coasting || progression > 0) {
+    const hovering = stepGraphHover(hoverVisual, hoverId, adjacency, edges);
+    if (dirty || simulating || zooming || coasting || progression > 0 || hovering) {
       draw();
       dirty = false;
     }
@@ -1138,6 +1138,7 @@ export function mountGraphPanel(
     nodes = data.nodes;
     edges = data.edges;
     hoverId = null;
+    resetGraphHoverAmounts(hoverVisual);
     canvas.style.cursor = "";
     rebuildAdjacency();
     seedLayout();
@@ -1220,6 +1221,7 @@ export function mountGraphPanel(
     const gen = ++progressionGen;
     progression = 1;
     hoverId = null;
+    resetGraphHoverAmounts(hoverVisual);
     canvas.style.cursor = "";
     nodes = [];
     edges = [];

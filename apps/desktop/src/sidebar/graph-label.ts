@@ -32,18 +32,3 @@ export function graphLabelAlpha(textOpacity: number, scale: number): number {
   const u = (scale - hide) / (full - hide);
   return u * u * (3 - 2 * u);
 }
-
-/**
- * Final opacity for one node’s name.
- * The hovered node keeps a readable name even when zoom has hidden the rest.
- */
-export function nodeLabelAlpha(
-  textAlpha: number,
-  isHover: boolean,
-  highlighted: boolean,
-  dimming: boolean,
-): number {
-  if (isHover) return Math.max(textAlpha, 0.92);
-  if (dimming && !highlighted) return textAlpha * 0.25;
-  return textAlpha;
-}
