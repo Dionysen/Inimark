@@ -29,6 +29,22 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.6 — 2026-09-14
+
+**Release page:** [v1.0.6](https://github.com/Dionysen/Inimark/releases/tag/v1.0.6)
+
+### What's new
+
+- Tags: inline `#tag` / `#parent/child` chips and a Tags sidebar (including YAML front matter), with counts and open-note
+- External file change detection: banner when the open file is modified or deleted on disk, with reload / save-as / overwrite
+- Context-menu Quick Insert for the current local datetime
+- Configurable code indent size; editor always keeps bottom scroll padding so the last line can reach mid-viewport
+- Relationship graph: smooth hover highlighting, zoom-aware labels, layout preserved across soft refreshes
+- Bookmarks and tags show parent folder paths; find bar no longer loses focus to the editor
+- Tag styling and theme color polish
+
+---
+
 ## 1.0.5 — 2026-09-12
 
 **Release page:** [v1.0.5](https://github.com/Dionysen/Inimark/releases/tag/v1.0.5)
