@@ -40,6 +40,12 @@ textarea {
   user-select: none;
 }
 
+/* Mobile (Android / iOS) only — desktop insets stay 0 and must not get extra padding. */
+html.platform-mobile #app {
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+    env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
 /* Markdown editor — only surface where free-form text selection is allowed. */
 .inimark-editor-host,
 .inimark-editor-host * {
