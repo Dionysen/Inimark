@@ -57,7 +57,9 @@ The center is `@inimark/editor`:
 - `Ctrl/⌘ + /` toggles [[Editing Modes#Source mode|source mode]]
 - [[Editing Modes#Typewriter mode|Typewriter]] (`F9` / status bar) and [[Editing Modes#Focus mode|Focus]] (`F8` / Settings / More → Immersive)
 
-Context menus insert formatting, links, callouts — see [[Markdown Syntax]].
+Context menus insert formatting, links, callouts, and the current time — see [[Markdown Syntax]].
+
+If another app changes the open file: unmodified buffers reload silently with a toast; dirty buffers show a banner to reload or keep edits; saving against a changed disk file asks before overwrite.
 
 ## Status bar
 

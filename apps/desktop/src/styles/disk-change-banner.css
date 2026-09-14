@@ -1,0 +1,39 @@
+/* External disk-change notice — sits above the editor host inside the pane. */
+.inimark-disk-change-banner {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid var(--border, var(--inimark-border));
+  background: color-mix(in srgb, var(--accent, #3b82f6) 10%, var(--bg-primary, var(--inimark-content-bg)));
+  color: var(--text-primary, var(--inimark-fg));
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.inimark-disk-change-banner[hidden] {
+  display: none;
+}
+
+.inimark-disk-change-banner__message {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.inimark-disk-change-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.inimark-disk-change-banner__btn {
+  min-height: 1.7rem;
+  padding-block: 0.15rem;
+  padding-inline: 0.7rem;
+  font-size: 0.8rem;
+}

@@ -31,7 +31,9 @@ import { mountUpdatePreflightHandler } from "./update-bridge.ts";
 import { mountUpdateDevCheckHandler } from "./update-dev-bridge.ts";
 import { createAutoUpdateService } from "./update/auto-update.ts";
 import { mountTitlebarUpdateCapsule, type TitlebarUpdateCapsuleController } from "./ui/titlebar-update-capsule.ts";
-import { promptUnsavedChanges } from "./ui/confirm-dialog.ts";
+import { promptUnsavedChanges, promptDiskConflict } from "./ui/confirm-dialog.ts";
+import { mountDiskChangeBanner } from "./ui/disk-change-banner.ts";
+import { showStatusToast } from "./ui/status-toast.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
@@ -44,6 +46,8 @@ import {
   refreshWorkspaceTree,
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
+import { createActiveFileSync, type ActiveFileDiskEvent } from "./workspace/active-file-sync.ts";
+import type { DiskRevision } from "./workspace/disk-revision.ts";
 import { mountEditorFontZoom } from "./editor/font-zoom.ts";
 import {
   captureFileViewState,
@@ -224,6 +228,17 @@ export function mountApp(host: HTMLElement): AppController {
   editor.setTypewriterMode(settings.typewriterMode);
   editor.setFocusMode(settings.focusMode);
 
+  let pendingDiskRevision: DiskRevision | null = null;
+  const diskBanner = mountDiskChangeBanner(shell.editorPane);
+  cleanups.push(() => diskBanner.destroy());
+
+  const fileSync = createActiveFileSync({
+    onDiskEvent(event) {
+      handleExternalDiskEvent(event);
+    },
+  });
+  cleanups.push(() => fileSync.destroy());
+
   wordCount = mountWordCount({
     host: shell.editorPane,
     editor,
@@ -398,6 +413,7 @@ export function mountApp(host: HTMLElement): AppController {
     clearAutoSaveTimer();
     if (!settings.autoSave) return;
     if (!workspace || !activeFilePath) return;
+    if (diskBanner.isVisible() || fileSync.hasPendingConflict()) return;
     autoSaveTimer = setTimeout(() => {
       autoSaveTimer = null;
       void saveCurrentFile({ quiet: true });
@@ -446,9 +462,110 @@ export function mountApp(host: HTMLElement): AppController {
     });
   }
 
+  async function bindActiveFileSync(text: string): Promise<void> {
+    diskBanner.hide();
+    pendingDiskRevision = null;
+    if (!workspace || !activeFilePath) {
+      await fileSync.unbind();
+      return;
+    }
+    await fileSync.bind(workspace.rootPath, activeFilePath, text);
+  }
+
+  async function reloadActiveFromDisk(
+    text: string,
+    options?: { toast?: boolean },
+  ): Promise<void> {
+    const view = editor.getViewState();
+    editor.setMarkdown(text);
+    editor.restoreViewState(view);
+    shell.setDirty(false);
+    diskBanner.hide();
+    pendingDiskRevision = null;
+    scheduleOutlineSync(text);
+    if (workspace && activeFilePath) {
+      linkIndex.addFileLinks(activeFilePath, text);
+      shell.graph.setActiveFile(activeFilePath);
+    }
+    await fileSync.recordBaseline(text);
+    wordCount?.scheduleUpdate();
+    if (options?.toast !== false) {
+      showStatusToast(shell.mainColumn, t("editor.disk.reloadedToast"));
+    }
+  }
+
+  function showModifiedDiskBanner(text: string, revision: DiskRevision): void {
+    pendingDiskRevision = revision;
+    diskBanner.showModified({
+      onReload: () => {
+        void (async () => {
+          if (!workspace || !activeFilePath) {
+            await reloadActiveFromDisk(text, { toast: false });
+            return;
+          }
+          const latest = await readWorkspaceFile(workspace, activeFilePath);
+          await reloadActiveFromDisk(
+            latest.status === "opened" ? latest.text : text,
+            { toast: false },
+          );
+        })();
+      },
+      onKeep: () => {
+        if (pendingDiskRevision) fileSync.dismissRevision(pendingDiskRevision);
+        pendingDiskRevision = null;
+        diskBanner.hide();
+      },
+    });
+  }
+
+  function showDeletedDiskBanner(): void {
+    diskBanner.showDeleted({
+      onClose: () => {
+        diskBanner.hide();
+        void fileSync.unbind();
+        resetToUntitled();
+      },
+      onSaveAs: () => {
+        void saveFileAs();
+      },
+    });
+  }
+
+  function handleExternalDiskEvent(event: ActiveFileDiskEvent): void {
+    if (!activeFilePath) return;
+    if (event.kind === "same-content") return;
+    if (event.kind === "deleted") {
+      showDeletedDiskBanner();
+      return;
+    }
+    if (!shell.isDirty()) {
+      void reloadActiveFromDisk(event.text, { toast: true });
+      return;
+    }
+    showModifiedDiskBanner(event.text, event.revision);
+  }
+
   async function saveCurrentFile(options?: { quiet?: boolean }): Promise<boolean> {
     const markdown = currentMarkdownForSave();
     if (workspace && activeFilePath) {
+      const probe = await fileSync.probe();
+      if (probe.status === "modified") {
+        if (options?.quiet) {
+          showModifiedDiskBanner(probe.text, probe.revision);
+          return false;
+        }
+        const choice = await promptDiskConflict();
+        if (choice === "cancel") return false;
+        if (choice === "save-as") {
+          await saveFileAs();
+          return false;
+        }
+      } else if (probe.status === "deleted" && options?.quiet) {
+        showDeletedDiskBanner();
+        return false;
+      }
+
+      fileSync.markOwnWrite();
       const result = await writeWorkspaceFile(workspace, activeFilePath, markdown);
       if (result.status === "saved") {
         if (settings.markdownFormat.formatOnSave) {
@@ -460,12 +577,15 @@ export function mountApp(host: HTMLElement): AppController {
         }
         shell.setFileName(result.name);
         shell.setDirty(false);
+        diskBanner.hide();
+        pendingDiskRevision = null;
         workspace.tree = await refreshWorkspaceTree(workspace);
         shell.sidebar.setWorkspace(workspace);
         shell.sidebar.setActiveFile(activeFilePath);
         linkIndex.addFileLinks(activeFilePath, markdown);
         linkIndex.persistCache(workspace.rootPath);
         shell.graph.setActiveFile(activeFilePath);
+        await fileSync.recordBaseline(markdown);
         persistLibrarySession();
         return true;
       }
@@ -489,6 +609,9 @@ export function mountApp(host: HTMLElement): AppController {
     const result = await editor.saveMarkdownFileAs();
     if (result.status === "saved" || result.status === "downloaded") {
       activeFilePath = null;
+      diskBanner.hide();
+      pendingDiskRevision = null;
+      await fileSync.unbind();
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(null);
       shell.setDirty(false);
@@ -499,6 +622,9 @@ export function mountApp(host: HTMLElement): AppController {
   function resetToUntitled(): void {
     editor.newMarkdownFile();
     activeFilePath = null;
+    diskBanner.hide();
+    pendingDiskRevision = null;
+    void fileSync.unbind();
     shell.setFileName(null);
     shell.sidebar.setActiveFile(null);
     shell.graph.setActiveFile(null);
@@ -551,6 +677,7 @@ export function mountApp(host: HTMLElement): AppController {
       scheduleOutlineSync(result.text);
       recordRecentFile(activeLibraryId, path);
       navHistory.record(path);
+      await bindActiveFileSync(result.text);
     } else {
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
@@ -642,6 +769,9 @@ export function mountApp(host: HTMLElement): AppController {
       await openWorkspaceFile(session.activeFilePath, { skipConfirm: true });
     } else {
       activeFilePath = null;
+      diskBanner.hide();
+      pendingDiskRevision = null;
+      await fileSync.unbind();
       shell.sidebar.setActiveFile(null);
     }
   }
@@ -860,6 +990,7 @@ export function mountApp(host: HTMLElement): AppController {
           if (saved) {
             editor.restoreViewState(toEditorViewState(saved));
           }
+          await bindActiveFileSync(opened.text);
         }
         persistLibrarySession();
       } else {
@@ -887,6 +1018,9 @@ export function mountApp(host: HTMLElement): AppController {
     activeFilePath = null;
     activeLibraryId = null;
     sessionFileViews = {};
+    diskBanner.hide();
+    pendingDiskRevision = null;
+    void fileSync.unbind();
     navHistory.clear();
     shell.sidebar.setWorkspace(null);
     linkIndex.clear();
@@ -983,6 +1117,12 @@ export function mountApp(host: HTMLElement): AppController {
         void requestAppClose();
       });
       cleanups.push(unlistenClose);
+
+      const unlistenFocus = await win.onFocusChanged(({ payload: focused }) => {
+        if (!focused) return;
+        void fileSync.checkNow();
+      });
+      cleanups.push(unlistenFocus);
 
       cleanups.push(
         mountUpdatePreflightHandler({

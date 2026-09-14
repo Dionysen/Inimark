@@ -1032,6 +1032,8 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 
 .inimark-editor-pane {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -1039,7 +1041,9 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 }
 
 .inimark-editor-host {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   overflow: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   min-width: 0;

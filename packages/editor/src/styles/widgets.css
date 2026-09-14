@@ -1379,9 +1379,21 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   padding: 0.78em 1em 0.82em;
   color: var(--text-primary, #2d333b);
   background: var(--md-alert-bg);
+  /* Obsidian-like: no border; soft color glow only on hover. */
   border: none;
-  /* border-left: 4px solid var(--md-alert-color); */
   border-radius: 4px;
+  box-shadow: 0 0 0 0 transparent;
+  transition: box-shadow 180ms ease;
+}
+
+.ProseMirror blockquote.md-alert:hover {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--md-alert-color) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ProseMirror blockquote.md-alert {
+    transition: none;
+  }
 }
 
 .ProseMirror blockquote.md-alert::before {

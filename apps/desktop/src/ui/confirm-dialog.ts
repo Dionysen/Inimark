@@ -2,6 +2,7 @@ import "../styles/confirm-dialog.css";
 import { t } from "../i18n/index.ts";
 
 export type UnsavedChoice = "save" | "discard" | "cancel";
+export type DiskConflictChoice = "overwrite" | "save-as" | "cancel";
 
 export interface UnsavedPromptOptions {
   title?: string;
@@ -183,5 +184,87 @@ export function promptConfirm(options: ConfirmPromptOptions = {}): Promise<boole
     document.body.append(overlay);
     activeDialog = overlay;
     (danger ? cancelBtn : confirmBtn).focus();
+  });
+}
+
+export interface DiskConflictPromptOptions {
+  title?: string;
+  message?: string;
+  overwriteLabel?: string;
+  saveAsLabel?: string;
+  cancelLabel?: string;
+}
+
+/** Save conflict when the on-disk file changed under a dirty buffer. */
+export function promptDiskConflict(
+  options: DiskConflictPromptOptions = {},
+): Promise<DiskConflictChoice> {
+  if (activeDialog) {
+    return Promise.resolve("cancel");
+  }
+
+  const title = options.title ?? t("dialogs.diskConflictTitle");
+  const message = options.message ?? t("dialogs.diskConflictMessage");
+  const overwriteLabel = options.overwriteLabel ?? t("dialogs.diskConflictOverwrite");
+  const saveAsLabel = options.saveAsLabel ?? t("dialogs.diskConflictSaveAs");
+  const cancelLabel = options.cancelLabel ?? t("dialogs.diskConflictCancel");
+
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "inimark-confirm-dialog";
+    overlay.innerHTML = `
+      <div class="inimark-confirm-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="inimark-confirm-title">
+        <h2 class="inimark-confirm-dialog-title" id="inimark-confirm-title"></h2>
+        <p class="inimark-confirm-dialog-message"></p>
+        <div class="inimark-confirm-dialog-actions">
+          <button type="button" class="inimark-control inimark-btn inimark-confirm-dialog-btn" data-choice="cancel"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-confirm-dialog-btn" data-choice="save-as"></button>
+          <button type="button" class="inimark-control inimark-btn inimark-btn--danger inimark-confirm-dialog-btn" data-choice="overwrite"></button>
+        </div>
+      </div>
+    `;
+
+    overlay.querySelector(".inimark-confirm-dialog-title")!.textContent = title;
+    overlay.querySelector(".inimark-confirm-dialog-message")!.textContent = message;
+    const cancelBtn = overlay.querySelector<HTMLButtonElement>('[data-choice="cancel"]')!;
+    const saveAsBtn = overlay.querySelector<HTMLButtonElement>('[data-choice="save-as"]')!;
+    const overwriteBtn = overlay.querySelector<HTMLButtonElement>('[data-choice="overwrite"]')!;
+    cancelBtn.textContent = cancelLabel;
+    saveAsBtn.textContent = saveAsLabel;
+    overwriteBtn.textContent = overwriteLabel;
+
+    const panel = overlay.querySelector(".inimark-confirm-dialog-panel")!;
+
+    function finish(choice: DiskConflictChoice): void {
+      cleanup();
+      resolve(choice);
+    }
+
+    function cleanup(): void {
+      document.removeEventListener("keydown", onKeyDown, true);
+      overlay.remove();
+      if (activeDialog === overlay) activeDialog = null;
+    }
+
+    function onKeyDown(event: KeyboardEvent): void {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        finish("cancel");
+        return;
+      }
+    }
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) finish("cancel");
+    });
+    panel.addEventListener("click", (event) => event.stopPropagation());
+    cancelBtn.addEventListener("click", () => finish("cancel"));
+    saveAsBtn.addEventListener("click", () => finish("save-as"));
+    overwriteBtn.addEventListener("click", () => finish("overwrite"));
+
+    document.addEventListener("keydown", onKeyDown, true);
+    document.body.append(overlay);
+    activeDialog = overlay;
+    cancelBtn.focus();
   });
 }

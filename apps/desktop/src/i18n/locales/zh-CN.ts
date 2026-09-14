@@ -228,6 +228,15 @@ export const zhCN: Dictionary = {
       copyAsPlainText: "复制为纯文本",
       pasteAsPlainText: "粘贴为纯文本",
     },
+    disk: {
+      modifiedMessage: "文件已在外部被修改",
+      deletedMessage: "文件已从磁盘删除",
+      reload: "重新加载",
+      keep: "保留我的修改",
+      close: "关闭文档",
+      saveAs: "另存为…",
+      reloadedToast: "已从磁盘重新加载",
+    },
     find: {
       placeholder: "查找",
       replacePlaceholder: "替换",
@@ -834,5 +843,10 @@ export const zhCN: Dictionary = {
     linkUpdateConfirm: "更新",
     linkUpdateSkip: "不更新",
     linkUpdateAlways: "移动或重命名时始终更新链接",
+    diskConflictTitle: "磁盘文件已更改",
+    diskConflictMessage: "磁盘上的文件已被其他程序修改。保存将覆盖那些更改。",
+    diskConflictOverwrite: "覆盖",
+    diskConflictSaveAs: "另存为…",
+    diskConflictCancel: "取消",
   },
 };

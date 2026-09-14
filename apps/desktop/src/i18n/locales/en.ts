@@ -228,6 +228,15 @@ export const en: Dictionary = {
       copyAsPlainText: "Copy as Plain Text",
       pasteAsPlainText: "Paste as Plain Text",
     },
+    disk: {
+      modifiedMessage: "This file has been modified externally",
+      deletedMessage: "This file has been deleted from disk",
+      reload: "Reload",
+      keep: "Keep my changes",
+      close: "Close",
+      saveAs: "Save As…",
+      reloadedToast: "Reloaded from disk",
+    },
     find: {
       placeholder: "Find",
       replacePlaceholder: "Replace",
@@ -846,5 +855,11 @@ export const en: Dictionary = {
     linkUpdateConfirm: "Update",
     linkUpdateSkip: "Don't update",
     linkUpdateAlways: "Always update links when moving or renaming",
+    diskConflictTitle: "File changed on disk",
+    diskConflictMessage:
+      "The file has been modified by another program. Saving will overwrite those changes.",
+    diskConflictOverwrite: "Overwrite",
+    diskConflictSaveAs: "Save As…",
+    diskConflictCancel: "Cancel",
   },
 };
