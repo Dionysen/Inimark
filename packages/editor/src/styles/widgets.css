@@ -159,10 +159,14 @@
 .typora-web-wrap.tw-focus-mode .ProseMirror .tw-focus-active {
   opacity: 1;
 }
+/* Always allow scrolling the last line to mid-viewport; typewriter also
+ * pads the top so the first line can sit at center. */
+.typora-web-wrap .ProseMirror,
+.typora-web-wrap .typora-web-source-editor .cm-content {
+  padding-bottom: var(--editor-scroll-pad, 0px);
+}
 .typora-web-wrap.tw-typewriter-mode .ProseMirror {
-  /* Half-viewport padding so first/last lines can sit at vertical center */
-  padding-top: var(--typewriter-pad, 0px);
-  padding-bottom: var(--typewriter-pad, 0px);
+  padding-top: var(--editor-scroll-pad, 0px);
 }
 
 /* HTML comment — wraps the entire `<!-- ... -->` source. The chars

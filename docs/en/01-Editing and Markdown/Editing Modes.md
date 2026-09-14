@@ -73,6 +73,8 @@ Keeps the **current line near vertical center** to reduce vertical eye travel â€
 
 Persists in settings when changed from the Editor section.
 
+Even with typewriter off, the editor keeps roughly half a viewport of bottom padding so the last line can scroll to mid-height; **Scroll to bottom** on the status bar uses the same range.
+
 ## Focus mode
 
 Dims blocks away from the caret so the active paragraph stands out.

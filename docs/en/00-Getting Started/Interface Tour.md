@@ -68,7 +68,7 @@ Typical items:
 
 - Word / character counts
 - Typewriter toggle
-- Scroll to top / bottom
+- Scroll to top / bottom (bottom can bring the last line to mid-viewport)
 - Other edit state (depending on config)
 
 ## Settings window

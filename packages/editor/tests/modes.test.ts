@@ -1,4 +1,5 @@
-﻿import { describe, expect, test } from "vitest";
+﻿import { readFileSync } from "node:fs";
+import { describe, expect, test } from "vitest";
 
 import { createEditor } from "../src/lib.ts";
 
@@ -57,6 +58,54 @@ describe("editor modes", () => {
     }
   });
 
+  test("editor always keeps end padding so the last line can reach mid-viewport", () => {
+    const host = document.createElement("div");
+    host.style.overflow = "auto";
+    host.style.height = "200px";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "one" });
+    try {
+      Object.defineProperty(host, "clientHeight", { configurable: true, get: () => 200 });
+      // Re-apply after stubbing clientHeight (createEditor measured before stub).
+      editor.setTypewriterMode(false);
+      const wrap = host.querySelector<HTMLElement>(".typora-web-wrap");
+      expect(wrap?.style.getPropertyValue("--editor-scroll-pad").trim()).toBe("90px");
+      expect(editor.isTypewriterMode()).toBe(false);
+      expect(wrap?.classList.contains("tw-typewriter-mode")).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("typewriter mode keeps end padding and adds top pad class", () => {
+    const host = document.createElement("div");
+    host.style.overflow = "auto";
+    host.style.height = "200px";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "one" });
+    try {
+      Object.defineProperty(host, "clientHeight", { configurable: true, get: () => 200 });
+      editor.setTypewriterMode(true);
+      const wrap = host.querySelector<HTMLElement>(".typora-web-wrap");
+      expect(wrap?.style.getPropertyValue("--editor-scroll-pad").trim()).toBe("90px");
+      expect(wrap?.classList.contains("tw-typewriter-mode")).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("widgets.css always pads the editor end and typewriter top via --editor-scroll-pad", () => {
+    const widgetsCss = readFileSync("src/styles/widgets.css", "utf8");
+    expect(widgetsCss).toContain(
+      "padding-bottom: var(--editor-scroll-pad, 0px);",
+    );
+    expect(widgetsCss).toMatch(
+      /\.typora-web-wrap\.tw-typewriter-mode \.ProseMirror \{\s*padding-top: var\(--editor-scroll-pad, 0px\);/,
+    );
+  });
+
   test("typewriter mode toggles through the controller", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
@@ -108,7 +157,7 @@ describe("editor modes", () => {
 
       expect(editor.isTypewriterMode()).toBe(true);
       expect(host.querySelector(".typora-web-wrap")?.getAttribute("style") ?? "").toContain(
-        "--typewriter-pad",
+        "--editor-scroll-pad",
       );
 
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));

@@ -328,14 +328,14 @@ export function createEditor(
     });
   }
 
-  function applyTypewriterPad(): void {
-    if (!typewriterMode) {
-      wrap.style.removeProperty("--typewriter-pad");
-      return;
-    }
+  /**
+   * Half-viewport end padding so the last line can scroll to mid-height
+   * (and typewriter mode can pin the first line to center via top pad).
+   */
+  function applyEditorScrollPad(): void {
     const sc = findScrollContainer();
     const pad = Math.max(0, Math.floor(sc.clientHeight * 0.45));
-    wrap.style.setProperty("--typewriter-pad", `${pad}px`);
+    wrap.style.setProperty("--editor-scroll-pad", `${pad}px`);
   }
 
   function scrollCursorToCenterNow(): void {
@@ -386,10 +386,9 @@ export function createEditor(
     document.addEventListener("pointercancel", endPointerSelecting, true);
   }
 
-  function onTypewriterResize(): void {
-    if (!typewriterMode) return;
-    applyTypewriterPad();
-    scheduleScrollCursorToCenter();
+  function onEditorScrollPadResize(): void {
+    applyEditorScrollPad();
+    if (typewriterMode) scheduleScrollCursorToCenter();
   }
 
   function buildView(initialMd: string): EditorView {
@@ -451,10 +450,8 @@ export function createEditor(
       dispatchFocusMode(view.state, (tr) => view.updateState(view.state.apply(tr)), true);
     }
     syncModeClasses();
-    if (typewriterMode) {
-      applyTypewriterPad();
-      scheduleScrollCursorToCenter();
-    }
+    applyEditorScrollPad();
+    if (typewriterMode) scheduleScrollCursorToCenter();
   }
 
   function parseMarkdownDoc(md: string) {
@@ -698,7 +695,7 @@ export function createEditor(
     setTypewriterMode(enabled: boolean): void {
       typewriterMode = enabled;
       syncModeClasses();
-      applyTypewriterPad();
+      applyEditorScrollPad();
       if (enabled) {
         // Wait a frame so padding is laid out before measuring caret.
         scheduleScrollCursorToCenter();
@@ -1012,13 +1009,13 @@ export function createEditor(
     },
     destroy(): void {
       window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("resize", onTypewriterResize);
+      window.removeEventListener("resize", onEditorScrollPadResize);
       document.removeEventListener("mouseup", endPointerSelecting, true);
       document.removeEventListener("pointerup", endPointerSelecting, true);
       document.removeEventListener("pointercancel", endPointerSelecting, true);
       if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
       host.removeEventListener("mousedown", onEditorSurfaceMouseDown);
-      wrap.style.removeProperty("--typewriter-pad");
+      wrap.style.removeProperty("--editor-scroll-pad");
       clearFindInternal();
       sourceView?.destroy();
       view.destroy();
@@ -1029,6 +1026,7 @@ export function createEditor(
     },
   };
   syncModeClasses();
-  window.addEventListener("resize", onTypewriterResize);
+  applyEditorScrollPad();
+  window.addEventListener("resize", onEditorScrollPadResize);
   return controller;
 }
