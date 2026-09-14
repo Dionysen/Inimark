@@ -71,9 +71,9 @@
   --padding-blockquote-y: 4px;
   --padding-blockquote-x: 16px;
   --radius-table: 2px;
-  --radius-tag: 10px;
-  --padding-tag-y: 1px;
-  --padding-tag-x: 8px;
+  --radius-tag: 20px;
+  --padding-tag-y: 2px;
+  --padding-tag-x: 7px;
   --radius-scrollbar: 2px;
   --scrollbar-size: 6px;
 

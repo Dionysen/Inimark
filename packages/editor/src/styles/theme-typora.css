@@ -193,12 +193,17 @@ html[data-first-line-indent="true"] .ProseMirror > p {
 .ProseMirror .tag,
 .ProseMirror [data-type="tag"] {
   display: inline-block;
+  /* Parent line-height (often ~1.6–1.8) would otherwise inflate the chip. */
+  line-height: 1.2;
+  vertical-align: baseline;
   background: var(--tag-bg, color-mix(in srgb, var(--accent, #4078c0) 15%, transparent));
   color: var(--tag-text, var(--accent, #4078c0));
   border: 1px solid var(--tag-border, color-mix(in srgb, var(--accent, #4078c0) 20%, transparent));
-  border-radius: var(--radius-tag, 10px);
-  padding: var(--padding-tag-y, 1px) var(--padding-tag-x, 8px);
+  border-radius: var(--radius-tag, 20px);
+  padding: var(--padding-tag-y, 2px) var(--padding-tag-x, 7px);
   font-size: 0.9em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* ─── extension marks ────────────────────────────────────────────── */

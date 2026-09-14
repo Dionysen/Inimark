@@ -734,9 +734,9 @@ const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--padding-blockquote-y", value: "4px", type: "size" },
   { name: "--padding-blockquote-x", value: "16px", type: "size" },
   { name: "--radius-table", value: "2px", type: "size" },
-  { name: "--radius-tag", value: "10px", type: "size" },
-  { name: "--padding-tag-y", value: "1px", type: "size" },
-  { name: "--padding-tag-x", value: "8px", type: "size" },
+  { name: "--radius-tag", value: "20px", type: "size" },
+  { name: "--padding-tag-y", value: "2px", type: "size" },
+  { name: "--padding-tag-x", value: "7px", type: "size" },
   { name: "--radius-scrollbar", value: "2px", type: "size" },
   { name: "--scrollbar-size", value: "6px", type: "size" },
 ];
