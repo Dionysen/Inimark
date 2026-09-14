@@ -1,7 +1,6 @@
 import { t } from "../i18n/index.ts";
 import { isTauri } from "../platform/env.ts";
 import { loadSettings } from "../settings/store.ts";
-import { mergeUpdateCheckOptions } from "./dev-update-test.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
 import {
   checkForUpdate,
@@ -42,7 +41,7 @@ export interface AutoUpdateService {
   stop(): void;
   /** User-initiated install from the titlebar capsule. */
   startInstall(): Promise<void>;
-  /** Run one background check immediately and return a dev-friendly report. */
+  /** Run one background check immediately and return a report. */
   checkNow(): Promise<AutoUpdateCheckReport>;
 }
 
@@ -84,11 +83,9 @@ export function createAutoUpdateService(): AutoUpdateService {
     checking = true;
     try {
       const settings = loadSettings();
-      const info = await checkForUpdate(
-        mergeUpdateCheckOptions({
-          useSystemProxy: settings.useSystemProxyForUpdates,
-        }),
-      );
+      const info = await checkForUpdate({
+        useSystemProxy: settings.useSystemProxyForUpdates,
+      });
       if (info) {
         if (state.phase !== "available" || state.version !== info.version) {
           state = { phase: "available", version: info.version, progress: 0 };
@@ -135,11 +132,9 @@ export function createAutoUpdateService(): AutoUpdateService {
 
     try {
       const settings = loadSettings();
-      const info = await checkForUpdate(
-        mergeUpdateCheckOptions({
-          useSystemProxy: settings.useSystemProxyForUpdates,
-        }),
-      );
+      const info = await checkForUpdate({
+        useSystemProxy: settings.useSystemProxyForUpdates,
+      });
       if (!info) {
         state = { phase: "idle", version: null, progress: 0 };
         emit();
@@ -165,7 +160,7 @@ export function createAutoUpdateService(): AutoUpdateService {
       await relaunchApp();
     } catch (error) {
       if (isDevUpdateInstallBlocked(error)) {
-        console.warn(t("settings.dev.installBlockedOnMacDev"));
+        console.warn(t("settings.about.installBlockedOnMacDev"));
       }
       state = { phase: "available", version, progress: 0 };
       emit();

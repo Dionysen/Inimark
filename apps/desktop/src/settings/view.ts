@@ -11,7 +11,6 @@ import {
 import { isTauri } from "../platform/env.ts";
 import { openExternalUrl } from "../platform/open-url.ts";
 import { mountAboutUpdateControl } from "./about-update-control.ts";
-import { mountDevUpdatePanel } from "./dev-update-panel.ts";
 import { mountDevDocsPublishPanel } from "./dev-docs-publish-panel.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
@@ -490,7 +489,6 @@ export function mountSettingsView(
   let themeCleanup: (() => void) | null = null;
   let graphControlsCleanup: (() => void) | null = null;
   let publishCleanup: (() => void) | null = null;
-  let devUpdateCleanup: (() => void) | null = null;
   let devDocsCleanup: (() => void) | null = null;
   let libraryDropCleanup: (() => void) | null = null;
 
@@ -1317,8 +1315,6 @@ export function mountSettingsView(
     graphControlsCleanup = null;
     publishCleanup?.();
     publishCleanup = null;
-    devUpdateCleanup?.();
-    devUpdateCleanup = null;
     devDocsCleanup?.();
     devDocsCleanup = null;
     libraryDropCleanup?.();
@@ -1493,10 +1489,6 @@ export function mountSettingsView(
       const docsPanel = mountDevDocsPublishPanel();
       body.append(docsPanel.el);
       devDocsCleanup = () => docsPanel.destroy();
-
-      const panel = mountDevUpdatePanel();
-      body.append(panel.el);
-      devUpdateCleanup = () => panel.destroy();
     }
 
     content.append(body);
@@ -1548,7 +1540,6 @@ export function mountSettingsView(
       themeCleanup?.();
       graphControlsCleanup?.();
       publishCleanup?.();
-      devUpdateCleanup?.();
       devDocsCleanup?.();
       libraryDropCleanup?.();
       host.replaceChildren();

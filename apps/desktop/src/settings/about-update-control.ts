@@ -4,7 +4,6 @@ import { createIconButton, closeIcon } from "../ui/widgets/icon-button.ts";
 import { createButton } from "../ui/widgets/button.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
 import { loadSettings } from "./store.ts";
-import { mergeUpdateCheckOptions } from "../update/dev-update-test.ts";
 import {
   cancelUpdateDownload,
   checkForUpdate,
@@ -37,7 +36,7 @@ function updateErrorMessage(error: unknown): string {
 
 function downloadErrorMessage(error: unknown): string {
   if (isUpdateDownloadCancelled(error)) return "";
-  if (isDevUpdateInstallBlocked(error)) return t("settings.dev.installBlockedOnMacDev");
+  if (isDevUpdateInstallBlocked(error)) return t("settings.about.installBlockedOnMacDev");
   const kind = classifyUpdateError(error);
   return kind === "network"
     ? t("settings.about.downloadFailedNetwork")
@@ -174,10 +173,9 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     render();
   };
 
-  const updateOptions = () =>
-    mergeUpdateCheckOptions({
-      useSystemProxy: loadSettings().useSystemProxyForUpdates,
-    });
+  const updateOptions = () => ({
+    useSystemProxy: loadSettings().useSystemProxyForUpdates,
+  });
 
   async function runCheck(): Promise<void> {
     if (!isTauri() || busy) return;

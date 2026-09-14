@@ -1,7 +1,7 @@
 import { Update, type DownloadOptions } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { isTauri } from "./platform/env.ts";
-import { isMacDevInstallBlocked } from "./update/dev-update-test.ts";
+import { detectPlatform } from "./platform/platform.ts";
 
 export interface UpdateInfo {
   version: string;
@@ -12,8 +12,6 @@ export interface UpdateInfo {
 export interface UpdateCheckOptions {
   /** When false, bypass system and explicit proxies for the updater only. */
   useSystemProxy?: boolean;
-  /** Dev-only: pretend the app is this version when comparing against the remote release. */
-  devCurrentVersionOverride?: string;
 }
 
 export type UpdateErrorKind = "network" | "other";
@@ -25,11 +23,16 @@ export class UpdateDownloadCancelled extends Error {
   }
 }
 
+/** macOS `tauri dev` replaces the local .app on install and breaks the next run. */
 export class DevUpdateInstallBlocked extends Error {
   constructor() {
     super("Update install is blocked in macOS dev builds.");
     this.name = "DevUpdateInstallBlocked";
   }
+}
+
+function isMacDevInstallBlocked(): boolean {
+  return Boolean(import.meta.env.DEV) && detectPlatform() === "macos";
 }
 
 interface UpdateMetadata {
@@ -128,7 +131,6 @@ export async function checkForUpdate(
     const metadata = await invoke<UpdateMetadata | null>("check_app_update", {
       useSystemProxy,
       timeoutMs: UPDATE_REQUEST_TIMEOUT_MS,
-      devCurrentVersionOverride: options.devCurrentVersionOverride ?? null,
     });
     if (!metadata) {
       cachedUpdate = null;
