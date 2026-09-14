@@ -25,7 +25,7 @@ const OPAQUE_BLOCKS = new Set([
 
 function isInteractiveEditorTarget(target: Element): boolean {
   if (target.closest(".typora-web-code-editor .cm-editor")) return true;
-  if (target.closest(".cb-lang-input, .cb-lang-menu")) return true;
+  if (target.closest(".cb-chrome, .cb-lang-input, .cb-lang-menu")) return true;
   if (target.closest(".typora-web-html-source")) return true;
   // Editable TeX source while revealed (open / error / empty draft).
   if (target.closest("math-block math-source")) {

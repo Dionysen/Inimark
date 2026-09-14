@@ -15,6 +15,8 @@ import { Prec, type Extension } from "@codemirror/state";
 import { keymap, type EditorView as CodeMirrorView } from "@codemirror/view";
 
 import { leaveLineDraft } from "../block-draft.ts";
+import { writeTextToClipboard } from "../clipboard-bridge.ts";
+import { codeIndentPlugin, registerCodeIndentEditor } from "../code-indent.ts";
 import {
   createEmbeddedCodeMirrorEditor,
   filterLanguageOptions,
@@ -50,9 +52,10 @@ import type { FeatureSpec } from "./_types.ts";
 // Post-commit affordances implemented here:
 //
 //   - NodeView renders a chrome overlay next to the `<code>` body
-//     containing a `<input class="cb-lang-input">` for editing the
-//     code_block's `lang` attribute. Chrome shows only when the caret
-//     is inside the block (CSS-only: decoration toggles `cb-active`).
+//     containing action buttons (auto-indent, copy) plus a
+//     `<input class="cb-lang-input">` for editing the code_block's
+//     `lang` attribute. Chrome shows only when the caret is inside
+//     the block (CSS-only: decoration toggles `cb-active`).
 //
 //   - Arrow navigation: from the LAST position of the main code body,
 //     ArrowDown "enters" the lang input (a virtual plugin state).
@@ -244,10 +247,42 @@ function isToggleCodeBlockShortcut(event: KeyboardEvent): boolean {
   return mod && event.altKey;
 }
 
+function cbChromeSvgIcon(paths: string): SVGElement {
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "16");
+  svg.setAttribute("height", "16");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = paths;
+  return svg;
+}
+
+function createCbActionButton(opts: {
+  className: string;
+  title: string;
+  paths: string;
+  onClick: (event: MouseEvent) => void;
+}): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `cb-action ${opts.className} inimark-glass`;
+  btn.title = opts.title;
+  btn.setAttribute("aria-label", opts.title);
+  btn.appendChild(cbChromeSvgIcon(opts.paths));
+  btn.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  btn.addEventListener("click", opts.onClick);
+  return btn;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // NodeView: outer <pre data-lang><code/></pre> plus a chrome overlay with
-// a <input class="cb-lang-input">. The input mutates code_block.attrs.lang
-// via setNodeAttribute.
+// action buttons and a <input class="cb-lang-input">. The input mutates
+// code_block.attrs.lang via setNodeAttribute.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CodeBlockView implements NodeView {
@@ -271,6 +306,7 @@ class CodeBlockView implements NodeView {
   private syncingFromProseMirror = false;
   private menuHighlightIndex = -1;
   private menuSuppressedUntilInput = false;
+  private unregisterIndent: () => void;
 
   constructor(
     node: PMNode,
@@ -308,6 +344,29 @@ class CodeBlockView implements NodeView {
     const chrome = document.createElement("div");
     chrome.className = "cb-chrome";
     chrome.setAttribute("contenteditable", "false");
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "cb-toolbar";
+    const indentBtn = createCbActionButton({
+      className: "cb-indent",
+      title: "自动缩进",
+      paths:
+        `<path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M4 7h16"/>` +
+        `<path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 12h12"/>` +
+        `<path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M4 17h16"/>` +
+        `<path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M4 10v4"/>`,
+      onClick: this.onAutoIndentClick,
+    });
+    const copyBtn = createCbActionButton({
+      className: "cb-copy",
+      title: "复制",
+      paths:
+        `<rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.75"/>` +
+        `<path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 15V7a2 2 0 0 1 2-2h8"/>`,
+      onClick: this.onCopyClick,
+    });
+    toolbar.append(indentBtn, copyBtn);
+
     const input = document.createElement("input");
     input.className = "cb-lang-input inimark-glass";
     input.placeholder = "lang";
@@ -317,7 +376,7 @@ class CodeBlockView implements NodeView {
     menu.className = "cb-lang-menu inimark-glass";
     menu.hidden = true;
     menu.setAttribute("role", "listbox");
-    chrome.appendChild(input);
+    chrome.append(toolbar, input);
     root.append(pre, diagram);
     document.body.appendChild(chrome);
     document.body.appendChild(menu);
@@ -339,6 +398,7 @@ class CodeBlockView implements NodeView {
       onChange: this.onCodeChange,
       extraExtensions: [this.createBoundaryKeymap()],
     });
+    this.unregisterIndent = registerCodeIndentEditor(view, this.cm);
 
     codeMount.addEventListener("focusin", this.onFocusIn);
     codeMount.addEventListener("focusout", this.onFocusOut);
@@ -553,16 +613,38 @@ class CodeBlockView implements NodeView {
     const rect = this.dom.getBoundingClientRect();
     const margin = 8;
     const gap = 6;
-    const inputWidth = 160;
+    const chromeWidth = Math.max(this.chromeEl.offsetWidth, 220);
     const viewportWidth =
-      window.innerWidth || document.documentElement.clientWidth || inputWidth + margin * 2;
-    const maxLeft = Math.max(margin, viewportWidth - inputWidth - margin);
-    const left = Math.min(Math.max(margin, rect.right - inputWidth), maxLeft);
+      window.innerWidth || document.documentElement.clientWidth || chromeWidth + margin * 2;
+    const maxLeft = Math.max(margin, viewportWidth - chromeWidth - margin);
+    const left = Math.min(Math.max(margin, rect.right - chromeWidth), maxLeft);
     const top = rect.bottom + gap;
 
     this.chromeEl.style.left = `${left}px`;
     this.chromeEl.style.top = `${top}px`;
   }
+
+  private onCopyClick = (event: MouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    const code = this.cm.view.state.doc.toString();
+    void writeTextToClipboard(code);
+  };
+
+  /** Wait for language support, then reindent the whole CodeMirror document. */
+  private onAutoIndentClick = (event: MouseEvent): void => {
+    event.preventDefault();
+    event.stopPropagation();
+    void (async () => {
+      await this.cm.whenLanguageReady();
+      this.cm.autoIndent();
+      try {
+        this.cm.view.focus();
+      } catch {
+        /* ignore */
+      }
+    })();
+  };
 
   private closeDiagramSource(): void {
     if (this.dom.classList.contains("diagram-error")) return;
@@ -1077,6 +1159,7 @@ class CodeBlockView implements NodeView {
     this.diagramScheduler.cancel();
     this.stopDiagramObserver();
     this.stopAppearanceObserver();
+    this.unregisterIndent();
     this.cm.destroy();
     this.codeMountEl.removeEventListener("focusin", this.onFocusIn);
     this.codeMountEl.removeEventListener("focusout", this.onFocusOut);
@@ -1324,6 +1407,7 @@ export const fencedCode: FeatureSpec = {
     makeFencedPlugin(schema).plugin,
     fencedCodeChromePlugin(),
     codeBlockFocusPlugin(),
+    codeIndentPlugin(),
   ],
 
   // test-pretty renderCase for <pre>. Overrides the core switch branch

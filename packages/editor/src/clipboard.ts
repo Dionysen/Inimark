@@ -7,31 +7,12 @@ import {
 } from "prosemirror-model";
 import type { EditorView } from "prosemirror-view";
 
-import { getClipboardBridge } from "./clipboard-bridge.ts";
+import { getClipboardBridge, writeTextToClipboard } from "./clipboard-bridge.ts";
 import { insertMarkdownFromText } from "./paste.ts";
 import { parseInline } from "./inline-parse.ts";
 
 /** Skip inline mark normalization for a plain-text paste transaction. */
 export const PASTE_PLAIN_TEXT_META = "pastePlainText";
-
-async function writeTextToClipboard(text: string): Promise<void> {
-  const host = getClipboardBridge();
-  if (host) {
-    await host.writeText(text);
-    return;
-  }
-  return navigator.clipboard.writeText(text).catch(() => {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  });
-}
 
 /** Read plain text from the clipboard without WebView permission prompts when bridged. */
 export async function readClipboardText(): Promise<string | null> {

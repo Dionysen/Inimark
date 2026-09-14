@@ -66,6 +66,8 @@ import {
   EDITOR_WIDTH_MIN,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
+  CODE_INDENT_SIZE_MAX,
+  CODE_INDENT_SIZE_MIN,
   loadSettings,
   menuDensityLabel,
   patchGraphSettings,
@@ -638,6 +640,28 @@ export function mountSettingsView(
         t("settings.editor.codeLineHeightDesc"),
         codeLineHeight.el,
         "editor.codeLineHeight",
+      ),
+    );
+
+    const codeIndentSize = createSlider({
+      min: CODE_INDENT_SIZE_MIN,
+      max: CODE_INDENT_SIZE_MAX,
+      step: 1,
+      value: settings.codeIndentSize,
+      formatValue: (value) => t("settings.editor.codeIndentSizeValue", { n: value }),
+      onInput(value) {
+        updateLive({ codeIndentSize: value });
+      },
+      onChange(value) {
+        updateLive({ codeIndentSize: value });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.codeIndentSize"),
+        t("settings.editor.codeIndentSizeDesc"),
+        codeIndentSize.el,
+        "editor.codeIndentSize",
       ),
     );
 

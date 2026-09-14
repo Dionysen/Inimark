@@ -61,6 +61,7 @@ import { flashHeadingAtPos } from "./heading-flash.ts";
 import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 import { isImeComposing } from "./ime-position.ts";
+import { getCodeIndentSize, setCodeIndentSize } from "./code-indent.ts";
 
 export interface FindSession {
   options: FindOptions;
@@ -111,6 +112,9 @@ export interface Editor {
   toggleTypewriterMode(): void;
   setTypewriterMode(enabled: boolean): void;
   isTypewriterMode(): boolean;
+  /** Spaces per indent level for fenced-code Tab and auto-indent (1–8). */
+  setCodeIndentSize(size: number): void;
+  getCodeIndentSize(): number;
   openMarkdownFile(): Promise<FileResult>;
   openMarkdownFileHandle(handle: FileSystemFileHandle): Promise<FileResult>;
   /** Start an untitled document without opening a save picker. */
@@ -703,6 +707,12 @@ export function createEditor(
     },
     isTypewriterMode(): boolean {
       return typewriterMode;
+    },
+    setCodeIndentSize(size: number): void {
+      setCodeIndentSize(view, size);
+    },
+    getCodeIndentSize(): number {
+      return getCodeIndentSize(view.state);
     },
     async openMarkdownFile(): Promise<FileResult> {
       const picked = await pickMarkdownFile();

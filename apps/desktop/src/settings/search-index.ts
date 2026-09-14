@@ -65,6 +65,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "editor.lineHeight", section: "editor", titleKey: "settings.editor.lineHeight", descKey: "settings.editor.lineHeightDesc" },
   { id: "editor.paragraphSpacing", section: "editor", titleKey: "settings.editor.paragraphSpacing", descKey: "settings.editor.paragraphSpacingDesc" },
   { id: "editor.codeLineHeight", section: "editor", titleKey: "settings.editor.codeLineHeight", descKey: "settings.editor.codeLineHeightDesc" },
+  { id: "editor.codeIndentSize", section: "editor", titleKey: "settings.editor.codeIndentSize", descKey: "settings.editor.codeIndentSizeDesc" },
   { id: "editor.editorWidth", section: "editor", titleKey: "settings.editor.editorWidth", descKey: "settings.editor.editorWidthDesc" },
   { id: "editor.typewriter", section: "editor", titleKey: "settings.editor.typewriter", descKey: "settings.editor.typewriterDesc" },
   { id: "editor.focus", section: "editor", titleKey: "settings.editor.focus", descKey: "settings.editor.focusDesc" },

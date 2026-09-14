@@ -1,9 +1,11 @@
-﻿import { describe, expect, test } from "vitest";
+﻿import { describe, expect, test, vi } from "vitest";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView as CodeMirrorView } from "@codemirror/view";
 
 import { runFeatureCases } from "../utils.ts";
 import { createEditor } from "../../src/lib.ts";
+import { loadCodeLanguage } from "../../src/code-highlighter.ts";
+import { setClipboardBridge } from "../../src/clipboard-bridge.ts";
 import { mermaidRenderer } from "../../src/renderers/mermaid.ts";
 import { feedEvent } from "../../specs/events.ts";
 import { fencedCodeSpecs } from "../../specs/features/fenced-code.specs.ts";
@@ -597,6 +599,123 @@ describe("fenced code node view", () => {
           originalUserAgentDescriptor,
         );
       }
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("chrome exposes auto-indent and copy buttons before the language input", () => {
+    const host = createHost();
+    const editor = createEditor(host, { initialContent: "```js\nconst x = 1;\n```" });
+
+    try {
+      const chrome = document.body.querySelector<HTMLElement>(".cb-chrome");
+      expect(chrome).not.toBeNull();
+      const toolbar = chrome!.querySelector(".cb-toolbar");
+      const indent = chrome!.querySelector<HTMLButtonElement>("button.cb-indent");
+      const copy = chrome!.querySelector<HTMLButtonElement>("button.cb-copy");
+      const input = chrome!.querySelector<HTMLInputElement>(".cb-lang-input");
+      expect(toolbar).not.toBeNull();
+      expect(indent?.title).toBe("自动缩进");
+      expect(copy?.title).toBe("复制");
+      expect(input).not.toBeNull();
+
+      const children = [...chrome!.children];
+      expect(children[0]).toBe(toolbar);
+      expect(children[1]).toBe(input);
+      const actions = [...toolbar!.children];
+      expect(actions[0]).toBe(indent);
+      expect(actions[1]).toBe(copy);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("copy button writes the full code block contents to the clipboard", async () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "```js\nconst value = 42;\n```",
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboardBridge({ readText: vi.fn(), writeText });
+
+    try {
+      const copy = document.body.querySelector<HTMLButtonElement>("button.cb-copy");
+      expect(copy).not.toBeNull();
+      copy!.click();
+      await Promise.resolve();
+      expect(writeText).toHaveBeenCalledWith("const value = 42;");
+    } finally {
+      setClipboardBridge(null);
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("auto-indent button reindents the CodeMirror document", async () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "```js\nfunction f(){\nreturn 1;\n}\n```",
+    });
+
+    try {
+      await loadCodeLanguage("js");
+      // Allow the NodeView's in-flight setLanguage to apply the cached pack.
+      await nextTick(30);
+
+      const indent = document.body.querySelector<HTMLButtonElement>("button.cb-indent");
+      expect(indent).not.toBeNull();
+      indent!.click();
+
+      let indented = false;
+      for (let i = 0; i < 20 && !indented; i++) {
+        await nextTick(20);
+        if (editor.getMarkdown().includes("  return 1;")) indented = true;
+      }
+      expect(editor.getMarkdown()).toContain("  return 1;");
+      expect(codeMirrorView(host).state.doc.toString()).toContain("  return 1;");
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("auto-indent uses the editor indent size setting", async () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "```js\nfunction f(){\nreturn 1;\n}\n```",
+    });
+
+    try {
+      editor.setCodeIndentSize(4);
+      expect(editor.getCodeIndentSize()).toBe(4);
+      editor.setCodeIndentSize(99);
+      expect(editor.getCodeIndentSize()).toBe(8);
+      editor.setCodeIndentSize(4);
+      await loadCodeLanguage("js");
+      await nextTick(30);
+
+      const indent = document.body.querySelector<HTMLButtonElement>("button.cb-indent");
+      expect(indent).not.toBeNull();
+      indent!.click();
+
+      let indented = false;
+      for (let i = 0; i < 20 && !indented; i++) {
+        await nextTick(20);
+        if (editor.getMarkdown().includes("    return 1;")) indented = true;
+      }
+      expect(editor.getMarkdown()).toContain("    return 1;");
+      expect(editor.getMarkdown()).toBe("```js\nfunction f(){\n    return 1;\n}\n```");
+    } finally {
       editor.destroy();
       host.remove();
       document.body.querySelector(".cb-lang-menu")?.remove();

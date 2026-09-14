@@ -17,6 +17,12 @@ export type { SearchRevealOptions } from "./search-reveal.ts";
 export type { EditorCommandName } from "./commands.ts";
 export { executeEditorCommand, formatLocalDateTime } from "./commands.ts";
 export {
+  CODE_INDENT_SIZE_DEFAULT,
+  CODE_INDENT_SIZE_MAX,
+  CODE_INDENT_SIZE_MIN,
+  clampCodeIndentSize,
+} from "./code-indent.ts";
+export {
   setClipboardBridge,
   getClipboardBridge,
 } from "./clipboard-bridge.ts";

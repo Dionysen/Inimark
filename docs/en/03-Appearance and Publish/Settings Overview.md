@@ -34,6 +34,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | First-line indent | Indents the first line of top-level paragraphs by ~2 characters (display only) | Chinese prose / formal essays |
 | Auto-hide title / status | More canvas, less chrome | Focused drafting |
 | Editor / code fonts & sizes | Typography comfort | You care about reading feel |
+| Code indent size | Spaces per fenced-code Tab / auto-indent level (1–8) | Match team conventions |
 | Editor width | Constrains line length | Prose-heavy notes |
 | Autosave + delay | Writes without Save panic | Everyday use |
 | Link update on move | `ask` / `always` / `never` | Start with `ask` |

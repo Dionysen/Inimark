@@ -452,6 +452,10 @@ export const en: Dictionary = {
       paragraphSpacingDesc: "Vertical gap after paragraphs (em).",
       codeLineHeight: "Code line height",
       codeLineHeightDesc: "Leading inside code blocks.",
+      codeIndentSize: "Code indent size",
+      codeIndentSizeDesc:
+        "Spaces per indent level for fenced-code Tab and the auto-indent button.",
+      codeIndentSizeValue: "{{n}} spaces",
       editorWidth: "Editor width",
       editorWidthDesc: "Maximum width of the writing column (480–1280px).",
       autoSave: "Auto save",

@@ -232,6 +232,7 @@ export function mountApp(host: HTMLElement): AppController {
   });
   editor.setTypewriterMode(settings.typewriterMode);
   editor.setFocusMode(settings.focusMode);
+  editor.setCodeIndentSize(settings.codeIndentSize);
 
   let pendingDiskRevision: DiskRevision | null = null;
   const diskBanner = mountDiskChangeBanner(shell.editorPane);
@@ -1119,6 +1120,7 @@ export function mountApp(host: HTMLElement): AppController {
     applySettings(settings);
     editor.setTypewriterMode(settings.typewriterMode);
     editor.setFocusMode(settings.focusMode);
+    editor.setCodeIndentSize(settings.codeIndentSize);
     shell.applySidebarTabLayout(settings);
     shell.graph.applyGraphSettings(settings.graph);
     wordCount?.syncChrome();

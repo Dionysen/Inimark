@@ -15,6 +15,7 @@ import {
   type AppSettings,
 } from "../src/settings/store.ts";
 import { mountSettingsView } from "../src/settings/view.ts";
+import { initI18n } from "../src/i18n/index.ts";
 
 describe("settings store", () => {
   const memory = new Map<string, string>();
@@ -117,6 +118,16 @@ describe("settings store", () => {
     expect(document.documentElement.dataset.firstLineIndent).toBe("false");
   });
 
+  test("persists and clamps code indent size", () => {
+    expect(DEFAULT_SETTINGS.codeIndentSize).toBe(2);
+    saveSettings({ ...DEFAULT_SETTINGS, codeIndentSize: 4 });
+    expect(loadSettings().codeIndentSize).toBe(4);
+    saveSettings({ ...DEFAULT_SETTINGS, codeIndentSize: 99 });
+    expect(loadSettings().codeIndentSize).toBe(8);
+    saveSettings({ ...DEFAULT_SETTINGS, codeIndentSize: 0 });
+    expect(loadSettings().codeIndentSize).toBe(1);
+  });
+
   test("persists wiki link preview trigger", () => {
     expect(DEFAULT_SETTINGS.wikiLinkPreviewTrigger).toBe("modifier");
     saveSettings({ ...DEFAULT_SETTINGS, wikiLinkPreviewTrigger: "hover" });
@@ -136,6 +147,11 @@ describe("settings store", () => {
 });
 
 describe("settings view", () => {
+  beforeEach(() => {
+    initI18n("en");
+    saveSettings({ ...DEFAULT_SETTINGS, locale: "en" });
+  });
+
   test("mounts split layout with nav topbar and searchable sections", () => {
     const host = document.createElement("div");
     document.body.append(host);
@@ -148,7 +164,7 @@ describe("settings view", () => {
 
     const search = host.querySelector<HTMLInputElement>(".inimark-search .inimark-field__input");
     expect(search).not.toBeNull();
-    search!.value = "code theme";
+    search!.value = "frosted glass";
     search!.dispatchEvent(new Event("input", { bubbles: true }));
 
     const items = [...host.querySelectorAll<HTMLButtonElement>(".inimark-nav-item")];
@@ -170,6 +186,23 @@ describe("settings view", () => {
       host.querySelector<HTMLButtonElement>('.inimark-nav-item[data-section="theme"]')
         ?.classList.contains("is-active"),
     ).toBe(true);
+
+    view.destroy();
+    host.remove();
+  });
+
+  test("editor section exposes a code indent size slider", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+
+    const view = mountSettingsView(host);
+    const slider = host.querySelector<HTMLInputElement>(
+      '[data-setting-id="editor.codeIndentSize"] .inimark-slider__input',
+    );
+    expect(slider).not.toBeNull();
+    expect(slider?.min).toBe("1");
+    expect(slider?.max).toBe("8");
+    expect(slider?.value).toBe("2");
 
     view.destroy();
     host.remove();

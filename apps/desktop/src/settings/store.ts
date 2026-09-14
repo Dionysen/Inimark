@@ -27,6 +27,10 @@ export const EDITOR_WIDTH_DEFAULT = 768;
 export const FONT_SIZE_MIN = 9;
 export const FONT_SIZE_MAX = 36;
 
+export const CODE_INDENT_SIZE_MIN = 1;
+export const CODE_INDENT_SIZE_MAX = 8;
+export const CODE_INDENT_SIZE_DEFAULT = 2;
+
 export type AutoSaveDelayUnit = "s" | "min" | "h";
 
 export const AUTO_SAVE_DELAY_MS_DEFAULT = 900;
@@ -100,6 +104,10 @@ export interface AppSettings {
   lineHeight: number;
   paragraphSpacing: number;
   codeLineHeight: number;
+  /**
+   * Spaces per indent level for fenced-code Tab and auto-indent.
+   */
+  codeIndentSize: number;
   typewriterMode: boolean;
   /** Dim blocks away from the caret so the active paragraph stands out. */
   focusMode: boolean;
@@ -233,6 +241,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   lineHeight: 1.8,
   paragraphSpacing: 1.05,
   codeLineHeight: 1.5,
+  codeIndentSize: CODE_INDENT_SIZE_DEFAULT,
   typewriterMode: false,
   focusMode: false,
   firstLineIndent: false,
@@ -446,6 +455,11 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
       parsed.codeLineHeight ?? DEFAULT_SETTINGS.codeLineHeight,
       1.1,
       2.4,
+    ),
+    codeIndentSize: clamp(
+      parsed.codeIndentSize ?? DEFAULT_SETTINGS.codeIndentSize,
+      CODE_INDENT_SIZE_MIN,
+      CODE_INDENT_SIZE_MAX,
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
     focusMode: Boolean(parsed.focusMode ?? DEFAULT_SETTINGS.focusMode),

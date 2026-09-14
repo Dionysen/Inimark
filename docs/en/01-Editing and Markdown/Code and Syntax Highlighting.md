@@ -42,6 +42,11 @@ print("hello")
 
 3. Put a **language tag** on the opening fence (`python`, `cpp`, `rust`…). That tag selects highlighting.
 
+When the caret is inside a code block, a language field appears at the bottom-right. To its left are two buttons:
+
+- **Auto-indent**: reindent the whole block using the active language's rules (width: **Settings → Editor → Code indent size**, default 2 spaces)
+- **Copy**: write the block contents to the clipboard
+
 > [!TIP]
 > After a messy paste from the browser, use **paste as plain text** (`Ctrl/⌘ + Shift + V`) so indentation stays honest.
 
@@ -220,6 +225,8 @@ pnpm test:editor
 | --- | --- |
 | Quick insert | `Alt + Ctrl/⌘ + C` |
 | Tweak language tag | Click / focus the fence language field in WYSIWYG, or edit in source |
+| Auto-indent | Use the auto-indent button left of the language field (width is in Settings) |
+| Copy code | Use the copy button left of the language field |
 | Large refactors | [[Editing Modes#Source mode|Source mode]] (`Ctrl/⌘ + /`) |
 | Keep paste clean | Plain-text paste |
 | Change colors | [[Themes and Appearance]] code theme (includes Cursor / Rider light & dark) |

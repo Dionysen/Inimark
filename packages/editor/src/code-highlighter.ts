@@ -13,6 +13,7 @@ import {
   bracketMatching,
   HighlightStyle,
   indentOnInput,
+  indentRange,
   LanguageDescription,
   type LanguageSupport,
   syntaxHighlighting,
@@ -25,6 +26,11 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 
+import {
+  CODE_INDENT_SIZE_DEFAULT,
+  clampCodeIndentSize,
+  codeIndentExtensions,
+} from "./code-indent.ts";
 import {
   CODE_TOKEN_CSS_VARS,
   CODE_TOKEN_TAG_CLASSES,
@@ -159,6 +165,7 @@ type CodeMirrorEditorOptions = {
   className: string;
   language?: string;
   markdownSource?: boolean;
+  indentSize?: number;
   onChange?: (doc: string, update: ViewUpdate) => void;
   extraExtensions?: Extension[];
 };
@@ -167,6 +174,14 @@ export type EmbeddedCodeMirrorEditor = {
   view: CodeMirrorView;
   setDoc(doc: string): void;
   setLanguage(language: string): void;
+  setIndentSize(size: number): void;
+  /** Resolve when the latest `setLanguage` load+reconfigure has settled. */
+  whenLanguageReady(): Promise<void>;
+  /**
+   * Reindent the entire document using the active language's indent rules.
+   * Returns false when indentation produced no changes (e.g. no language).
+   */
+  autoIndent(): boolean;
   destroy(): void;
 };
 
@@ -177,7 +192,6 @@ function commonExtensions(
   return [
     history(),
     keymap.of([indentWithTab, ...historyKeymap, ...defaultKeymap]),
-    CodeMirrorState.tabSize.of(2),
     indentOnInput(),
     bracketMatching(),
     syntaxHighlighting(typoraWebHighlightStyle, { fallback: true }),
@@ -229,7 +243,10 @@ export function createEmbeddedCodeMirrorEditor(
   options: CodeMirrorEditorOptions,
 ): EmbeddedCodeMirrorEditor {
   const languageCompartment = new Compartment();
+  const indentCompartment = new Compartment();
+  let indentSize = clampCodeIndentSize(options.indentSize ?? CODE_INDENT_SIZE_DEFAULT);
   const extensions = commonExtensions(languageCompartment, options.onChange);
+  extensions.push(indentCompartment.of(codeIndentExtensions(indentSize)));
   if (options.markdownSource) {
     extensions.push(markdown({ codeLanguages: codeMirrorLanguages }));
   }
@@ -249,10 +266,11 @@ export function createEmbeddedCodeMirrorEditor(
     .__typoraWebCodeMirrorView = view;
 
   let languageRequest = 0;
+  let languageReady: Promise<void> = Promise.resolve();
   const setLanguage = (language: string): void => {
     if (options.markdownSource) return;
     const request = ++languageRequest;
-    loadCodeLanguage(language).then((support) => {
+    languageReady = loadCodeLanguage(language).then((support) => {
       if (request !== languageRequest) return;
       view.dispatch({
         effects: languageCompartment.reconfigure(support ? support.extension : []),
@@ -272,6 +290,23 @@ export function createEmbeddedCodeMirrorEditor(
       });
     },
     setLanguage,
+    setIndentSize(size: number): void {
+      const next = clampCodeIndentSize(size);
+      if (next === indentSize) return;
+      indentSize = next;
+      view.dispatch({
+        effects: indentCompartment.reconfigure(codeIndentExtensions(next)),
+      });
+    },
+    whenLanguageReady(): Promise<void> {
+      return languageReady;
+    },
+    autoIndent(): boolean {
+      const changes = indentRange(view.state, 0, view.state.doc.length);
+      if (changes.empty) return false;
+      view.dispatch({ changes });
+      return true;
+    },
     destroy(): void {
       view.destroy();
     },
