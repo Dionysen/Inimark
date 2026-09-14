@@ -1,6 +1,7 @@
 /**
  * Browser runtime for published site graphs (preview + modal).
  * Ported from apps/desktop graph-panel forces / camera / draw (defaults only).
+ * Label fade math: keep in sync with apps/desktop/src/sidebar/graph-label.ts.
  * Embedded into SITE_JS as a string — keep self-contained (no imports).
  */
 export const SITE_GRAPH_JS = `
@@ -27,11 +28,27 @@ export const SITE_GRAPH_JS = `
     return Math.max(0.05, value / 50);
   }
   function graphLabelAlpha(textOpacity, scale) {
-    const fade = Math.max(0, Math.min(1, (textOpacity - 50) / 50));
-    if (fade < 0.001) return 1;
-    const span = GRAPH_SCALE_MAX - GRAPH_SCALE_MIN;
-    const normalized = Math.max(0, Math.min(1, (scale - GRAPH_SCALE_MIN) / span));
-    return Math.max(0.08, 1 - fade * (1 - normalized));
+    if (textOpacity <= 0) return 1;
+    const t = Math.max(0, Math.min(1, textOpacity / 100));
+    let hide, full;
+    if (t <= 0.5) {
+      const u = t * 2;
+      hide = -1 + 1.5 * u;
+      full = 0.25 + 0.5 * u;
+    } else {
+      const u = (t - 0.5) * 2;
+      hide = 0.5 + 0.75 * u;
+      full = 0.75 + 1.75 * u;
+    }
+    if (scale <= hide) return 0;
+    if (scale >= full) return 1;
+    const u = (scale - hide) / (full - hide);
+    return u * u * (3 - 2 * u);
+  }
+  function nodeLabelAlpha(textAlpha, isHover, highlighted, dimming) {
+    if (isHover) return Math.max(textAlpha, 0.92);
+    if (dimming && !highlighted) return textAlpha * 0.25;
+    return textAlpha;
   }
   function cssVar(el, name, fallback) {
     const value = getComputedStyle(el).getPropertyValue(name).trim();
@@ -364,7 +381,7 @@ export const SITE_GRAPH_JS = `
         ctx.arc(s.x, s.y, drawR, 0, Math.PI * 2);
         ctx.fill();
 
-        const labelA = highlighted ? Math.max(textAlpha, 0.92) : dimming ? textAlpha * 0.25 : textAlpha;
+        const labelA = nodeLabelAlpha(textAlpha, isHover, highlighted, dimming);
         if (labelA > 0.02) {
           ctx.globalAlpha = labelA;
           ctx.fillStyle = highlighted ? (isHover ? accent : labelColor) : labelColor;

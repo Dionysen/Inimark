@@ -59,7 +59,7 @@ See the honest status on [[Images and Attachments]]. Treat the panel as a previe
 
 ## Graph
 
-Sliders for arrows, opacity, node/link size, animation, and force-layout parameters. Restore defaults if a layout goes wild — [[Relationship Graph]].
+Sliders for arrows, text fade (labels hide when zoomed out), node/link size, animation, and force-layout parameters. Restore defaults if a layout goes wild — [[Relationship Graph]].
 
 ## i18n
 

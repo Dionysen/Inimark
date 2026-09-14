@@ -24,6 +24,8 @@ Force layout spreads nodes to reduce overlap. Drag nodes, pan, and zoom as neede
 | Action | Result |
 | --- | --- |
 | Click a node (without dragging) | Open that note in the editor |
+| Show in editor | Cover the editor pane with a full graph (toggle again to close) |
+| Switch to another file | Closes the editor-area graph and shows the editor |
 | Fit | Frame the current graph in the viewport |
 | Animate / timelapse | Playback-style layout motion (toolbar control) |
 | Hover | Emphasize neighbors; dim the rest |
@@ -56,7 +58,8 @@ A floating graph can open with complementary mode settings; Graph preferences sy
 | Control | Role |
 | --- | --- |
 | Show arrows | Directed edges |
-| Text / node / link size | Visual weight |
+| Text fade | Hide names when zoomed out; slider shifts the threshold. Hover still shows that node’s name. |
+| Node / link size | Visual weight |
 | Animate | Motion preference |
 | Center / repulsion / link force & distance | Layout physics (0–100 style sliders) |
 

@@ -73,7 +73,7 @@ export interface WordCountSettings {
 
 export interface GraphSettings {
   showArrows: boolean;
-  /** Label fade: 50 = center/0 (always opaque); >50 fades when zoomed out. */
+  /** Label fade: 50 = hide names when zoomed out; 0 = always show; 100 = hide until zoomed in. */
   textOpacity: number;
   /** Node radius scale 0–100 (50 ≈ default). */
   nodeSize: number;

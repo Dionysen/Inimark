@@ -22,6 +22,7 @@ import {
   type GraphSettings,
 } from "../settings/store.ts";
 import { mountGraphControls } from "../settings/graph-controls.ts";
+import { graphLabelAlpha, nodeLabelAlpha } from "./graph-label.ts";
 
 export type GraphMode = "local" | "vault";
 
@@ -116,7 +117,6 @@ function attachDegrees(nodes: GraphNode[], edges: GraphEdge[]): void {
 }
 
 const GRAPH_SCALE_MIN = 0.12;
-/** Max zoom — labels reach full settings opacity at this scale. */
 const GRAPH_SCALE_MAX = 15;
 
 /**
@@ -131,26 +131,6 @@ function camLerp(current: number, target: number, k = 0.9): number {
 const ZOOM_LERP_K = 0.72;
 /** Pan fling velocity decay each frame (lower = stops sooner). */
 const PAN_DECAY_K = 0.78;
-
-/**
- * Label alpha from the text-fade slider (0–100, center 50 = “0”).
- * - ≤50: always fully opaque at any zoom
- * - >50: more transparent when zoomed out; zooming in returns to opaque
- */
-function graphLabelAlpha(textOpacity: number, scale: number): number {
-  const fade = Math.max(0, Math.min(1, (textOpacity - 50) / 50));
-  if (fade < 0.001) return 1;
-
-  const span = GRAPH_SCALE_MAX - GRAPH_SCALE_MIN;
-  const normalized = Math.max(
-    0,
-    Math.min(1, (scale - GRAPH_SCALE_MIN) / span),
-  );
-  // Stronger fade → stays transparent longer until you zoom further in.
-  const zoomFade = Math.pow(normalized, 0.55 + fade * 1.6);
-  // fade=0 → 1; fade=1 → zoomFade (0 at min zoom, 1 at max zoom)
-  return (1 - fade) + fade * zoomFade;
-}
 
 function buildLocalGraph(activePath: string | null): {
   nodes: GraphNode[];
@@ -1109,11 +1089,7 @@ export function mountGraphPanel(
       ctx.arc(s.x, s.y, drawR, 0, Math.PI * 2);
       ctx.fill();
 
-      const labelA = highlighted
-        ? Math.max(textAlpha, 0.92)
-        : dimming
-          ? textAlpha * 0.25
-          : textAlpha;
+      const labelA = nodeLabelAlpha(textAlpha, isHover, highlighted, dimming);
       if (labelA > 0.02) {
         ctx.globalAlpha = labelA;
         ctx.fillStyle = highlighted ? (isHover ? accent : labelColor) : labelColor;
@@ -1495,9 +1471,16 @@ export function mountGraphPanel(
   return {
     el: host,
     setActiveFile(path) {
-      activePath = path ? path.replace(/\\/g, "/") : null;
+      const next = path ? path.replace(/\\/g, "/") : null;
+      const switched = next !== activePath;
+      activePath = next;
       rebuild();
-      editorGraph?.setActiveFile(activePath);
+      // Switching notes while the editor-area graph is open → return to the editor.
+      if (switched) {
+        closeEditorGraph();
+      } else {
+        editorGraph?.setActiveFile(activePath);
+      }
     },
     setMode(next) {
       if (mode === next) return;
