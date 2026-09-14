@@ -15,7 +15,8 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
-  padding: 0 var(--inimark-space-1) var(--inimark-space-3);
+  padding: 0 var(--inimark-space-1)
+    calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
 }
 
 .inimark-tags-group {
@@ -69,7 +70,7 @@
   white-space: nowrap;
   font-size: 0.88rem;
   font-weight: 560;
-  color: var(--tag-text, var(--accent, #3b82f6));
+  color: var(--inimark-fg, inherit);
 }
 
 .inimark-tags-group-count {

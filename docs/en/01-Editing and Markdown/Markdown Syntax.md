@@ -45,7 +45,7 @@ Shortcuts: `Ctrl/⌘ + 1…6`, paragraph `Ctrl/⌘ + 0` (see [[Find Replace and 
 | `code` | `` `code` `` |
 | H~2~O | `H~2~O` |
 | E=mc^2^ | `E=mc^2^` |
-| #tag | `#tag` / `#parent/child` (themed chips; browse in the Tags sidebar) |
+| #tag | Must start a line or follow whitespace: `#tag` / `#parent/child`. Glued forms like `的#define` are not tags. YAML `tags:` also feed the index |
 
 Escape marks with `\`, e.g. `\*\*not bold\*\*`.
 

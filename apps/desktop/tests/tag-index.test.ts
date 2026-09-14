@@ -81,4 +81,23 @@ describe("tagIndex", () => {
       ["aa", 3],
     ]);
   });
+
+  test("indexes YAML frontmatter tags alongside inline tags", () => {
+    tagIndex.setFileTags(
+      "post.md",
+      [
+        "---",
+        "tags: [Windows, GLFW]",
+        "---",
+        "",
+        "Also #GLFW and #cpp",
+      ].join("\n"),
+    );
+
+    expect(tagIndex.listTags("name-asc").map((e) => e.name)).toEqual([
+      "cpp",
+      "GLFW",
+      "Windows",
+    ]);
+  });
 });

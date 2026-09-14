@@ -51,7 +51,12 @@ Typical uses:
 
 ## Tags
 
-Open the **Tags** sidebar tab to browse every `#tag` in the vault (including `#parent/child` as a single name).
+Open the **Tags** sidebar tab to browse every tag in the vault from:
+
+- Inline `#tag` / `#parent/child`
+- YAML front matter `tags:` / `tag:` (flow lists and `-` lists)
+
+Sources are merged and de-duplicated; the pane still shows `#name`.
 
 | Capability | Notes |
 | --- | --- |

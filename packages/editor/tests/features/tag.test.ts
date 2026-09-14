@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   collectTagNamesFromMarkdown,
   isValidTagName,
+  parseFrontmatterTagNames,
   scanTagsInText,
 } from "../../src/tag-parse.ts";
 import { runFeatureCases } from "../utils.ts";
@@ -24,6 +25,21 @@ describe("tag parse helpers", () => {
     expect(scanTagsInText("# Title")).toEqual([]);
   });
 
+  test("requires start of line or whitespace before #", () => {
+    expect(scanTagsInText("删除所有的#define")).toEqual([]);
+    expect(scanTagsInText("如“#if”和“#endif”")).toEqual([]);
+    expect(scanTagsInText("如：#pragma once")).toEqual([]);
+    expect(scanTagsInText("#define at line start")).toEqual([
+      { name: "define", from: 0, to: 7 },
+    ]);
+    expect(scanTagsInText("see #include here")).toEqual([
+      { name: "include", from: 4, to: 12 },
+    ]);
+    expect(scanTagsInText("a\n#if b")).toEqual([
+      { name: "if", from: 2, to: 5 },
+    ]);
+  });
+
   test("isValidTagName", () => {
     expect(isValidTagName("dsa")).toBe(true);
     expect(isValidTagName("foo/bar")).toBe(true);
@@ -41,5 +57,52 @@ describe("tag parse helpers", () => {
       "use `#also` and #keep again #other",
     ].join("\n");
     expect(collectTagNamesFromMarkdown(md)).toEqual(["keep", "other"]);
+  });
+
+  test("collectTagNamesFromMarkdown reads YAML flow and block tags", () => {
+    const flow = [
+      "---",
+      "title: glfw APIENTRY",
+      "categories: [misc, cpp]",
+      "tags: [Windows, GLFW]",
+      "comment: true",
+      "---",
+      "",
+      "body #inline",
+    ].join("\n");
+    expect(collectTagNamesFromMarkdown(flow)).toEqual([
+      "Windows",
+      "GLFW",
+      "inline",
+    ]);
+
+    const block = [
+      "---",
+      "title: Singly Linked list",
+      "tags:",
+      "  - Programming",
+      "  - DataStructure",
+      "  - Algorithm",
+      "comment: true",
+      "---",
+      "",
+      "see #Algorithm again",
+    ].join("\n");
+    expect(collectTagNamesFromMarkdown(block)).toEqual([
+      "Programming",
+      "DataStructure",
+      "Algorithm",
+    ]);
+  });
+
+  test("parseFrontmatterTagNames ignores categories and accepts tag:", () => {
+    expect(
+      parseFrontmatterTagNames(
+        [
+          "categories: [经验与技巧与踩坑, cpp]",
+          "tag: [Windows, '#GLFW']",
+        ].join("\n"),
+      ),
+    ).toEqual(["Windows", "GLFW"]);
   });
 });

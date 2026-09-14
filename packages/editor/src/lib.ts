@@ -29,7 +29,9 @@ export type { WikiLinkBridge, WikiNoteHit, WikiLinkPreviewTrigger } from "./wiki
 export {
   collectTagNamesFromMarkdown,
   isValidTagName,
+  parseFrontmatterTagNames,
   scanTagsInText,
+  splitMarkdownFrontmatter,
   TAG_RE,
 } from "./tag-parse.ts";
 export type { ParsedTag } from "./tag-parse.ts";
