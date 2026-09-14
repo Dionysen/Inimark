@@ -1,5 +1,5 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
-import { fileNameFromPath } from "../platform/env.ts";
+import { fileNameFromPath, parentDirFromPath } from "../platform/env.ts";
 import {
   collapseAllIcon,
   createMenu,
@@ -344,6 +344,7 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
           const row = document.createElement("button");
           row.type = "button";
           row.className = "inimark-tags-item";
+          row.title = path;
           if (activePath === path) row.classList.add("is-active");
 
           const kind = document.createElement("span");
@@ -354,9 +355,17 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
           const label = document.createElement("span");
           label.className = "inimark-tags-item-label";
           label.textContent = noteLabel(path);
-          label.title = path;
 
+          // Same as bookmarks: parent folder path on the right (omit vault-root files).
+          const parent = parentDirFromPath(path);
           row.append(kind, label);
+          if (parent) {
+            const meta = document.createElement("span");
+            meta.className = "inimark-tags-item-meta";
+            meta.textContent = parent;
+            row.append(meta);
+          }
+
           row.addEventListener("click", () => onOpen(path));
           list.append(row);
         }

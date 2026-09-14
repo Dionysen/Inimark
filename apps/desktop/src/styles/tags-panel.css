@@ -139,6 +139,16 @@
   font-size: var(--inimark-control-font-size, 0.8125rem);
 }
 
+.inimark-tags-item-meta {
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: var(--inimark-muted-fg);
+}
+
 .inimark-tags-sort-menu {
   position: fixed;
   z-index: 80;

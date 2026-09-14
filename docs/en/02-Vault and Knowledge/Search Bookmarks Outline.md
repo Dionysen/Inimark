@@ -61,7 +61,7 @@ Sources are merged and de-duplicated; the pane shows the bare tag name (no leadi
 | Capability | Notes |
 | --- | --- |
 | Count | Note count on the right of each tag |
-| Children | Expand to list notes that contain the tag; click to open |
+| Children | Expand to list notes that contain the tag; parent folder path on the right (same as Bookmarks); click to open |
 | Sort | Name A–Z / Z–A, or count high→low / low→high |
 | Expand / collapse | Toolbar toggles all tag groups |
 | Search | Click the search icon to show a filter field (tag or note name) |

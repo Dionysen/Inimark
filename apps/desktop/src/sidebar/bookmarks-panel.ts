@@ -6,7 +6,7 @@ import {
   type BookmarkItem,
   type LibraryBookmarks,
 } from "../bookmarks/store.ts";
-import { fileNameFromPath } from "../platform/env.ts";
+import { fileNameFromPath, parentDirFromPath } from "../platform/env.ts";
 import {
   compareByName,
   type BookmarkGroupSortMode,
@@ -166,9 +166,7 @@ export function createBookmarksPanel(
           label.className = "inimark-bookmarks-item-label";
           label.textContent = fileNameFromPath(item.path);
 
-          const parent = item.path.includes("/")
-            ? item.path.slice(0, item.path.lastIndexOf("/"))
-            : "";
+          const parent = parentDirFromPath(item.path);
           row.append(kind, label);
           if (parent) {
             const meta = document.createElement("span");
