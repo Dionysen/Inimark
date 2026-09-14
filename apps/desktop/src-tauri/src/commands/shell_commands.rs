@@ -1,3 +1,4 @@
+#[cfg(desktop)]
 use std::process::Command;
 
 fn normalize_open_url(url: &str) -> String {
@@ -37,85 +38,109 @@ fn normalize_open_url(url: &str) -> String {
 /// Reveal a file or folder in the system file manager (Finder / Explorer).
 #[tauri::command]
 pub fn reveal_in_file_manager(path: String) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
-        Command::new("explorer.exe")
-            .args(["/select,", &path])
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("explorer.exe")
+                .args(["/select,", &path])
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            Command::new("open")
+                .args(["-R", &path])
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let dir = std::path::Path::new(&path)
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|| path.clone());
+            Command::new("xdg-open")
+                .arg(&dir)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(mobile)]
     {
-        Command::new("open")
-            .args(["-R", &path])
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        let _ = path;
+        Err("Reveal in file manager is not supported on mobile".into())
     }
-    #[cfg(target_os = "linux")]
-    {
-        let dir = std::path::Path::new(&path)
-            .parent()
-            .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_else(|| path.clone());
-        Command::new("xdg-open")
-            .arg(&dir)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
 }
 
 /// Open a URL in the system default browser.
 #[tauri::command]
 pub fn open_url(url: String) -> Result<(), String> {
     let url = normalize_open_url(&url);
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
-        Command::new("cmd")
-            .args(["/C", "start", "", &url])
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("cmd")
+                .args(["/C", "start", "", &url])
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            Command::new("open")
+                .arg(&url)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "linux")]
+        {
+            Command::new("xdg-open")
+                .arg(&url)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(mobile)]
     {
-        Command::new("open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        let _ = url;
+        Err("Open URL is not supported on mobile yet".into())
     }
-    #[cfg(target_os = "linux")]
-    {
-        Command::new("xdg-open")
-            .arg(&url)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
 }
 
 /// Open a file or folder with the OS default application.
 #[tauri::command]
 pub fn open_with_default_app(path: String) -> Result<(), String> {
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
-        Command::new("cmd")
-            .args(["/C", "start", "", &path])
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        #[cfg(target_os = "windows")]
+        {
+            Command::new("cmd")
+                .args(["/C", "start", "", &path])
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            Command::new("open")
+                .arg(&path)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        #[cfg(target_os = "linux")]
+        {
+            Command::new("xdg-open")
+                .arg(&path)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(mobile)]
     {
-        Command::new("open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| e.to_string())?;
+        let _ = path;
+        Err("Open with default app is not supported on mobile".into())
     }
-    #[cfg(target_os = "linux")]
-    {
-        Command::new("xdg-open")
-            .arg(&path)
-            .spawn()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
 }

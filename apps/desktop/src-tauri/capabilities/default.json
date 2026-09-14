@@ -22,9 +22,6 @@
     "core:webview:allow-create-webview-window",
     "dialog:default",
     "fs:default",
-    "updater:default",
-    "process:default",
-    "window-state:default",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
     {

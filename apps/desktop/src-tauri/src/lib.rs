@@ -1,6 +1,8 @@
 mod commands;
 
 use tauri::{Manager, RunEvent, WindowEvent};
+
+#[cfg(desktop)]
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 #[cfg(target_os = "macos")]
@@ -26,33 +28,47 @@ fn finish_platform_window(_window: &tauri::WebviewWindow) {
     }
 }
 
+/// Apply desktop window chrome. No-op on mobile (no decorations / title-bar APIs).
 fn apply_platform_chrome(window: &tauri::WebviewWindow) {
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(desktop)]
     {
-        let _ = window.set_decorations(false);
+        #[cfg(not(target_os = "macos"))]
+        {
+            let _ = window.set_decorations(false);
+        }
+        #[cfg(target_os = "windows")]
+        {
+            let _ = window.set_shadow(true);
+        }
+        #[cfg(target_os = "macos")]
+        {
+            let _ = window.set_decorations(true);
+            let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
+        }
+        finish_platform_window(window);
     }
-    #[cfg(target_os = "windows")]
+    #[cfg(mobile)]
     {
-        let _ = window.set_shadow(true);
+        let _ = window;
     }
-    #[cfg(target_os = "macos")]
-    {
-        let _ = window.set_decorations(true);
-        let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
-    }
-    finish_platform_window(window);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .manage(SitePreviewState::default());
+
+    // Desktop-only plugins (window state / updater / process relaunch).
+    #[cfg(desktop)]
+    let builder = builder
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .manage(SitePreviewState::default())
+        .plugin(tauri_plugin_window_state::Builder::default().build());
+
+    builder
         .invoke_handler(tauri::generate_handler![
             list_system_fonts,
             reveal_in_file_manager,
@@ -89,9 +105,10 @@ pub fn run() {
             "settings" => {
                 if let WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();
-                    let _ = window
-                        .app_handle()
-                        .save_window_state(StateFlags::all());
+                    #[cfg(desktop)]
+                    {
+                        let _ = window.app_handle().save_window_state(StateFlags::all());
+                    }
                     let _ = window.hide();
                 }
             }
@@ -105,7 +122,10 @@ pub fn run() {
                     match event {
                         WindowEvent::CloseRequested { .. } => {}
                         WindowEvent::Destroyed => {
-                            let _ = app_handle.save_window_state(StateFlags::all());
+                            #[cfg(desktop)]
+                            {
+                                let _ = app_handle.save_window_state(StateFlags::all());
+                            }
                             if let Some(settings) = app_handle.get_webview_window("settings") {
                                 let _ = settings.destroy();
                             }

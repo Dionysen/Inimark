@@ -1,10 +1,5 @@
-use std::time::Duration;
-
-use crate::commands::proxy_commands::resolve_system_proxy_url;
 use serde::Serialize;
-use tauri::{Manager, ResourceId, Runtime, Webview};
-use tauri_plugin_updater::UpdaterExt;
-use url::Url;
+use tauri::{ResourceId, Runtime, Webview};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,41 +19,56 @@ pub async fn check_app_update<R: Runtime>(
     use_system_proxy: bool,
     timeout_ms: Option<u64>,
 ) -> Result<Option<UpdateMetadata>, String> {
-    let mut builder = webview.updater_builder();
+    #[cfg(desktop)]
+    {
+        use std::time::Duration;
 
-    if let Some(timeout_ms) = timeout_ms {
-        builder = builder.timeout(Duration::from_millis(timeout_ms));
-    }
+        use crate::commands::proxy_commands::resolve_system_proxy_url;
+        use tauri::Manager;
+        use tauri_plugin_updater::UpdaterExt;
+        use url::Url;
 
-    if use_system_proxy {
-        if let Some(proxy) = resolve_system_proxy_url() {
-            let url = Url::parse(&proxy).map_err(|error| error.to_string())?;
-            builder = builder.proxy(url);
+        let mut builder = webview.updater_builder();
+
+        if let Some(timeout_ms) = timeout_ms {
+            builder = builder.timeout(Duration::from_millis(timeout_ms));
         }
-    } else {
-        builder = builder.no_proxy();
+
+        if use_system_proxy {
+            if let Some(proxy) = resolve_system_proxy_url() {
+                let url = Url::parse(&proxy).map_err(|error| error.to_string())?;
+                builder = builder.proxy(url);
+            }
+        } else {
+            builder = builder.no_proxy();
+        }
+
+        let updater = builder.build().map_err(|error| error.to_string())?;
+        let update = updater.check().await.map_err(|error| error.to_string())?;
+
+        let Some(update) = update else {
+            return Ok(None);
+        };
+
+        let formatted_date = update.date.and_then(|date| {
+            date.format(&time::format_description::well_known::Rfc3339)
+                .ok()
+        });
+
+        let metadata = UpdateMetadata {
+            current_version: update.current_version.clone(),
+            version: update.version.clone(),
+            date: formatted_date,
+            body: update.body.clone(),
+            raw_json: update.raw_json.clone(),
+            rid: webview.resources_table().add(update),
+        };
+
+        Ok(Some(metadata))
     }
-
-    let updater = builder.build().map_err(|error| error.to_string())?;
-    let update = updater.check().await.map_err(|error| error.to_string())?;
-
-    let Some(update) = update else {
-        return Ok(None);
-    };
-
-    let formatted_date = update.date.and_then(|date| {
-        date.format(&time::format_description::well_known::Rfc3339)
-            .ok()
-    });
-
-    let metadata = UpdateMetadata {
-        current_version: update.current_version.clone(),
-        version: update.version.clone(),
-        date: formatted_date,
-        body: update.body.clone(),
-        raw_json: update.raw_json.clone(),
-        rid: webview.resources_table().add(update),
-    };
-
-    Ok(Some(metadata))
+    #[cfg(mobile)]
+    {
+        let _ = (webview, use_system_proxy, timeout_ms);
+        Err("Updates are not supported on mobile yet".into())
+    }
 }
