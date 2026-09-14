@@ -126,6 +126,48 @@ describe("editor context menu", () => {
     host.remove();
   });
 
+  test("quick-insert submenu inserts current local datetime", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.append(host);
+
+    const editor = createEditor(host, { initialContent: "hello" });
+    const menu = mountEditorContextMenu(host, editor);
+
+    host.dispatchEvent(
+      new MouseEvent("mousedown", {
+        button: 2,
+        clientX: 40,
+        clientY: 40,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    const panel = document.querySelector(".inimark-editor-context-menu") as HTMLElement;
+    const quickInsertRow = [...panel.querySelectorAll(".inimark-editor-context-row")].find(
+      (row) => row.textContent?.includes("Quick Insert"),
+    ) as HTMLElement;
+    expect(quickInsertRow).toBeTruthy();
+
+    quickInsertRow.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+    const flyout = document.querySelector(".inimark-editor-context-submenu") as HTMLElement;
+    expect(flyout.hidden).toBe(false);
+    expect(flyout.textContent).toContain("Insert Current Time");
+
+    const insertTime = [...flyout.querySelectorAll(".inimark-editor-context-item")].find((btn) =>
+      btn.textContent?.includes("Insert Current Time"),
+    ) as HTMLButtonElement;
+    insertTime.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+
+    expect(editor.getMarkdown()).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}hello$/);
+    expect(panel.hidden).toBe(true);
+
+    menu.destroy();
+    editor.destroy();
+    host.remove();
+  });
+
   test("closes when another exclusive menu opens", () => {
     dismissExclusiveLayers();
 

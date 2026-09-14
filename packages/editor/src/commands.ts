@@ -60,7 +60,21 @@ export type EditorCommandName =
   | "callout-danger"
   | "copy-as-html"
   | "copy-as-plain-text"
-  | "paste-as-plain-text";
+  | "paste-as-plain-text"
+  | "insert-datetime";
+
+/**
+ * Format a date as local `YYYY-MM-DD HH:mm:ss` (e.g. `2024-11-17 19:58:01`).
+ */
+export function formatLocalDateTime(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const mo = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const mi = String(date.getMinutes()).padStart(2, "0");
+  const s = String(date.getSeconds()).padStart(2, "0");
+  return `${y}-${mo}-${d} ${h}:${mi}:${s}`;
+}
 
 function run(view: EditorView, command: Command): boolean {
   const ok = command(view.state, view.dispatch.bind(view), view);
@@ -188,6 +202,8 @@ export function executeEditorCommand(
     case "paste-as-plain-text":
       void pasteAsPlainText(view);
       return true;
+    case "insert-datetime":
+      return run(view, insertText(formatLocalDateTime()));
     default:
       return false;
   }

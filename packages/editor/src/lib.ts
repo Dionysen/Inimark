@@ -15,7 +15,7 @@ export type {
 export type { FindOptions, MdMatch } from "./find-in-markdown.ts";
 export type { SearchRevealOptions } from "./search-reveal.ts";
 export type { EditorCommandName } from "./commands.ts";
-export { executeEditorCommand } from "./commands.ts";
+export { executeEditorCommand, formatLocalDateTime } from "./commands.ts";
 export {
   setClipboardBridge,
   getClipboardBridge,

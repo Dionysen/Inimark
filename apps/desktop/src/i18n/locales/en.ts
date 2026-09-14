@@ -215,6 +215,8 @@ export const en: Dictionary = {
       codeBlock: "Code Block",
       mathBlock: "Math Block",
       wikiLink: "Wiki Link",
+      quickInsert: "Quick Insert",
+      insertDateTime: "Insert Current Time",
       callout: "Callout",
       calloutNote: "Note",
       calloutTip: "Tip",

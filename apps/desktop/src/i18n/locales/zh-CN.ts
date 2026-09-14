@@ -215,6 +215,8 @@ export const zhCN: Dictionary = {
       codeBlock: "代码块",
       mathBlock: "公式块",
       wikiLink: "双向链接",
+      quickInsert: "快捷插入",
+      insertDateTime: "插入当前时间",
       callout: "标注",
       calloutNote: "Note",
       calloutTip: "Tip",
