@@ -232,7 +232,7 @@ export function createEditor(
     }
     applyFindHighlights(view, options.query, pmMatches, index);
     scrollToRenderedPos(pmMatches[index]!.from);
-    view.focus();
+    // Do not focus the editor here — the find bar owns focus while open.
     return session;
   }
 

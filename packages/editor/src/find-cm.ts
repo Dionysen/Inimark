@@ -41,5 +41,5 @@ export function selectCmMatch(view: CMView, match: MdMatch): void {
     selection: { anchor: match.from, head: match.to },
     scrollIntoView: true,
   });
-  view.focus();
+  // Intentionally skip view.focus() — find-bar typing must keep focus in the input.
 }
