@@ -216,7 +216,7 @@ export function mountApp(host: HTMLElement): AppController {
       wordCount?.scheduleUpdate();
       if (workspace && activeFilePath) {
         linkIndex.addFileLinks(activeFilePath, md);
-        tagIndex.setFileTags(activeFilePath, md);
+        scheduleTagIndexSync(md);
       }
     },
     onContentReplaced: () => {
@@ -386,6 +386,32 @@ export function mountApp(host: HTMLElement): AppController {
   }
   scheduleOutlineSync(editor.getMarkdown());
 
+  // Debounce tag index like Obsidian metadata cache — typing `#tag`
+  // changes the set every keystroke; coalesce until input settles.
+  let tagIndexTimer: ReturnType<typeof setTimeout> | null = null;
+  let pendingTagMarkdown: string | null = null;
+  function scheduleTagIndexSync(md: string): void {
+    pendingTagMarkdown = md;
+    if (tagIndexTimer != null) clearTimeout(tagIndexTimer);
+    tagIndexTimer = setTimeout(() => {
+      tagIndexTimer = null;
+      flushTagIndex();
+    }, 200);
+  }
+  function flushTagIndex(md?: string): void {
+    if (tagIndexTimer != null) {
+      clearTimeout(tagIndexTimer);
+      tagIndexTimer = null;
+    }
+    const text = md ?? pendingTagMarkdown;
+    pendingTagMarkdown = null;
+    if (!workspace || !activeFilePath || text == null) return;
+    tagIndex.setFileTags(activeFilePath, text);
+  }
+  cleanups.push(() => {
+    if (tagIndexTimer != null) clearTimeout(tagIndexTimer);
+  });
+
   shell.rightSidebar.onSelectHeading((_level, text, line) => {
     editor.scrollToHeading(text, line);
   });
@@ -493,7 +519,7 @@ export function mountApp(host: HTMLElement): AppController {
     scheduleOutlineSync(text);
     if (workspace && activeFilePath) {
       linkIndex.addFileLinks(activeFilePath, text);
-      tagIndex.setFileTags(activeFilePath, text);
+      flushTagIndex(text);
       shell.graph.setActiveFile(activeFilePath);
       shell.tags.setActiveFile(activeFilePath);
     }
@@ -594,7 +620,7 @@ export function mountApp(host: HTMLElement): AppController {
         shell.sidebar.setActiveFile(activeFilePath);
         linkIndex.addFileLinks(activeFilePath, markdown);
         linkIndex.persistCache(workspace.rootPath);
-        tagIndex.setFileTags(activeFilePath, markdown);
+        flushTagIndex(markdown);
         shell.graph.setActiveFile(activeFilePath);
         shell.tags.setActiveFile(activeFilePath);
         await fileSync.recordBaseline(markdown);

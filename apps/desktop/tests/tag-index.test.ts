@@ -100,4 +100,38 @@ describe("tagIndex", () => {
       "Windows",
     ]);
   });
+
+  test("skips notify when the tag set is unchanged", () => {
+    let ticks = 0;
+    const stop = tagIndex.subscribe(() => {
+      ticks += 1;
+    });
+    tagIndex.setFileTags("n.md", "hello #a #b");
+    expect(ticks).toBe(1);
+    tagIndex.setFileTags("n.md", "hello #a #b and more prose");
+    expect(ticks).toBe(1);
+    tagIndex.setFileTags("n.md", "hello #a");
+    expect(ticks).toBe(2);
+    stop();
+  });
+
+  test("pauseNotifications coalesces bulk updates into one emit", () => {
+    let ticks = 0;
+    const stop = tagIndex.subscribe(() => {
+      ticks += 1;
+    });
+    tagIndex.pauseNotifications();
+    tagIndex.setFileTags("a.md", "#one");
+    tagIndex.setFileTags("b.md", "#two");
+    tagIndex.setFileTags("c.md", "#three");
+    expect(ticks).toBe(0);
+    tagIndex.resumeNotifications();
+    expect(ticks).toBe(1);
+    expect(tagIndex.listTags("name-asc").map((e) => e.name)).toEqual([
+      "one",
+      "three",
+      "two",
+    ]);
+    stop();
+  });
 });

@@ -9,23 +9,68 @@ export interface TagEntry {
   files: string[];
 }
 
+function sameTagSet(prev: Set<string> | undefined, next: Set<string>): boolean {
+  if (!prev) return next.size === 0;
+  if (prev.size !== next.size) return false;
+  for (const tag of next) {
+    if (!prev.has(tag)) return false;
+  }
+  return true;
+}
+
 class TagIndexServiceImpl {
   /** tag name → set of file paths */
   private tagToFiles = new Map<string, Set<string>>();
   /** file path → set of tag names */
   private fileToTags = new Map<string, Set<string>>();
   private listeners = new Set<() => void>();
+  /** Nested pause depth — listeners fire once when the outermost resume runs. */
+  private pauseDepth = 0;
+  private pendingNotify = false;
+  private listCache: { sort: TagSortMode; entries: TagEntry[] } | null = null;
 
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
+  /**
+   * Suspend listener notifications (nestable). Use around bulk builds so the
+   * sidebar redraws once instead of once per file.
+   */
+  pauseNotifications(): void {
+    this.pauseDepth += 1;
+  }
+
+  /** Resume notifications; emits a single update if anything changed while paused. */
+  resumeNotifications(): void {
+    if (this.pauseDepth === 0) return;
+    this.pauseDepth -= 1;
+    if (this.pauseDepth === 0 && this.pendingNotify) {
+      this.pendingNotify = false;
+      this.emit();
+    }
+  }
+
+  private invalidateListCache(): void {
+    this.listCache = null;
+  }
+
   private notify(): void {
+    this.invalidateListCache();
+    if (this.pauseDepth > 0) {
+      this.pendingNotify = true;
+      return;
+    }
+    this.emit();
+  }
+
+  private emit(): void {
     for (const listener of this.listeners) listener();
   }
 
   clear(): void {
+    if (this.tagToFiles.size === 0 && this.fileToTags.size === 0) return;
     this.tagToFiles.clear();
     this.fileToTags.clear();
     this.notify();
@@ -35,6 +80,8 @@ class TagIndexServiceImpl {
     const normalized = filePath.replace(/\\/g, "/");
     const nextTags = new Set(collectTagNamesFromMarkdown(content));
     const prevTags = this.fileToTags.get(normalized);
+
+    if (sameTagSet(prevTags, nextTags)) return;
 
     if (prevTags) {
       for (const tag of prevTags) {
@@ -102,6 +149,8 @@ class TagIndexServiceImpl {
   }
 
   listTags(sort: TagSortMode = "name-asc"): TagEntry[] {
+    if (this.listCache?.sort === sort) return this.listCache.entries;
+
     const entries: TagEntry[] = [];
     for (const [name, files] of this.tagToFiles) {
       const list = [...files].sort((a, b) =>
@@ -118,6 +167,7 @@ class TagIndexServiceImpl {
       const byName = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
       return sort === "name-desc" ? -byName : byName;
     });
+    this.listCache = { sort, entries };
     return entries;
   }
 

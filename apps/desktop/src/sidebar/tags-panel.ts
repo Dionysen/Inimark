@@ -67,8 +67,46 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
   let activePath: string | null = null;
   let searchOpen = false;
   let query = "";
-  const collapsed = new Set<string>();
+  const expanded = new Set<string>();
   let onOpen: (path: string) => void = () => {};
+  let renderTimer: ReturnType<typeof setTimeout> | null = null;
+  let renderRaf = 0;
+  let renderDirty = false;
+
+  function isPanelVisible(): boolean {
+    return !host.hidden;
+  }
+
+  /** Coalesce index updates; skip work while the tab is hidden. */
+  function scheduleRerender(): void {
+    renderDirty = true;
+    if (!isPanelVisible()) return;
+    if (renderTimer != null) clearTimeout(renderTimer);
+    renderTimer = setTimeout(() => {
+      renderTimer = null;
+      if (renderRaf) cancelAnimationFrame(renderRaf);
+      renderRaf = requestAnimationFrame(() => {
+        renderRaf = 0;
+        if (!renderDirty) return;
+        if (!isPanelVisible()) return;
+        renderDirty = false;
+        rerender();
+      });
+    }, 50);
+  }
+
+  function rerenderNow(): void {
+    if (renderTimer != null) {
+      clearTimeout(renderTimer);
+      renderTimer = null;
+    }
+    if (renderRaf) {
+      cancelAnimationFrame(renderRaf);
+      renderRaf = 0;
+    }
+    renderDirty = false;
+    rerender();
+  }
 
   const sortMenu = createMenu();
   sortMenu.el.classList.add("inimark-tags-sort-menu");
@@ -197,7 +235,7 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
 
   function syncExpandButton(entries: TagEntry[]): void {
     const expandable = entries.filter((e) => e.files.length > 0);
-    const anyExpanded = expandable.some((e) => !collapsed.has(e.name));
+    const anyExpanded = expandable.some((e) => expanded.has(e.name));
     const label = anyExpanded
       ? t("tags.toolbar.collapseAll")
       : t("tags.toolbar.expandAll");
@@ -208,18 +246,18 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
 
   function hasAnyExpanded(): boolean {
     const entries = visibleEntries();
-    return entries.some((e) => e.files.length > 0 && !collapsed.has(e.name));
+    return entries.some((e) => e.files.length > 0 && expanded.has(e.name));
   }
 
   function collapseAll(): void {
-    for (const entry of tagIndex.listTags(sortMode)) {
-      if (entry.files.length > 0) collapsed.add(entry.name);
-    }
+    expanded.clear();
     rerender();
   }
 
   function expandAll(): void {
-    collapsed.clear();
+    for (const entry of tagIndex.listTags(sortMode)) {
+      if (entry.files.length > 0) expanded.add(entry.name);
+    }
     rerender();
   }
 
@@ -247,8 +285,9 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
 
   function rerender(): void {
     const entries = visibleEntries();
-    listHost.replaceChildren();
     syncExpandButton(entries);
+
+    const frag = document.createDocumentFragment();
 
     if (entries.length === 0) {
       const empty = document.createElement("p");
@@ -256,11 +295,12 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
       empty.textContent = query
         ? t("tags.emptyFilter")
         : t("tags.empty");
-      listHost.append(empty);
+      frag.append(empty);
       const hint = document.createElement("p");
       hint.className = "inimark-sidebar-empty-hint";
       hint.textContent = query ? "" : t("tags.emptyHint");
-      if (hint.textContent) listHost.append(hint);
+      if (hint.textContent) frag.append(hint);
+      listHost.replaceChildren(frag);
       return;
     }
 
@@ -269,7 +309,7 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
       section.className = "inimark-tags-group";
 
       // Searching expands matches so hits stay visible.
-      const isCollapsed = !query && collapsed.has(entry.name);
+      const isCollapsed = !query && !expanded.has(entry.name);
       const header = document.createElement("button");
       header.type = "button";
       header.className = "inimark-tags-group-header";
@@ -282,7 +322,7 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
 
       const title = document.createElement("span");
       title.className = "inimark-tags-group-title";
-      title.textContent = `#${entry.name}`;
+      title.textContent = entry.name;
 
       const count = document.createElement("span");
       count.className = "inimark-tags-group-count";
@@ -291,9 +331,9 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
       header.append(chevron, title, count);
       header.addEventListener("click", () => {
         if (query) return;
-        if (collapsed.has(entry.name)) collapsed.delete(entry.name);
-        else collapsed.add(entry.name);
-        rerender();
+        if (expanded.has(entry.name)) expanded.delete(entry.name);
+        else expanded.add(entry.name);
+        rerenderNow();
       });
       section.append(header);
 
@@ -323,11 +363,18 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
         section.append(list);
       }
 
-      listHost.append(section);
+      frag.append(section);
     }
+
+    listHost.replaceChildren(frag);
   }
 
-  const unsubscribeIndex = tagIndex.subscribe(() => rerender());
+  const unsubscribeIndex = tagIndex.subscribe(() => scheduleRerender());
+  const visibilityObserver = new MutationObserver(() => {
+    if (isPanelVisible() && renderDirty) scheduleRerender();
+  });
+  visibilityObserver.observe(host, { attributes: true, attributeFilter: ["hidden"] });
+
   const unsubscribeLocale = onLocaleChange(() => {
     sortBtn.title = t("tags.toolbar.sort");
     sortBtn.setAttribute("aria-label", t("tags.toolbar.sort"));
@@ -337,20 +384,30 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
     searchField.input.setAttribute("aria-label", t("tags.searchPlaceholder"));
     listHost.setAttribute("aria-label", t("tags.tab"));
     if (sortMenu.isOpen()) renderSortMenu();
-    rerender();
+    rerenderNow();
   });
 
   syncSearchChrome();
-  rerender();
+  rerenderNow();
 
   return {
     el: host,
     setActiveFile(path) {
+      if (activePath === path) return;
       activePath = path;
-      rerender();
+      if (!isPanelVisible()) {
+        renderDirty = true;
+        return;
+      }
+      // Cheap path: toggle active class without rebuilding the tree.
+      for (const row of listHost.querySelectorAll<HTMLElement>(".inimark-tags-item")) {
+        const label = row.querySelector(".inimark-tags-item-label");
+        const rowPath = label?.getAttribute("title");
+        row.classList.toggle("is-active", rowPath === path);
+      }
     },
     refresh() {
-      rerender();
+      rerenderNow();
     },
     onOpenFile(handler) {
       onOpen = handler;
@@ -358,6 +415,9 @@ export function mountTagsPanel(host: HTMLElement): TagsPanelController {
     destroy() {
       unsubscribeIndex();
       unsubscribeLocale();
+      visibilityObserver.disconnect();
+      if (renderTimer != null) clearTimeout(renderTimer);
+      if (renderRaf) cancelAnimationFrame(renderRaf);
       closeSortMenu();
       sortMenu.destroy();
       toolbar.destroy();

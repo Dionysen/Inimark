@@ -68,8 +68,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.88rem;
-  font-weight: 560;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--inimark-fg, inherit);
 }
 
@@ -136,7 +136,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.84rem;
+  font-size: var(--inimark-control-font-size, 0.8125rem);
 }
 
 .inimark-tags-sort-menu {

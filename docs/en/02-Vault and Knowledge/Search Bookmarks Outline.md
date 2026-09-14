@@ -56,7 +56,7 @@ Open the **Tags** sidebar tab to browse every tag in the vault from:
 - Inline `#tag` / `#parent/child`
 - YAML front matter `tags:` / `tag:` (flow lists and `-` lists)
 
-Sources are merged and de-duplicated; the pane still shows `#name`.
+Sources are merged and de-duplicated; the pane shows the bare tag name (no leading `#`).
 
 | Capability | Notes |
 | --- | --- |
