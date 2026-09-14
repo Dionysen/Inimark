@@ -29,7 +29,7 @@ translationKey: roadmap
 | --- | --- | --- |
 | Image storage settings | UI/schema yes; paste/drop → disk not fully wired | [[Images and Attachments]] |
 | Footnotes | Marker insert, incomplete render | [[Markdown Syntax]] |
-| `#tags` | Theme styles, no pane/parser | [[Wikilinks and Embeds]] |
+| `#tags` | Inline chips render with theme tokens; sidebar pane / tag search not built | [[Markdown Syntax]] |
 
 ## Explicitly absent (for now)
 

@@ -119,7 +119,8 @@ Configured under Settings → Editor (link update on move); operations start fro
 Compared with Obsidian:
 
 - [ ] Block refs `[[note#^id]]` as a full system
-- [ ] First-class `#tags` / tag pane (theme tokens exist; parsing is weak)
+- [x] Inline `#tag` parsing + themed chips
+- [ ] Tag pane / search by tag
 
 ### Hover preview
 

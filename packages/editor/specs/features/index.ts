@@ -34,6 +34,7 @@ import { underlineSpecs } from "./underline.specs.ts";
 import { tableSpecs } from "./table.specs.ts";
 import { taskSpecs } from "./task.specs.ts";
 import { tocSpecs } from "./toc.specs.ts";
+import { tagSpecs } from "./tag.specs.ts";
 
 export const ALL_SPECS: FeatureSpecs[] = [
   htmlCommentSpecs,
@@ -61,6 +62,7 @@ export const ALL_SPECS: FeatureSpecs[] = [
   refDefSpecs,
   tableSpecs,
   tocSpecs,
+  tagSpecs,
   autoPairSpecs,
 ];
 

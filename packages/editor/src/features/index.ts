@@ -32,6 +32,7 @@ import { table } from "./table.ts";
 import { task } from "./task.ts";
 import { toc } from "./toc.ts";
 import { wikiLink } from "./wiki-link.ts";
+import { tag } from "./tag.ts";
 
 export const ALL_FEATURES: FeatureSpec[] = [
   htmlComment,
@@ -48,6 +49,7 @@ export const ALL_FEATURES: FeatureSpec[] = [
   link,
   image,
   wikiLink,
+  tag,
   hr,
   htmlBlock,
   blockquote,

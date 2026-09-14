@@ -27,6 +27,13 @@ export {
 } from "./wiki-link-bridge.ts";
 export type { WikiLinkBridge, WikiNoteHit, WikiLinkPreviewTrigger } from "./wiki-link-bridge.ts";
 export {
+  collectTagNamesFromMarkdown,
+  isValidTagName,
+  scanTagsInText,
+  TAG_RE,
+} from "./tag-parse.ts";
+export type { ParsedTag } from "./tag-parse.ts";
+export {
   setLinkNavigationBridge,
   getLinkNavigationBridge,
 } from "./link-navigation-bridge.ts";
