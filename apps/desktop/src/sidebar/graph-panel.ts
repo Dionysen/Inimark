@@ -23,6 +23,7 @@ import {
 } from "../settings/store.ts";
 import { mountGraphControls } from "../settings/graph-controls.ts";
 import { graphLabelAlpha } from "./graph-label.ts";
+import { mergeGraphNodeLayout } from "./graph-layout.ts";
 import {
   createGraphHoverAmounts,
   edgeHoverKey,
@@ -1152,6 +1153,25 @@ export function mountGraphPanel(
     scheduleDraw();
   }
 
+  /**
+   * Apply link-index changes without resetting the camera or re-seeding layout.
+   * Full rebuild() is reserved for mode switches / active-note changes.
+   */
+  function softRefreshFromIndex(): void {
+    if (progression > 0) return;
+    const data = mode === "local" ? buildLocalGraph(activePath) : buildVaultGraph();
+    const prev = new Map(
+      nodes.map((node) => [node.id, { x: node.x, y: node.y, vx: node.vx, vy: node.vy }]),
+    );
+    nodes = mergeGraphNodeLayout(data.nodes, prev);
+    edges = data.edges;
+    rebuildAdjacency();
+    // Settle over animation frames — never block the UI thread with sync warmup.
+    alpha = Math.max(alpha, 0.28);
+    updateLists();
+    scheduleDraw();
+  }
+
   function applyProgressionSlice(count: number): void {
     const slice = progressionSlots.slice(0, Math.max(0, count));
     const visibleIds = new Set<string>();
@@ -1451,7 +1471,7 @@ export function mountGraphPanel(
     scheduleDraw();
   });
 
-  const unsubIndex = linkIndex.subscribe(() => rebuild());
+  const unsubIndex = linkIndex.subscribe(() => softRefreshFromIndex());
   const unsubLocale = onLocaleChange(() => {
     refreshChrome();
     updateLists();
@@ -1476,11 +1496,13 @@ export function mountGraphPanel(
       const next = path ? path.replace(/\\/g, "/") : null;
       const switched = next !== activePath;
       activePath = next;
-      rebuild();
-      // Switching notes while the editor-area graph is open → return to the editor.
       if (switched) {
+        rebuild();
+        // Switching notes while the editor-area graph is open → return to the editor.
         closeEditorGraph();
       } else {
+        // Same note (e.g. after save): keep layout; out/back lists refresh via softRefresh.
+        updateLists();
         editorGraph?.setActiveFile(activePath);
       }
     },

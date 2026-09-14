@@ -29,6 +29,7 @@ Force layout spreads nodes to reduce overlap. Drag nodes, pan, and zoom as neede
 | Fit | Frame the current graph in the viewport |
 | Animate / timelapse | Playback-style layout motion (toolbar control) |
 | Hover | Smoothly emphasize the node and its neighbors; the rest fade |
+| Save / link edits | Graph updates in place (keeps layout); no full re-seed |
 | Outlinks / Backlinks lists | Sidebar lists; click to open; unresolved outlinks marked |
 
 A floating graph can open with complementary mode settings; Graph preferences sync across sidebar, floating panel, and **Settings → Graph**.

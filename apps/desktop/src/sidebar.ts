@@ -2840,6 +2840,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   return {
     setWorkspace: applyWorkspace,
     setActiveFile(path) {
+      if (activePath === path) return;
       activePath = path;
       rerender();
       if (activePanel === "search" && searchQuery.trim()) renderSearchResults();

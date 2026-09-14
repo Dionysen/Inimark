@@ -616,8 +616,8 @@ export function mountApp(host: HTMLElement): AppController {
         shell.setDirty(false);
         diskBanner.hide();
         pendingDiskRevision = null;
-        workspace.tree = await refreshWorkspaceTree(workspace);
-        shell.sidebar.setWorkspace(workspace);
+        // Content-only save: vault topology is unchanged — skip full tree rescan /
+        // sidebar remount (those fight window drag on the main thread).
         shell.sidebar.setActiveFile(activeFilePath);
         linkIndex.addFileLinks(activeFilePath, markdown);
         linkIndex.persistCache(workspace.rootPath);
