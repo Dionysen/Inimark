@@ -8,7 +8,7 @@ translationKey: search-bookmarks
 
 **中文:** [[搜索书签与大纲|中文]] · [[Interface Tour]] · [[Libraries and Files]]
 
-Three navigation tabs that complement the [[Relationship Graph]].
+Three navigation tabs that complement the [[Relationship Graph]] (plus Tags).
 
 ## Search
 
@@ -48,6 +48,20 @@ Typical uses:
 
 - [ ] Bookmark [[Publish a Site]]
 - [ ] Bookmark [[Markdown Syntax]]
+
+## Tags
+
+Open the **Tags** sidebar tab to browse every `#tag` in the vault (including `#parent/child` as a single name).
+
+| Capability | Notes |
+| --- | --- |
+| Count | Note count on the right of each tag |
+| Children | Expand to list notes that contain the tag; click to open |
+| Sort | Name A–Z / Z–A, or count high→low / low→high |
+| Expand / collapse | Toolbar toggles all tag groups |
+| Search | Click the search icon to show a filter field (tag or note name) |
+
+Inline syntax and chips: [[Markdown Syntax]]. Vault-wide `tag:` search operators are still not built.
 
 ## Outline
 

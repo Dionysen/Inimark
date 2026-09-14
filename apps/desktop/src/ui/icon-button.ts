@@ -9,5 +9,7 @@ export {
   searchTabIcon,
   bookmarksTabIcon,
   outlineTabIcon,
+  graphTabIcon,
+  tagsTabIcon,
   type IconButtonOptions,
 } from "./widgets/icon-button.ts";

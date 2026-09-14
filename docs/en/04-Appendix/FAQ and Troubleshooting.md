@@ -80,7 +80,7 @@ Local mode only shows neighbors of the **active** note. Switch to **vault** mode
 
 ### Can I use `#tags` / block refs like Obsidian?
 
-`#tag` / `#a/b` already render as themed chips in the editor. Tag pane and tag search are still on the [[Roadmap]]. Block refs: same page.
+`#tag` / `#a/b` already render as themed chips in the editor, and the **Tags** sidebar lists them. Vault `tag:` search operators are still on the [[Roadmap]]. Block refs: same page.
 
 ## Publish
 

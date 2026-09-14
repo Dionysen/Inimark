@@ -1,0 +1,145 @@
+/* Tags sidebar panel — tag → notes tree */
+.inimark-tags-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.inimark-tags-search {
+  flex-shrink: 0;
+  padding: 0 var(--inimark-space-2) var(--inimark-space-2);
+}
+
+.inimark-tags-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 var(--inimark-space-1) var(--inimark-space-3);
+}
+
+.inimark-tags-group {
+  margin-bottom: 2px;
+}
+
+.inimark-tags-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.4rem;
+  border: none;
+  border-radius: var(--inimark-radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-tags-group-header:hover {
+  background: color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent);
+}
+
+.inimark-tags-group-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--text-muted, var(--inimark-muted-fg));
+  transition: transform 120ms ease;
+  transform: rotate(0deg);
+}
+
+.inimark-tags-group-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-tags-group-chevron svg {
+  width: 100%;
+  height: 100%;
+}
+
+.inimark-tags-group-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 560;
+  color: var(--tag-text, var(--accent, #3b82f6));
+}
+
+.inimark-tags-group-count {
+  flex-shrink: 0;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tag-bg, var(--accent, #3b82f6)) 55%, transparent);
+  color: var(--text-muted, var(--inimark-muted-fg));
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.inimark-tags-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 0 0.15rem 1.15rem;
+}
+
+.inimark-tags-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.22rem 0.4rem;
+  border: none;
+  border-radius: var(--inimark-radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-tags-item:hover {
+  background: color-mix(in srgb, var(--accent, #3b82f6) 10%, transparent);
+}
+
+.inimark-tags-item.is-active {
+  background: color-mix(in srgb, var(--accent, #3b82f6) 16%, transparent);
+}
+
+.inimark-tags-item-kind {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--text-muted, var(--inimark-muted-fg));
+}
+
+.inimark-tags-item-kind svg {
+  width: 100%;
+  height: 100%;
+}
+
+.inimark-tags-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.inimark-tags-sort-menu {
+  position: fixed;
+  z-index: 80;
+  min-width: 10rem;
+}

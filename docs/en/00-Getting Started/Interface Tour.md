@@ -13,7 +13,7 @@ The main window is a writing column flanked by sidebars: title bar on top, statu
 | Region | Typical contents |
 | --- | --- |
 | Top | Back / Forward, window controls, More menu |
-| Left sidebar | Files, Search, Bookmarks, Outline, Graph (configurable) |
+| Left sidebar | Files, Search, Bookmarks, Tags, Outline, Graph (configurable) |
 | Center | Editor: WYSIWYG or source |
 | Right sidebar | Same tab set; left/right assignment is customizable |
 | Bottom | Word count, typewriter, and other status |
@@ -31,13 +31,14 @@ The main window is a writing column flanked by sidebars: title bar on top, statu
 
 ## Dual sidebars
 
-Left and right **tabs are configurable** (Files / Search / Bookmarks / Outline / Graph).
+Left and right **tabs are configurable** (Files / Search / Bookmarks / Tags / Outline / Graph).
 
 | Tab | One-liner | Deep dive |
 | --- | --- | --- |
 | Files | Vault file tree | [[Libraries and Files]] |
 | Search | Name + content search | [[Search Bookmarks Outline]] |
 | Bookmarks | Bookmarks and groups | [[Search Bookmarks Outline]] |
+| Tags | Vault `#tag` list and notes | [[Search Bookmarks Outline]] |
 | Outline | Heading tree for the active note | [[Search Bookmarks Outline]] |
 | Graph | Graph plus outlinks / backlinks | [[Relationship Graph]] |
 

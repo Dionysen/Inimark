@@ -5,12 +5,14 @@ import {
   graphTabIcon,
   outlineTabIcon,
   searchTabIcon,
+  tagsTabIcon,
 } from "../ui/widgets/index.ts";
 
 export const ALL_SIDEBAR_TABS = [
   "files",
   "search",
   "bookmarks",
+  "tags",
   "outline",
   "graph",
 ] as const;
@@ -21,6 +23,7 @@ export const DEFAULT_LEFT_SIDEBAR_TABS: SidebarTabId[] = [
   "files",
   "search",
   "bookmarks",
+  "tags",
 ];
 
 export const DEFAULT_RIGHT_SIDEBAR_TABS: SidebarTabId[] = ["outline", "graph"];
@@ -44,6 +47,8 @@ export function sidebarTabIcon(id: SidebarTabId): string {
       return searchTabIcon();
     case "bookmarks":
       return bookmarksTabIcon();
+    case "tags":
+      return tagsTabIcon();
     case "outline":
       return outlineTabIcon();
     case "graph":
@@ -59,6 +64,8 @@ export function sidebarTabLabel(id: SidebarTabId): string {
       return t("sidebar.tabs.search");
     case "bookmarks":
       return t("sidebar.tabs.bookmarks");
+    case "tags":
+      return t("tags.tab");
     case "outline":
       return t("outline.tab");
     case "graph":

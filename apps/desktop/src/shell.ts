@@ -17,6 +17,10 @@ import {
   mountGraphPanel,
   type GraphPanelController,
 } from "./sidebar/graph-panel.ts";
+import {
+  mountTagsPanel,
+  type TagsPanelController,
+} from "./sidebar/tags-panel.ts";
 import { loadSettings, type AppSettings } from "./settings/store.ts";
 import type { SidebarTabId } from "./sidebar/tab-layout.ts";
 
@@ -39,6 +43,7 @@ export interface ShellController {
   sidebar: SidebarController;
   rightSidebar: RightSidebarController;
   graph: GraphPanelController;
+  tags: TagsPanelController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
@@ -101,6 +106,12 @@ export function mountShell(
   graphPanelHost.setAttribute("role", "tabpanel");
   const graph = mountGraphPanel(graphPanelHost);
 
+  const tagsPanelHost = document.createElement("div");
+  tagsPanelHost.className = "inimark-sidebar-panel";
+  tagsPanelHost.dataset.panel = "tags";
+  tagsPanelHost.setAttribute("role", "tabpanel");
+  const tags = mountTagsPanel(tagsPanelHost);
+
   const mainColumn = document.createElement("div");
   mainColumn.className = "inimark-main";
 
@@ -115,6 +126,7 @@ export function mountShell(
       ...sidebar.getPanels(),
       outline: outlinePanelHost,
       graph: graphPanelHost,
+      tags: tagsPanelHost,
     };
   }
 
@@ -289,6 +301,7 @@ export function mountShell(
     sidebar,
     rightSidebar,
     graph,
+    tags,
     setFileName(name) {
       fileName = name;
       renderTitle();
@@ -312,6 +325,7 @@ export function mountShell(
       sidebar.destroy();
       rightSidebar.destroy();
       graph.destroy();
+      tags.destroy();
       host.replaceChildren();
     },
   };

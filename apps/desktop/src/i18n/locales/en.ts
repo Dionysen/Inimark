@@ -168,6 +168,25 @@ export const en: Dictionary = {
     backlinks: "Incoming",
     emptyLinks: "None",
   },
+  tags: {
+    tab: "Tags",
+    searchPlaceholder: "Filter tags…",
+    empty: "No tags yet",
+    emptyHint: "Add #tags in notes to see them here",
+    emptyFilter: "No matching tags",
+    toolbar: {
+      sort: "Sort",
+      expandAll: "Expand all",
+      collapseAll: "Collapse all",
+      search: "Search tags",
+    },
+    sort: {
+      nameAsc: "Name (A–Z)",
+      nameDesc: "Name (Z–A)",
+      countDesc: "Count (high → low)",
+      countAsc: "Count (low → high)",
+    },
+  },
   wordCount: {
     label: "{{count}} chars",
     toggle: "Word count settings",

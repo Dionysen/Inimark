@@ -88,6 +88,10 @@ import {
   linkIndex,
 } from "./wikilink/index.ts";
 import {
+  buildTagIndexForWorkspace,
+  tagIndex,
+} from "./tags/index.ts";
+import {
   bindWorkspace,
   flushWorkspace,
   unbindWorkspace,
@@ -212,6 +216,7 @@ export function mountApp(host: HTMLElement): AppController {
       wordCount?.scheduleUpdate();
       if (workspace && activeFilePath) {
         linkIndex.addFileLinks(activeFilePath, md);
+        tagIndex.setFileTags(activeFilePath, md);
       }
     },
     onContentReplaced: () => {
@@ -367,6 +372,9 @@ export function mountApp(host: HTMLElement): AppController {
   shell.graph.onOpenFile((path) => {
     void openWorkspaceFile(path);
   });
+  shell.tags.onOpenFile((path) => {
+    void openWorkspaceFile(path);
+  });
 
   let outlineTimer: ReturnType<typeof setTimeout> | null = null;
   function scheduleOutlineSync(md?: string): void {
@@ -485,7 +493,9 @@ export function mountApp(host: HTMLElement): AppController {
     scheduleOutlineSync(text);
     if (workspace && activeFilePath) {
       linkIndex.addFileLinks(activeFilePath, text);
+      tagIndex.setFileTags(activeFilePath, text);
       shell.graph.setActiveFile(activeFilePath);
+      shell.tags.setActiveFile(activeFilePath);
     }
     await fileSync.recordBaseline(text);
     wordCount?.scheduleUpdate();
@@ -584,7 +594,9 @@ export function mountApp(host: HTMLElement): AppController {
         shell.sidebar.setActiveFile(activeFilePath);
         linkIndex.addFileLinks(activeFilePath, markdown);
         linkIndex.persistCache(workspace.rootPath);
+        tagIndex.setFileTags(activeFilePath, markdown);
         shell.graph.setActiveFile(activeFilePath);
+        shell.tags.setActiveFile(activeFilePath);
         await fileSync.recordBaseline(markdown);
         persistLibrarySession();
         return true;
@@ -628,6 +640,7 @@ export function mountApp(host: HTMLElement): AppController {
     shell.setFileName(null);
     shell.sidebar.setActiveFile(null);
     shell.graph.setActiveFile(null);
+    shell.tags.setActiveFile(null);
     shell.setDirty(false);
     persistLibrarySession();
     scheduleOutlineSync("");
@@ -673,6 +686,7 @@ export function mountApp(host: HTMLElement): AppController {
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
+      shell.tags.setActiveFile(path);
       shell.setDirty(false);
       scheduleOutlineSync(result.text);
       recordRecentFile(activeLibraryId, path);
@@ -681,6 +695,7 @@ export function mountApp(host: HTMLElement): AppController {
     } else {
       shell.sidebar.setActiveFile(path);
       shell.graph.setActiveFile(path);
+      shell.tags.setActiveFile(path);
     }
 
     const query = options?.query?.trim();
@@ -756,6 +771,7 @@ export function mountApp(host: HTMLElement): AppController {
     }
     shell.sidebar.setWorkspace(workspace);
     void buildLinkIndexForWorkspace(workspace);
+    void buildTagIndexForWorkspace(workspace);
 
     const session = getLibrarySession(activeLibraryId);
     sessionFileViews = session.fileViews ?? {};
@@ -935,7 +951,9 @@ export function mountApp(host: HTMLElement): AppController {
           // Still remap index paths; content left as-is.
           linkIndex.remapPaths(pairs);
           linkIndex.persistCache(workspace!.rootPath);
+          tagIndex.remapPaths(pairs);
           shell.graph.refresh();
+          shell.tags.refresh();
           return;
         }
         shouldUpdate = result.choice === "update";
@@ -962,6 +980,7 @@ export function mountApp(host: HTMLElement): AppController {
         linkIndex.remapPaths(pairs);
       }
       linkIndex.persistCache(workspace!.rootPath);
+      tagIndex.remapPaths(pairs);
 
       navHistory.remap(pairs);
       sessionFileViews = remapFileViews(sessionFileViews, pairs);
@@ -981,6 +1000,7 @@ export function mountApp(host: HTMLElement): AppController {
         shell.setFileName(activeFilePath.split(/[/\\]/).pop() ?? activeFilePath);
         shell.sidebar.setActiveFile(activeFilePath);
         shell.graph.setActiveFile(activeFilePath);
+        shell.tags.setActiveFile(activeFilePath);
         const opened = await readWorkspaceFile(workspace!, activeFilePath);
         if (opened.status === "opened") {
           editor.setMarkdown(opened.text);
@@ -995,11 +1015,13 @@ export function mountApp(host: HTMLElement): AppController {
         persistLibrarySession();
       } else {
         shell.graph.refresh();
+        shell.tags.refresh();
       }
     })();
   });
   shell.sidebar.onFileDeleted((path) => {
     linkIndex.removeFile(path);
+    tagIndex.removeFile(path);
     sessionFileViews = removeFileView(sessionFileViews, path);
     if (workspace) linkIndex.persistCache(workspace.rootPath);
     if (
@@ -1008,8 +1030,10 @@ export function mountApp(host: HTMLElement): AppController {
     ) {
       resetToUntitled();
       shell.graph.setActiveFile(null);
+      shell.tags.setActiveFile(null);
     } else {
       shell.graph.refresh();
+      shell.tags.refresh();
     }
   });
   shell.sidebar.onCloseLibrary(() => {
@@ -1024,7 +1048,9 @@ export function mountApp(host: HTMLElement): AppController {
     navHistory.clear();
     shell.sidebar.setWorkspace(null);
     linkIndex.clear();
+    tagIndex.clear();
     shell.graph.setActiveFile(null);
+    shell.tags.setActiveFile(null);
     refreshLibraryList();
   });
   cleanups.push(

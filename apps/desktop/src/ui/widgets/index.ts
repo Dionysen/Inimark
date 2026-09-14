@@ -9,6 +9,7 @@ export {
   bookmarksTabIcon,
   outlineTabIcon,
   graphTabIcon,
+  tagsTabIcon,
   graphLocalModeIcon,
   graphVaultModeIcon,
   graphOpenEditorIcon,

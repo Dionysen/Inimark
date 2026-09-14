@@ -120,7 +120,8 @@ Compared with Obsidian:
 
 - [ ] Block refs `[[note#^id]]` as a full system
 - [x] Inline `#tag` parsing + themed chips
-- [ ] Tag pane / search by tag
+- [x] Tags sidebar pane (counts, note children, sort / expand / filter)
+- [ ] Search-by-tag operators and taxonomy views
 
 ### Hover preview
 

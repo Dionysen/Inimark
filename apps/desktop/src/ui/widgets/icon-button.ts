@@ -59,6 +59,11 @@ export function graphTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="18" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="18" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="17" cy="17" r="2.25" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 7.5 16 8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7.5 8.2 9.2 15.8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M16.2 9.1 15.5 14.8"/></svg>`;
 }
 
+/** Tags panel tab — hash chip. */
+export function tagsTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 9h14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 15h14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m9.5 4  -2 16"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m16.5 4  -2 16"/></svg>`;
+}
+
 /** Graph scope: local (ego) neighborhood. */
 export function graphLocalModeIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/><circle cx="5" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9.4 10.2 6.6 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14.6 10.2 17.4 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M10 14.5 8 16.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14 14.5 16 16.7"/></svg>`;

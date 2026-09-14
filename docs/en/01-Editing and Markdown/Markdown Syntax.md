@@ -45,7 +45,7 @@ Shortcuts: `Ctrl/⌘ + 1…6`, paragraph `Ctrl/⌘ + 0` (see [[Find Replace and 
 | `code` | `` `code` `` |
 | H~2~O | `H~2~O` |
 | E=mc^2^ | `E=mc^2^` |
-| #tag | `#tag` / `#parent/child` (themed chips; pane & search → [[Roadmap]]) |
+| #tag | `#tag` / `#parent/child` (themed chips; browse in the Tags sidebar) |
 
 Escape marks with `\`, e.g. `\*\*not bold\*\*`.
 
@@ -149,7 +149,8 @@ More languages and highlighting details → [[Code and Syntax Highlighting]].
 | Editor | ✅ | [[Editing Modes]] |
 | Wikilinks | ✅ | [[Wikilinks and Embeds]] |
 | Graph | ✅ | [[Relationship Graph]] |
-| Tag pane / search by tag | ❌ (inline `#tag` chips work) | [[Roadmap]] |
+| Tag pane | ✅ Tags sidebar: counts, notes, sort / expand / filter | [[Search Bookmarks Outline]] |
+| Search by tag operators | ❌ No `tag:` yet | [[Roadmap]] |
 
 Insert a starter table with `Alt + Ctrl/⌘ + T`. Move rows/columns with `Alt + Ctrl/⌘ + Arrow` (or `Ctrl/⌘ + Ctrl + Arrow` variants depending on platform). For heavily broken tables after a paste, switch to [[Editing Modes#Source mode|source mode]], fix the pipes, then return.
 

@@ -168,6 +168,25 @@ export const zhCN: Dictionary = {
     backlinks: "入链",
     emptyLinks: "暂无",
   },
+  tags: {
+    tab: "标签",
+    searchPlaceholder: "筛选标签…",
+    empty: "暂无标签",
+    emptyHint: "在笔记中写入 #标签 后会出现在这里",
+    emptyFilter: "没有匹配的标签",
+    toolbar: {
+      sort: "排序",
+      expandAll: "全部展开",
+      collapseAll: "全部折叠",
+      search: "搜索标签",
+    },
+    sort: {
+      nameAsc: "名称（A–Z）",
+      nameDesc: "名称（Z–A）",
+      countDesc: "使用频次（高→低）",
+      countAsc: "使用频次（低→高）",
+    },
+  },
   wordCount: {
     label: "{{count}} 字",
     toggle: "字数统计设置",
