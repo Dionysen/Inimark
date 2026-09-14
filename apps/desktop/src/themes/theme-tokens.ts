@@ -263,7 +263,7 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--bg-code": "#1f2129",
   "--bg-code-inline": "#181a21",
   "--bg-input": "#0c0c10",
-  "--text-primary": "#cccccc",
+  "--text-primary": "#c1c3c2",
   "--text-secondary": "#818286",
   "--text-tertiary": "#5c5e63",
   "--text-strong": "#ffffff",
@@ -290,7 +290,9 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
 };
 
-/** Full color maps for each built-in theme (for fork). Keep in sync with themes.css. */
+/** Full color maps for each built-in theme (for fork / theme editor).
+ * Runtime styles live in `styles/themes.css` via `[data-theme="…"]`.
+ * Keep these maps in sync with that CSS — editing only this file will not change the live UI. */
 export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, string>> = {
   light: {
     "--bg-primary": "#ffffff",
@@ -554,7 +556,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--bg-code": "#1f2129",
     "--bg-code-inline": "#181a21",
     "--bg-input": "#0c0c10",
-    "--text-primary": "#cccccc",
+    "--text-primary": "#c1c3c2",
     "--text-secondary": "#818286",
     "--text-tertiary": "#5c5e63",
     "--text-strong": "#ffffff",
@@ -628,7 +630,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--bg-code": "#1e1e1e",
     "--bg-code-inline": "#2a2a2a",
     "--bg-input": "#0f0f0f",
-    "--text-primary": "#e4e4e7",
+    "--text-primary": "#c1c3c2",
     "--text-secondary": "#a1a1aa",
     "--text-tertiary": "#71717a",
     "--text-strong": "#ffffff",

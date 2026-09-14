@@ -624,7 +624,7 @@ export const en: Dictionary = {
         textTertiary: "Tertiary text",
         textTertiaryDesc: "Least-emphasized text such as metadata captions.",
         textStrong: "Strong text",
-        textStrongDesc: "Bold / strong emphasis color in the editor.",
+        textStrongDesc: "Color for headings and bold / strong emphasis in the editor.",
         bgCode: "Code block background",
         bgCodeDesc: "Background behind fenced code blocks.",
         bgCodeInline: "Inline code background",

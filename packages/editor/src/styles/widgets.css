@@ -186,7 +186,10 @@
 .ProseMirror .heading-draft-3,
 .ProseMirror .heading-draft-4,
 .ProseMirror .heading-draft-5,
-.ProseMirror .heading-draft-6 { font-weight: bold; }
+.ProseMirror .heading-draft-6 {
+  font-weight: bold;
+  color: var(--text-strong, inherit);
+}
 
 /* ─── Math preview widgets ───────────────────────────────────────── */
 .ProseMirror math-inline {

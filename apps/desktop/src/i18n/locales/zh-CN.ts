@@ -612,7 +612,7 @@ export const zhCN: Dictionary = {
         textTertiary: "三级文本",
         textTertiaryDesc: "最弱的辅助文字，如元数据标注。",
         textStrong: "强调文本",
-        textStrongDesc: "加粗等强调样式的文字颜色。",
+        textStrongDesc: "编辑器中标题与加粗等强调样式的文字颜色。",
         bgCode: "代码块背景",
         bgCodeDesc: "围栏代码块的背景色。",
         bgCodeInline: "行内代码背景",

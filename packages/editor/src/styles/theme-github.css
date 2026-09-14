@@ -32,6 +32,7 @@
   margin-bottom: 16px;
   font-weight: 600;
   line-height: 1.25;
+  color: var(--text-strong, inherit);
 }
 .ProseMirror > :first-child { margin-top: 0; }
 .ProseMirror h1 {
@@ -47,7 +48,7 @@
 .ProseMirror h3 { font-size: 1.25em; }
 .ProseMirror h4 { font-size: 1em; }
 .ProseMirror h5 { font-size: 0.875em; }
-.ProseMirror h6 { font-size: 0.85em; color: #59636e; }
+.ProseMirror h6 { font-size: 0.85em; }
 
 /* ─── paragraphs / br ─────────────────────────────────────────────── */
 .ProseMirror p { margin: 0 0 16px; }
