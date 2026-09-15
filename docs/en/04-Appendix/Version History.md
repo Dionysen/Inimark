@@ -36,6 +36,7 @@ Prefer **Latest** unless you are debugging an older build.
 ### What's new
 
 - Drop the trailing sentinel paragraph after ordinary text so the live document matches saved markdown; a follow-on paragraph is still added after fences, tables, and other non-paragraph blocks
+- Empty-gutter / side-margin drag-select still maps by pointer coordinates, but scrolls via edge auto-scroll instead of `scrollIntoView`
 
 ---
 

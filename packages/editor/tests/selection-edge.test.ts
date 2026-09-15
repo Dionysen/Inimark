@@ -2,8 +2,10 @@ import { describe, expect, test } from "vitest";
 import { EditorView } from "prosemirror-view";
 
 import {
+  autoScrollSelectionSurface,
   clampSelectionPointer,
   isOutsideSelectionSurface,
+  SELECTION_AUTO_SCROLL_MARGIN,
 } from "../src/selection-edge.ts";
 import { setup } from "./utils.ts";
 
@@ -13,17 +15,17 @@ function stubSurface(view: EditorView, rect: {
   right: number;
   bottom: number;
 }): void {
-  view.dom.getBoundingClientRect = () =>
-    ({
-      ...rect,
-      width: rect.right - rect.left,
-      height: rect.bottom - rect.top,
-      x: rect.left,
-      y: rect.top,
-      toJSON() {
-        return this;
-      },
-    }) as DOMRect;
+  const box = {
+    ...rect,
+    width: rect.right - rect.left,
+    height: rect.bottom - rect.top,
+    x: rect.left,
+    y: rect.top,
+    toJSON() {
+      return this;
+    },
+  } as DOMRect;
+  view.dom.getBoundingClientRect = () => box;
 }
 
 describe("selection edge clamp", () => {
@@ -67,6 +69,72 @@ describe("selection edge clamp", () => {
     } finally {
       view.destroy();
       mount.remove();
+    }
+  });
+
+  test("auto-scrolls toward document end when the pointer sits on the bottom edge", () => {
+    const state = setup("hello");
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    Object.defineProperty(host, "clientHeight", { configurable: true, value: 120 });
+    Object.defineProperty(host, "scrollHeight", { configurable: true, value: 800 });
+    let scrollTop = 40;
+    Object.defineProperty(host, "scrollTop", {
+      configurable: true,
+      get: () => scrollTop,
+      set: (v: number) => {
+        scrollTop = v;
+      },
+    });
+    document.body.appendChild(host);
+    const view = new EditorView(host, { state });
+
+    try {
+      host.getBoundingClientRect = () =>
+        ({
+          left: 0,
+          top: 0,
+          right: 400,
+          bottom: 120,
+          width: 400,
+          height: 120,
+          x: 0,
+          y: 0,
+          toJSON() {
+            return this;
+          },
+        }) as DOMRect;
+
+      // Force the host itself to be the scroll container.
+      const style = { overflowY: "auto" } as CSSStyleDeclaration;
+      const originalGet = window.getComputedStyle;
+      window.getComputedStyle = ((el: Element) =>
+        el === host ? style : originalGet(el)) as typeof getComputedStyle;
+
+      try {
+        const before = host.scrollTop;
+        const scrolled = autoScrollSelectionSurface(
+          view,
+          200,
+          120 - SELECTION_AUTO_SCROLL_MARGIN / 2,
+        );
+        expect(scrolled).toBe(true);
+        expect(host.scrollTop).toBeGreaterThan(before);
+
+        const topBefore = host.scrollTop;
+        const scrolledUp = autoScrollSelectionSurface(
+          view,
+          200,
+          SELECTION_AUTO_SCROLL_MARGIN / 2,
+        );
+        expect(scrolledUp).toBe(true);
+        expect(host.scrollTop).toBeLessThan(topBefore);
+      } finally {
+        window.getComputedStyle = originalGet;
+      }
+    } finally {
+      view.destroy();
+      host.remove();
     }
   });
 });

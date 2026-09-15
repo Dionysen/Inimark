@@ -4,6 +4,7 @@ import type { EditorView } from "prosemirror-view";
 
 import { isModifiedClick, isRenderedNavigablePointer } from "./link-navigation.ts";
 import {
+  autoScrollSelectionSurface,
   clampSelectionPointer,
   isOutsideSelectionSurface,
 } from "./selection-edge.ts";
@@ -280,6 +281,9 @@ type SelectionDrag = {
   /** When true, only update selection once the pointer leaves the editor/window edge. */
   edgeOnly: boolean;
   moved: boolean;
+  lastX: number;
+  lastY: number;
+  raf: number | null;
   pointerId: number | null;
   captureEl: Element | null;
   onMove: (event: MouseEvent) => void;
@@ -294,6 +298,7 @@ function clearSelectionDrag(): void {
   if (!activeDrag) return;
   const drag = activeDrag;
   activeDrag = null;
+  if (drag.raf != null) cancelAnimationFrame(drag.raf);
   window.removeEventListener("mousemove", drag.onMove, true);
   window.removeEventListener("pointermove", drag.onMove, true);
   window.removeEventListener("mouseup", drag.onUp, true);
@@ -344,22 +349,41 @@ function pointerIsOutside(view: EditorView, clientX: number, clientY: number): b
   );
 }
 
+/**
+ * Map the pointer to a selection head by screen coordinates.
+ * Does not call scrollIntoView — scrolling is driven by edge auto-scroll so
+ * empty gutters / bottom pad behave like native drag-select.
+ */
 function applyNearestSelection(view: EditorView, anchor: number, clientX: number, clientY: number): void {
   if (!view.editable || view.isDestroyed) return;
+  autoScrollSelectionSurface(view, clientX, clientY);
   const { x, y } = clampSelectionPointer(view, clientX, clientY);
   const el = document.elementFromPoint(x, y);
   // Only pass in-editor targets so host/chrome hits use Y-based nearest mapping.
   const target = el && view.dom.contains(el) ? el : null;
   const doc = view.state.doc;
   const head = focusPosFromClick(view, x, y, target) ?? anchor;
-  if (head === anchor) {
-    view.dispatch(
-      view.state.tr.setSelection(TextSelection.create(doc, anchor)).scrollIntoView(),
-    );
-    return;
-  }
-  const sel = TextSelection.create(doc, anchor, head);
-  view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+  const next =
+    head === anchor
+      ? TextSelection.create(doc, anchor)
+      : TextSelection.create(doc, anchor, head);
+  if (next.eq(view.state.selection)) return;
+  view.dispatch(view.state.tr.setSelection(next));
+}
+
+function scheduleEdgeAutoScroll(drag: SelectionDrag): void {
+  if (drag.raf != null) return;
+  const tick = () => {
+    drag.raf = null;
+    if (activeDrag !== drag || drag.view.isDestroyed) return;
+    const scrolled = autoScrollSelectionSurface(drag.view, drag.lastX, drag.lastY);
+    if (!scrolled) return;
+    const anchor = drag.anchor ?? drag.view.state.selection.anchor;
+    if (drag.anchor == null) drag.anchor = anchor;
+    applyNearestSelection(drag.view, anchor, drag.lastX, drag.lastY);
+    drag.raf = requestAnimationFrame(tick);
+  };
+  drag.raf = requestAnimationFrame(tick);
 }
 
 /**
@@ -372,17 +396,23 @@ function startSelectionDrag(
     anchor: number | null;
     edgeOnly: boolean;
     event?: Event;
+    clientX?: number;
+    clientY?: number;
   },
 ): void {
   clearSelectionDrag();
   const captureEl = view.dom;
   const pointerId = tryCapturePointer(options.event, captureEl);
+  const mouse = options.event as MouseEvent | undefined;
 
   const drag: SelectionDrag = {
     view,
     anchor: options.anchor,
     edgeOnly: options.edgeOnly,
     moved: false,
+    lastX: options.clientX ?? mouse?.clientX ?? 0,
+    lastY: options.clientY ?? mouse?.clientY ?? 0,
+    raf: null,
     pointerId,
     captureEl,
     onMove: (moveEvent: MouseEvent) => {
@@ -400,9 +430,12 @@ function startSelectionDrag(
       }
 
       drag.moved = true;
+      drag.lastX = moveEvent.clientX;
+      drag.lastY = moveEvent.clientY;
       const anchor = drag.anchor ?? view.state.selection.anchor;
       if (drag.anchor == null) drag.anchor = anchor;
       applyNearestSelection(view, anchor, moveEvent.clientX, moveEvent.clientY);
+      scheduleEdgeAutoScroll(drag);
     },
     onUp: (upEvent: MouseEvent) => {
       if (!drag.moved) {
@@ -447,10 +480,9 @@ export function focusEditorAtPoint(
   const mouse = event as MouseEvent | undefined;
   const isDragStart = !!(mouse && mouse.type === "mousedown" && mouse.button === 0);
 
-  const tr = view.state.tr
-    .setSelection(TextSelection.create(view.state.doc, pos))
-    .scrollIntoView();
-  view.dispatch(tr);
+  // Place the caret by coordinate mapping only — do not scrollIntoView here.
+  // Owned drags scroll via edge auto-scroll so empty gutters/pad can roll back.
+  view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, pos)));
   view.focus();
 
   if (isDragStart) {
@@ -458,6 +490,8 @@ export function focusEditorAtPoint(
       anchor: pos,
       edgeOnly: false,
       event,
+      clientX,
+      clientY,
     });
   }
 
@@ -506,12 +540,15 @@ function applyPreciseSelection(
         ? el
         : null;
   const doc = view.state.doc;
+  autoScrollSelectionSurface(view, clientX, clientY);
   const head = posAtPoint(view, x, y, resolvedTarget, true) ?? anchor;
   const sel =
     head === anchor
       ? TextSelection.create(doc, anchor)
       : TextSelection.create(doc, anchor, head);
-  view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+  if (!sel.eq(view.state.selection)) {
+    view.dispatch(view.state.tr.setSelection(sel));
+  }
 }
 
 /** Block PM's Ctrl/Cmd+click paragraph select; keep normal click + drag behavior. */
