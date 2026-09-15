@@ -101,6 +101,17 @@ export function moveWorkspaceTreeNodeInMemory(
   return insertWorkspaceTreeNode(nodes, parentDirOf(toPath), remapped);
 }
 
+/** File paths in a node (the node itself if a file, else all descendants). */
+export function collectWorkspaceFilePaths(node: WorkspaceTreeNode): string[] {
+  const out: string[] = [];
+  const walk = (n: WorkspaceTreeNode) => {
+    if (n.kind === "file") out.push(n.path);
+    else for (const child of n.children ?? []) walk(child);
+  };
+  walk(node);
+  return out;
+}
+
 export function createFileTreeNode(path: string): WorkspaceTreeNode {
   const now = Date.now();
   return {

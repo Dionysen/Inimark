@@ -1,5 +1,6 @@
 import {
   cloneWorkspaceTreeNode,
+  collectWorkspaceFilePaths,
   createDirectoryTreeNode,
   createFileTreeNode,
   insertWorkspaceTreeNode,
@@ -168,6 +169,8 @@ export interface SidebarController {
   onExpandedDirsChange(handler: (dirs: string[]) => void): void;
   /** Fired after files/folders are renamed or moved (all descendant note pairs). */
   onEntriesMoved(handler: (pairs: PathRenamePair[]) => void | Promise<void>): void;
+  /** Fired after files are created or copied (vault-relative paths). */
+  onFilesAdded(handler: (paths: string[]) => void): void;
   onFileDeleted(handler: (path: string) => void): void;
   destroy(): void;
 }
@@ -623,6 +626,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     expandedDirsChange: (_dirs: string[]): void => {},
     toggleSidebar: (): void => {},
     entriesMoved: (_pairs: PathRenamePair[]): void | Promise<void> => {},
+    filesAdded: (_paths: string[]): void => {},
     fileDeleted: (_path: string): void => {},
   };
 
@@ -1541,6 +1545,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     notifyExpandedChange();
     if (copiedPaths.length > 0) setSelection(copiedPaths, copiedPaths[0] ?? null);
     commitLocalTreeChange();
+    const added: string[] = [];
+    for (const path of copiedPaths) {
+      const copied = findTreeNode(currentTree, path);
+      if (copied) added.push(...collectWorkspaceFilePaths(copied));
+    }
+    notifyFilesAdded(added);
   }
 
   async function pasteClipboard(): Promise<void> {
@@ -1665,6 +1675,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       createFileTreeNode(relativePath),
     );
     commitLocalTreeChange();
+    notifyFilesAdded([relativePath]);
     const node = findTreeNode(currentTree, relativePath);
     if (!node) {
       void handlers.fileSelect(relativePath);
@@ -2264,6 +2275,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     if (sourceNode) {
       const cloned = cloneWorkspaceTreeNode(sourceNode, node.path, result.path);
       insertWorkspaceTreeNode(currentWorkspace.tree, parent, cloned);
+      notifyFilesAdded(collectWorkspaceFilePaths(cloned));
     }
     commitLocalTreeChange();
   }
@@ -2302,6 +2314,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   function notifyEntriesMoved(pairs: PathRenamePair[]): void {
     if (pairs.length === 0) return;
     void handlers.entriesMoved(pairs);
+  }
+
+  function notifyFilesAdded(paths: string[]): void {
+    if (paths.length === 0) return;
+    handlers.filesAdded(paths);
   }
 
   async function moveNodesToDirectory(
@@ -2926,6 +2943,9 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     onEntriesMoved(handler) {
       handlers.entriesMoved = handler;
+    },
+    onFilesAdded(handler) {
+      handlers.filesAdded = handler;
     },
     onFileDeleted(handler) {
       handlers.fileDeleted = handler;

@@ -77,6 +77,19 @@ describe("linkIndex", () => {
     expect(hits.map((h) => h.name)).toEqual(["A", "B"]);
   });
 
+  test("addFiles indexes created notes for search immediately", () => {
+    linkIndex.clear();
+    linkIndex.registerFile("A.md");
+    expect(linkIndex.searchNotes("untitled")).toEqual([]);
+
+    linkIndex.addFiles(["Untitled.md", "folder/New Note.md"]);
+    expect(linkIndex.findFileByNoteName("Untitled")).toBe("Untitled.md");
+    expect(linkIndex.searchNotes("untitled").map((h) => h.name)).toEqual(["Untitled"]);
+    expect(linkIndex.searchNotes("new").some((h) => h.name === "folder/New Note")).toBe(
+      true,
+    );
+  });
+
   test("searchNotes without limit returns every match", () => {
     linkIndex.clear();
     for (let i = 0; i < 12; i++) {

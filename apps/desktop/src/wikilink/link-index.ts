@@ -112,6 +112,13 @@ class LinkIndexServiceImpl {
     }
   }
 
+  /** Index files created or copied in the vault (search / resolve / graph). */
+  addFiles(relativePaths: string[]): void {
+    if (relativePaths.length === 0) return;
+    for (const path of relativePaths) this.registerFile(path);
+    this.notify();
+  }
+
   addFileLinks(filePath: string, content: string): void {
     const normalized = filePath.replace(/\\/g, "/");
     const noteName = pathToNoteName(normalized);

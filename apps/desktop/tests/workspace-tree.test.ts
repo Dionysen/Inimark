@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { WorkspaceTreeNode } from "../src/platform/types.ts";
 import {
   cloneWorkspaceTreeNode,
+  collectWorkspaceFilePaths,
   createDirectoryTreeNode,
   createFileTreeNode,
   findWorkspaceTreeNode,
@@ -57,6 +58,17 @@ describe("workspace-tree", () => {
     expect(findWorkspaceTreeNode(tree, "archive/renamed.md")?.path).toBe(
       "archive/renamed.md",
     );
+  });
+
+  test("collects file paths from a copied subtree", () => {
+    const tree = sampleTree();
+    const source = findWorkspaceTreeNode(tree, "notes");
+    const cloned = cloneWorkspaceTreeNode(source!, "notes", "notes-copy");
+    expect(collectWorkspaceFilePaths(cloned).sort()).toEqual([
+      "notes-copy/a.md",
+      "notes-copy/b.md",
+    ]);
+    expect(collectWorkspaceFilePaths(createFileTreeNode("solo.md"))).toEqual(["solo.md"]);
   });
 
   test("clones subtree for copy operations", () => {

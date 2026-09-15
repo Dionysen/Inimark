@@ -1045,6 +1045,11 @@ export function mountApp(host: HTMLElement): AppController {
       }
     })();
   });
+  shell.sidebar.onFilesAdded((paths) => {
+    if (paths.length === 0) return;
+    linkIndex.addFiles(paths);
+    if (workspace) linkIndex.persistCache(workspace.rootPath);
+  });
   shell.sidebar.onFileDeleted((path) => {
     linkIndex.removeFile(path);
     tagIndex.removeFile(path);

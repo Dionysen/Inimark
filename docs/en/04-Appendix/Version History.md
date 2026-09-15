@@ -39,6 +39,7 @@ Prefer **Latest** unless you are debugging an older build.
 - Empty-gutter / side-margin drag-select still maps by pointer coordinates, but scrolls via edge auto-scroll instead of `scrollIntoView`
 - Code-block / table toolbars stay hidden while drag-select sweeps across them; they appear only when the caret is idle inside the block
 - Fix caret jumping into a wikilink when typing CJK punctuation (e.g. `。`) right after it — syntax chrome no longer collapses mid-IME composition
+- Index newly created or copied notes immediately so wikilink autocomplete can find them
 
 ---
 
