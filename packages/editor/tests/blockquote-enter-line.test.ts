@@ -5,7 +5,6 @@ import { createEditor } from "../src/lib.ts";
 import { feedEvent } from "../specs/events.ts";
 import { fakeView } from "../specs/sim.ts";
 import { pretty } from "../specs/pretty.ts";
-import { selectionAtSentinelStart } from "../src/trailing-sentinel.ts";
 import { setup } from "./utils.ts";
 
 function docSummary(editor: ReturnType<typeof createEditor>) {
@@ -25,7 +24,7 @@ describe("blockquote after Enter on new line", () => {
 
     try {
       const doc = editor.view.state.doc;
-      const lastContentPos = doc.content.size - doc.lastChild!.nodeSize - 1;
+      const lastContentPos = TextSelection.atEnd(doc).from;
       editor.view.dispatch(
         editor.view.state.tr.setSelection(TextSelection.create(doc, lastContentPos)),
       );
@@ -33,9 +32,7 @@ describe("blockquote after Enter on new line", () => {
       expect(editor.view.state.selection.$from.parentOffset).toBe(0);
       feedEvent(editor.view, ">");
       feedEvent(editor.view, " ");
-      const blockquote = editor.view.state.doc.child(
-        editor.view.state.doc.childCount - 2,
-      );
+      const blockquote = editor.view.state.doc.lastChild;
       expect(blockquote.type.name, docSummary(editor)).toBe("blockquote");
     } finally {
       editor.destroy();
@@ -43,15 +40,16 @@ describe("blockquote after Enter on new line", () => {
     }
   });
 
-  test("Enter in trailing sentinel then > space", () => {
+  test("Enter at document end then > space", () => {
     const host = document.createElement("div");
     host.className = "inimark-editor-host";
     document.body.appendChild(host);
     const editor = createEditor(host, { initialContent: "hello" });
 
     try {
-      const sel = selectionAtSentinelStart(editor.view.state.doc)!;
-      editor.view.dispatch(editor.view.state.tr.setSelection(sel));
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(TextSelection.atEnd(editor.view.state.doc)),
+      );
       feedEvent(editor.view, "<Enter>");
       feedEvent(editor.view, ">");
       feedEvent(editor.view, " ");

@@ -127,7 +127,7 @@
   cursor: text;
 }
 .ProseMirror > p:last-child {
-  /* Keep the trailing sentinel (and empty docs) clickable. */
+  /* Empty last paragraphs (and empty docs) still need a clickable line box. */
   min-height: 1.5em;
 }
 .ProseMirror[contenteditable="true"]:focus { outline: none; }

@@ -29,6 +29,16 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.7 — 2026-09-15
+
+**Release page:** [v1.0.7](https://github.com/Dionysen/Inimark/releases/tag/v1.0.7)
+
+### What's new
+
+- Drop the trailing sentinel paragraph after ordinary text so the live document matches saved markdown; a follow-on paragraph is still added after fences, tables, and other non-paragraph blocks
+
+---
+
 ## 1.0.6 — 2026-09-14
 
 **Release page:** [v1.0.6](https://github.com/Dionysen/Inimark/releases/tag/v1.0.6)

@@ -12,7 +12,6 @@ import {
 } from "../src/link-navigation.ts";
 import { parse } from "../src/parser.ts";
 import { schema } from "../src/schema.ts";
-import { ensureTrailingSentinel } from "../src/trailing-sentinel.ts";
 import { setWikiLinkBridge } from "../src/wiki-link-bridge.ts";
 
 function mountView(markdown: string): {
@@ -25,7 +24,7 @@ function mountView(markdown: string): {
   const view = new EditorView(host, {
     state: EditorState.create({
       schema,
-      doc: ensureTrailingSentinel(parse(markdown)),
+      doc: parse(markdown),
       plugins: defaultPlugins({ cursorWidget: false }),
     }),
   });
@@ -240,14 +239,14 @@ describe("link navigation", () => {
       return null;
     }) as typeof window.open;
 
-    const { host, view, cleanup } = mountView("[bing](http://www.bing.com)");
+    const { host, view, cleanup } = mountView("see [bing](http://www.bing.com)");
     try {
       const link = host.querySelector<HTMLAnchorElement>("a");
       expect(link).not.toBeNull();
       expect(link!.textContent).toBe("bing");
 
       view.dispatch(
-        view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)),
+        view.state.tr.setSelection(TextSelection.atStart(view.state.doc)),
       );
 
       const outsidePos = view.state.selection.from;

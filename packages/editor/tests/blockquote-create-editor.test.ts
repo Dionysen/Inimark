@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 
+import { handleEditorSurfaceMouseDown } from "../src/click-focus.ts";
 import { createEditor } from "../src/lib.ts";
 import { feedEvent } from "../specs/events.ts";
 import { pretty } from "../specs/pretty.ts";
@@ -20,16 +21,14 @@ describe("blockquote in live editor", () => {
 
     try {
       for (const e of [">", " "]) feedEvent(editor.view, e);
-      expect(editor.view.state.doc.child(editor.view.state.doc.childCount - 2)?.type.name).toBe(
-        "blockquote",
-      );
+      expect(editor.view.state.doc.lastChild?.type.name).toBe("blockquote");
     } finally {
       editor.destroy();
       host.remove();
     }
   });
 
-  test("welcome doc: click sentinel paragraph then > space wraps", () => {
+  test("welcome doc: click last paragraph focuses that paragraph", () => {
     const host = document.createElement("div");
     host.className = "inimark-editor-host";
     host.style.height = "480px";
@@ -38,55 +37,18 @@ describe("blockquote in live editor", () => {
 
     try {
       const pm = host.querySelector(".ProseMirror")!;
-      const sentinel = pm.lastElementChild as HTMLElement;
-      const rect = sentinel.getBoundingClientRect();
-      pm.dispatchEvent(
-        new MouseEvent("mousedown", {
-          bubbles: true,
-          cancelable: true,
-          clientX: rect.left + 20,
-          clientY: rect.top + rect.height / 2,
-          button: 0,
-        }),
-      );
-      for (const e of [">", " "]) feedEvent(editor.view, e);
-      const blockquote = editor.view.state.doc.child(
-        editor.view.state.doc.childCount - 2,
-      );
-      expect(blockquote.type.name).toBe("blockquote");
-    } finally {
-      editor.destroy();
-      host.remove();
-    }
-  });
-
-  test("welcome doc: click below content then > space wraps", () => {
-    const host = document.createElement("div");
-    host.className = "inimark-editor-host";
-    host.style.height = "480px";
-    host.style.padding = "24px";
-    document.body.appendChild(host);
-    const editor = createEditor(host, { initialContent: "# Welcome\n\nStart writing…" });
-
-    try {
-      const rect = host.getBoundingClientRect();
-      host.dispatchEvent(
-        new MouseEvent("mousedown", {
-          bubbles: true,
-          cancelable: true,
-          clientX: rect.left + 40,
-          clientY: rect.bottom - 16,
-          button: 0,
-        }),
-      );
-      for (const e of [">", " "]) feedEvent(editor.view, e);
-      const last = editor.view.state.doc.lastChild;
-      expect(last?.type.name).toBe("paragraph");
-      expect(editor.view.state.doc.childCount).toBeGreaterThanOrEqual(3);
-      const blockquote = editor.view.state.doc.child(
-        editor.view.state.doc.childCount - 2,
-      );
-      expect(blockquote.type.name).toBe("blockquote");
+      const last = pm.lastElementChild as HTMLElement;
+      const rect = last.getBoundingClientRect();
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: rect.left + 20,
+        clientY: rect.top + Math.max(rect.height / 2, 2),
+        button: 0,
+      });
+      Object.defineProperty(down, "target", { value: last });
+      handleEditorSurfaceMouseDown(editor.view, down, host);
+      expect(editor.view.state.selection.$from.parent.textContent).toContain("Start writing");
     } finally {
       editor.destroy();
       host.remove();

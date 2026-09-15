@@ -7,7 +7,6 @@ import { defaultPlugins } from "../src/editor.ts";
 import { createEditor } from "../src/lib.ts";
 import { parse } from "../src/parser.ts";
 import { schema } from "../src/schema.ts";
-import { ensureTrailingSentinel } from "../src/trailing-sentinel.ts";
 import { mdConfig, serializeWith } from "../src/serializer.ts";
 import { feedEvent } from "../specs/events.ts";
 import { fakeView } from "../specs/sim.ts";
@@ -22,7 +21,7 @@ function mountView(markdown: string): {
   const view = new EditorView(host, {
     state: EditorState.create({
       schema,
-      doc: ensureTrailingSentinel(parse(markdown)),
+      doc: parse(markdown),
       plugins: defaultPlugins({ cursorWidget: false }),
     }),
   });
@@ -75,13 +74,13 @@ describe("core editor behavior", () => {
     }) as typeof window.open;
 
     try {
-      const { host, view, cleanup } = mountView("[site](https://example.com)");
+      const { host, view, cleanup } = mountView("see [site](https://example.com)");
       try {
         const link = host.querySelector<HTMLAnchorElement>("a");
         expect(link).not.toBeNull();
 
         view.dispatch(
-          view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)),
+          view.state.tr.setSelection(TextSelection.atStart(view.state.doc)),
         );
 
         fireLinkPointer(view, clickEvent(link!, false));
@@ -90,14 +89,14 @@ describe("core editor behavior", () => {
         cleanup();
       }
 
-      const { host: host2, view: view2, cleanup: cleanup2 } = mountView("[note](note.md)");
+      const { host: host2, view: view2, cleanup: cleanup2 } = mountView("see [note](note.md)");
       try {
         const internal = host2.querySelector<HTMLAnchorElement>("a");
         expect(internal).not.toBeNull();
         calls.length = 0;
 
         view2.dispatch(
-          view2.state.tr.setSelection(TextSelection.atEnd(view2.state.doc)),
+          view2.state.tr.setSelection(TextSelection.atStart(view2.state.doc)),
         );
 
         fireLinkPointer(view2, clickEvent(internal!, false));

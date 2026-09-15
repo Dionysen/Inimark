@@ -7,13 +7,6 @@ import {
   clampSelectionPointer,
   isOutsideSelectionSurface,
 } from "./selection-edge.ts";
-import {
-  clampPosAwayFromSentinel,
-  editableEndPos,
-  isEmptyParagraph,
-  posInTrailingSentinel,
-  trailingSentinelStart,
-} from "./trailing-sentinel.ts";
 
 type BlockRect = {
   nodePos: number;
@@ -32,6 +25,10 @@ const OPAQUE_BLOCKS = new Set([
   "more_break",
   "html_block",
 ]);
+
+function isEmptyParagraph(node: PMNode): boolean {
+  return node.type.name === "paragraph" && node.content.size === 0;
+}
 
 function isInteractiveEditorTarget(target: Element): boolean {
   if (target.closest(".typora-web-code-editor .cm-editor")) return true;
@@ -126,63 +123,6 @@ function collectBlockRects(view: EditorView): BlockRect[] {
   return blocks;
 }
 
-function contentBottomBeforeSentinel(view: EditorView): number | null {
-  const doc = view.state.doc;
-  if (doc.childCount < 2 || !isEmptyParagraph(doc.lastChild!)) return null;
-  let pos = 0;
-  for (let i = 0; i < doc.childCount - 1; i++) pos += doc.child(i).nodeSize;
-  const lastContent = doc.child(doc.childCount - 2)!;
-  try {
-    return view.coordsAtPos(pos + lastContent.nodeSize - 1).bottom;
-  } catch {
-    return null;
-  }
-}
-
-function clickTargetIsSentinelParagraph(view: EditorView, target: Element | null): boolean {
-  if (!target) return false;
-  const sentinelEl = view.dom.lastElementChild;
-  if (!sentinelEl || sentinelEl.tagName !== "P") return false;
-  return target === sentinelEl || sentinelEl.contains(target);
-}
-
-/** Clicks that should land at the start of the trailing sentinel, not end-of-prev-line. */
-function shouldFocusTrailingSentinel(
-  view: EditorView,
-  clientY: number,
-  blocks: BlockRect[],
-  target: Element | null = null,
-  forSelection = false,
-): boolean {
-  const sentinelStart = trailingSentinelStart(view.state.doc);
-  if (sentinelStart == null || blocks.length === 0) return false;
-
-  const last = blocks[blocks.length - 1]!;
-  if (!isEmptyParagraph(last.node)) return false;
-
-  // Target-based hit is for caret placement only. During drag-select the pointer
-  // Y is authoritative — elementFromPoint can still report the sentinel <p>.
-  if (!forSelection && clickTargetIsSentinelParagraph(view, target)) return true;
-
-  const contentBottom = contentBottomBeforeSentinel(view);
-  if (contentBottom != null && clientY > contentBottom + 2) return true;
-
-  if (clientY >= last.top - 2 && clientY <= last.bottom + 2) {
-    if (blocks.length < 2) return true;
-    const prev = blocks[blocks.length - 2]!;
-    if (clientY > prev.bottom - 2) return true;
-  }
-
-  return false;
-}
-
-/** Sentinel-zone target: caret → sentinel start; drag-select → editable end. */
-function posForTrailingSentinelZone(doc: PMNode, forSelection: boolean): number {
-  const sentinelStart = trailingSentinelStart(doc);
-  if (sentinelStart == null) return editableEndPos(doc);
-  return forSelection ? editableEndPos(doc) : sentinelStart;
-}
-
 function prosePosForBlock(block: BlockRect, preferStart: boolean): number {
   if (isEmptyParagraph(block.node) || preferStart) return block.from;
   return block.to;
@@ -217,33 +157,11 @@ function hitIsInsideOpaqueBlock(view: EditorView, pos: number): boolean {
   return false;
 }
 
-function posFromCoordsHit(
-  view: EditorView,
-  clientX: number,
-  clientY: number,
-  blocks: BlockRect[],
-  target: Element | null,
-  forSelection: boolean,
-): number | null {
+function posFromCoordsHit(view: EditorView, clientX: number, clientY: number): number | null {
   const hit = view.posAtCoords({ left: clientX, top: clientY });
   if (!hit || hitIsInsideOpaqueBlock(view, hit.pos)) return null;
-  if (shouldFocusTrailingSentinel(view, clientY, blocks, target, forSelection)) {
-    // Native coords often resolve to the previous line; force the sentinel zone.
-    if (!posInTrailingSentinel(view.state.doc, hit.pos)) return null;
-    if (forSelection) return editableEndPos(view.state.doc);
-  } else if (forSelection && posInTrailingSentinel(view.state.doc, hit.pos)) {
-    return editableEndPos(view.state.doc);
-  }
   return hit.pos;
 }
-
-export type FocusPosOptions = {
-  /**
-   * When true, map the trailing-sentinel zone to the end of editable content
-   * so drag-select never anchors inside the empty sentinel paragraph.
-   */
-  forSelection?: boolean;
-};
 
 /** Map a screen click to the nearest prose caret / selection position. */
 export function focusPosFromClick(
@@ -251,70 +169,47 @@ export function focusPosFromClick(
   clientX: number,
   clientY: number,
   target: Element | null = null,
-  options: FocusPosOptions = {},
 ): number | null {
-  const forSelection = options.forSelection === true;
-  // Host / wrap margin clicks are outside `view.dom`. Do not force the trailing
-  // sentinel — map by Y (and clamp X into the content column) like Typora.
+  // Host / wrap margin clicks are outside `view.dom`. Map by Y (and clamp X
+  // into the content column) like Typora.
   const inEditorTarget =
     target && view.dom.contains(target) ? target : null;
 
   const blocks = collectBlockRects(view);
   if (blocks.length === 0) return 1;
 
-  const doc = view.state.doc;
-  const sentinelStart = trailingSentinelStart(doc);
-  if (
-    sentinelStart != null &&
-    shouldFocusTrailingSentinel(view, clientY, blocks, inEditorTarget, forSelection)
-  ) {
-    return posForTrailingSentinelZone(doc, forSelection);
+  const last = blocks[blocks.length - 1]!;
+  if (clientY > last.bottom) {
+    return nearestEditablePos(blocks, blocks.length - 1, 1, true) ?? last.to;
+  }
+  if (clientY < blocks[0]!.top) {
+    return nearestEditablePos(blocks, 0, -1) ?? blocks[0]!.from;
   }
 
+  const doc = view.state.doc;
   const opaqueChrome = inEditorTarget ? isOpaqueChromeClick(inEditorTarget) : false;
 
   if (!opaqueChrome) {
-    const hit = posFromCoordsHit(view, clientX, clientY, blocks, inEditorTarget, forSelection);
-    if (hit != null) return forSelection ? clampPosAwayFromSentinel(doc, hit) : hit;
+    const hit = posFromCoordsHit(view, clientX, clientY);
+    if (hit != null) return hit;
   }
 
   for (const dy of [0, -8, 8, -16, 16, -32, 32]) {
-    const probe = posFromCoordsHit(
-      view,
-      clientX,
-      clientY + dy,
-      blocks,
-      inEditorTarget,
-      forSelection,
-    );
-    if (probe != null) return forSelection ? clampPosAwayFromSentinel(doc, probe) : probe;
+    const probe = posFromCoordsHit(view, clientX, clientY + dy);
+    if (probe != null) return probe;
   }
 
   const editorRect = view.dom.getBoundingClientRect();
   const x = Math.max(editorRect.left + 4, Math.min(clientX, editorRect.right - 4));
 
   for (const dy of [0, -8, 8, -16, 16]) {
-    const probe = posFromCoordsHit(view, x, clientY + dy, blocks, inEditorTarget, forSelection);
-    if (probe != null) return forSelection ? clampPosAwayFromSentinel(doc, probe) : probe;
-  }
-
-  if (clientY < blocks[0]!.top) {
-    return nearestEditablePos(blocks, 0, -1) ?? blocks[0]!.from;
-  }
-
-  const last = blocks[blocks.length - 1]!;
-  if (clientY > last.bottom) {
-    if (sentinelStart != null) return posForTrailingSentinelZone(doc, forSelection);
-    return nearestEditablePos(blocks, blocks.length - 1, 1, true) ?? last.to;
+    const probe = posFromCoordsHit(view, x, clientY + dy);
+    if (probe != null) return probe;
   }
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i]!;
     if (clientY >= block.top && clientY <= block.bottom) {
-      // The last empty paragraph is the sentinel — never use it as a selection head.
-      if (forSelection && i === blocks.length - 1 && isEmptyParagraph(block.node) && sentinelStart != null) {
-        return editableEndPos(doc);
-      }
       if (block.opaque) {
         const mid = (block.top + block.bottom) / 2;
         if (clientY >= mid) {
@@ -329,8 +224,7 @@ export function focusPosFromClick(
           TextSelection.atEnd(doc).from
         );
       }
-      const pos = posInBlock(block, clientY);
-      return forSelection ? clampPosAwayFromSentinel(doc, pos) : pos;
+      return posInBlock(block, clientY);
     }
   }
 
@@ -340,14 +234,6 @@ export function focusPosFromClick(
     if (clientY > cur.bottom && clientY < next.top) {
       const gapMid = (cur.bottom + next.top) / 2;
       if (clientY >= gapMid) {
-        if (
-          forSelection &&
-          i + 1 === blocks.length - 1 &&
-          isEmptyParagraph(next.node) &&
-          sentinelStart != null
-        ) {
-          return editableEndPos(doc);
-        }
         return nearestEditablePos(blocks, i, 1, true) ?? next.from;
       }
       return nearestEditablePos(blocks, i + 1, -1) ?? cur.to;
@@ -358,16 +244,12 @@ export function focusPosFromClick(
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i]!;
     if (block.opaque) continue;
-    if (forSelection && i === blocks.length - 1 && isEmptyParagraph(block.node) && sentinelStart != null) {
-      continue;
-    }
     const mid = (block.top + block.bottom) / 2;
     const dist = Math.abs(clientY - mid);
     const pos = posInBlock(block, clientY);
     if (!best || dist < best.dist) best = { dist, pos };
   }
-  const fallback = best?.pos ?? TextSelection.atEnd(doc).from;
-  return forSelection ? clampPosAwayFromSentinel(doc, fallback) : fallback;
+  return best?.pos ?? TextSelection.atEnd(doc).from;
 }
 
 /** True when PM's default click handling would miss or misplace the caret. */
@@ -386,10 +268,6 @@ export function needsClickRedirect(
   const last = blocks[blocks.length - 1]!;
   const hit = view.posAtCoords({ left: clientX, top: clientY });
 
-  // Sentinel zone: always own caret + drag. Native selection from an empty
-  // sentinel paragraph gets stuck when dragging upward into content.
-  if (shouldFocusTrailingSentinel(view, clientY, blocks, target)) return true;
-
   if (clientY < first.top - 2 || clientY > last.bottom + 2) return true;
   if (hit && hitIsInsideOpaqueBlock(view, hit.pos)) return true;
   return hit == null;
@@ -402,8 +280,6 @@ type SelectionDrag = {
   /** When true, only update selection once the pointer leaves the editor/window edge. */
   edgeOnly: boolean;
   moved: boolean;
-  /** Caret to restore on click-without-drag (e.g. sentinel) when mousedown used a selection anchor. */
-  clickPos: number | null;
   pointerId: number | null;
   captureEl: Element | null;
   onMove: (event: MouseEvent) => void;
@@ -475,16 +351,14 @@ function applyNearestSelection(view: EditorView, anchor: number, clientX: number
   // Only pass in-editor targets so host/chrome hits use Y-based nearest mapping.
   const target = el && view.dom.contains(el) ? el : null;
   const doc = view.state.doc;
-  const safeAnchor = clampPosAwayFromSentinel(doc, anchor);
-  const head =
-    focusPosFromClick(view, x, y, target, { forSelection: true }) ?? safeAnchor;
-  if (head === safeAnchor) {
+  const head = focusPosFromClick(view, x, y, target) ?? anchor;
+  if (head === anchor) {
     view.dispatch(
-      view.state.tr.setSelection(TextSelection.create(doc, safeAnchor)).scrollIntoView(),
+      view.state.tr.setSelection(TextSelection.create(doc, anchor)).scrollIntoView(),
     );
     return;
   }
-  const sel = TextSelection.create(doc, safeAnchor, head);
+  const sel = TextSelection.create(doc, anchor, head);
   view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
 }
 
@@ -498,8 +372,6 @@ function startSelectionDrag(
     anchor: number | null;
     edgeOnly: boolean;
     event?: Event;
-    /** If set, restore this caret when the user clicks without dragging. */
-    clickPos?: number | null;
   },
 ): void {
   clearSelectionDrag();
@@ -511,7 +383,6 @@ function startSelectionDrag(
     anchor: options.anchor,
     edgeOnly: options.edgeOnly,
     moved: false,
-    clickPos: options.clickPos ?? null,
     pointerId,
     captureEl,
     onMove: (moveEvent: MouseEvent) => {
@@ -535,17 +406,6 @@ function startSelectionDrag(
     },
     onUp: (upEvent: MouseEvent) => {
       if (!drag.moved) {
-        if (
-          drag.clickPos != null &&
-          !view.isDestroyed &&
-          view.state.selection.from !== drag.clickPos
-        ) {
-          view.dispatch(
-            view.state.tr
-              .setSelection(TextSelection.create(view.state.doc, drag.clickPos))
-              .scrollIntoView(),
-          );
-        }
         clearSelectionDrag();
         return;
       }
@@ -566,7 +426,7 @@ function startSelectionDrag(
 
 /**
  * Place the caret via nearest-pos mapping and, on drag, extend the selection
- * with the same mapping so editor-chrome / sentinel clicks can select text.
+ * with the same mapping so editor-chrome clicks can select text.
  */
 export function focusEditorAtPoint(
   view: EditorView,
@@ -586,26 +446,18 @@ export function focusEditorAtPoint(
 
   const mouse = event as MouseEvent | undefined;
   const isDragStart = !!(mouse && mouse.type === "mousedown" && mouse.button === 0);
-  const selectAnchor = clampPosAwayFromSentinel(view.state.doc, pos);
-  // Only when the pointer is in the trailing-sentinel zone do we avoid painting
-  // the empty line during a drag. Other redirects (e.g. code-block chrome) may
-  // also resolve to the sentinel caret and must keep that placement.
-  const blocks = collectBlockRects(view);
-  const sentinelZone = shouldFocusTrailingSentinel(view, clientY, blocks, target);
-  const placePos = isDragStart && sentinelZone ? selectAnchor : pos;
 
   const tr = view.state.tr
-    .setSelection(TextSelection.create(view.state.doc, placePos))
+    .setSelection(TextSelection.create(view.state.doc, pos))
     .scrollIntoView();
   view.dispatch(tr);
   view.focus();
 
   if (isDragStart) {
     startSelectionDrag(view, {
-      anchor: selectAnchor,
+      anchor: pos,
       edgeOnly: false,
       event,
-      clickPos: sentinelZone && selectAnchor !== pos ? pos : null,
     });
   }
 
@@ -629,13 +481,13 @@ function posAtPoint(
   clientX: number,
   clientY: number,
   target: Element | null,
-  forSelection = false,
+  nearest = false,
 ): number | null {
-  if (!forSelection) {
+  if (!nearest) {
     const hit = view.posAtCoords({ left: clientX, top: clientY });
     if (hit) return hit.pos;
   }
-  return focusPosFromClick(view, clientX, clientY, target, { forSelection });
+  return focusPosFromClick(view, clientX, clientY, target);
 }
 
 function applyPreciseSelection(
@@ -654,12 +506,11 @@ function applyPreciseSelection(
         ? el
         : null;
   const doc = view.state.doc;
-  const safeAnchor = clampPosAwayFromSentinel(doc, anchor);
-  const head = posAtPoint(view, x, y, resolvedTarget, true) ?? safeAnchor;
+  const head = posAtPoint(view, x, y, resolvedTarget, true) ?? anchor;
   const sel =
-    head === safeAnchor
-      ? TextSelection.create(doc, safeAnchor)
-      : TextSelection.create(doc, safeAnchor, head);
+    head === anchor
+      ? TextSelection.create(doc, anchor)
+      : TextSelection.create(doc, anchor, head);
   view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
 }
 
@@ -678,7 +529,7 @@ function startPreciseSelectionAtClick(view: EditorView, event: MouseEvent): bool
 
   if (event.type === "mousedown" && event.button === 0) {
     startSelectionDrag(view, {
-      anchor: clampPosAwayFromSentinel(view.state.doc, view.state.selection.anchor),
+      anchor: view.state.selection.anchor,
       edgeOnly: false,
       event,
     });

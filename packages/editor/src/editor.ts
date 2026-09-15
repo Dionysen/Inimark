@@ -18,10 +18,7 @@ import { searchRevealPlugin } from "./search-reveal.ts";
 import { headingFlashPlugin } from "./heading-flash.ts";
 import { schema } from "./schema.ts";
 import { commonShortcutKeymap } from "./shortcuts.ts";
-import {
-  ensureTrailingSentinel,
-  trailingSentinelPlugin,
-} from "./trailing-sentinel.ts";
+import { editableDocEndPlugin, ensureEditableDocEnd } from "./editable-doc-end.ts";
 import { clickFocusPlugin } from "./click-focus.ts";
 import { isRenderedNavigablePointer, tryNavigateFromClick } from "./link-navigation.ts";
 
@@ -77,7 +74,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
     searchRevealPlugin(),
     findReplacePlugin(),
     headingFlashPlugin(),
-    trailingSentinelPlugin(),
+    editableDocEndPlugin(),
     clickFocusPlugin(),
     linkNavigationPlugin(),
   ];
@@ -92,7 +89,7 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
 export function createState(doc: PMNode): EditorState {
   return EditorState.create({
     schema,
-    doc: ensureTrailingSentinel(doc),
+    doc: ensureEditableDocEnd(doc),
     plugins: defaultPlugins(),
   });
 }

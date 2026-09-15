@@ -1,7 +1,7 @@
 ﻿import { describe, expect, test } from "vitest";
 import { DOMParser as PMDOMParser, DOMSerializer } from "prosemirror-model";
 
-import { EditorState } from "prosemirror-state";
+import { EditorState, TextSelection } from "prosemirror-state";
 
 import {
   calloutAttrsFromSource,
@@ -12,7 +12,6 @@ import {
   insertCallout,
   normalizeCalloutKind,
 } from "../src/callouts.ts";
-import { selectionAtEditableEnd } from "../src/trailing-sentinel.ts";
 import { createState } from "../src/editor.ts";
 import { parse } from "../src/parser.ts";
 import { schema } from "../src/schema.ts";
@@ -221,7 +220,7 @@ describe("callouts", () => {
       ]),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(base.doc)));
     let next = state;
 
     const handled = convertCurrentBlockquoteCallout(state, (tr) => {
@@ -241,7 +240,7 @@ describe("callouts", () => {
       ]),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(base.doc)));
     let next = state;
 
     const handled = commonShortcutKeymap(schema)["Shift-Enter"]!(state, (tr) => {
@@ -259,7 +258,7 @@ describe("callouts", () => {
       schema.nodes.paragraph.create(null, schema.text("hello")),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(base.doc)));
     let next = state;
 
     const handled = insertCallout("warning")(state, (tr) => {
@@ -282,7 +281,7 @@ describe("callouts", () => {
       schema.nodes.paragraph.create(null, schema.text("between")),
     ]);
     const base = createState(doc);
-    const state = base.apply(base.tr.setSelection(selectionAtEditableEnd(base.doc)));
+    const state = base.apply(base.tr.setSelection(TextSelection.atEnd(base.doc)));
     let next = state;
 
     const handled = insertCallout("tip")(state, (tr) => {

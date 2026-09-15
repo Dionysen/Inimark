@@ -39,7 +39,7 @@ import {
   type EmbeddedCodeMirrorEditor,
 } from "./code-highlighter.ts";
 import { defaultPlugins } from "./editor.ts";
-import { ensureTrailingSentinel } from "./trailing-sentinel.ts";
+import { ensureEditableDocEnd } from "./editable-doc-end.ts";
 import { handleEditorSurfaceMouseDown } from "./click-focus.ts";
 import {
   createMarkdownFile,
@@ -397,7 +397,7 @@ export function createEditor(
 
   function buildView(initialMd: string): EditorView {
     const parsed = initialMd ? parse(initialMd) : schema.nodes.doc.createAndFill()!;
-    const doc = ensureTrailingSentinel(parsed);
+    const doc = ensureEditableDocEnd(parsed);
     const base = EditorState.create({
       schema,
       doc,
@@ -459,8 +459,7 @@ export function createEditor(
   }
 
   function parseMarkdownDoc(md: string) {
-    const parsed = md ? parse(md) : schema.nodes.doc.createAndFill()!;
-    return ensureTrailingSentinel(parsed);
+    return md ? ensureEditableDocEnd(parse(md)) : schema.nodes.doc.createAndFill()!;
   }
 
   /** Replace the rendered document while keeping PM history (undo/redo). */
