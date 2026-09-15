@@ -3,6 +3,10 @@ import { Plugin, TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 
 import { isModifiedClick, isRenderedNavigablePointer } from "./link-navigation.ts";
+import {
+  clampSelectionPointer,
+  isOutsideSelectionSurface,
+} from "./selection-edge.ts";
 import { isEmptyParagraph, trailingSentinelStart } from "./trailing-sentinel.ts";
 
 type BlockRect = {
@@ -355,27 +359,82 @@ export function needsClickRedirect(
 
 type SelectionDrag = {
   view: EditorView;
-  anchor: number;
+  /** Fixed anchor for owned drags; null means read `view.state.selection.anchor` when taking over. */
+  anchor: number | null;
+  /** When true, only update selection once the pointer leaves the editor/window edge. */
+  edgeOnly: boolean;
   moved: boolean;
+  pointerId: number | null;
+  captureEl: Element | null;
   onMove: (event: MouseEvent) => void;
   onUp: (event: MouseEvent) => void;
 };
 
 let activeDrag: SelectionDrag | null = null;
+/** Primary pointer id from the latest pointerdown — used when drag starts on mousedown. */
+let lastPrimaryPointerId: number | null = null;
 
 function clearSelectionDrag(): void {
   if (!activeDrag) return;
-  window.removeEventListener("mousemove", activeDrag.onMove, true);
-  window.removeEventListener("mouseup", activeDrag.onUp, true);
+  const drag = activeDrag;
   activeDrag = null;
+  window.removeEventListener("mousemove", drag.onMove, true);
+  window.removeEventListener("pointermove", drag.onMove, true);
+  window.removeEventListener("mouseup", drag.onUp, true);
+  window.removeEventListener("pointerup", drag.onUp, true);
+  window.removeEventListener("pointercancel", drag.onUp, true);
+  if (
+    drag.captureEl &&
+    drag.pointerId != null &&
+    drag.captureEl.hasPointerCapture?.(drag.pointerId)
+  ) {
+    try {
+      drag.captureEl.releasePointerCapture(drag.pointerId);
+    } catch {
+      // Element may already be gone.
+    }
+  }
+}
+
+function tryCapturePointer(event: Event | undefined, el: Element): number | null {
+  if (typeof el.setPointerCapture !== "function") return null;
+  if (event instanceof PointerEvent) {
+    try {
+      el.setPointerCapture(event.pointerId);
+      return event.pointerId;
+    } catch {
+      return null;
+    }
+  }
+  // mousedown follows pointerdown; reuse the primary pointer id for capture.
+  if (lastPrimaryPointerId != null) {
+    try {
+      el.setPointerCapture(lastPrimaryPointerId);
+      return lastPrimaryPointerId;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function pointerIsOutside(view: EditorView, clientX: number, clientY: number): boolean {
+  return (
+    isOutsideSelectionSurface(view, clientX, clientY) ||
+    clientX < 0 ||
+    clientY < 0 ||
+    clientX >= window.innerWidth ||
+    clientY >= window.innerHeight
+  );
 }
 
 function applyNearestSelection(view: EditorView, anchor: number, clientX: number, clientY: number): void {
   if (!view.editable || view.isDestroyed) return;
-  const el = document.elementFromPoint(clientX, clientY);
+  const { x, y } = clampSelectionPointer(view, clientX, clientY);
+  const el = document.elementFromPoint(x, y);
   // Only pass in-editor targets so host/chrome hits use Y-based nearest mapping.
   const target = el && view.dom.contains(el) ? el : null;
-  const head = focusPosFromClick(view, clientX, clientY, target) ?? anchor;
+  const head = focusPosFromClick(view, x, y, target) ?? anchor;
   if (head === anchor) {
     view.dispatch(
       view.state.tr.setSelection(TextSelection.create(view.state.doc, anchor)).scrollIntoView(),
@@ -384,6 +443,63 @@ function applyNearestSelection(view: EditorView, anchor: number, clientX: number
   }
   const sel = TextSelection.create(view.state.doc, anchor, head);
   view.dispatch(view.state.tr.setSelection(sel).scrollIntoView());
+}
+
+/**
+ * Install window-level drag listeners so selection continues when the pointer
+ * leaves the editor or the OS window (coords clamp to the matching edge).
+ */
+function startSelectionDrag(
+  view: EditorView,
+  options: {
+    anchor: number | null;
+    edgeOnly: boolean;
+    event?: Event;
+  },
+): void {
+  clearSelectionDrag();
+  const captureEl = view.dom;
+  const pointerId = tryCapturePointer(options.event, captureEl);
+
+  const drag: SelectionDrag = {
+    view,
+    anchor: options.anchor,
+    edgeOnly: options.edgeOnly,
+    moved: false,
+    pointerId,
+    captureEl,
+    onMove: (moveEvent: MouseEvent) => {
+      if (!(moveEvent.buttons & 1)) {
+        clearSelectionDrag();
+        return;
+      }
+      if (drag.edgeOnly && !pointerIsOutside(view, moveEvent.clientX, moveEvent.clientY)) {
+        return;
+      }
+
+      drag.moved = true;
+      const anchor = drag.anchor ?? view.state.selection.anchor;
+      if (drag.anchor == null) drag.anchor = anchor;
+      applyNearestSelection(view, anchor, moveEvent.clientX, moveEvent.clientY);
+    },
+    onUp: (upEvent: MouseEvent) => {
+      if (!drag.moved) {
+        clearSelectionDrag();
+        return;
+      }
+      if (!drag.edgeOnly || pointerIsOutside(view, upEvent.clientX, upEvent.clientY)) {
+        const anchor = drag.anchor ?? view.state.selection.anchor;
+        applyNearestSelection(view, anchor, upEvent.clientX, upEvent.clientY);
+      }
+      clearSelectionDrag();
+    },
+  };
+  activeDrag = drag;
+  window.addEventListener("mousemove", drag.onMove, true);
+  window.addEventListener("pointermove", drag.onMove, true);
+  window.addEventListener("mouseup", drag.onUp, true);
+  window.addEventListener("pointerup", drag.onUp, true);
+  window.addEventListener("pointercancel", drag.onUp, true);
 }
 
 /**
@@ -412,29 +528,7 @@ export function focusEditorAtPoint(
 
   const mouse = event as MouseEvent | undefined;
   if (mouse && mouse.type === "mousedown" && mouse.button === 0) {
-    clearSelectionDrag();
-    const drag: SelectionDrag = {
-      view,
-      anchor: pos,
-      moved: false,
-      onMove: (moveEvent: MouseEvent) => {
-        if (!(moveEvent.buttons & 1)) {
-          clearSelectionDrag();
-          return;
-        }
-        drag.moved = true;
-        applyNearestSelection(view, drag.anchor, moveEvent.clientX, moveEvent.clientY);
-      },
-      onUp: (upEvent: MouseEvent) => {
-        if (drag.moved) {
-          applyNearestSelection(view, drag.anchor, upEvent.clientX, upEvent.clientY);
-        }
-        clearSelectionDrag();
-      },
-    };
-    activeDrag = drag;
-    window.addEventListener("mousemove", drag.onMove, true);
-    window.addEventListener("mouseup", drag.onUp, true);
+    startSelectionDrag(view, { anchor: pos, edgeOnly: false, event });
   }
 
   return true;
@@ -470,7 +564,15 @@ function applyPreciseSelection(
   clientY: number,
   target: Element | null = null,
 ): void {
-  const head = posAtPoint(view, clientX, clientY, target) ?? anchor;
+  const { x, y } = clampSelectionPointer(view, clientX, clientY);
+  const el = document.elementFromPoint(x, y);
+  const resolvedTarget =
+    target && view.dom.contains(target)
+      ? target
+      : el && view.dom.contains(el)
+        ? el
+        : null;
+  const head = posAtPoint(view, x, y, resolvedTarget) ?? anchor;
   const sel =
     head === anchor
       ? TextSelection.create(view.state.doc, anchor)
@@ -492,36 +594,33 @@ function startPreciseSelectionAtClick(view: EditorView, event: MouseEvent): bool
   view.focus();
 
   if (event.type === "mousedown" && event.button === 0) {
-    const dragAnchor = view.state.selection.anchor;
-    clearSelectionDrag();
-    const drag: SelectionDrag = {
-      view,
-      anchor: dragAnchor,
-      moved: false,
-      onMove: (moveEvent: MouseEvent) => {
-        if (!(moveEvent.buttons & 1)) {
-          clearSelectionDrag();
-          return;
-        }
-        drag.moved = true;
-        const el = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY);
-        const moveTarget = el && view.dom.contains(el) ? el : null;
-        applyPreciseSelection(view, drag.anchor, moveEvent.clientX, moveEvent.clientY, moveTarget);
-      },
-      onUp: (upEvent: MouseEvent) => {
-        if (drag.moved) {
-          const el = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-          const upTarget = el && view.dom.contains(el) ? el : null;
-          applyPreciseSelection(view, drag.anchor, upEvent.clientX, upEvent.clientY, upTarget);
-        }
-        clearSelectionDrag();
-      },
-    };
-    activeDrag = drag;
-    window.addEventListener("mousemove", drag.onMove, true);
-    window.addEventListener("mouseup", drag.onUp, true);
+    startSelectionDrag(view, {
+      anchor: view.state.selection.anchor,
+      edgeOnly: false,
+      event,
+    });
   }
 
+  return true;
+}
+
+/**
+ * For normal (browser-owned) drag-select: keep updating once the pointer
+ * leaves the editor or OS window, treating the position as the matching edge.
+ */
+function armNativeEdgeContinuation(view: EditorView, event: Event): void {
+  if (activeDrag) return;
+  startSelectionDrag(view, { anchor: null, edgeOnly: true, event });
+}
+
+function shouldArmNativeEdgeContinuation(view: EditorView, event: MouseEvent): boolean {
+  if (!view.editable || event.button !== 0) return false;
+  const target = event.target;
+  if (!(target instanceof Element)) return false;
+  if (!view.dom.contains(target)) return false;
+  if (isInteractiveEditorTarget(target)) return false;
+  if (shouldPreserveSelectionOnClick(target)) return false;
+  if (isRenderedNavigablePointer(view, event)) return false;
   return true;
 }
 
@@ -545,6 +644,7 @@ export function handleEditorSurfaceMouseDown(
   }
 
   if (view.dom.contains(target) && !needsClickRedirect(view, event.clientX, event.clientY, target)) {
+    armNativeEdgeContinuation(view, event);
     return false;
   }
 
@@ -565,13 +665,24 @@ export function clickFocusPlugin(): Plugin {
   return new Plugin({
     props: {
       handleDOMEvents: {
+        pointerdown(view, event) {
+          if (event.isPrimary && event.button === 0) {
+            lastPrimaryPointerId = event.pointerId;
+          }
+          return false;
+        },
         mousedown(view, event) {
           if (isRenderedNavigablePointer(view, event)) return false;
           if (shouldNeutralizeModifiedClick(view, event)) {
             return startPreciseSelectionAtClick(view, event);
           }
-          if (!shouldCaptureClick(view, event)) return false;
-          return focusEditorAtPoint(view, event.clientX, event.clientY, event);
+          if (shouldCaptureClick(view, event)) {
+            return focusEditorAtPoint(view, event.clientX, event.clientY, event);
+          }
+          if (shouldArmNativeEdgeContinuation(view, event)) {
+            armNativeEdgeContinuation(view, event);
+          }
+          return false;
         },
       },
     },

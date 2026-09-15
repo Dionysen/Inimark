@@ -338,4 +338,79 @@ describe("click focus", () => {
       host.remove();
     }
   });
+
+  test("drag-select continues when the pointer leaves the window", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "first line of the note\n\nsecond line of the note\n\nthird line of the note",
+    });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      // selectionSurfaceRect prefers the host; keep it aligned with the stubbed blocks
+      // (content paragraphs + blanks + trailing sentinel ≈ 6 blocks).
+      const surfaceBottom = 20 + 6 * 36;
+      host.getBoundingClientRect = () =>
+        ({
+          top: 20,
+          bottom: surfaceBottom,
+          left: 100,
+          right: 520,
+          width: 420,
+          height: surfaceBottom - 20,
+          x: 100,
+          y: 20,
+          toJSON() {
+            return this;
+          },
+        }) as DOMRect;
+
+      // Anchor in the first paragraph (mid Y = 34).
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 120,
+        clientY: 34,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: host });
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      const anchor = view.state.selection.anchor;
+      expect(view.state.selection.empty).toBe(true);
+
+      // Drag below the OS window — clamp to the bottom edge and extend the selection.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: 5000,
+          buttons: 1,
+        }),
+      );
+
+      expect(view.state.selection.empty).toBe(false);
+      expect(view.state.selection.anchor).toBe(anchor);
+      expect(view.state.selection.head).not.toBe(anchor);
+      expect(Math.abs(view.state.selection.head - anchor)).toBeGreaterThan(10);
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: 5000,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
 });
