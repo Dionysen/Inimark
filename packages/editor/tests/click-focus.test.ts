@@ -4,6 +4,10 @@ import { EditorView } from "prosemirror-view";
 
 import { focusEditorAtPoint, focusPosFromClick, handleEditorSurfaceMouseDown, needsClickRedirect } from "../src/click-focus.ts";
 import { createEditor } from "../src/lib.ts";
+import {
+  editableEndPos,
+  posInTrailingSentinel,
+} from "../src/trailing-sentinel.ts";
 import { setup } from "./utils.ts";
 
 /** happy-dom often returns zero-size rects; stub vertical geometry for Y-nearest tests. */
@@ -185,7 +189,7 @@ describe("click focus", () => {
     }
   });
 
-  test("needsClickRedirect is false when clicking the trailing sentinel paragraph", () => {
+  test("needsClickRedirect is true when clicking the trailing sentinel paragraph", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
     const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
@@ -197,10 +201,35 @@ describe("click focus", () => {
       const rect = sentinel.getBoundingClientRect();
       expect(
         needsClickRedirect(view, rect.left + 4, rect.top + 4, sentinel),
-      ).toBe(false);
+      ).toBe(true);
     } finally {
       editor.destroy();
       host.remove();
+    }
+  });
+
+  test("focusPosFromClick forSelection maps the sentinel zone to editable end", () => {
+    const state = setup("alpha\n\nbeta");
+    const mount = document.createElement("div");
+    document.body.appendChild(mount);
+    const view = new EditorView(mount, { state });
+
+    try {
+      stubVerticalLayout(view, 36);
+      // "alpha" / "beta" / trailing sentinel → sentinel is index 2; probe below it.
+      const sentinelY = 20 + 2 * 36 + 10;
+      const caretPos = focusPosFromClick(view, 120, sentinelY);
+      const selectPos = focusPosFromClick(view, 120, sentinelY, null, {
+        forSelection: true,
+      });
+      expect(caretPos).not.toBeNull();
+      expect(selectPos).not.toBeNull();
+      expect(posInTrailingSentinel(view.state.doc, caretPos!)).toBe(true);
+      expect(posInTrailingSentinel(view.state.doc, selectPos!)).toBe(false);
+      expect(selectPos).toBe(editableEndPos(view.state.doc));
+    } finally {
+      view.destroy();
+      mount.remove();
     }
   });
 
@@ -404,6 +433,199 @@ describe("click focus", () => {
           cancelable: true,
           clientX: 120,
           clientY: 5000,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("drag-select from the sentinel zone excludes the sentinel", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      // "alpha" / "beta" / trailing sentinel → indices 0, 1, 2
+      const sentinelY = 20 + 2 * 36 + 10;
+      const contentY = 20 + 1 * 36 + 10; // mid of "beta"
+
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 120,
+        clientY: sentinelY,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: host });
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      // mousedown in the sentinel zone anchors at editable end (not the empty line).
+      expect(posInTrailingSentinel(view.state.doc, view.state.selection.from)).toBe(false);
+      expect(view.state.selection.from).toBe(editableEndPos(view.state.doc));
+      expect(view.state.selection.empty).toBe(true);
+
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: contentY,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+
+      const { from, to, empty } = view.state.selection;
+      expect(empty).toBe(false);
+      expect(posInTrailingSentinel(view.state.doc, from)).toBe(false);
+      expect(posInTrailingSentinel(view.state.doc, to)).toBe(false);
+      expect(Math.max(from, to)).toBe(editableEndPos(view.state.doc));
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: contentY,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("click without drag in the sentinel zone restores the sentinel caret", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      const sentinelY = 20 + 2 * 36 + 10;
+
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 120,
+        clientY: sentinelY,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: host });
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      expect(posInTrailingSentinel(view.state.doc, view.state.selection.from)).toBe(false);
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: sentinelY,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+      expect(posInTrailingSentinel(view.state.doc, view.state.selection.from)).toBe(true);
+      expect(view.state.selection.empty).toBe(true);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("drag-select from below the sentinel then outside the window stays live", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "alpha\n\nbeta" });
+
+    try {
+      const view = editor.view;
+      stubVerticalLayout(view, 36);
+      const surfaceBottom = 20 + 6 * 36;
+      host.getBoundingClientRect = () =>
+        ({
+          top: 20,
+          bottom: surfaceBottom,
+          left: 100,
+          right: 520,
+          width: 420,
+          height: surfaceBottom - 20,
+          x: 100,
+          y: 20,
+          toJSON() {
+            return this;
+          },
+        }) as DOMRect;
+
+      // Below the sentinel block (index 2 ends near y=120).
+      const belowY = 20 + 3 * 36 + 10;
+      const contentY = 20 + 1 * 36 + 10;
+
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 120,
+        clientY: belowY,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: host });
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+
+      // Platforms often report buttons=0 once the pointer leaves the window.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: -40,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+
+      expect(view.state.selection.empty).toBe(false);
+      expect(posInTrailingSentinel(view.state.doc, view.state.selection.from)).toBe(false);
+      expect(posInTrailingSentinel(view.state.doc, view.state.selection.to)).toBe(false);
+      expect(Math.max(view.state.selection.from, view.state.selection.to)).toBe(
+        editableEndPos(view.state.doc),
+      );
+
+      // Still dragging: move back over content — must keep updating.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: contentY,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+      expect(view.state.selection.empty).toBe(false);
+      expect(Math.max(view.state.selection.from, view.state.selection.to)).toBe(
+        editableEndPos(view.state.doc),
+      );
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: 120,
+          clientY: contentY,
           button: 0,
           buttons: 0,
         }),

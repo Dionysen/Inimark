@@ -1,5 +1,5 @@
 import { Fragment, type Node as PMNode } from "prosemirror-model";
-import { Plugin, TextSelection } from "prosemirror-state";
+import { Plugin, TextSelection, type Transaction } from "prosemirror-state";
 
 import { schema } from "./schema.ts";
 
@@ -43,6 +43,11 @@ export function selectionAtEditableEnd(doc: PMNode): TextSelection {
   return TextSelection.atEnd(doc);
 }
 
+/** Doc position at the end of visible content (ignores the trailing sentinel). */
+export function editableEndPos(doc: PMNode): number {
+  return selectionAtEditableEnd(doc).from;
+}
+
 /** Place the caret at the start of the trailing sentinel paragraph, if any. */
 export function selectionAtSentinelStart(doc: PMNode): TextSelection | null {
   const pos = trailingSentinelStart(doc);
@@ -58,14 +63,63 @@ export function trailingSentinelStart(doc: PMNode): number | null {
   return pos + 1;
 }
 
+/** True when `pos` sits inside the trailing empty sentinel paragraph. */
+export function posInTrailingSentinel(doc: PMNode, pos: number): boolean {
+  const start = trailingSentinelStart(doc);
+  if (start == null) return false;
+  const $pos = doc.resolve(pos);
+  if ($pos.depth < 1 || $pos.index(0) !== doc.childCount - 1) return false;
+  return isEmptyParagraph($pos.node(1));
+}
+
+/**
+ * Map a position out of the trailing sentinel onto the end of editable content.
+ * Empty caret placement in the sentinel is intentional; selection must not use it.
+ *
+ * Clamps any endpoint at or after the sentinel *node* (not only deep inside it),
+ * so ranges that end on the node boundary or at doc end cannot paint the empty line.
+ */
+export function clampPosAwayFromSentinel(doc: PMNode, pos: number): number {
+  const start = trailingSentinelStart(doc);
+  if (start == null) return pos;
+  // Sentinel node occupies [start - 1, start - 1 + nodeSize).
+  if (pos >= start - 1) return editableEndPos(doc);
+  return pos;
+}
+
+/**
+ * Non-empty selections must never include the trailing sentinel — keep the
+ * empty caret there for typing, but treat drag/keyboard ranges as ending at
+ * the last real content.
+ */
+function selectionExcludingSentinel(doc: PMNode, selection: TextSelection): TextSelection | null {
+  if (selection.empty) return null;
+  const anchor = clampPosAwayFromSentinel(doc, selection.anchor);
+  const head = clampPosAwayFromSentinel(doc, selection.head);
+  if (anchor === selection.anchor && head === selection.head) return null;
+  if (anchor === head) return TextSelection.create(doc, anchor);
+  return TextSelection.create(doc, anchor, head);
+}
+
 export function trailingSentinelPlugin(): Plugin {
   return new Plugin({
     appendTransaction(transactions, _oldState, newState) {
-      if (!transactions.some((tr) => tr.docChanged)) return null;
-      if (!docNeedsTrailingSentinel(newState.doc)) return null;
-      const tr = newState.tr;
-      const para = schema.nodes.paragraph!.create();
-      return tr.insert(tr.doc.content.size, para);
+      let tr: Transaction | null = null;
+
+      if (transactions.some((tx) => tx.docChanged) && docNeedsTrailingSentinel(newState.doc)) {
+        tr = newState.tr;
+        const para = schema.nodes.paragraph!.create();
+        tr.insert(tr.doc.content.size, para);
+      }
+
+      const doc = tr?.doc ?? newState.doc;
+      const selection = tr?.selection ?? newState.selection;
+      if (!(selection instanceof TextSelection)) return tr;
+
+      const next = selectionExcludingSentinel(doc, selection);
+      if (!next) return tr;
+      tr ??= newState.tr;
+      return tr.setSelection(next);
     },
   });
 }
