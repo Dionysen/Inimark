@@ -9,8 +9,8 @@
 // whether to show it gray (cursor inside the surrounding span) or hide it
 // (cursor outside).
 
-import { Plugin, PluginKey, type EditorState } from "prosemirror-state";
-import { Decoration, DecorationSet } from "prosemirror-view";
+import { Plugin, PluginKey, TextSelection, type EditorState } from "prosemirror-state";
+import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
 
 import { getDelims, getExtras, getWidgets, type WidgetDecoration } from "./normalize.ts";
 import { bindWikiClick } from "./link-navigation.ts";
@@ -230,15 +230,54 @@ function buildDecorationSet(state: EditorState): DecorationSet {
 const syntaxHintsKey = new PluginKey<DecorationSet>("syntaxHints");
 
 export function syntaxHintsPlugin(): Plugin<DecorationSet> {
+  // IME composition uses a non-empty selection over the draft glyphs. If we
+  // rebuild chrome then, `selection.empty` is false → every wiki/math/emoji
+  // span is treated as "cursor outside", so a neighbouring `[[…]]` collapses
+  // from visible source into a widget + font-size:0 text mid-composition.
+  // Chromium then remaps the caret into that hidden source ("jumps into the
+  // wikilink"). Freeze the decoration set until composition ends.
+  let imeDepth = 0;
+
+  /** Rebuild chrome after IME; collapse any leftover composition range to a caret. */
+  const settleAfterIme = (view: EditorView) => {
+    if (!view.dom.isConnected) return;
+    const { state } = view;
+    let tr = state.tr.setMeta(syntaxHintsKey, { refresh: true });
+    // Composition often leaves a one-glyph selection (e.g. `。` highlighted).
+    // Collapsing before the chrome rebuild keeps the caret after the char
+    // instead of selecting it once the neighbouring wiki turns into a widget.
+    if (!state.selection.empty) {
+      tr = tr.setSelection(TextSelection.create(state.doc, state.selection.head));
+    }
+    view.dispatch(tr);
+  };
+
   return new Plugin<DecorationSet>({
     key: syntaxHintsKey,
     state: {
       init: (_, state) => buildDecorationSet(state),
-      apply: (_tr, _old, _oldState, newState) => buildDecorationSet(newState),
+      apply: (tr, old, _oldState, newState) => {
+        if (imeDepth > 0 && !tr.getMeta(syntaxHintsKey)) return old;
+        return buildDecorationSet(newState);
+      },
     },
     props: {
       decorations(state) {
         return syntaxHintsKey.getState(state);
+      },
+      handleDOMEvents: {
+        compositionstart() {
+          imeDepth += 1;
+          return false;
+        },
+        compositionend(view) {
+          imeDepth = Math.max(0, imeDepth - 1);
+          if (imeDepth === 0) {
+            // Rebuild after the browser has committed composition text.
+            queueMicrotask(() => settleAfterIme(view));
+          }
+          return false;
+        },
       },
     },
   });
