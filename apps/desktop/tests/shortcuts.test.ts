@@ -9,6 +9,14 @@ import {
 } from "../src/shortcuts/store.ts";
 
 describe("shortcuts store", () => {
+  test("focus-search defaults to Ctrl+Shift+F for vault search", () => {
+    expect(DEFAULT_SHORTCUTS.find((item) => item.id === "focus-search")?.keys).toEqual([
+      "Ctrl",
+      "Shift",
+      "F",
+    ]);
+  });
+
   test("matchShortcut matches Ctrl+S", () => {
     const event = new KeyboardEvent("keydown", {
       key: "s",

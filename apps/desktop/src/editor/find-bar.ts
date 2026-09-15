@@ -321,7 +321,8 @@ export function mountFindBar(
   };
 
   const onCtrlF = (event: KeyboardEvent): void => {
-    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    // Ctrl+F = document find; leave Ctrl+Shift+F for vault/global search.
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
     if (event.key.toLowerCase() !== "f") return;
     if (!isInMarkdownEditor(event.target)) return;
     event.preventDefault();
@@ -335,7 +336,7 @@ export function mountFindBar(
   };
 
   const onCtrlH = (event: KeyboardEvent): void => {
-    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
     if (event.key.toLowerCase() !== "h") return;
     if (!isInMarkdownEditor(event.target)) return;
     event.preventDefault();
