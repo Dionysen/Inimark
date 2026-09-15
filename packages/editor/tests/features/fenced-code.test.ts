@@ -199,6 +199,69 @@ describe("fenced code node view", () => {
     }
   });
 
+  test("hides chrome while a non-empty selection sweeps through a code block", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "before\n\n```ts\nbody\n```\n\nafter",
+    });
+
+    try {
+      const doc = editor.view.state.doc;
+      let codePos: number | null = null;
+      doc.descendants((node, pos) => {
+        if (node.type.name === "code_block") {
+          codePos = pos;
+          return false;
+        }
+      });
+      expect(codePos).not.toBeNull();
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(doc, codePos! + 1),
+        ),
+      );
+      const cm = codeMirrorView(host);
+      cm.focus();
+      expect(document.body.querySelector<HTMLElement>(".cb-chrome")?.hidden).toBe(false);
+
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(editor.view.state.doc, 1, editor.view.state.doc.content.size - 1),
+        ),
+      );
+
+      expect(document.body.querySelector<HTMLElement>(".cb-chrome")?.hidden).toBe(true);
+      expect(host.querySelector(".code-block-node")?.classList.contains("cb-active")).toBe(
+        false,
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
+  test("shows chrome when CodeMirror is focused even before PM selection syncs", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "before\n\n```ts\nbody\n```",
+    });
+
+    try {
+      // Caret stays on the leading paragraph — simulates click-to-edit
+      // where CM focuses before ProseMirror rewrites the selection.
+      const cm = codeMirrorView(host);
+      cm.focus();
+      expect(document.body.querySelector<HTMLElement>(".cb-chrome")?.hidden).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".cb-lang-menu")?.remove();
+      document.body.querySelector(".cb-chrome")?.remove();
+    }
+  });
+
   test("ArrowUp from language input returns to CodeMirror at the last line", () => {
     const host = createHost();
     const editor = createEditor(host, { initialContent: "```ts\nline1\nline2\n```" });

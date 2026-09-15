@@ -179,6 +179,9 @@ function codeBlockFocusPlugin(): Plugin {
       return {
         update(view, prevState) {
           if (langFocusKey.getState(view.state)) return;
+          // Only steal focus when the caret is idle inside the block —
+          // drag-select sweeping through must not open code chrome.
+          if (!view.state.selection.empty) return;
           const from = view.state.selection.from;
           const cbPos = codeBlockPosAt(view.state, from);
           if (cbPos === null) return;
@@ -595,11 +598,22 @@ class CodeBlockView implements NodeView {
   private shouldShowChrome(): boolean {
     if (this.dom.classList.contains("cb-lang-focus")) return true;
     const active = document.activeElement;
-    return Boolean(
+    // Keep chrome while the user is interacting with it / the lang menu.
+    if (
       active &&
-        (this.codeMountEl.contains(active) ||
-          this.chromeEl.contains(active) ||
-          this.menuEl.contains(active)),
+      (this.chromeEl.contains(active) || this.menuEl.contains(active))
+    ) {
+      return true;
+    }
+    // Drag-select sweeping the doc must not open chrome.
+    if (!this.view.state.selection.empty) return false;
+    // Idle caret inside this block.
+    if (this.selectionInThisBlock()) return true;
+    // Click-to-edit focuses CodeMirror before PM selection catches up;
+    // onFocusIn marks the block active in that window.
+    return (
+      this.dom.classList.contains("cb-active") &&
+      Boolean(active && this.codeMountEl.contains(active))
     );
   }
 

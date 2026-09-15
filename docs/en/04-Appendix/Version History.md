@@ -37,6 +37,7 @@ Prefer **Latest** unless you are debugging an older build.
 
 - Drop the trailing sentinel paragraph after ordinary text so the live document matches saved markdown; a follow-on paragraph is still added after fences, tables, and other non-paragraph blocks
 - Empty-gutter / side-margin drag-select still maps by pointer coordinates, but scrolls via edge auto-scroll instead of `scrollIntoView`
+- Code-block / table toolbars stay hidden while drag-select sweeps across them; they appear only when the caret is idle inside the block
 
 ---
 

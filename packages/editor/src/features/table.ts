@@ -771,7 +771,9 @@ function tableToolbarPlugin(): Plugin {
 
       const update = () => {
         info = findTableAtSelection(view.state);
-        if (!info || !view.hasFocus()) {
+        // Only show while the caret is idle inside a cell — drag-select
+        // sweeping across a table must not pop the menus.
+        if (!info || !view.hasFocus() || !view.state.selection.empty) {
           unmount();
           return;
         }

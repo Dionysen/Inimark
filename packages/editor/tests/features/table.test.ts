@@ -74,6 +74,37 @@ describe("table toolbar", () => {
     }
   });
 
+  test("hides toolbar while a non-empty selection sweeps through a table", () => {
+    const host = createHost();
+    const editor = createEditor(host, {
+      initialContent: "before\n\n| A | B |\n| --- | --- |\n| a | b |\n\nafter",
+    });
+
+    try {
+      setSelectionInTableCell(editor);
+      focusTable(editor);
+      expect(document.body.querySelector(".table-toolbar")).not.toBeNull();
+
+      const doc = editor.view.state.doc;
+      editor.view.dispatch(
+        editor.view.state.tr.setSelection(
+          TextSelection.create(doc, 1, doc.content.size - 1),
+        ),
+      );
+      editor.view.dispatch(editor.view.state.tr.setMeta("table-test-refresh", true));
+
+      expect(document.body.querySelector(".table-toolbar")).toBeNull();
+      expect(document.body.querySelector(".table-rc-toolbar")).toBeNull();
+    } finally {
+      editor.destroy();
+      host.remove();
+      document.body.querySelector(".table-toolbar")?.remove();
+      document.body.querySelector(".table-resize-popup")?.remove();
+      document.body.querySelector(".table-rc-toolbar")?.remove();
+      document.body.querySelector(".table-rc-popup")?.remove();
+    }
+  });
+
   test("aligns the active column through the toolbar and serializes alignment", () => {
     const host = createHost();
     const editor = createEditor(host, {
