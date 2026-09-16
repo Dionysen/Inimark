@@ -35,14 +35,11 @@ Prefer **Latest** unless you are debugging an older build.
 
 ### What's new
 
-- Fix Windows startup flash of a transparent window with a native title bar: start hidden, strip decorations before show on Windows; keep Overlay decorations at creation on macOS so traffic lights stay correctly inset; window-state no longer restores decorations / visibility
-- AI replies lightly render task lists and quotes (including `[!NOTE]`-style callouts); dividers, code blocks/inline code, and table borders also follow the active theme; bubble text and the composer use the editor body font and size, with common Markdown preview line/paragraph spacing in replies; the composer height tracks font size; code uses the editor monospace font (including size and line height), and fenced code is syntax-highlighted with the active code theme after the reply settles; math (KaTeX) and Mermaid diagrams also render (diagrams hydrate after streaming ends); external links open in the system browser, and vault `[[wikilinks]]` are recognized and open notes
-- AI document assistant (sidebar tab, default right, draggable to left): DeepSeek / OpenAI-compatible streaming chat, attachments, tool-calling agent that can edit notes (writes are undoable); star tab icon and shared panel toolbar for history / new chat / undo; history is stored in the library’s `.inimark/ai-chat.json` (up to 50 per library; confirms before auto-removing the oldest); titles come from the first user message on send, with previews preferring the first assistant reply; composer thinking-mode dropdown (Fast / Deep think) with a collapsible thinking block when the model streams reasoning (DeepSeek switches to reasoner in Deep think)
-- AI assistant is intent-first: greetings get a short summary of the open note and a ask-what-you-need; no vault browsing or answering questions only found inside the note until the user asks
-- AI replies in the user’s message language when clear; otherwise uses the app UI language from Settings
-- AI tool cards use friendly labels; each turn’s final answer has a bottom-left copy control (answer text only, not tool traces) with a relative “ended ago” time next to it
-- Immersive AI composer: tools bottom-left, solid send bottom-right, no resize handle, auto-grows up to 5 lines then scrolls; explicit file/folder chips only (click opens, × removes); open note is included silently when no chips are attached; drag files/folders from the file tree onto the composer to attach
-- Fix settings (and other app IPC) failing after AI permissions enabled app ACL without allowing the rest of the commands
+- New **AI document assistant** (sidebar): streaming chat with attachments; can read and edit notes when you ask (writes are undoable); history, new chat, and undo
+- Replies lightly render Markdown (task lists, quotes, code highlighting, math, Mermaid); links open in the browser; `[[wikilinks]]` jump to notes; fonts and theme match the editor
+- Immersive composer: drag files/folders to attach, one-click copy of the final answer; Fast / Deep think modes (Deep think shows a collapsible reasoning block)
+- Intent-first: greetings get a short note summary and a ask-what-you-need—no vault browsing until you ask; replies prefer your message language
+- Fix Windows startup window flash; fix Settings and other windows failing to open after AI was introduced
 
 ---
 
