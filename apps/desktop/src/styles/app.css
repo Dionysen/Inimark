@@ -49,7 +49,7 @@ html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone {
   pointer-events: auto;
 }
 
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone > .inimark-titlebar {
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone>.inimark-titlebar {
   position: absolute;
   top: 0;
   left: 0;
@@ -77,8 +77,8 @@ html[data-auto-hide-titlebar="true"] .inimark-titlebar-controls--native {
   transition: opacity 180ms ease;
 }
 
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover > .inimark-titlebar,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within > .inimark-titlebar {
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover>.inimark-titlebar,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within>.inimark-titlebar {
   background: var(--inimark-content-bg);
 }
 
@@ -351,10 +351,7 @@ html.platform-windows .inimark-right-sidebar-titlebar-toggle {
 html.platform-windows .inimark-shell.is-right-sidebar-closed .inimark-titlebar-more-cluster {
   position: fixed;
   top: calc((var(--inimark-titlebar-height) - var(--inimark-chrome-btn-size)) / 2);
-  right: calc(
-    var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) + var(--inimark-space-1) +
-      var(--inimark-space-2)
-  );
+  right: calc(var(--inimark-caption-cluster-width) + var(--inimark-chrome-btn-size) + var(--inimark-space-1) + var(--inimark-space-2));
   z-index: 30;
   margin: 0;
 }
@@ -591,10 +588,10 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 .inimark-graph-float-panel {
   display: none;
   flex-direction: column;
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
-  max-height: min(70vh, 520px);
+  width: 280px;
+  min-width: 280px;
+  max-width: min(280px, calc(100% - 0.5rem));
+  max-height: min(70vh, 560px);
   height: fit-content;
   overflow: hidden;
   padding: var(--inimark-space-3);
@@ -669,11 +666,75 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 .inimark-graph-float-group-title {
   margin: 0;
   padding: 4px 2px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-group-toggle:hover {
+  color: var(--inimark-fg);
+}
+
+.inimark-graph-group-chevron {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+  transition: transform 120ms ease;
+}
+
+.inimark-graph-group-toggle[aria-expanded="true"] .inimark-graph-group-chevron {
+  transform: rotate(90deg);
+}
+
+.inimark-graph-group-toggle-label {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inimark-graph-float-group.is-collapsed .inimark-graph-float-group-body,
+.inimark-graph-settings-group.is-collapsed .inimark-graph-settings-group-body {
+  display: none;
+}
+
+.inimark-graph-settings-group {
+  margin-bottom: var(--inimark-space-3);
+}
+
+.inimark-graph-settings-group .inimark-graph-group-toggle.inimark-settings-section-title {
+  margin-bottom: var(--inimark-space-2);
+}
+
+.inimark-graph-query-suggest {
+  position: fixed;
+  z-index: 80;
+  overflow: auto;
+  min-width: 180px;
+  padding: 4px;
+}
+
+.inimark-graph-query-suggest .inimark-menu-item.is-active {
+  background: color-mix(in srgb, var(--inimark-accent) 18%, transparent);
 }
 
 .inimark-graph-float-group-body {
@@ -697,6 +758,92 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
 }
 
 .inimark-graph-float-row-control .inimark-slider {
+  width: 100%;
+}
+
+.inimark-graph-color-groups {
+  margin-top: var(--inimark-space-2);
+}
+
+.inimark-graph-color-groups-hint {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-graph-color-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.inimark-graph-color-group-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.inimark-graph-color-group-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.inimark-graph-color-group-toolbar .inimark-toggle {
+  flex-shrink: 0;
+}
+
+.inimark-graph-color-group-swatch {
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border: 1px solid var(--inimark-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inimark-graph-color-group-query {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--inimark-border);
+  border-radius: 6px;
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  font-size: 12px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.inimark-graph-color-group-query:focus {
+  outline: none;
+  border-color: var(--inimark-accent);
+}
+
+.inimark-graph-color-group-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.inimark-graph-color-group-actions .inimark-btn {
+  min-width: 24px;
+  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.inimark-graph-color-group-add {
   width: 100%;
 }
 
@@ -1094,7 +1241,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   pointer-events: auto;
 }
 
-.inimark-statusbar > * {
+.inimark-statusbar>* {
   pointer-events: auto;
 }
 

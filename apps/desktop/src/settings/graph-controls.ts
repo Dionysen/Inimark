@@ -1,6 +1,17 @@
 import { t } from "../i18n/index.ts";
-import { createSlider, createToggle } from "../ui/widgets/index.ts";
-import type { GraphSettings } from "./store.ts";
+import { createSlider, createToggle, createButton } from "../ui/widgets/index.ts";
+import { linkIndex } from "../wikilink/index.ts";
+import { tagIndex } from "../tags/index.ts";
+import {
+  paletteColorAt,
+  type GraphColorGroup,
+  type GraphSettings,
+} from "./store.ts";
+import type { GraphSuggestCatalog } from "../graph/index.ts";
+import {
+  attachGraphQueryAutocomplete,
+  type GraphQueryAutocompleteController,
+} from "./graph-query-autocomplete.ts";
 
 export interface GraphControlsController {
   el: HTMLElement;
@@ -147,12 +158,56 @@ function createRow(
   return row;
 }
 
+function newGroupId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `group-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+}
+
+/** Ids / enable / color — query text alone does not count as a structural change. */
+function colorGroupsStructureEqual(
+  a: readonly GraphColorGroup[],
+  b: readonly GraphColorGroup[],
+): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((group, index) => {
+    const next = b[index];
+    return (
+      !!next &&
+      group.id === next.id &&
+      group.enabled === next.enabled &&
+      group.color === next.color
+    );
+  });
+}
+
+function suggestCatalog(): GraphSuggestCatalog {
+  return {
+    tags: tagIndex.listTags("name-asc").map((entry) => entry.name),
+    notes: linkIndex.getAllNotes(),
+  };
+}
+
+type CollapsibleGroup = {
+  id: string;
+  titleKey: string;
+  titleEl: HTMLElement;
+  body: HTMLElement;
+  section: HTMLElement;
+  setOpen: (open: boolean) => void;
+  isOpen: () => boolean;
+};
+
 /** Shared appearance + force controls for settings page and editor float. */
 export function mountGraphControls(
   options: GraphControlsOptions,
 ): GraphControlsController {
   const compact = options.compact ?? false;
-  let settings = { ...options.settings };
+  let settings = {
+    ...options.settings,
+    colorGroups: [...(options.settings.colorGroups ?? [])],
+  };
 
   const el = document.createElement("div");
   el.className = compact
@@ -164,7 +219,15 @@ export function mountGraphControls(
     setValue: (value: boolean | number) => void;
   };
   const bounds: Bound[] = [];
-  const groupTitles: HTMLElement[] = [];
+  const collapsibles: CollapsibleGroup[] = [];
+  const queryAutocompletes: GraphQueryAutocompleteController[] = [];
+
+  // Compact float: keep color groups open; collapse appearance/forces to save height.
+  const openState = new Map<string, boolean>([
+    ["appearance", !compact],
+    ["forces", !compact],
+    ["colors", true],
+  ]);
 
   function appendFieldRows(parent: HTMLElement, fields: Field[]): void {
     for (const field of fields) {
@@ -226,35 +289,231 @@ export function mountGraphControls(
     }
   }
 
-  function appendGroup(titleKey: string, fields: Field[]): void {
-    if (compact) {
-      const section = document.createElement("section");
-      section.className = "inimark-graph-float-group";
+  function mountCollapsible(
+    id: string,
+    titleKey: string,
+    fillBody: (body: HTMLElement) => void,
+  ): CollapsibleGroup {
+    const section = document.createElement(compact ? "section" : "div");
+    section.className = compact
+      ? "inimark-graph-float-group"
+      : "inimark-graph-settings-group";
+    section.dataset.groupId = id;
 
-      const title = document.createElement("div");
-      title.className = "inimark-graph-float-group-title";
-      title.textContent = t(titleKey);
-      groupTitles.push(title);
+    const titleBtn = document.createElement("button");
+    titleBtn.type = "button";
+    titleBtn.className = compact
+      ? "inimark-graph-float-group-title inimark-graph-group-toggle"
+      : "inimark-settings-section-title inimark-graph-group-toggle";
 
-      const body = document.createElement("div");
-      body.className = "inimark-graph-float-group-body";
-      appendFieldRows(body, fields);
+    const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    chevron.setAttribute("class", "inimark-graph-group-chevron");
+    chevron.setAttribute("viewBox", "0 0 24 24");
+    chevron.setAttribute("aria-hidden", "true");
+    const chevronPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    chevronPath.setAttribute("fill", "none");
+    chevronPath.setAttribute("stroke", "currentColor");
+    chevronPath.setAttribute("stroke-width", "2.25");
+    chevronPath.setAttribute("stroke-linecap", "round");
+    chevronPath.setAttribute("stroke-linejoin", "round");
+    chevronPath.setAttribute("d", "M9 6l6 6-6 6");
+    chevron.append(chevronPath);
 
-      section.append(title, body);
-      el.append(section);
-      return;
+    const label = document.createElement("span");
+    label.className = "inimark-graph-group-toggle-label";
+    label.textContent = t(titleKey);
+
+    titleBtn.append(chevron, label);
+
+    const body = document.createElement("div");
+    body.className = compact
+      ? "inimark-graph-float-group-body"
+      : "inimark-graph-settings-group-body";
+    fillBody(body);
+
+    function setOpen(open: boolean): void {
+      openState.set(id, open);
+      section.classList.toggle("is-collapsed", !open);
+      titleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      body.hidden = !open;
     }
 
-    const title = document.createElement("h3");
-    title.className = "inimark-settings-section-title";
-    title.textContent = t(titleKey);
-    groupTitles.push(title);
-    el.append(title);
-    appendFieldRows(el, fields);
+    titleBtn.addEventListener("click", () => {
+      setOpen(!(openState.get(id) ?? true));
+    });
+
+    section.append(titleBtn, body);
+    el.append(section);
+
+    const group: CollapsibleGroup = {
+      id,
+      titleKey,
+      titleEl: label,
+      body,
+      section,
+      setOpen,
+      isOpen: () => openState.get(id) ?? true,
+    };
+    collapsibles.push(group);
+    setOpen(openState.get(id) ?? true);
+    return group;
   }
 
-  appendGroup("settings.group.graphAppearance", APPEARANCE_FIELDS);
-  appendGroup("settings.group.graphForce", FORCE_FIELDS);
+  mountCollapsible("appearance", "settings.group.graphAppearance", (body) => {
+    appendFieldRows(body, APPEARANCE_FIELDS);
+  });
+  mountCollapsible("forces", "settings.group.graphForce", (body) => {
+    appendFieldRows(body, FORCE_FIELDS);
+  });
+
+  const colorDesc = document.createElement("p");
+  colorDesc.className = compact
+    ? "inimark-graph-color-groups-hint"
+    : "inimark-settings-row-desc";
+  colorDesc.textContent = t("settings.graph.colorGroupsDesc");
+
+  const colorList = document.createElement("div");
+  colorList.className = "inimark-graph-color-group-list";
+
+  const addBtn = createButton({
+    label: t("settings.graph.addColorGroup"),
+    variant: "ghost",
+    onClick() {
+      const next: GraphColorGroup[] = [
+        ...settings.colorGroups,
+        {
+          id: newGroupId(),
+          query: "",
+          color: paletteColorAt(settings.colorGroups.length),
+          enabled: true,
+        },
+      ];
+      emitColorGroups(next);
+    },
+  });
+  addBtn.classList.add("inimark-graph-color-group-add");
+
+  function clearQueryAutocompletes(): void {
+    for (const ac of queryAutocompletes) ac.destroy();
+    queryAutocompletes.length = 0;
+  }
+
+  function emitColorGroups(next: GraphColorGroup[], rerender = true): void {
+    settings = { ...settings, colorGroups: next };
+    options.onChange({ colorGroups: next });
+    if (rerender) renderColorGroups();
+  }
+
+  function moveGroup(index: number, delta: number): void {
+    const target = index + delta;
+    if (target < 0 || target >= settings.colorGroups.length) return;
+    const next = [...settings.colorGroups];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item!);
+    emitColorGroups(next);
+  }
+
+  function renderColorGroups(): void {
+    clearQueryAutocompletes();
+    colorList.replaceChildren();
+    settings.colorGroups.forEach((group, index) => {
+      const row = document.createElement("div");
+      row.className = "inimark-graph-color-group-row";
+
+      const toggle = createToggle({
+        checked: group.enabled,
+        title: t("settings.graph.colorGroupEnabled"),
+        onChange(checked) {
+          const next = settings.colorGroups.map((g, i) =>
+            i === index ? { ...g, enabled: checked } : g,
+          );
+          emitColorGroups(next);
+        },
+      });
+
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.className = "inimark-graph-color-group-swatch";
+      colorInput.value = /^#[0-9a-fA-F]{6}$/.test(group.color)
+        ? group.color
+        : paletteColorAt(index);
+      colorInput.title = t("settings.graph.colorGroupColor");
+      colorInput.addEventListener("change", () => {
+        const next = settings.colorGroups.map((g, i) =>
+          i === index ? { ...g, color: colorInput.value } : g,
+        );
+        emitColorGroups(next, false);
+      });
+
+      const queryInput = document.createElement("input");
+      queryInput.type = "text";
+      queryInput.className = "inimark-graph-color-group-query";
+      queryInput.value = group.query;
+      queryInput.placeholder = t("settings.graph.colorGroupQueryPlaceholder");
+      queryInput.spellcheck = false;
+      queryInput.autocomplete = "off";
+
+      const ac = attachGraphQueryAutocomplete({
+        input: queryInput,
+        getCatalog: suggestCatalog,
+        onQueryCommit(query) {
+          const next = settings.colorGroups.map((g, i) =>
+            i === index ? { ...g, query } : g,
+          );
+          emitColorGroups(next, false);
+        },
+      });
+      queryAutocompletes.push(ac);
+
+      const actions = document.createElement("div");
+      actions.className = "inimark-graph-color-group-actions";
+
+      const upBtn = createButton({
+        label: "↑",
+        variant: "ghost",
+        onClick() {
+          moveGroup(index, -1);
+        },
+      });
+      upBtn.title = t("settings.graph.colorGroupMoveUp");
+      upBtn.disabled = index === 0;
+
+      const downBtn = createButton({
+        label: "↓",
+        variant: "ghost",
+        onClick() {
+          moveGroup(index, 1);
+        },
+      });
+      downBtn.title = t("settings.graph.colorGroupMoveDown");
+      downBtn.disabled = index === settings.colorGroups.length - 1;
+
+      const removeBtn = createButton({
+        label: "×",
+        variant: "ghost",
+        onClick() {
+          emitColorGroups(settings.colorGroups.filter((_, i) => i !== index));
+        },
+      });
+      removeBtn.title = t("settings.graph.colorGroupRemove");
+
+      actions.append(upBtn, downBtn, removeBtn);
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "inimark-graph-color-group-toolbar";
+      toolbar.append(toggle.el, colorInput, actions);
+      row.append(toolbar, queryInput);
+      colorList.append(row);
+    });
+  }
+
+  const colorsGroup = mountCollapsible("colors", "settings.group.graphColors", (body) => {
+    if (!compact) body.dataset.settingId = "graph.colorGroups";
+    body.append(colorDesc, colorList, addBtn);
+  });
+  if (!compact) colorsGroup.section.classList.add("inimark-graph-color-groups");
+
+  renderColorGroups();
 
   let playBtn: HTMLButtonElement | null = null;
   if (options.onPlayTimelapse) {
@@ -269,27 +528,33 @@ export function mountGraphControls(
     el.append(playBtn);
   }
 
-  const groupTitleKeys = [
-    "settings.group.graphAppearance",
-    "settings.group.graphForce",
-  ];
-
   return {
     el,
     refresh(next) {
-      settings = { ...next };
+      const prevGroups = settings.colorGroups;
+      settings = {
+        ...next,
+        colorGroups: [...(next.colorGroups ?? [])],
+      };
       for (const bound of bounds) {
         bound.setValue(settings[bound.key] as boolean | number);
       }
-      groupTitleKeys.forEach((key, index) => {
-        groupTitles[index]!.textContent = t(key);
-      });
+      for (const group of collapsibles) {
+        group.titleEl.textContent = t(group.titleKey);
+      }
+      colorDesc.textContent = t("settings.graph.colorGroupsDesc");
+      addBtn.textContent = t("settings.graph.addColorGroup");
+      const editing =
+        colorList.contains(document.activeElement) &&
+        colorGroupsStructureEqual(prevGroups, settings.colorGroups);
+      if (!editing) renderColorGroups();
       if (playBtn) {
         playBtn.textContent = t("settings.graph.playTimelapse");
         playBtn.title = t("settings.graph.playTimelapseDesc");
       }
     },
     destroy() {
+      clearQueryAutocompletes();
       el.replaceChildren();
       el.remove();
     },

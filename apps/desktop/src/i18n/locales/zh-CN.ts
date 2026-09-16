@@ -375,6 +375,7 @@ export const zhCN: Dictionary = {
       interface: "界面",
       graphAppearance: "外观",
       graphForce: "力度",
+      graphColors: "颜色分组",
     },
     editor: {
       typewriter: "打字机模式",
@@ -718,6 +719,18 @@ export const zhCN: Dictionary = {
       floatTitle: "图谱设置",
       floatToggle: "图谱设置",
       resetDefaults: "恢复默认",
+      colorGroupsDesc:
+        "按查询给节点着色。分组自上而下匹配，先命中先生效。可用 path:、file:、tag: 或裸笔记名；空格分隔表示同时满足（AND）。",
+      addColorGroup: "添加分组",
+      colorGroupEnabled: "启用分组",
+      colorGroupColor: "节点颜色",
+      colorGroupQueryPlaceholder: "path:docs tag:inbox",
+      colorGroupMoveUp: "上移",
+      colorGroupMoveDown: "下移",
+      colorGroupRemove: "删除分组",
+      suggestPath: "匹配文件路径",
+      suggestFile: "匹配文件名",
+      suggestTag: "匹配标签",
     },
     libraries: {
       add: "添加文库",

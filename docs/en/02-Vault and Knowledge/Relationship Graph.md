@@ -63,8 +63,41 @@ A floating graph can open with complementary mode settings; Graph preferences sy
 | Node / link size | Visual weight |
 | Animate | Motion preference |
 | Center / repulsion / link force & distance | Layout physics (0–100 style sliders) |
+| Color groups | Paint nodes by query (see below) |
 
-Use **Restore defaults** if a layout feels chaotic.
+Use **Restore defaults** if a layout feels chaotic (this also clears color groups).
+
+### Color groups
+
+Color groups let you tint notes that match a search-style query. Groups are checked **from top to bottom**; the **first match wins**. Notes that match nothing keep the theme default color.
+
+In the graph settings panel, **Appearance**, **Forces**, and **Color groups** are collapsible. The floating panel opens with Color groups expanded and the others collapsed so the query editor stays reachable.
+
+Each group has:
+
+- An enable switch
+- A color
+- A query string (with Obsidian-style autocomplete: empty → `path:` / `file:` / `tag:`; after an operator → matching paths, files, or tags)
+
+**Operators (MVP):**
+
+| Query | Matches |
+| --- | --- |
+| `path:docs` | Vault-relative path contains `docs` (case-insensitive) |
+| `file:Welcome` | Filename or note name contains `Welcome` |
+| `tag:inbox` | Note has tag `inbox`, or a nested tag like `inbox/later` |
+| `Welcome` | Bare word — same as matching the note / file name |
+
+Space-separated terms are **AND** (all must match). Examples:
+
+- `path:docs/en` — everything under the English docs folder
+- `tag:roadmap` — notes tagged roadmap
+- `path:notes tag:inbox` — inbox-tagged notes only under `notes`
+
+Reorder groups with the up/down controls so more specific rules sit above broader ones.
+
+> [!NOTE]
+> `line:`, `section:`, and `[property]` are recognized but not applied yet — they never match until content / property indexes land.
 
 ## Boundaries
 
@@ -73,6 +106,7 @@ Use **Restore defaults** if a layout feels chaotic.
 | Note graph | Tag graph |
 | Out / back links | Canvas editor |
 | Force layout | Dataview-like queries |
+| Color groups (`path` / `file` / `tag`) | `line` / `section` / property coloring |
 
 See [[Roadmap]] and [[Feature Comparison]].
 

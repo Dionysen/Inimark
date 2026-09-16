@@ -376,6 +376,7 @@ export const en: Dictionary = {
       interface: "Interface",
       graphAppearance: "Appearance",
       graphForce: "Forces",
+      graphColors: "Color groups",
     },
     editor: {
       typewriter: "Typewriter mode",
@@ -730,6 +731,18 @@ export const en: Dictionary = {
       floatTitle: "Graph settings",
       floatToggle: "Graph settings",
       resetDefaults: "Restore defaults",
+      colorGroupsDesc:
+        "Color nodes by query. Groups are checked top to bottom — the first match wins. Use path:, file:, tag:, or a bare note name. Space-separated terms are AND.",
+      addColorGroup: "Add group",
+      colorGroupEnabled: "Enable group",
+      colorGroupColor: "Node color",
+      colorGroupQueryPlaceholder: "path:docs tag:inbox",
+      colorGroupMoveUp: "Move up",
+      colorGroupMoveDown: "Move down",
+      colorGroupRemove: "Remove group",
+      suggestPath: "Match file path",
+      suggestFile: "Match file name",
+      suggestTag: "Match tag",
     },
     libraries: {
       add: "Add library",

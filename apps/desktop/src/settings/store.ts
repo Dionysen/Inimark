@@ -17,8 +17,14 @@ import {
   normalizeSidebarTabLayout,
   type SidebarTabId,
 } from "../sidebar/tab-layout.ts";
+import {
+  isUsableGraphColor,
+  paletteColorAt,
+  type GraphColorGroup,
+} from "../graph/index.ts";
 
-export type { SidebarTabId };
+export type { SidebarTabId, GraphColorGroup };
+export { paletteColorAt };
 
 export const EDITOR_WIDTH_MIN = 480;
 export const EDITOR_WIDTH_MAX = 1280;
@@ -89,6 +95,8 @@ export interface GraphSettings {
   linkForce: number;
   /** Preferred link length 0–100 (50 ≈ default). */
   linkDistance: number;
+  /** Ordered color groups (first matching query wins). */
+  colorGroups: GraphColorGroup[];
 }
 
 export interface AppSettings {
@@ -227,6 +235,7 @@ export const DEFAULT_GRAPH_SETTINGS: GraphSettings = {
   repulsion: 75,
   linkForce: 20,
   linkDistance: 70,
+  colorGroups: [],
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -521,6 +530,28 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
   };
 }
 
+function normalizeColorGroups(
+  raw: unknown,
+): GraphColorGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const groups: GraphColorGroup[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (!item || typeof item !== "object") continue;
+    const rec = item as Record<string, unknown>;
+    const id =
+      typeof rec.id === "string" && rec.id.trim()
+        ? rec.id.trim()
+        : `group-${i}`;
+    const query = typeof rec.query === "string" ? rec.query : "";
+    const colorRaw = typeof rec.color === "string" ? rec.color.trim() : "";
+    const color = isUsableGraphColor(colorRaw) ? colorRaw : paletteColorAt(i);
+    const enabled = rec.enabled === undefined ? true : Boolean(rec.enabled);
+    groups.push({ id, query, color, enabled });
+  }
+  return groups;
+}
+
 function normalizeGraphSettings(graph: Partial<GraphSettings>): GraphSettings {
   return {
     showArrows: Boolean(graph.showArrows ?? DEFAULT_GRAPH_SETTINGS.showArrows),
@@ -539,6 +570,9 @@ function normalizeGraphSettings(graph: Partial<GraphSettings>): GraphSettings {
       graph.linkDistance ?? DEFAULT_GRAPH_SETTINGS.linkDistance,
       0,
       100,
+    ),
+    colorGroups: normalizeColorGroups(
+      graph.colorGroups ?? DEFAULT_GRAPH_SETTINGS.colorGroups,
     ),
   };
 }

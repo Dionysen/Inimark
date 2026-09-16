@@ -108,6 +108,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "graph.repulsion", section: "graph", titleKey: "settings.graph.repulsion", descKey: "settings.graph.repulsionDesc" },
   { id: "graph.linkForce", section: "graph", titleKey: "settings.graph.linkForce", descKey: "settings.graph.linkForceDesc" },
   { id: "graph.linkDistance", section: "graph", titleKey: "settings.graph.linkDistance", descKey: "settings.graph.linkDistanceDesc" },
+  { id: "graph.colorGroups", section: "graph", titleKey: "settings.group.graphColors", descKey: "settings.graph.colorGroupsDesc" },
   // Libraries
   { id: "libraries.manage", section: "libraries", titleKey: "settings.nav.libraries", descKey: "settings.subtitle.libraries" },
   { id: "libraries.add", section: "libraries", titleKey: "settings.libraries.add", descKey: "settings.libraries.empty" },

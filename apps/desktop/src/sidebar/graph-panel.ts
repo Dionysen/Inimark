@@ -1,5 +1,10 @@
 import { onLocaleChange, t } from "../i18n/index.ts";
 import { linkIndex } from "../wikilink/index.ts";
+import { tagIndex } from "../tags/index.ts";
+import {
+  noteMatchContextFromPath,
+  resolveNodeColors,
+} from "../graph/index.ts";
 import { fileNameFromPath } from "../platform/env.ts";
 import {
   createIconButton,
@@ -283,6 +288,8 @@ export function mountGraphPanel(
   let panGestureT = 0;
   let alpha = 1; // cooling for force sim
   let graphSettings: GraphSettings = { ...loadSettings().graph };
+  /** Resolved group colors for the current node set (path → CSS color). */
+  let colorByPath = new Map<string, string>();
   let syncFloatChrome: (() => void) | null = null;
   /** Coalesce camera/UI updates into one paint per animation frame. */
   let dirty = true;
@@ -310,9 +317,17 @@ export function mountGraphPanel(
     progressionFullNodes = [];
   }
 
+  function rebuildColorMap(): void {
+    const paths = nodes.map((node) => node.path);
+    colorByPath = resolveNodeColors(paths, graphSettings.colorGroups, (path) =>
+      noteMatchContextFromPath(path, tagIndex.getTagsForFile(path)),
+    );
+  }
+
   function applyGraphSettingsLocal(next: GraphSettings): void {
     const wasAnimating = graphSettings.animate;
     graphSettings = { ...next };
+    rebuildColorMap();
     if (graphSettings.animate) {
       alpha = Math.max(alpha, wasAnimating ? 0.25 : 1);
     } else {
@@ -1077,7 +1092,8 @@ export function mountGraphPanel(
       const r = nodeRadius(node, maxDeg, scaleClamp, nodeScale);
       const drawR = r * nodeHoverScale(centerAmt);
       const fontSize = labelFontSize(drawR);
-      const baseFill = node.center ? nodeActive : nodeColor;
+      const baseFill =
+        colorByPath.get(node.path) ?? (node.center ? nodeActive : nodeColor);
       const litFill = mixCssColor(baseFill, nodeActive, focusAmt);
       ctx.beginPath();
       ctx.fillStyle = mixCssColor(litFill, accent, centerAmt);
@@ -1150,6 +1166,7 @@ export function mountGraphPanel(
     if (graphSettings.animate) alpha = Math.max(alpha, 0.2);
     updateLists();
     refreshChrome();
+    rebuildColorMap();
     scheduleDraw();
   }
 
@@ -1169,6 +1186,7 @@ export function mountGraphPanel(
     // Settle over animation frames — never block the UI thread with sync warmup.
     alpha = Math.max(alpha, 0.28);
     updateLists();
+    rebuildColorMap();
     scheduleDraw();
   }
 
@@ -1206,6 +1224,7 @@ export function mountGraphPanel(
     edges = nextEdges;
     attachDegrees(nodes, edges);
     rebuildAdjacency();
+    rebuildColorMap();
     alpha = Math.max(alpha, 0.45);
     scheduleDraw();
   }
@@ -1472,6 +1491,10 @@ export function mountGraphPanel(
   });
 
   const unsubIndex = linkIndex.subscribe(() => softRefreshFromIndex());
+  const unsubTags = tagIndex.subscribe(() => {
+    rebuildColorMap();
+    scheduleDraw();
+  });
   const unsubLocale = onLocaleChange(() => {
     refreshChrome();
     updateLists();
@@ -1539,6 +1562,7 @@ export function mountGraphPanel(
       cancelAnimationFrame(raf);
       closeEditorGraph();
       unsubIndex();
+      unsubTags();
       unsubLocale();
       unsubGraphSettings();
       ro.disconnect();
