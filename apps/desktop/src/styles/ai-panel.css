@@ -226,22 +226,60 @@
 }
 
 .inimark-ai-chip {
-  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
   border: 1px solid var(--inimark-border);
   background: var(--inimark-content-bg, var(--inimark-bg));
   color: var(--inimark-fg);
   border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 11px;
+  overflow: hidden;
+}
+
+.inimark-ai-chip__label,
+.inimark-ai-chip__remove {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
-  max-width: 100%;
+  margin: 0;
+  font: inherit;
+}
+
+.inimark-ai-chip__label {
+  padding: 2px 4px 2px 8px;
+  font-size: 11px;
+  max-width: 12rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.inimark-ai-chip:hover {
+.inimark-ai-chip__label:hover {
   background: var(--inimark-hover);
+}
+
+.inimark-ai-chip__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin-right: 2px;
+  border-radius: 999px;
+  color: var(--inimark-muted-fg);
+  flex-shrink: 0;
+}
+
+.inimark-ai-chip__remove:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-ai-chip__remove .inimark-icon {
+  width: 10px;
+  height: 10px;
 }
 
 .inimark-ai-input {

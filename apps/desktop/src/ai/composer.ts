@@ -1,4 +1,4 @@
-import { createIconButton } from "../ui/widgets/index.ts";
+import { closeIcon, createIconButton } from "../ui/widgets/index.ts";
 import { t } from "../i18n/index.ts";
 import type { ChatAttachment } from "./types.ts";
 
@@ -18,7 +18,8 @@ export interface ComposerOptions {
   onStop: () => void;
   onAddFile: () => void;
   onAddDirectory: () => void;
-  onToggleActiveNote: () => void;
+  /** Open the attached note / file in the editor. */
+  onOpenAttachment: (id: string) => void;
   onRemoveAttachment: (id: string) => void;
 }
 
@@ -55,10 +56,6 @@ function stopIcon(): string {
 
 function folderIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
-}
-
-function noteIcon(): string {
-  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M14 3v6h6"/></svg>`;
 }
 
 export function mountComposer(host: HTMLElement, options: ComposerOptions): ComposerController {
@@ -99,13 +96,6 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   });
   folderBtn.innerHTML = folderIcon();
 
-  const noteBtn = createIconButton({
-    label: t("ai.attachActive"),
-    title: t("ai.attachActive"),
-    onClick: () => options.onToggleActiveNote(),
-  });
-  noteBtn.innerHTML = noteIcon();
-
   const sendBtn = createIconButton({
     label: t("ai.send"),
     title: t("ai.send"),
@@ -122,7 +112,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   sendBtn.innerHTML = sendIcon();
   sendBtn.classList.add("inimark-ai-send");
 
-  tools.append(attachBtn, folderBtn, noteBtn);
+  tools.append(attachBtn, folderBtn);
   toolbar.append(tools, sendBtn);
 
   function syncInputHeight(): void {
@@ -143,12 +133,26 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   function syncChips(): void {
     chips.replaceChildren();
     for (const item of attachments) {
-      const chip = document.createElement("button");
-      chip.type = "button";
+      const chip = document.createElement("div");
       chip.className = "inimark-ai-chip";
-      chip.title = item.path || item.label;
-      chip.textContent = item.label;
-      chip.addEventListener("click", () => options.onRemoveAttachment(item.id));
+      chip.dataset.kind = item.kind;
+
+      const openBtn = document.createElement("button");
+      openBtn.type = "button";
+      openBtn.className = "inimark-ai-chip__label";
+      openBtn.title = item.path || item.label;
+      openBtn.textContent = item.label;
+      openBtn.addEventListener("click", () => options.onOpenAttachment(item.id));
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "inimark-ai-chip__remove";
+      removeBtn.setAttribute("aria-label", t("ai.removeAttachment"));
+      removeBtn.title = t("ai.removeAttachment");
+      removeBtn.innerHTML = closeIcon();
+      removeBtn.addEventListener("click", () => options.onRemoveAttachment(item.id));
+
+      chip.append(openBtn, removeBtn);
       chips.append(chip);
     }
     chips.hidden = attachments.length === 0;

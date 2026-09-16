@@ -15,6 +15,7 @@ import {
   type AttachmentContent,
 } from "./agent/context.ts";
 import type { AgentToolHost } from "./agent/tools.ts";
+import { resolveSendAttachments } from "./attachments.ts";
 import { mountChatView, type ChatViewController } from "./chat-view.ts";
 import { mountComposer, type ComposerController } from "./composer.ts";
 import { createOpenAiCompatProvider } from "./providers/openai-compat.ts";
@@ -117,7 +118,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     onStop: () => stop(),
     onAddFile: () => void addFileAttachment(),
     onAddDirectory: () => void addDirectoryAttachment(),
-    onToggleActiveNote: () => toggleActiveNoteAttachment(),
+    onOpenAttachment: (id) => void openAttachment(id),
     onRemoveAttachment: (id) => {
       attachments = attachments.filter((a) => a.id !== id);
       composer.setAttachments(attachments);
@@ -137,6 +138,8 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     uiMessages = [];
     history = [];
     undoStack = [];
+    attachments = [];
+    composer.setAttachments(attachments);
     refreshChat();
   }
 
@@ -174,20 +177,15 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     refreshChat();
   }
 
-  function toggleActiveNoteAttachment(): void {
-    const existing = attachments.find((a) => a.kind === "active-note");
-    if (existing) {
-      attachments = attachments.filter((a) => a.id !== existing.id);
-    } else {
-      const path = panelHost?.getActiveFilePath() ?? "";
-      attachments.push({
-        id: newId(),
-        kind: "active-note",
-        path,
-        label: path ? path.split("/").pop()! : t("ai.activeNote"),
-      });
-    }
-    composer.setAttachments(attachments);
+  function fileLabel(path: string): string {
+    return path.split(/[/\\]/).pop() || path;
+  }
+
+  async function openAttachment(id: string): Promise<void> {
+    const item = attachments.find((a) => a.id === id);
+    if (!item || !panelHost || item.kind === "directory") return;
+    if (!item.path) return;
+    await panelHost.openNote(item.path);
   }
 
   async function addFileAttachment(): Promise<void> {
@@ -209,7 +207,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       id: newId(),
       kind: "file",
       path: rel,
-      label: rel.split("/").pop() || rel,
+      label: fileLabel(rel),
     });
     composer.setAttachments(attachments);
   }
@@ -435,28 +433,21 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       return;
     }
 
-    const prefsAtts = [...atts];
-    if (
-      prefs.attachActiveNote &&
-      !prefsAtts.some((a) => a.kind === "active-note") &&
-      panelHost?.getActiveFilePath()
-    ) {
-      const path = panelHost.getActiveFilePath()!;
-      prefsAtts.push({
-        id: newId(),
-        kind: "active-note",
-        path,
-        label: path.split("/").pop() || path,
-      });
-    }
-
-    const packed = packAttachmentContext(await loadAttachmentContents(prefsAtts));
+    const sendAttachments = resolveSendAttachments({
+      userAttachments: atts,
+      activeFilePath: panelHost?.getActiveFilePath() ?? null,
+      attachActiveNote: prefs.attachActiveNote,
+      makeId: newId,
+      labelForPath: fileLabel,
+    });
+    const packed = packAttachmentContext(await loadAttachmentContents(sendAttachments));
     const userContent = formatUserTurnWithAttachments(text, packed.text);
 
     uiMessages.push({ id: newId(), kind: "user", content: text });
     history.push({ role: "user", content: userContent });
     composer.setText("");
-    attachments = [];
+    // Chips stay as the user’s explicit attachments only (never silent active-note).
+    attachments = attachments.filter((a) => a.kind === "file" || a.kind === "directory");
     composer.setAttachments(attachments);
     refreshChat();
 
@@ -504,12 +495,6 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     newBtn.title = t("ai.newChat");
     undoBtn.title = t("ai.undoWrite");
   });
-
-  // Default: offer active note chip when prefs say so (visual only until send).
-  const prefs = loadAiPrefs();
-  if (prefs.attachActiveNote) {
-    toggleActiveNoteAttachment();
-  }
 
   return {
     el: hostEl,

@@ -23,6 +23,7 @@ import {
   clampComposerInputHeight,
   COMPOSER_MAX_LINES,
 } from "../src/ai/composer.ts";
+import { resolveSendAttachments } from "../src/ai/attachments.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
 import { initI18n, setLocale } from "../src/i18n/index.ts";
 import {
@@ -307,5 +308,66 @@ describe("clampComposerInputHeight", () => {
     const capped = clampComposerInputHeight(line * 8 + pad, line, pad);
     expect(capped.height).toBe(line * COMPOSER_MAX_LINES + pad);
     expect(capped.scroll).toBe(true);
+  });
+});
+
+describe("resolveSendAttachments", () => {
+  const labelForPath = (path: string) => path.split("/").pop() || path;
+  let n = 0;
+  const makeId = () => `id-${++n}`;
+
+  test("silently adds current note when user attached nothing", () => {
+    n = 0;
+    expect(
+      resolveSendAttachments({
+        userAttachments: [],
+        activeFilePath: "notes/a.md",
+        attachActiveNote: true,
+        makeId,
+        labelForPath,
+      }),
+    ).toEqual([
+      { id: "id-1", kind: "active-note", path: "notes/a.md", label: "a.md" },
+    ]);
+  });
+
+  test("prefers explicit file/folder chips over silent current note", () => {
+    n = 0;
+    const file = {
+      id: "f1",
+      kind: "file" as const,
+      path: "other.md",
+      label: "other.md",
+    };
+    expect(
+      resolveSendAttachments({
+        userAttachments: [file],
+        activeFilePath: "notes/a.md",
+        attachActiveNote: true,
+        makeId,
+        labelForPath,
+      }),
+    ).toEqual([file]);
+  });
+
+  test("skips silent current note when pref is off or no active file", () => {
+    expect(
+      resolveSendAttachments({
+        userAttachments: [],
+        activeFilePath: "notes/a.md",
+        attachActiveNote: false,
+        makeId: () => "x",
+        labelForPath,
+      }),
+    ).toEqual([]);
+    expect(
+      resolveSendAttachments({
+        userAttachments: [],
+        activeFilePath: null,
+        attachActiveNote: true,
+        makeId: () => "x",
+        labelForPath,
+      }),
+    ).toEqual([]);
   });
 });
