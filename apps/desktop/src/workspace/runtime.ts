@@ -1,7 +1,14 @@
 import type { LibraryBookmarks } from "../bookmarks/store.ts";
 import type { LibrarySessionState } from "../libraries/store.ts";
+import {
+  clearLegacyAiChatSessionsFromLocalStorage,
+  loadLegacyAiChatSessionsFromLocalStorage,
+  parseAiChatSessions,
+  type AiChatSession,
+} from "../ai/chat-history.ts";
 import { readInimarkFile, inimarkFileExists, writeInimarkFile } from "./io.ts";
 import {
+  WORKSPACE_AI_CHAT_FILE,
   WORKSPACE_BOOKMARKS_FILE,
   WORKSPACE_LINK_INDEX_FILE,
   WORKSPACE_RECENT_FILE,
@@ -77,11 +84,12 @@ interface WorkspaceRuntimeState {
   session: LibrarySessionState;
   recent: string[];
   linkIndexCache: string | null;
+  aiChat: AiChatSession[];
   dirty: Set<WorkspaceDataKey>;
   io?: WorkspaceFileIo;
 }
 
-type WorkspaceDataKey = "bookmarks" | "session" | "recent" | "linkIndex";
+type WorkspaceDataKey = "bookmarks" | "session" | "recent" | "linkIndex" | "aiChat";
 
 let active: WorkspaceRuntimeState | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -242,6 +250,18 @@ async function writeDirtyFiles(state: WorkspaceRuntimeState): Promise<void> {
       }),
     );
   }
+  if (state.dirty.has("aiChat")) {
+    writes.push(
+      writeWorkspaceDataFile(
+        state.rootPath,
+        WORKSPACE_AI_CHAT_FILE,
+        JSON.stringify(state.aiChat, null, 2),
+        io,
+      ).catch((error) => {
+        console.error("Failed to save ai-chat.json", error);
+      }),
+    );
+  }
 
   await Promise.all(writes);
   state.dirty.clear();
@@ -325,6 +345,27 @@ export async function bindWorkspace(
     }
   }
 
+  const aiChatRaw = await readWorkspaceDataFile(rootPath, WORKSPACE_AI_CHAT_FILE, io);
+  const aiChatFileExists = await workspaceDataFileExists(
+    rootPath,
+    WORKSPACE_AI_CHAT_FILE,
+    io,
+  );
+  let aiChat = parseAiChatSessions(parseJson<unknown>(aiChatRaw));
+  let aiChatMigrated = false;
+  if (aiChatRaw == null && !aiChatFileExists) {
+    const fromStorage = loadLegacyAiChatSessionsFromLocalStorage();
+    if (fromStorage.length > 0) {
+      aiChat = fromStorage;
+      aiChatMigrated = true;
+      migrated = true;
+    }
+  } else if (aiChatRaw != null && aiChat.length === 0 && aiChatRaw.trim() !== "[]") {
+    console.error("Invalid ai-chat.json in .inimark");
+  } else if (aiChatRaw == null && aiChatFileExists) {
+    console.error("Failed to read ai-chat.json from .inimark");
+  }
+
   active = {
     rootPath,
     libraryId,
@@ -332,6 +373,7 @@ export async function bindWorkspace(
     session,
     recent,
     linkIndexCache,
+    aiChat,
     dirty: new Set(),
     io,
   };
@@ -341,8 +383,10 @@ export async function bindWorkspace(
     active.dirty.add("session");
     active.dirty.add("recent");
     if (linkIndexCache) active.dirty.add("linkIndex");
+    if (aiChatMigrated) active.dirty.add("aiChat");
     await flushWorkspace();
     clearMigratedLocalStorage(libraryId, rootPath);
+    if (aiChatMigrated) clearLegacyAiChatSessionsFromLocalStorage();
   }
 }
 
@@ -414,5 +458,17 @@ export function setWorkspaceLinkIndexCache(rootPath: string, cache: string): boo
   if (!active || active.rootPath !== rootPath) return false;
   active.linkIndexCache = cache;
   markDirty("linkIndex");
+  return true;
+}
+
+export function getWorkspaceAiChatSessions(): AiChatSession[] | null {
+  if (!active) return null;
+  return active.aiChat;
+}
+
+export function setWorkspaceAiChatSessions(sessions: AiChatSession[]): boolean {
+  if (!active) return false;
+  active.aiChat = sessions;
+  markDirty("aiChat");
   return true;
 }

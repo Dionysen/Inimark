@@ -26,6 +26,7 @@ Under each library root:
 | `session.json` | Open files, caret/scroll, source mode, expanded dirs | Yes — session resets |
 | `recent.json` | Recents | Yes — recents clear |
 | `link-index.json` | Wikilink index cache | Yes — app rebuilds it |
+| `ai-chat.json` | AI chat history (up to 50 per library) | Yes — chats are lost |
 
 Typical library root layout:
 
@@ -35,6 +36,7 @@ Typical library root layout:
   - `session.json`
   - `recent.json`
   - `link-index.json`
+  - `ai-chat.json`
 - `publish.config.json`
 - `dist/` (build output)
 
@@ -48,7 +50,7 @@ Typical library root layout:
 | Notes + assets | Commit |
 | `publish.config.json` | Commit |
 | `.inimark/bookmarks.json` | Optional (nice for shared hubs) |
-| `.inimark/session.json` / `recent.json` | Usually ignore (personal) |
+| `.inimark/session.json` / `recent.json` / `ai-chat.json` | Usually ignore (personal) |
 | `link-index.json` | Optional; rebuildable |
 | `dist/` | Ignore — build artifact |
 

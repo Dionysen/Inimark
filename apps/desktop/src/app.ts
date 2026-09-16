@@ -816,6 +816,7 @@ export function mountApp(host: HTMLElement): AppController {
     } catch (error) {
       console.error("Failed to load workspace metadata from .inimark", error);
     }
+    shell.ai.syncWorkspace();
     shell.sidebar.setWorkspace(workspace);
     void buildLinkIndexForWorkspace(workspace);
     void buildTagIndexForWorkspace(workspace);
@@ -861,6 +862,7 @@ export function mountApp(host: HTMLElement): AppController {
     if (libraryId === activeLibraryId) return;
     if (!(await confirmDiscardChanges())) return;
     persistLibrarySession();
+    shell.ai.persistActiveSession();
     await flushWorkspace();
     await loadLibraryById(libraryId, { restoreSession: true });
   }
@@ -880,6 +882,7 @@ export function mountApp(host: HTMLElement): AppController {
       showLibraryAddedToast(shell.mainColumn, picked.workspace.rootName);
     }
     persistLibrarySession();
+    shell.ai.persistActiveSession();
     await flushWorkspace();
     await activateWorkspace(picked.workspace, { restoreSession: false });
   }
@@ -1090,6 +1093,11 @@ export function mountApp(host: HTMLElement): AppController {
   });
   shell.sidebar.onCloseLibrary(() => {
     persistLibrarySession();
+    shell.ai.persistActiveSession();
+    void flushWorkspace().finally(() => {
+      unbindWorkspace();
+      shell.ai.syncWorkspace();
+    });
     workspace = null;
     activeFilePath = null;
     activeLibraryId = null;

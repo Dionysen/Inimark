@@ -7,11 +7,30 @@ import {
 } from "../platform/workspace.ts";
 import { searchVaultIncremental } from "../sidebar/vault-search.ts";
 import {
+  chatHistoryIcon,
+  closeIcon,
+  createMenu,
   createPanelToolbar,
   newChatIcon,
   undoWriteIcon,
 } from "../ui/widgets/index.ts";
+import {
+  AI_CHAT_HISTORY_MAX,
+  createAiChatSession,
+  deleteAiChatSession,
+  previewFromUiMessages,
+  sessionHasContent,
+  titleFromFirstUserMessage,
+  upsertAiChatSession,
+  wouldEvictAiChatSession,
+  type AiChatSession,
+} from "./chat-history.ts";
 import { runAgentLoop, type AgentLoopEvent } from "./agent/loop.ts";
+import { promptConfirm } from "../ui/confirm-dialog.ts";
+import {
+  getWorkspaceAiChatSessions,
+  setWorkspaceAiChatSessions,
+} from "../workspace/runtime.ts";
 import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
   formatDirectoryListing,
@@ -46,6 +65,10 @@ export interface AiPanelController {
   focusComposer(): void;
   newChat(): void;
   setHost(host: AiPanelHost): void;
+  /** Write the open chat into the bound library’s history (before vault flush). */
+  persistActiveSession(): void;
+  /** Reload chat history after the bound library changes. */
+  syncWorkspace(): void;
   destroy(): void;
 }
 
@@ -91,8 +114,19 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   let undoStack: WriteUndoEntry[] = [];
   let abort: AbortController | null = null;
   let running = false;
+  let sessions: AiChatSession[] = [];
+  let currentSessionId: string | null = null;
+
+  const historyMenu = createMenu();
+  historyMenu.el.classList.add("inimark-ai-history-menu");
 
   const toolbar = createPanelToolbar([
+    {
+      label: t("ai.history"),
+      title: t("ai.history"),
+      icon: chatHistoryIcon,
+      onClick: () => toggleHistoryMenu(),
+    },
     {
       label: t("ai.undoWrite"),
       title: t("ai.undoWrite"),
@@ -107,8 +141,12 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       onClick: () => newChat(),
     },
   ]);
-  const undoBtn = toolbar.buttons[0]!;
-  const newBtn = toolbar.buttons[1]!;
+  const historyBtn = toolbar.buttons[0]!;
+  const undoBtn = toolbar.buttons[1]!;
+  const newBtn = toolbar.buttons[2]!;
+  historyBtn.setAttribute("aria-haspopup", "menu");
+  historyBtn.setAttribute("aria-expanded", "false");
+  historyMenu.setDismissAnchors([historyBtn]);
 
   const chatHost = document.createElement("div");
   const chat: ChatViewController = mountChatView(chatHost);
@@ -126,7 +164,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     },
   });
 
-  hostEl.append(toolbar.el, chatHost, composerHost);
+  hostEl.append(toolbar.el, chatHost, composerHost, historyMenu.el);
 
   function attachVaultPaths(
     items: readonly Array<{ path: string; kind: "file" | "directory" }>,
@@ -145,8 +183,57 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     undoBtn.disabled = undoStack.length === 0;
   }
 
-  function newChat(): void {
-    stop();
+  function reloadSessionsFromWorkspace(): void {
+    const fromWs = getWorkspaceAiChatSessions();
+    sessions = fromWs ? structuredClone(fromWs) : [];
+  }
+
+  function commitSessions(next: AiChatSession[]): void {
+    sessions = next;
+    setWorkspaceAiChatSessions(sessions);
+  }
+
+  function persistCurrentSession(): void {
+    if (!currentSessionId) return;
+    const existing = sessions.find((s) => s.id === currentSessionId);
+    if (!existing) return;
+    const next: AiChatSession = {
+      ...existing,
+      uiMessages: structuredClone(uiMessages),
+      history: structuredClone(history),
+      preview: previewFromUiMessages(uiMessages),
+      updatedAt: Date.now(),
+    };
+    if (!sessionHasContent(next)) return;
+    commitSessions(upsertAiChatSession(sessions, next));
+  }
+
+  async function confirmHistoryEviction(): Promise<boolean> {
+    return promptConfirm({
+      title: t("ai.historyLimitTitle"),
+      message: t("ai.historyLimitMessage", { max: AI_CHAT_HISTORY_MAX }),
+      confirmLabel: t("ai.historyLimitConfirm"),
+      cancelLabel: t("ai.historyLimitCancel"),
+    });
+  }
+
+  /**
+   * First user message of a draft chat → create a stored session + title.
+   * Caller must confirm eviction when `wouldEvictAiChatSession` is true.
+   */
+  function ensureSessionForFirstMessage(userText: string): void {
+    if (currentSessionId) return;
+    const draft = createAiChatSession({
+      title: titleFromFirstUserMessage(userText, t("ai.untitledChat")),
+      uiMessages,
+      history,
+    });
+    currentSessionId = draft.id;
+    commitSessions(upsertAiChatSession(sessions, draft));
+  }
+
+  function clearDraftChat(): void {
+    currentSessionId = null;
     uiMessages = [];
     history = [];
     undoStack = [];
@@ -154,6 +241,111 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     composer.setAttachments(attachments);
     refreshChat();
   }
+
+  function syncWorkspace(): void {
+    abort?.abort();
+    abort = null;
+    running = false;
+    composer.setRunning(false);
+    closeHistoryMenu();
+    clearDraftChat();
+    reloadSessionsFromWorkspace();
+  }
+
+  function newChat(): void {
+    stop();
+    closeHistoryMenu();
+    persistCurrentSession();
+    clearDraftChat();
+  }
+
+  function openSession(id: string): void {
+    if (id === currentSessionId) {
+      closeHistoryMenu();
+      return;
+    }
+    stop();
+    persistCurrentSession();
+    const session = sessions.find((s) => s.id === id);
+    if (!session) return;
+    currentSessionId = session.id;
+    uiMessages = structuredClone(session.uiMessages);
+    history = structuredClone(session.history);
+    undoStack = [];
+    attachments = [];
+    composer.setAttachments(attachments);
+    refreshChat();
+    closeHistoryMenu();
+  }
+
+  function removeSession(id: string): void {
+    commitSessions(deleteAiChatSession(sessions, id));
+    if (currentSessionId === id) {
+      stop();
+      clearDraftChat();
+    }
+    if (historyMenu.isOpen()) renderHistoryMenu();
+  }
+
+  function closeHistoryMenu(): void {
+    historyMenu.setOpen(false);
+    historyBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function positionHistoryMenu(): void {
+    const rect = historyBtn.getBoundingClientRect();
+    const menuWidth = Math.max(240, Math.min(320, hostEl.getBoundingClientRect().width - 16));
+    const left = Math.min(
+      Math.max(8, rect.left + rect.width / 2 - menuWidth / 2),
+      window.innerWidth - menuWidth - 8,
+    );
+    historyMenu.el.style.top = `${rect.bottom + 4}px`;
+    historyMenu.el.style.left = `${left}px`;
+    historyMenu.el.style.width = `${menuWidth}px`;
+  }
+
+  function renderHistoryMenu(): void {
+    historyMenu.clear();
+    historyMenu.setPath("");
+    historyMenu.addHeading(t("ai.history"));
+    if (sessions.length === 0) {
+      historyMenu.setEmpty(t("ai.historyEmpty"));
+      return;
+    }
+    for (const session of sessions) {
+      historyMenu.addItem({
+        label: session.title || t("ai.untitledChat"),
+        meta: session.preview || undefined,
+        metaPlacement: "below",
+        selected: session.id === currentSessionId,
+        title: session.title,
+        onClick: () => openSession(session.id),
+        trailingAction: {
+          icon: closeIcon(),
+          title: t("ai.historyDelete"),
+          onClick: () => removeSession(session.id),
+        },
+      });
+    }
+  }
+
+  function toggleHistoryMenu(): void {
+    if (historyMenu.isOpen()) {
+      closeHistoryMenu();
+      return;
+    }
+    reloadSessionsFromWorkspace();
+    renderHistoryMenu();
+    historyMenu.setOpen(true);
+    historyBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionHistoryMenu());
+  }
+
+  function onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape" && historyMenu.isOpen()) closeHistoryMenu();
+  }
+
+  document.addEventListener("keydown", onDocumentKeydown);
 
   function stop(): void {
     abort?.abort();
@@ -168,6 +360,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       }
     }
     refreshChat();
+    persistCurrentSession();
   }
 
   async function undoLastWrite(): Promise<void> {
@@ -455,13 +648,21 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     const packed = packAttachmentContext(await loadAttachmentContents(sendAttachments));
     const userContent = formatUserTurnWithAttachments(text, packed.text);
 
+    // Cap check before mutating the draft so cancel leaves the composer intact.
+    if (!currentSessionId && wouldEvictAiChatSession(sessions, { id: "__new__" })) {
+      const ok = await confirmHistoryEviction();
+      if (!ok) return;
+    }
+
     uiMessages.push({ id: newId(), kind: "user", content: text });
     history.push({ role: "user", content: userContent });
+    ensureSessionForFirstMessage(text);
     composer.setText("");
     // Chips stay as the user’s explicit attachments only (never silent active-note).
     attachments = attachments.filter((a) => a.kind === "file" || a.kind === "directory");
     composer.setAttachments(attachments);
     refreshChat();
+    persistCurrentSession();
 
     running = true;
     composer.setRunning(true);
@@ -501,13 +702,17 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     composer.setRunning(false);
     abort = null;
     refreshChat();
+    persistCurrentSession();
   }
 
   const unsubLocale = onLocaleChange(() => {
+    historyBtn.title = t("ai.history");
+    historyBtn.setAttribute("aria-label", t("ai.history"));
     newBtn.title = t("ai.newChat");
     newBtn.setAttribute("aria-label", t("ai.newChat"));
     undoBtn.title = t("ai.undoWrite");
     undoBtn.setAttribute("aria-label", t("ai.undoWrite"));
+    if (historyMenu.isOpen()) renderHistoryMenu();
   });
 
   return {
@@ -519,10 +724,15 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     setHost(next) {
       panelHost = next;
     },
+    persistActiveSession: persistCurrentSession,
+    syncWorkspace,
     destroy() {
       stop();
+      document.removeEventListener("keydown", onDocumentKeydown);
+      closeHistoryMenu();
       unregisterVaultDrop();
       unsubLocale();
+      historyMenu.destroy();
       toolbar.destroy();
       chat.destroy();
       composer.destroy();

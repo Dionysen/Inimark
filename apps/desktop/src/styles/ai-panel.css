@@ -700,3 +700,54 @@
   background: color-mix(in srgb, var(--inimark-fg) 70%, var(--inimark-surface));
   color: var(--inimark-bg);
 }
+
+/* Chat history dropdown (toolbar) */
+.inimark-ai-history-menu {
+  position: fixed;
+  z-index: 40;
+  min-width: 15rem;
+  max-width: min(20rem, calc(100vw - 16px));
+  max-height: min(22rem, 50vh);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.inimark-ai-history-menu .inimark-menu__path {
+  display: none;
+}
+
+.inimark-ai-history-menu .inimark-menu__heading {
+  margin: 0.55rem 0.7rem 0.4rem;
+}
+
+.inimark-ai-history-menu .inimark-menu__section {
+  overflow-y: auto;
+  min-height: 0;
+  max-height: inherit;
+}
+
+.inimark-ai-history-menu .inimark-menu-item-row {
+  width: 100%;
+  align-items: flex-start;
+}
+
+.inimark-ai-history-menu .inimark-menu-item__action {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0.2rem 0.25rem 0 0;
+  box-sizing: border-box;
+}
+
+.inimark-ai-history-menu .inimark-menu-item--meta-below .inimark-menu-item__content {
+  gap: 0.15rem;
+}
+
+.inimark-ai-history-menu .inimark-menu-item__meta--below {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  color: var(--inimark-muted-fg);
+}

@@ -13,6 +13,7 @@ export {
   aiTabIcon,
   newChatIcon,
   undoWriteIcon,
+  chatHistoryIcon,
   graphLocalModeIcon,
   graphVaultModeIcon,
   graphOpenEditorIcon,
