@@ -162,6 +162,21 @@ export const zhCN: Dictionary = {
     undoDone: "已恢复 {{path}}",
     error: "错误",
     missingKey: "请先在 设置 → AI 中填写 DeepSeek API Key。",
+    copyAnswer: "复制回答",
+    tools: {
+      get_active_note: "获取当前文档",
+      read_file: "读取文件",
+      list_dir: "列出目录",
+      search_vault: "搜索文库",
+      apply_edit: "编辑文件",
+      write_file: "写入文件",
+      open_note: "打开笔记",
+    },
+    toolStatus: {
+      pending: "进行中",
+      done: "完成",
+      error: "失败",
+    },
     settings: {
       apiKey: "API Key",
       apiKeyDesc: "DeepSeek（或 OpenAI 兼容）密钥，仅保存在本机。",

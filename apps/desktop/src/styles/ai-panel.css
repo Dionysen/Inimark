@@ -59,6 +59,41 @@
   align-items: stretch;
 }
 
+.inimark-ai-msg-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2px;
+  padding-left: 2px;
+}
+
+.inimark-ai-copy-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  margin: 0;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  line-height: 0;
+  opacity: 0.55;
+}
+
+.inimark-ai-copy-btn:hover {
+  opacity: 1;
+  color: var(--inimark-fg);
+  background: transparent;
+}
+
+.inimark-ai-copy-btn:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--inimark-accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.inimark-ai-copy-btn .inimark-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .inimark-ai-bubble {
   padding: var(--inimark-space-2) var(--inimark-space-3);
   border-radius: var(--inimark-radius-md);

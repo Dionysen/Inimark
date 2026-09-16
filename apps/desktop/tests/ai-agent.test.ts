@@ -15,11 +15,19 @@ import {
 } from "../src/ai/providers/sse.ts";
 import type { ChatProvider, ChatStreamEvent } from "../src/ai/types.ts";
 import {
+  formatToolCardSummary,
+  isFinalAssistantAnswer,
+} from "../src/ai/tool-labels.ts";
+import type { UiChatMessage } from "../src/ai/types.ts";
+import { initI18n } from "../src/i18n/index.ts";
+import {
   ALL_SIDEBAR_TABS,
   DEFAULT_LEFT_SIDEBAR_TABS,
   DEFAULT_RIGHT_SIDEBAR_TABS,
   normalizeSidebarTabLayout,
 } from "../src/sidebar/tab-layout.ts";
+
+initI18n("zh-CN");
 
 describe("normalizeSidebarTabLayout with ai", () => {
   test("defaults place ai on the right", () => {
@@ -217,5 +225,42 @@ describe("runAgentLoop", () => {
     expect(events).toContain("tool_start");
     expect(events).toContain("tool_end");
     expect(events).toContain("done");
+  });
+});
+
+describe("tool labels and copy eligibility", () => {
+  test("formats friendly Chinese tool summaries", () => {
+    expect(
+      formatToolCardSummary({
+        id: "1",
+        name: "get_active_note",
+        argsPreview: "{}",
+        status: "done",
+      }),
+    ).toBe("获取当前文档 · 完成");
+  });
+
+  test("isFinalAssistantAnswer picks the last answer of a turn", () => {
+    const messages: UiChatMessage[] = [
+      { id: "u1", kind: "user", content: "hello" },
+      { id: "a1", kind: "assistant", content: "嗨" },
+      {
+        id: "t1",
+        kind: "tool",
+        content: "",
+        tool: {
+          id: "c1",
+          name: "get_active_note",
+          argsPreview: "{}",
+          status: "done",
+        },
+      },
+      { id: "a2", kind: "assistant", content: "这是总结" },
+      { id: "u2", kind: "user", content: "继续" },
+      { id: "a3", kind: "assistant", content: "下一轮", streaming: true },
+    ];
+    expect(isFinalAssistantAnswer(messages, 1)).toBe(false);
+    expect(isFinalAssistantAnswer(messages, 3)).toBe(true);
+    expect(isFinalAssistantAnswer(messages, 5)).toBe(false);
   });
 });

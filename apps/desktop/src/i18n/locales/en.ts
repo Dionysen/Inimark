@@ -162,6 +162,21 @@ export const en: Dictionary = {
     undoDone: "Restored {{path}}",
     error: "Error",
     missingKey: "Add a DeepSeek API key in Settings → AI before chatting.",
+    copyAnswer: "Copy answer",
+    tools: {
+      get_active_note: "Get current note",
+      read_file: "Read file",
+      list_dir: "List directory",
+      search_vault: "Search vault",
+      apply_edit: "Edit file",
+      write_file: "Write file",
+      open_note: "Open note",
+    },
+    toolStatus: {
+      pending: "running",
+      done: "done",
+      error: "failed",
+    },
     settings: {
       apiKey: "API key",
       apiKeyDesc: "DeepSeek (or OpenAI-compatible) secret. Stored only on this device.",
