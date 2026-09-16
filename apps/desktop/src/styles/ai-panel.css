@@ -144,16 +144,78 @@
 
 .inimark-ai-bubble pre {
   overflow: auto;
-  padding: var(--inimark-space-2);
-  background: var(--inimark-surface-raised);
-  border-radius: var(--inimark-radius-sm);
-  font-family: var(--inimark-font-mono);
-  font-size: 12px;
+  margin: 0 0 0.55em;
+  padding: 10px 12px;
+  background: var(--bg-code, var(--inimark-surface-raised));
+  color: var(--text-primary, var(--inimark-fg));
+  border: 1px solid var(--border, var(--inimark-border));
+  border-radius: var(--radius-code-block, var(--inimark-radius-sm));
+  font-family: var(--font-mono, var(--inimark-font-mono));
+  font-size: var(--font-mono-size, 12px);
+  line-height: var(--code-line-height, 1.5);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .inimark-ai-bubble code {
-  font-family: var(--inimark-font-mono);
-  font-size: 0.92em;
+  font-family: var(--font-mono, var(--inimark-font-mono));
+  font-size: var(--font-mono-size, 0.92em);
+  padding: var(--padding-code-inline-y, 0.15em) var(--padding-code-inline-x, 0.35em);
+  background: var(--bg-code-inline, color-mix(in srgb, var(--inimark-fg) 6%, transparent));
+  color: var(--text-code, inherit);
+  border: var(--code-inline-border-width, 1px) solid
+    var(--code-inline-border, var(--border, transparent));
+  border-radius: var(--radius-code-inline, 3px);
+  white-space: break-spaces;
+}
+
+.inimark-ai-bubble pre code {
+  display: inline;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-radius: 0;
+  font-size: 100%;
+  white-space: pre-wrap;
+}
+
+.inimark-ai-bubble hr {
+  height: 1px;
+  padding: 0;
+  margin: 0.9em 0;
+  background: var(--border, var(--inimark-border));
+  border: 0;
+}
+
+.inimark-ai-bubble a {
+  color: var(--accent, var(--inimark-accent));
+}
+
+.inimark-ai-bubble table {
+  width: 100%;
+  margin: 0 0 0.55em;
+  border-collapse: collapse;
+  border-radius: var(--radius-table, 0);
+  overflow: hidden;
+  font-size: 0.95em;
+}
+
+.inimark-ai-bubble th,
+.inimark-ai-bubble td {
+  padding: 5px 8px;
+  border: 1px solid var(--border, var(--inimark-border));
+  vertical-align: top;
+}
+
+.inimark-ai-bubble th {
+  background: var(--table-header-bg, color-mix(in srgb, var(--inimark-fg) 6%, transparent));
+  color: var(--text-strong, var(--inimark-fg));
+  font-weight: 600;
+}
+
+.inimark-ai-bubble td {
+  background: var(--table-cell-bg, transparent);
 }
 
 .inimark-ai-bubble p {
@@ -168,6 +230,145 @@
 .inimark-ai-bubble ol {
   margin: 0 0 0.55em;
   padding-left: 1.2em;
+}
+
+.inimark-ai-bubble blockquote {
+  margin: 0 0 0.55em;
+  padding: var(--padding-blockquote-y, 4px) var(--padding-blockquote-x, 16px);
+  color: var(--blockquote-text, var(--inimark-muted-fg));
+  background: var(--blockquote-bg, transparent);
+  border-left: var(--blockquote-border-width, 3px) solid
+    var(--blockquote-border, var(--inimark-border));
+}
+
+.inimark-ai-bubble blockquote > :first-child {
+  margin-top: 0;
+}
+
+.inimark-ai-bubble blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Task lists — circular checkboxes (editor-like, display-only). */
+.inimark-ai-bubble ul.inimark-ai-task-list {
+  list-style: none;
+  padding-left: 0.15em;
+}
+
+.inimark-ai-bubble li.inimark-ai-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45em;
+  list-style: none;
+}
+
+.inimark-ai-bubble .inimark-ai-checkbox {
+  flex-shrink: 0;
+  width: 1.05em;
+  height: 1.05em;
+  margin-top: 0.18em;
+  border: max(1px, 0.085em) solid var(--border, var(--inimark-border));
+  border-radius: 50%;
+  background: var(--bg-primary, var(--inimark-surface));
+  box-sizing: border-box;
+  position: relative;
+}
+
+.inimark-ai-bubble .inimark-ai-checkbox[data-checked="1"] {
+  background: var(--accent, var(--inimark-accent));
+  border-color: var(--border, var(--inimark-border));
+}
+
+.inimark-ai-bubble .inimark-ai-checkbox[data-checked="1"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.3em;
+  height: 0.55em;
+  border: solid #fff;
+  border-width: 0 0.14em 0.14em 0;
+  transform: translate(-50%, -58%) rotate(45deg);
+  box-sizing: border-box;
+}
+
+/* Callouts — same color language as the editor, without hover glow. */
+.inimark-ai-bubble blockquote.md-alert {
+  --md-alert-color: #448aff;
+  --md-alert-bg: color-mix(in srgb, var(--md-alert-color) 14%, transparent);
+  display: grid;
+  grid-template-columns: 1.15em minmax(0, 1fr);
+  column-gap: 0.45em;
+  row-gap: 0.35em;
+  margin: 0 0 0.55em;
+  padding: 0.65em 0.85em 0.7em;
+  color: var(--text-primary, var(--inimark-fg));
+  background: var(--md-alert-bg);
+  border: none;
+  border-radius: 4px;
+}
+
+.inimark-ai-bubble blockquote.md-alert::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  width: 1.15em;
+  height: 1.15em;
+  background-color: var(--md-alert-color);
+  mask-image: var(--md-alert-icon);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: var(--md-alert-icon);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.inimark-ai-bubble blockquote.md-alert::after {
+  content: var(--md-alert-label);
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  color: var(--md-alert-color);
+  font-size: 0.88em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.inimark-ai-bubble blockquote.md-alert > * {
+  grid-column: 1 / -1;
+}
+
+.inimark-ai-bubble blockquote.md-alert-note {
+  --md-alert-color: #448aff;
+  --md-alert-label: "Note";
+  --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M12%202C6.47%202%202%206.47%202%2012s4.47%2010%2010%2010%2010-4.47%2010-10S17.53%202%2012%202m3.1%205.07c.14%200%20.28.05.4.16l1.27%201.27c.23.22.23.57%200%20.78l-1%201-2.05-2.05%201-1c.1-.11.24-.16.38-.16m-1.97%201.74%202.06%202.06-6.06%206.06H7.07v-2.06z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.inimark-ai-bubble blockquote.md-alert-tip {
+  --md-alert-color: #00bfa5;
+  --md-alert-label: "Tip";
+  --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27'%2F%3E%3C%2Fsvg%3E");
+}
+
+.inimark-ai-bubble blockquote.md-alert-important {
+  --md-alert-color: #00bfa5;
+  --md-alert-label: "Important";
+  --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27'%2F%3E%3C%2Fsvg%3E");
+}
+
+.inimark-ai-bubble blockquote.md-alert-warning {
+  --md-alert-color: #ff9100;
+  --md-alert-label: "Warning";
+  --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z'%2F%3E%3C%2Fsvg%3E");
+}
+
+.inimark-ai-bubble blockquote.md-alert-danger {
+  --md-alert-color: #ff1744;
+  --md-alert-label: "Danger";
+  --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'm11.5%2020%204.86-9.73H13V4l-5%209.73h3.5zM12%202c2.75%200%205.1%201%207.05%202.95S22%209.25%2022%2012s-1%205.1-2.95%207.05S14.75%2022%2012%2022s-5.1-1-7.05-2.95S2%2014.75%202%2012s1-5.1%202.95-7.05S9.25%202%2012%202'%2F%3E%3C%2Fsvg%3E");
 }
 
 .inimark-ai-tool-card {
