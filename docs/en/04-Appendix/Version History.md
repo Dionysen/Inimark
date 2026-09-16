@@ -35,7 +35,7 @@ Prefer **Latest** unless you are debugging an older build.
 
 ### What's new
 
-- Fix Windows startup flash of a transparent window with a native title bar: create undecorated and hidden, apply platform chrome, then show; window-state no longer restores decorations / visibility
+- Fix Windows startup flash of a transparent window with a native title bar: start hidden, strip decorations before show on Windows; keep Overlay decorations at creation on macOS so traffic lights stay correctly inset; window-state no longer restores decorations / visibility
 - AI document assistant (sidebar tab, default right, draggable to left): DeepSeek / OpenAI-compatible streaming chat, attachments, tool-calling agent that can edit notes (writes are undoable)
 - AI assistant is intent-first: greetings get a short summary of the open note and a ask-what-you-need; no vault browsing or answering questions only found inside the note until the user asks
 - AI tool cards use friendly labels; each turn’s final answer has a bottom-left copy control (answer text only, not tool traces)

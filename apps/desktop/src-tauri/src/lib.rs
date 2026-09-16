@@ -31,10 +31,13 @@ const WINDOW_STATE_FLAGS: StateFlags = StateFlags::from_bits_truncate(
 );
 
 /// Apply OS-specific chrome while the window is still hidden, then show main.
+///
+/// Config keeps `decorations: true` so macOS can place Overlay traffic lights
+/// (`trafficLightPosition`) at webview creation. Windows strips decorations
+/// here before `show()`, which is what avoids the startup title-bar flash.
 fn apply_platform_chrome(window: &tauri::WebviewWindow) {
     #[cfg(not(target_os = "macos"))]
     {
-        // Config already uses decorations: false; keep this as a hard guarantee.
         let _ = window.set_decorations(false);
     }
     #[cfg(target_os = "windows")]
