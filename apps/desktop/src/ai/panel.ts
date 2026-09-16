@@ -145,8 +145,12 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     abort = null;
     running = false;
     composer.setRunning(false);
+    const now = Date.now();
     for (const msg of uiMessages) {
-      if (msg.streaming) msg.streaming = false;
+      if (msg.streaming) {
+        msg.streaming = false;
+        msg.endedAt ??= now;
+      }
     }
     refreshChat();
   }
@@ -165,6 +169,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       id: newId(),
       kind: "assistant",
       content: t("ai.undoDone", { path: entry.path }),
+      endedAt: Date.now(),
     });
     refreshChat();
   }
@@ -359,12 +364,19 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       return;
     }
     if (event.type === "assistant_done") {
+      const now = Date.now();
       const last = uiMessages[uiMessages.length - 1];
       if (last?.kind === "assistant") {
         last.streaming = false;
+        last.endedAt = now;
         if (event.content) last.content = event.content;
       } else if (event.content) {
-        uiMessages.push({ id: newId(), kind: "assistant", content: event.content });
+        uiMessages.push({
+          id: newId(),
+          kind: "assistant",
+          content: event.content,
+          endedAt: now,
+        });
       }
       refreshChat();
       return;
@@ -474,6 +486,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     // Persist assistant turn(s) already reflected in UI into history for multi-turn.
     const lastAssistant = [...uiMessages].reverse().find((m) => m.kind === "assistant");
     if (lastAssistant?.content) {
+      lastAssistant.endedAt ??= Date.now();
       // history already has the user message; append final assistant text only
       // Tool transcripts stay inside the loop's message list for the request;
       // for follow-ups we keep a simplified history of user + last assistant.

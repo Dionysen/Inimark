@@ -163,6 +163,12 @@ export const zhCN: Dictionary = {
     error: "错误",
     missingKey: "请先在 设置 → AI 中填写 DeepSeek API Key。",
     copyAnswer: "复制回答",
+    answerAge: {
+      justNow: "刚刚",
+      minutes: "{{n}} 分钟前",
+      hours: "{{n}} 小时前",
+      days: "{{n}} 天前",
+    },
     tools: {
       get_active_note: "获取当前文档",
       read_file: "读取文件",

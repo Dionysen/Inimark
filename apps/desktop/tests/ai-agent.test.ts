@@ -18,8 +18,9 @@ import {
   formatToolCardSummary,
   isFinalAssistantAnswer,
 } from "../src/ai/tool-labels.ts";
+import { formatAnswerAge } from "../src/ai/relative-time.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
-import { initI18n } from "../src/i18n/index.ts";
+import { initI18n, setLocale } from "../src/i18n/index.ts";
 import {
   ALL_SIDEBAR_TABS,
   DEFAULT_LEFT_SIDEBAR_TABS,
@@ -262,5 +263,26 @@ describe("tool labels and copy eligibility", () => {
     expect(isFinalAssistantAnswer(messages, 1)).toBe(false);
     expect(isFinalAssistantAnswer(messages, 3)).toBe(true);
     expect(isFinalAssistantAnswer(messages, 5)).toBe(false);
+  });
+});
+
+describe("formatAnswerAge", () => {
+  const now = Date.parse("2026-09-16T12:00:00.000Z");
+
+  test("formats compact Chinese relative ages", () => {
+    setLocale("zh-CN");
+    expect(formatAnswerAge(now - 5_000, now)).toBe("刚刚");
+    expect(formatAnswerAge(now - 90_000, now)).toBe("1 分钟前");
+    expect(formatAnswerAge(now - 3_600_000, now)).toBe("1 小时前");
+    expect(formatAnswerAge(now - 2 * 86_400_000, now)).toBe("2 天前");
+  });
+
+  test("formats compact English relative ages", () => {
+    setLocale("en");
+    expect(formatAnswerAge(now - 5_000, now)).toBe("just now");
+    expect(formatAnswerAge(now - 5 * 60_000, now)).toBe("5m ago");
+    expect(formatAnswerAge(now - 3 * 3_600_000, now)).toBe("3h ago");
+    expect(formatAnswerAge(now - 86_400_000, now)).toBe("1d ago");
+    setLocale("zh-CN");
   });
 });

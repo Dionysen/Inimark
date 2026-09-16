@@ -12,7 +12,6 @@
   align-items: center;
   gap: var(--inimark-space-1);
   padding: var(--inimark-space-2) var(--inimark-space-2) var(--inimark-space-1);
-  border-bottom: 1px solid var(--inimark-border);
   flex-shrink: 0;
 }
 
@@ -61,7 +60,9 @@
 
 .inimark-ai-msg-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
+  gap: var(--inimark-space-1);
   margin-top: 2px;
   padding-left: 2px;
 }
@@ -70,8 +71,9 @@
   appearance: none;
   border: none;
   background: transparent;
-  padding: 2px;
+  padding: 6px;
   margin: 0;
+  border-radius: var(--inimark-radius-sm, 4px);
   color: var(--inimark-muted-fg);
   cursor: pointer;
   line-height: 0;
@@ -92,6 +94,15 @@
 .inimark-ai-copy-btn .inimark-icon {
   width: 14px;
   height: 14px;
+}
+
+.inimark-ai-msg-age {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--inimark-muted-fg);
+  opacity: 0.65;
+  user-select: none;
+  white-space: nowrap;
 }
 
 .inimark-ai-bubble {

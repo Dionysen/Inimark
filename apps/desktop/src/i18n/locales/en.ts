@@ -163,6 +163,12 @@ export const en: Dictionary = {
     error: "Error",
     missingKey: "Add a DeepSeek API key in Settings → AI before chatting.",
     copyAnswer: "Copy answer",
+    answerAge: {
+      justNow: "just now",
+      minutes: "{{n}}m ago",
+      hours: "{{n}}h ago",
+      days: "{{n}}d ago",
+    },
     tools: {
       get_active_note: "Get current note",
       read_file: "Read file",

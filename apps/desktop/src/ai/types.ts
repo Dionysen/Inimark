@@ -66,6 +66,8 @@ export interface UiChatMessage {
   content: string;
   tool?: UiToolCard;
   streaming?: boolean;
+  /** Epoch ms when this assistant answer finished (for relative age). */
+  endedAt?: number;
 }
 
 export interface WriteUndoEntry {

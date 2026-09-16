@@ -1,10 +1,14 @@
 import { renderChatMarkdown } from "./markdown-render.ts";
+import { formatAnswerAge } from "./relative-time.ts";
 import { formatToolCardSummary, isFinalAssistantAnswer } from "./tool-labels.ts";
 import type { UiChatMessage } from "./types.ts";
 import { t } from "../i18n/index.ts";
 import { isTauri } from "../platform/env.ts";
 import { menuIcons } from "../ui/widgets/menu.ts";
 import { bindTooltip } from "../ui/widgets/tooltip.ts";
+
+/** Refresh relative ages without a full message re-render. */
+const AGE_TICK_MS = 30_000;
 
 export interface ChatViewController {
   el: HTMLElement;
@@ -33,6 +37,29 @@ export function mountChatView(host: HTMLElement): ChatViewController {
   const list = document.createElement("div");
   list.className = "inimark-ai-chat-list inimark-scrollbar";
   host.append(list);
+
+  let ageTimer: ReturnType<typeof setInterval> | null = null;
+
+  function refreshAges(now: number = Date.now()): void {
+    for (const el of list.querySelectorAll<HTMLElement>(".inimark-ai-msg-age")) {
+      const raw = el.dataset.endedAt;
+      if (!raw) continue;
+      const endedAt = Number(raw);
+      if (!Number.isFinite(endedAt)) continue;
+      el.textContent = formatAnswerAge(endedAt, now);
+    }
+  }
+
+  function ensureAgeTimer(): void {
+    if (ageTimer != null) return;
+    ageTimer = setInterval(() => refreshAges(), AGE_TICK_MS);
+  }
+
+  function clearAgeTimer(): void {
+    if (ageTimer == null) return;
+    clearInterval(ageTimer);
+    ageTimer = null;
+  }
 
   function renderMessage(msg: UiChatMessage, index: number, messages: UiChatMessage[]): HTMLElement {
     const row = document.createElement("div");
@@ -70,7 +97,7 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     if (msg.streaming) bubble.classList.add("is-streaming");
     row.append(bubble);
 
-    // Copy only the final answer of a turn — not tool cards or earlier assistant fragments.
+    // Copy + age only on the final answer of a turn — not tool cards or earlier fragments.
     if (isFinalAssistantAnswer(messages, index)) {
       const actions = document.createElement("div");
       actions.className = "inimark-ai-msg-actions";
@@ -84,6 +111,14 @@ export function mountChatView(host: HTMLElement): ChatViewController {
         void copyPlainText(msg.content);
       });
       actions.append(copyBtn);
+      if (msg.endedAt != null) {
+        const age = document.createElement("time");
+        age.className = "inimark-ai-msg-age";
+        age.dataset.endedAt = String(msg.endedAt);
+        age.dateTime = new Date(msg.endedAt).toISOString();
+        age.textContent = formatAnswerAge(msg.endedAt);
+        actions.append(age);
+      }
       row.append(actions);
     }
 
@@ -94,11 +129,14 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     el: host,
     setMessages(messages) {
       list.replaceChildren(...messages.map((msg, i) => renderMessage(msg, i, messages)));
+      if (list.querySelector(".inimark-ai-msg-age")) ensureAgeTimer();
+      else clearAgeTimer();
     },
     scrollToBottom() {
       list.scrollTop = list.scrollHeight;
     },
     destroy() {
+      clearAgeTimer();
       host.replaceChildren();
     },
   };
