@@ -11,6 +11,8 @@ export {
   graphTabIcon,
   tagsTabIcon,
   aiTabIcon,
+  newChatIcon,
+  undoWriteIcon,
   graphLocalModeIcon,
   graphVaultModeIcon,
   graphOpenEditorIcon,

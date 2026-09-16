@@ -64,9 +64,19 @@ export function tagsTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.4 2.6A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
 }
 
-/** AI assistant sidebar tab — sparkles. */
+/** AI assistant sidebar tab — tilted four-point spark (subtle long / short tips). */
 export function aiTabIcon(): string {
-  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 3v3M12 18v3M3 12h3M18 12h3M6.2 6.2l2.1 2.1M15.7 15.7l2.1 2.1M17.8 6.2l-2.1 2.1M8.3 15.7l-2.1 2.1"/><circle cx="12" cy="12" r="3.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-20 12 12)" d="M12 2.9 13.55 9.75 19.1 12 13.55 14.25 12 21.1 10.45 14.25 4.9 12 10.45 9.75z"/></svg>`;
+}
+
+/** New AI chat / conversation. */
+export function newChatIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 5v14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 12h14"/></svg>`;
+}
+
+/** Undo last AI write to vault. */
+export function undoWriteIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M9 14 4 9l5-5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 9h10.5a5.5 5.5 0 1 1 0 11H11"/></svg>`;
 }
 
 /** Graph scope: local (ego) neighborhood. */

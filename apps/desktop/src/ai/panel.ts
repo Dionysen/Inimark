@@ -6,7 +6,11 @@ import {
   writeWorkspaceFile,
 } from "../platform/workspace.ts";
 import { searchVaultIncremental } from "../sidebar/vault-search.ts";
-import { createIconButton } from "../ui/widgets/index.ts";
+import {
+  createPanelToolbar,
+  newChatIcon,
+  undoWriteIcon,
+} from "../ui/widgets/index.ts";
 import { runAgentLoop, type AgentLoopEvent } from "./agent/loop.ts";
 import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
@@ -88,28 +92,23 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   let abort: AbortController | null = null;
   let running = false;
 
-  const toolbar = document.createElement("div");
-  toolbar.className = "inimark-ai-toolbar";
-
-  const title = document.createElement("div");
-  title.className = "inimark-ai-title";
-  title.textContent = t("ai.title");
-
-  const newBtn = createIconButton({
-    label: t("ai.newChat"),
-    title: t("ai.newChat"),
-    onClick: () => newChat(),
-  });
-  newBtn.textContent = "+";
-
-  const undoBtn = createIconButton({
-    label: t("ai.undoWrite"),
-    title: t("ai.undoWrite"),
-    onClick: () => void undoLastWrite(),
-  });
-  undoBtn.textContent = "↶";
-
-  toolbar.append(title, undoBtn, newBtn);
+  const toolbar = createPanelToolbar([
+    {
+      label: t("ai.undoWrite"),
+      title: t("ai.undoWrite"),
+      icon: undoWriteIcon,
+      onClick: () => void undoLastWrite(),
+      disabled: true,
+    },
+    {
+      label: t("ai.newChat"),
+      title: t("ai.newChat"),
+      icon: newChatIcon,
+      onClick: () => newChat(),
+    },
+  ]);
+  const undoBtn = toolbar.buttons[0]!;
+  const newBtn = toolbar.buttons[1]!;
 
   const chatHost = document.createElement("div");
   const chat: ChatViewController = mountChatView(chatHost);
@@ -127,7 +126,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     },
   });
 
-  hostEl.append(toolbar, chatHost, composerHost);
+  hostEl.append(toolbar.el, chatHost, composerHost);
 
   function attachVaultPaths(
     items: readonly Array<{ path: string; kind: "file" | "directory" }>,
@@ -505,9 +504,10 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   }
 
   const unsubLocale = onLocaleChange(() => {
-    title.textContent = t("ai.title");
     newBtn.title = t("ai.newChat");
+    newBtn.setAttribute("aria-label", t("ai.newChat"));
     undoBtn.title = t("ai.undoWrite");
+    undoBtn.setAttribute("aria-label", t("ai.undoWrite"));
   });
 
   return {
@@ -523,6 +523,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       stop();
       unregisterVaultDrop();
       unsubLocale();
+      toolbar.destroy();
       chat.destroy();
       composer.destroy();
       hostEl.replaceChildren();

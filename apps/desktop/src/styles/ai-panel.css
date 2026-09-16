@@ -7,24 +7,6 @@
   color: var(--inimark-fg);
 }
 
-.inimark-ai-toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--inimark-space-1);
-  padding: var(--inimark-space-2) var(--inimark-space-2) var(--inimark-space-1);
-  flex-shrink: 0;
-}
-
-.inimark-ai-title {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--inimark-control-font-size);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .inimark-ai-chat {
   flex: 1;
   min-height: 0;
