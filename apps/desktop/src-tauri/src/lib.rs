@@ -6,6 +6,7 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
 
+use commands::ai_commands::{ai_chat_cancel, ai_chat_stream, AiStreamState};
 use commands::color_commands::pick_screen_color;
 use commands::docs_deploy_commands::resolve_inimark_docs_vault;
 use commands::font_commands::list_system_fonts;
@@ -61,6 +62,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(SitePreviewState::default())
+        .manage(AiStreamState::default())
         .invoke_handler(tauri::generate_handler![
             list_system_fonts,
             reveal_in_file_manager,
@@ -74,7 +76,9 @@ pub fn run() {
             publish_write_site,
             publish_start_preview,
             publish_stop_preview,
-            resolve_inimark_docs_vault
+            resolve_inimark_docs_vault,
+            ai_chat_stream,
+            ai_chat_cancel
         ])
         .setup(|app| {
             for label in WINDOW_LABELS {

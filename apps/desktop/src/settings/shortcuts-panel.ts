@@ -44,6 +44,8 @@ export function shortcutActionLabel(id: string, fallback: string): string {
       return t("settings.shortcuts.toggleSidebar");
     case "focus-search":
       return t("settings.shortcuts.focusSearch");
+    case "focus-ai":
+      return t("settings.shortcuts.focusAi");
     case "tree-cut":
       return t("settings.shortcuts.treeCut");
     case "tree-copy":

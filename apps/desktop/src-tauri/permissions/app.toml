@@ -1,0 +1,20 @@
+[[permission]]
+identifier = "allow-app"
+description = "Allow Inimark application IPC commands"
+commands.allow = [
+  "list_system_fonts",
+  "reveal_in_file_manager",
+  "open_with_default_app",
+  "open_url",
+  "get_system_proxy_url",
+  "check_app_update",
+  "pick_screen_color",
+  "show_settings_window",
+  "toggle_settings_window",
+  "publish_write_site",
+  "publish_start_preview",
+  "publish_stop_preview",
+  "resolve_inimark_docs_vault",
+  "ai_chat_stream",
+  "ai_chat_cancel",
+]

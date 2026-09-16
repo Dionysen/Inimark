@@ -13,6 +13,7 @@ export type SettingsSection =
   | "publish"
   | "image"
   | "graph"
+  | "ai"
   | "about"
   | "dev";
 
@@ -25,6 +26,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   "publish",
   "image",
   "graph",
+  "ai",
   "about",
   "dev",
 ];
@@ -122,6 +124,12 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "publish.out", section: "publish", titleKey: "settings.publish.out", descKey: "settings.publish.outDesc" },
   { id: "publish.baseHref", section: "publish", titleKey: "settings.publish.baseHref", descKey: "settings.publish.baseHrefDesc" },
   { id: "publish.home", section: "publish", titleKey: "settings.publish.home", descKey: "settings.publish.homeDesc" },
+  // AI
+  { id: "ai.apiKey", section: "ai", titleKey: "ai.settings.apiKey", descKey: "ai.settings.apiKeyDesc" },
+  { id: "ai.baseUrl", section: "ai", titleKey: "ai.settings.baseUrl", descKey: "ai.settings.baseUrlDesc" },
+  { id: "ai.model", section: "ai", titleKey: "ai.settings.model", descKey: "ai.settings.modelDesc" },
+  { id: "ai.attachActive", section: "ai", titleKey: "ai.settings.attachActive", descKey: "ai.settings.attachActiveDesc" },
+  { id: "ai.useSystemProxy", section: "ai", titleKey: "ai.settings.useSystemProxy", descKey: "ai.settings.useSystemProxyDesc" },
   // About
   { id: "about.version", section: "about", titleKey: "settings.about.versionInfo", descKey: "settings.subtitle.about" },
   { id: "about.updates", section: "about", titleKey: "settings.about.softwareUpdate", descKey: "settings.about.checkUpdates" },

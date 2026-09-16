@@ -1105,6 +1105,36 @@ export function mountApp(host: HTMLElement): AppController {
     shell.tags.setActiveFile(null);
     refreshLibraryList();
   });
+  shell.ai.setHost({
+    getWorkspace: () => workspace,
+    getActiveFilePath: () => activeFilePath,
+    getActiveMarkdown: () => editor.getMarkdown(),
+    openNote: async (path) => {
+      await openWorkspaceFile(path);
+    },
+    onFileWritten(path, content) {
+      if (path === activeFilePath) {
+        const view = editor.getViewState();
+        editor.setMarkdown(content);
+        editor.restoreViewState(view);
+        shell.setDirty(true);
+        scheduleOutlineSync(content);
+        scheduleAutoSave();
+        if (workspace) {
+          linkIndex.addFileLinks(path, content);
+          scheduleTagIndexSync(content);
+        }
+        wordCount?.scheduleUpdate();
+      }
+      if (workspace) {
+        void (async () => {
+          workspace!.tree = await refreshWorkspaceTree(workspace!);
+          shell.sidebar.setWorkspace(workspace);
+        })();
+      }
+    },
+  });
+
   cleanups.push(
     mountShortcutHandler(
       {
@@ -1116,6 +1146,7 @@ export function mountApp(host: HTMLElement): AppController {
         close: () => void closeCurrent(),
         "toggle-sidebar": () => shell.toggleSidebar(),
         "focus-search": () => shell.focusSearch(),
+        "focus-ai": () => shell.focusAi(),
         "tree-cut": () => shell.sidebar.cutSelection(),
         "tree-copy": () => shell.sidebar.copySelection(),
         "tree-paste": () => void shell.sidebar.pasteClipboard(),

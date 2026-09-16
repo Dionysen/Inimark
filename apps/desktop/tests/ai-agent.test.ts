@@ -1,0 +1,201 @@
+import { describe, expect, test } from "vitest";
+
+import { applyUniqueReplace } from "../src/ai/agent/apply-edit.ts";
+import {
+  formatDirectoryListing,
+  packAttachmentContext,
+} from "../src/ai/agent/context.ts";
+import { runAgentLoop } from "../src/ai/agent/loop.ts";
+import { executeAgentTool, type AgentToolHost } from "../src/ai/agent/tools.ts";
+import {
+  consumeSseBuffer,
+  parseSseDataPayload,
+} from "../src/ai/providers/sse.ts";
+import type { ChatProvider, ChatStreamEvent } from "../src/ai/types.ts";
+import {
+  ALL_SIDEBAR_TABS,
+  DEFAULT_LEFT_SIDEBAR_TABS,
+  DEFAULT_RIGHT_SIDEBAR_TABS,
+  normalizeSidebarTabLayout,
+} from "../src/sidebar/tab-layout.ts";
+
+describe("normalizeSidebarTabLayout with ai", () => {
+  test("defaults place ai on the right", () => {
+    expect(DEFAULT_RIGHT_SIDEBAR_TABS).toContain("ai");
+    expect(DEFAULT_LEFT_SIDEBAR_TABS).not.toContain("ai");
+    const layout = normalizeSidebarTabLayout(undefined, undefined);
+    expect(layout.right).toEqual(DEFAULT_RIGHT_SIDEBAR_TABS);
+    expect([...layout.left, ...layout.right].sort()).toEqual(
+      [...ALL_SIDEBAR_TABS].sort(),
+    );
+  });
+
+  test("fills missing ai tab for legacy layouts", () => {
+    const layout = normalizeSidebarTabLayout(["files"], ["outline"]);
+    expect([...layout.left, ...layout.right]).toContain("ai");
+    expect(new Set([...layout.left, ...layout.right]).size).toBe(
+      ALL_SIDEBAR_TABS.length,
+    );
+  });
+});
+
+describe("applyUniqueReplace", () => {
+  test("replaces a unique occurrence", () => {
+    const result = applyUniqueReplace("hello world", "world", "there");
+    expect(result).toEqual({ ok: true, text: "hello there" });
+  });
+
+  test("fails when missing or ambiguous", () => {
+    expect(applyUniqueReplace("aa", "b", "c").ok).toBe(false);
+    expect(applyUniqueReplace("aaa", "a", "b").ok).toBe(false);
+  });
+});
+
+describe("packAttachmentContext", () => {
+  test("truncates under budget", () => {
+    const packed = packAttachmentContext(
+      [
+        {
+          attachment: {
+            id: "1",
+            kind: "file",
+            path: "a.md",
+            label: "a.md",
+          },
+          content: "x".repeat(1000),
+        },
+      ],
+      200,
+    );
+    expect(packed.blocks[0]?.truncated).toBe(true);
+    expect(packed.text).toContain("[truncated]");
+    expect(packed.text.length).toBeLessThanOrEqual(220);
+  });
+
+  test("formats directory listings", () => {
+    const text = formatDirectoryListing(
+      [
+        { name: "a.md", kind: "file", path: "a.md" },
+        { name: "dir", kind: "directory", path: "dir" },
+      ],
+      10,
+    );
+    expect(text).toContain("file\ta.md");
+    expect(text).toContain("dir\tdir");
+  });
+});
+
+describe("SSE parsing", () => {
+  test("parses text deltas from data lines", () => {
+    const events = parseSseDataPayload(
+      JSON.stringify({
+        choices: [{ delta: { content: "Hi" } }],
+      }),
+    );
+    expect(events).toEqual([{ type: "text_delta", text: "Hi" }]);
+  });
+
+  test("consumeSseBuffer keeps partial lines", () => {
+    const first = consumeSseBuffer('data: {"choices":[{"delta":{"content":"A"}}]}\n data: {"choi');
+    expect(first.events).toHaveLength(1);
+    expect(first.rest.startsWith(" data:")).toBe(true);
+  });
+});
+
+describe("executeAgentTool apply_edit", () => {
+  test("writes unique edit and returns undo", async () => {
+    const files = new Map<string, string>([["note.md", "alpha beta"]]);
+    const host: AgentToolHost = {
+      getActiveNote: () => ({ path: "note.md", content: files.get("note.md")! }),
+      readFile: async (path) => {
+        const text = files.get(path);
+        if (text == null) throw new Error("missing");
+        return text;
+      },
+      listDir: async () => [],
+      searchVault: async () => [],
+      writeFile: async (path, content) => {
+        files.set(path, content);
+      },
+      openNote: async () => {},
+    };
+    const result = await executeAgentTool(
+      "apply_edit",
+      JSON.stringify({
+        path: "note.md",
+        old_string: "beta",
+        new_string: "gamma",
+      }),
+      host,
+    );
+    expect(result.ok).toBe(true);
+    expect(files.get("note.md")).toBe("alpha gamma");
+    expect(result.undo).toEqual({ path: "note.md", before: "alpha beta" });
+  });
+});
+
+describe("runAgentLoop", () => {
+  test("runs a tool then finishes", async () => {
+    const calls: string[] = [];
+    let round = 0;
+    const provider: ChatProvider = {
+      id: "mock",
+      async *streamChat(): AsyncIterable<ChatStreamEvent> {
+        round += 1;
+        if (round === 1) {
+          yield {
+            type: "tool_call_delta",
+            index: 0,
+            id: "c1",
+            name: "get_active_note",
+            argumentsDelta: "{}",
+          };
+          yield {
+            type: "message_end",
+            message: {
+              role: "assistant",
+              content: null,
+              toolCalls: [{ id: "c1", name: "get_active_note", arguments: "{}" }],
+            },
+          };
+          return;
+        }
+        yield { type: "text_delta", text: "Done" };
+        yield {
+          type: "message_end",
+          message: { role: "assistant", content: "Done" },
+        };
+      },
+    };
+
+    const host: AgentToolHost = {
+      getActiveNote: () => {
+        calls.push("get_active_note");
+        return { path: "a.md", content: "# A" };
+      },
+      readFile: async () => "",
+      listDir: async () => [],
+      searchVault: async () => [],
+      writeFile: async () => {},
+      openNote: async () => {},
+    };
+
+    const events: string[] = [];
+    await runAgentLoop({
+      provider,
+      model: "mock",
+      history: [],
+      userContent: "hello",
+      host,
+      signal: new AbortController().signal,
+      onEvent(event) {
+        events.push(event.type);
+      },
+    });
+
+    expect(calls).toEqual(["get_active_note"]);
+    expect(events).toContain("tool_start");
+    expect(events).toContain("tool_end");
+    expect(events).toContain("done");
+  });
+});

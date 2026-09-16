@@ -16,6 +16,7 @@ export const DEFAULT_SHORTCUTS: ShortcutBinding[] = [
   { id: "close", label: "Close", group: "File", keys: ["Ctrl", "W"] },
   { id: "toggle-sidebar", label: "Toggle Sidebar", group: "View", keys: ["Ctrl", "B"] },
   { id: "focus-search", label: "Search in Files", group: "View", keys: ["Ctrl", "Shift", "F"] },
+  { id: "focus-ai", label: "AI Assistant", group: "View", keys: ["Ctrl", "L"] },
   { id: "tree-cut", label: "Cut", group: "Explorer", keys: ["Ctrl", "X"] },
   { id: "tree-copy", label: "Copy", group: "Explorer", keys: ["Ctrl", "C"] },
   { id: "tree-paste", label: "Paste", group: "Explorer", keys: ["Ctrl", "V"] },

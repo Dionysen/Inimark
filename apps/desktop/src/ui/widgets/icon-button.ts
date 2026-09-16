@@ -64,6 +64,11 @@ export function tagsTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.4 2.6A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
 }
 
+/** AI assistant sidebar tab — sparkles. */
+export function aiTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 3v3M12 18v3M3 12h3M18 12h3M6.2 6.2l2.1 2.1M15.7 15.7l2.1 2.1M17.8 6.2l-2.1 2.1M8.3 15.7l-2.1 2.1"/><circle cx="12" cy="12" r="3.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
+}
+
 /** Graph scope: local (ego) neighborhood. */
 export function graphLocalModeIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/><circle cx="5" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9.4 10.2 6.6 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14.6 10.2 17.4 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M10 14.5 8 16.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14 14.5 16 16.7"/></svg>`;
@@ -180,6 +185,11 @@ export function settingsPublishIcon(): string {
 /** Settings nav — relationship graph. */
 export function settingsGraphIcon(): string {
   return graphTabIcon();
+}
+
+/** Settings nav — AI assistant. */
+export function settingsAiIcon(): string {
+  return aiTabIcon();
 }
 
 /** Lucide wand-2 — Obsidian-style graph timelapse. */

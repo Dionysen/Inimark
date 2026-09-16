@@ -90,6 +90,7 @@ export function mountShortcutHandler(
         "open",
         "open-folder",
         "focus-search",
+        "focus-ai",
       ];
       if (inEditor && !alwaysAllowed.includes(id)) {
         continue;

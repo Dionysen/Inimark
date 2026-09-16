@@ -45,6 +45,7 @@ import {
   settingsImageIcon,
   settingsPublishIcon,
   settingsGraphIcon,
+  settingsAiIcon,
   settingsShortcutsIcon,
   settingsThemeIcon,
 } from "../ui/widgets/index.ts";
@@ -74,6 +75,7 @@ import {
 } from "./store.ts";
 import { mountPublishPanel } from "../publish/panel.ts";
 import { mountGraphControls } from "./graph-controls.ts";
+import { renderAiSettingsPanel } from "./ai-panel.ts";
 import { renderShortcutsPanel } from "./shortcuts-panel.ts";
 import { renderThemePanel } from "./theme-panel.ts";
 import { createSidebarTabsControl } from "./sidebar-tabs-control.ts";
@@ -113,6 +115,7 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
   publish: settingsPublishIcon,
   image: settingsImageIcon,
   graph: settingsGraphIcon,
+  ai: settingsAiIcon,
   about: settingsAboutIcon,
   dev: settingsDevIcon,
 };
@@ -126,6 +129,7 @@ const BASE_SECTION_IDS: SettingsSection[] = [
   "publish",
   "image",
   "graph",
+  "ai",
   "about",
 ];
 
@@ -488,6 +492,7 @@ export function mountSettingsView(
   let shortcutsCleanup: (() => void) | null = null;
   let themeCleanup: (() => void) | null = null;
   let graphControlsCleanup: (() => void) | null = null;
+  let aiSettingsCleanup: (() => void) | null = null;
   let publishCleanup: (() => void) | null = null;
   let devDocsCleanup: (() => void) | null = null;
   let libraryDropCleanup: (() => void) | null = null;
@@ -1313,6 +1318,8 @@ export function mountSettingsView(
     themeCleanup = null;
     graphControlsCleanup?.();
     graphControlsCleanup = null;
+    aiSettingsCleanup?.();
+    aiSettingsCleanup = null;
     publishCleanup?.();
     publishCleanup = null;
     devDocsCleanup?.();
@@ -1481,6 +1488,12 @@ export function mountSettingsView(
       graphControlsCleanup = () => controls.destroy();
     }
 
+    if (activeSection === "ai") {
+      const panelHost = document.createElement("div");
+      body.append(panelHost);
+      aiSettingsCleanup = renderAiSettingsPanel(panelHost);
+    }
+
     if (activeSection === "about") {
       renderAbout(body);
     }
@@ -1539,6 +1552,7 @@ export function mountSettingsView(
       shortcutsCleanup?.();
       themeCleanup?.();
       graphControlsCleanup?.();
+      aiSettingsCleanup?.();
       publishCleanup?.();
       devDocsCleanup?.();
       libraryDropCleanup?.();

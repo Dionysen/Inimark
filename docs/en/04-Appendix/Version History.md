@@ -36,6 +36,8 @@ Prefer **Latest** unless you are debugging an older build.
 ### What's new
 
 - Fix Windows startup flash of a transparent window with a native title bar: create undecorated and hidden, apply platform chrome, then show; window-state no longer restores decorations / visibility
+- AI document assistant (sidebar tab, default right, draggable to left): DeepSeek / OpenAI-compatible streaming chat, attachments, tool-calling agent that can edit notes (writes are undoable)
+- Fix settings (and other app IPC) failing after AI permissions enabled app ACL without allowing the rest of the commands
 
 ---
 

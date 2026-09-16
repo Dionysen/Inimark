@@ -21,6 +21,7 @@ import {
   mountTagsPanel,
   type TagsPanelController,
 } from "./sidebar/tags-panel.ts";
+import { mountAiPanel, type AiPanelController } from "./ai/panel.ts";
 import { loadSettings, type AppSettings } from "./settings/store.ts";
 import type { SidebarTabId } from "./sidebar/tab-layout.ts";
 
@@ -32,9 +33,9 @@ const SIDEBAR_WIDTH_MAX = 480;
 
 const RIGHT_SIDEBAR_OPEN_KEY = "inimark-right-sidebar-open";
 const RIGHT_SIDEBAR_WIDTH_KEY = "inimark-right-sidebar-width";
-const RIGHT_SIDEBAR_WIDTH_DEFAULT = 240;
+const RIGHT_SIDEBAR_WIDTH_DEFAULT = 320;
 const RIGHT_SIDEBAR_WIDTH_MIN = 180;
-const RIGHT_SIDEBAR_WIDTH_MAX = 420;
+const RIGHT_SIDEBAR_WIDTH_MAX = 520;
 
 export interface ShellController {
   editorHost: HTMLElement;
@@ -44,6 +45,7 @@ export interface ShellController {
   rightSidebar: RightSidebarController;
   graph: GraphPanelController;
   tags: TagsPanelController;
+  ai: AiPanelController;
   setFileName(name: string | null): void;
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
@@ -51,6 +53,7 @@ export interface ShellController {
   refreshGraphChrome(): void;
   toggleRightSidebar(): void;
   focusSearch(): void;
+  focusAi(): void;
   applySidebarTabLayout(settings?: AppSettings): void;
   destroy(): void;
 }
@@ -114,6 +117,9 @@ export function mountShell(
   tagsPanelHost.setAttribute("role", "tabpanel");
   const tags = mountTagsPanel(tagsPanelHost);
 
+  const aiPanelHost = document.createElement("div");
+  const ai = mountAiPanel(aiPanelHost);
+
   const mainColumn = document.createElement("div");
   mainColumn.className = "inimark-main";
 
@@ -129,6 +135,7 @@ export function mountShell(
       outline: outlinePanelHost,
       graph: graphPanelHost,
       tags: tagsPanelHost,
+      ai: aiPanelHost,
     };
   }
 
@@ -224,6 +231,20 @@ export function mountShell(
     }
   }
 
+  function focusAi(): void {
+    if (sidebar.hasTab("ai")) {
+      ensureSidebarOpen("left");
+      sidebar.activatePanel("ai");
+      ai.focusComposer();
+      return;
+    }
+    if (rightSidebar.hasTab("ai")) {
+      ensureSidebarOpen("right");
+      rightSidebar.activatePanel("ai");
+      ai.focusComposer();
+    }
+  }
+
   const titlebarZone = document.createElement("div");
   titlebarZone.className = "inimark-titlebar-zone";
 
@@ -305,6 +326,7 @@ export function mountShell(
     rightSidebar,
     graph,
     tags,
+    ai,
     setFileName(name) {
       fileName = name;
       renderTitle();
@@ -322,6 +344,7 @@ export function mountShell(
     },
     toggleRightSidebar,
     focusSearch,
+    focusAi,
     applySidebarTabLayout,
     destroy() {
       unsubscribeLocale();
@@ -332,6 +355,7 @@ export function mountShell(
       rightSidebar.destroy();
       graph.destroy();
       tags.destroy();
+      ai.destroy();
       host.replaceChildren();
     },
   };

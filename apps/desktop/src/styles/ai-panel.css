@@ -1,0 +1,216 @@
+.inimark-ai-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+}
+
+.inimark-ai-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-1);
+  padding: var(--inimark-space-2) var(--inimark-space-2) var(--inimark-space-1);
+  border-bottom: 1px solid var(--inimark-border);
+  flex-shrink: 0;
+}
+
+.inimark-ai-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--inimark-control-font-size);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-ai-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.inimark-ai-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--inimark-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-ai-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.inimark-ai-msg--user {
+  align-items: flex-end;
+}
+
+.inimark-ai-msg--assistant,
+.inimark-ai-msg--error,
+.inimark-ai-msg--tool {
+  align-items: stretch;
+}
+
+.inimark-ai-bubble {
+  padding: var(--inimark-space-2) var(--inimark-space-3);
+  border-radius: var(--inimark-radius-md);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.inimark-ai-msg--user .inimark-ai-bubble {
+  background: color-mix(in srgb, var(--inimark-accent) 18%, var(--inimark-surface));
+  border: 1px solid color-mix(in srgb, var(--inimark-accent) 35%, var(--inimark-border));
+  white-space: pre-wrap;
+}
+
+.inimark-ai-msg--assistant .inimark-ai-bubble {
+  background: var(--inimark-surface);
+  border: 1px solid var(--inimark-border);
+}
+
+.inimark-ai-msg--error .inimark-ai-bubble {
+  background: color-mix(in srgb, #c44 12%, var(--inimark-surface));
+  border: 1px solid color-mix(in srgb, #c44 40%, var(--inimark-border));
+}
+
+.inimark-ai-bubble.is-streaming::after {
+  content: "|";
+  animation: inimark-ai-caret 1s steps(1) infinite;
+  margin-left: 2px;
+  opacity: 0.6;
+}
+
+@keyframes inimark-ai-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.inimark-ai-bubble pre {
+  overflow: auto;
+  padding: var(--inimark-space-2);
+  background: var(--inimark-surface-raised);
+  border-radius: var(--inimark-radius-sm);
+  font-family: var(--inimark-font-mono);
+  font-size: 12px;
+}
+
+.inimark-ai-bubble code {
+  font-family: var(--inimark-font-mono);
+  font-size: 0.92em;
+}
+
+.inimark-ai-bubble p {
+  margin: 0 0 0.55em;
+}
+
+.inimark-ai-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.inimark-ai-bubble ul,
+.inimark-ai-bubble ol {
+  margin: 0 0 0.55em;
+  padding-left: 1.2em;
+}
+
+.inimark-ai-tool-card {
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm);
+  background: var(--inimark-surface-raised);
+  font-size: 12px;
+}
+
+.inimark-ai-tool-card > summary {
+  cursor: pointer;
+  padding: var(--inimark-space-2);
+  color: var(--inimark-muted-fg);
+  list-style: none;
+}
+
+.inimark-ai-tool-body {
+  margin: 0;
+  padding: 0 var(--inimark-space-2) var(--inimark-space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--inimark-font-mono);
+  font-size: 11px;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.inimark-ai-composer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--inimark-border);
+  padding: var(--inimark-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  background: var(--inimark-bg);
+}
+
+.inimark-ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--inimark-space-1);
+}
+
+.inimark-ai-chip {
+  appearance: none;
+  border: 1px solid var(--inimark-border);
+  background: var(--inimark-surface);
+  color: var(--inimark-fg);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-ai-chip:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-ai-composer-row {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto;
+  gap: var(--inimark-space-1);
+  align-items: end;
+}
+
+.inimark-ai-input {
+  width: 100%;
+  min-height: 52px;
+  max-height: 160px;
+  resize: vertical;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  background: var(--inimark-content-bg);
+  color: var(--inimark-fg);
+  padding: var(--inimark-space-2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.inimark-ai-input:focus {
+  outline: 2px solid var(--inimark-focus-ring);
+  outline-offset: 1px;
+}
+
+.inimark-ai-send {
+  color: var(--inimark-accent);
+}

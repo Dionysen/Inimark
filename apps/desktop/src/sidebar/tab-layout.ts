@@ -1,5 +1,6 @@
 import { t } from "../i18n/index.ts";
 import {
+  aiTabIcon,
   bookmarksTabIcon,
   filesTabIcon,
   graphTabIcon,
@@ -15,6 +16,7 @@ export const ALL_SIDEBAR_TABS = [
   "tags",
   "outline",
   "graph",
+  "ai",
 ] as const;
 
 export type SidebarTabId = (typeof ALL_SIDEBAR_TABS)[number];
@@ -26,7 +28,7 @@ export const DEFAULT_LEFT_SIDEBAR_TABS: SidebarTabId[] = [
   "tags",
 ];
 
-export const DEFAULT_RIGHT_SIDEBAR_TABS: SidebarTabId[] = ["outline", "graph"];
+export const DEFAULT_RIGHT_SIDEBAR_TABS: SidebarTabId[] = ["ai", "outline", "graph"];
 
 export interface SidebarTabLayout {
   left: SidebarTabId[];
@@ -53,6 +55,8 @@ export function sidebarTabIcon(id: SidebarTabId): string {
       return outlineTabIcon();
     case "graph":
       return graphTabIcon();
+    case "ai":
+      return aiTabIcon();
   }
 }
 
@@ -70,6 +74,8 @@ export function sidebarTabLabel(id: SidebarTabId): string {
       return t("outline.tab");
     case "graph":
       return t("graph.tab");
+    case "ai":
+      return t("ai.tab");
   }
 }
 
@@ -93,6 +99,13 @@ export function normalizeSidebarTabLayout(
 
   take(left, nextLeft);
   take(right, nextRight);
+
+  if (nextLeft.length === 0 && nextRight.length === 0) {
+    return {
+      left: [...DEFAULT_LEFT_SIDEBAR_TABS],
+      right: [...DEFAULT_RIGHT_SIDEBAR_TABS],
+    };
+  }
 
   for (const id of ALL_SIDEBAR_TABS) {
     if (seen.has(id)) continue;

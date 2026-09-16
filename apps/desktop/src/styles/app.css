@@ -1,5 +1,6 @@
 @import "./shell.css";
 @import "./status-toast.css";
+@import "./ai-panel.css";
 
 .inimark-shell {
   display: grid;

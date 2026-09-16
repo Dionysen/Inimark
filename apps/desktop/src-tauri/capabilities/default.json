@@ -27,6 +27,7 @@
     "window-state:default",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
+    "allow-app",
     {
       "identifier": "fs:allow-read-dir",
       "allow": [{ "path": "**" }]

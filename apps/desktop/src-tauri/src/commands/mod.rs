@@ -1,3 +1,4 @@
+pub mod ai_commands;
 pub mod color_commands;
 pub mod docs_deploy_commands;
 pub mod font_commands;
