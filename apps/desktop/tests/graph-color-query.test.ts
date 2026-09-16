@@ -5,6 +5,7 @@ import {
   noteMatchContextFromPath,
   parseGraphQuery,
   resolveNodeColors,
+  colorGroupRuleFromQuery,
   type GraphColorGroup,
 } from "../src/graph/index.ts";
 
@@ -32,6 +33,19 @@ describe("parseGraphQuery", () => {
       { kind: "unknown", op: "property", value: "status" },
       { kind: "unknown", op: "property", value: "priority:high" },
     ]);
+  });
+});
+
+describe("colorGroupRuleFromQuery", () => {
+  test("takes the first term as mode + value", () => {
+    expect(colorGroupRuleFromQuery("path:docs tag:inbox")).toEqual({
+      mode: "path",
+      value: "docs",
+    });
+    expect(colorGroupRuleFromQuery("Welcome")).toEqual({
+      mode: "name",
+      value: "Welcome",
+    });
   });
 });
 
@@ -93,9 +107,9 @@ describe("resolveNodeColors", () => {
 
   test("first enabled matching group wins", () => {
     const groups: GraphColorGroup[] = [
-      { id: "1", query: "path:docs", color: "#e67e22", enabled: true },
-      { id: "2", query: "tag:roadmap", color: "#3498db", enabled: true },
-      { id: "3", query: "tag:inbox", color: "#2ecc71", enabled: true },
+      { id: "1", mode: "path", value: "docs", color: "#e67e22", enabled: true },
+      { id: "2", mode: "tag", value: "roadmap", color: "#3498db", enabled: true },
+      { id: "3", mode: "tag", value: "inbox", color: "#2ecc71", enabled: true },
     ];
     const colors = resolveNodeColors(paths, groups, contextFor);
     expect(colors.get("docs/en/Welcome.md")).toBe("#e67e22");
@@ -103,11 +117,11 @@ describe("resolveNodeColors", () => {
     expect(colors.has("scratch/Todo.md")).toBe(false);
   });
 
-  test("disabled and empty queries are skipped", () => {
+  test("disabled and empty values are skipped", () => {
     const groups: GraphColorGroup[] = [
-      { id: "1", query: "path:docs", color: "#e67e22", enabled: false },
-      { id: "2", query: "", color: "#3498db", enabled: true },
-      { id: "3", query: "tag:roadmap", color: "#9b59b6", enabled: true },
+      { id: "1", mode: "path", value: "docs", color: "#e67e22", enabled: false },
+      { id: "2", mode: "tag", value: "", color: "#3498db", enabled: true },
+      { id: "3", mode: "tag", value: "roadmap", color: "#9b59b6", enabled: true },
     ];
     const colors = resolveNodeColors(paths, groups, contextFor);
     expect(colors.get("docs/en/Welcome.md")).toBe("#9b59b6");

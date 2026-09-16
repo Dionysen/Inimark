@@ -1,7 +1,6 @@
-import { t } from "../i18n/index.ts";
 import {
-  applyGraphSuggestion,
-  suggestGraphQuery,
+  suggestMatchValue,
+  type GraphMatchMode,
   type GraphSuggestCatalog,
   type GraphSuggestItem,
 } from "../graph/index.ts";
@@ -18,36 +17,24 @@ export type GraphQueryAutocompleteController = {
 
 export type GraphQueryAutocompleteOptions = {
   input: HTMLInputElement;
+  getMode: () => GraphMatchMode;
   getCatalog: () => GraphSuggestCatalog;
-  /** Called after a suggestion is applied (or input changes while open). */
-  onQueryCommit: (query: string) => void;
+  onValueCommit: (value: string) => void;
   limit?: number;
 };
 
-function itemDetail(item: GraphSuggestItem): string | undefined {
-  if (item.kind === "operator") {
-    const op = item.insert.replace(/:$/, "");
-    if (op === "path") return t("settings.graph.suggestPath");
-    if (op === "file") return t("settings.graph.suggestFile");
-    if (op === "tag") return t("settings.graph.suggestTag");
-  }
-  return item.detail;
-}
-
 /**
- * Attach an Obsidian-style suggestion popup to a graph color-group query input.
+ * Suggestion popup for a color-group value field (paths, files, tags, or names).
  */
 export function attachGraphQueryAutocomplete(
   options: GraphQueryAutocompleteOptions,
 ): GraphQueryAutocompleteController {
-  const { input, getCatalog, onQueryCommit } = options;
+  const { input, getMode, getCatalog, onValueCommit } = options;
   const limit = options.limit ?? 25;
 
   let open = false;
   let items: GraphSuggestItem[] = [];
   let activeIndex = 0;
-  let replaceFrom = 0;
-  let replaceTo = 0;
   let stopOutside: (() => void) | null = null;
   let stopScroll: (() => void) | null = null;
 
@@ -97,11 +84,10 @@ export function attachGraphQueryAutocomplete(
       name.textContent = item.label;
       nameRow.append(name);
       content.append(nameRow);
-      const detail = itemDetail(item);
-      if (detail) {
+      if (item.detail) {
         const meta = document.createElement("div");
         meta.className = "inimark-menu-item__meta inimark-menu-item__meta--below";
-        meta.textContent = detail;
+        meta.textContent = item.detail;
         content.append(meta);
         btn.classList.add("inimark-menu-item--meta-below");
       }
@@ -128,23 +114,14 @@ export function attachGraphQueryAutocomplete(
   }
 
   function applyItem(item: GraphSuggestItem): void {
-    const applied = applyGraphSuggestion(input.value, replaceFrom, replaceTo, item.insert);
-    input.value = applied.query;
-    input.setSelectionRange(applied.caret, applied.caret);
-    onQueryCommit(applied.query);
+    input.value = item.insert;
+    input.setSelectionRange(item.insert.length, item.insert.length);
+    onValueCommit(item.insert);
     close();
-    // Re-open for chained completion (e.g. after choosing `tag:`).
-    queueMicrotask(() => {
-      if (document.activeElement === input) refresh();
-    });
   }
 
   function refresh(): void {
-    const caret = input.selectionStart ?? input.value.length;
-    const result = suggestGraphQuery(input.value, caret, getCatalog(), limit);
-    replaceFrom = result.from;
-    replaceTo = result.to;
-    items = result.items;
+    items = suggestMatchValue(getMode(), input.value, getCatalog(), limit);
     activeIndex = items.length > 0 ? 0 : -1;
 
     if (items.length === 0) {
@@ -163,12 +140,11 @@ export function attachGraphQueryAutocomplete(
   }
 
   const onInput = () => {
-    onQueryCommit(input.value);
+    onValueCommit(input.value);
     refresh();
   };
   const onFocus = () => refresh();
   const onBlur = () => {
-    // Delay so mousedown on a suggestion can apply first.
     window.setTimeout(() => {
       if (!panel.contains(document.activeElement)) close();
     }, 0);

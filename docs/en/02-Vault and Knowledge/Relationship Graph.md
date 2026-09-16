@@ -69,7 +69,7 @@ Use **Restore defaults** if a layout feels chaotic (this also clears color group
 
 ### Color groups
 
-Color groups let you tint notes that match a search-style query. Groups are checked **from top to bottom**; the **first match wins**. Notes that match nothing keep the theme default color.
+Color groups let you tint notes that match a rule. Groups are checked **from top to bottom**; the **first match wins**. Notes that match nothing keep the theme default color.
 
 In the floating graph settings panel, **Appearance**, **Forces**, and **Color groups** are collapsible (Color groups opens by default). The full **Settings → Graph** page uses the same plain section headers as other settings pages.
 
@@ -77,27 +77,27 @@ Each group has:
 
 - An enable switch
 - A color
-- A query string (with Obsidian-style autocomplete: empty → `path:` / `file:` / `tag:`; after an operator → matching paths, files, or tags)
+- A **match type** (path, file, tag, or name)
+- A value field, with suggestions based on the type you picked
 
-**Operators (MVP):**
+**Match types:**
 
-| Query | Matches |
+| Type | Matches |
 | --- | --- |
-| `path:docs` | Vault-relative path contains `docs` (case-insensitive) |
-| `file:Welcome` | Filename or note name contains `Welcome` |
-| `tag:inbox` | Note has tag `inbox`, or a nested tag like `inbox/later` |
-| `Welcome` | Bare word — same as matching the note / file name |
+| Path | Vault-relative path contains the value (case-insensitive) |
+| File | Filename or note name contains the value |
+| Tag | Note has that tag, or a nested tag like `inbox/later` |
+| Name | Note / file name contains the value |
 
-Space-separated terms are **AND** (all must match). Examples:
+Examples:
 
-- `path:docs/en` — everything under the English docs folder
-- `tag:roadmap` — notes tagged roadmap
-- `path:notes tag:inbox` — inbox-tagged notes only under `notes`
+- Path `docs/en` — everything under the English docs folder
+- Tag `roadmap` — notes tagged roadmap
 
-Reorder groups with the up/down controls so more specific rules sit above broader ones.
+Add a separate group for each rule. Reorder with the up/down controls so more specific rules sit above broader ones.
 
 > [!NOTE]
-> `line:`, `section:`, and `[property]` are recognized but not applied yet — they never match until content / property indexes land.
+> Matching by line, heading section, or note property is not available yet.
 
 ## Boundaries
 

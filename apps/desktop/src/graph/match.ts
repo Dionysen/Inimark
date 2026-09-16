@@ -56,6 +56,27 @@ export function matchNoteQuery(ctx: NoteMatchContext, query: string | GraphQuery
   return parsed.terms.every((term) => matchTerm(ctx, term));
 }
 
+export const GRAPH_MATCH_MODES = ["path", "file", "tag", "name"] as const;
+export type GraphMatchMode = (typeof GRAPH_MATCH_MODES)[number];
+
+export function isGraphMatchMode(value: string): value is GraphMatchMode {
+  return (GRAPH_MATCH_MODES as readonly string[]).includes(value);
+}
+
+/** Single color-group rule: one match mode and one value. */
+export function matchColorGroup(
+  ctx: NoteMatchContext,
+  mode: GraphMatchMode,
+  value: string,
+): boolean {
+  return matchTerm(ctx, termFromMode(mode, value));
+}
+
+function termFromMode(mode: GraphMatchMode, value: string): GraphQueryTerm {
+  if (mode === "name") return { kind: "bare", value };
+  return { kind: mode, value };
+}
+
 const NOTE_EXT = /\.(md|markdown|mdown|canvas)$/i;
 
 /** Build a match context from a vault path and its tags. */

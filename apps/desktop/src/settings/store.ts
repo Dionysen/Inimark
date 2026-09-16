@@ -20,6 +20,7 @@ import {
 import {
   isUsableGraphColor,
   paletteColorAt,
+  normalizeColorGroupRule,
   type GraphColorGroup,
 } from "../graph/index.ts";
 
@@ -543,11 +544,11 @@ function normalizeColorGroups(
       typeof rec.id === "string" && rec.id.trim()
         ? rec.id.trim()
         : `group-${i}`;
-    const query = typeof rec.query === "string" ? rec.query : "";
     const colorRaw = typeof rec.color === "string" ? rec.color.trim() : "";
     const color = isUsableGraphColor(colorRaw) ? colorRaw : paletteColorAt(i);
     const enabled = rec.enabled === undefined ? true : Boolean(rec.enabled);
-    groups.push({ id, query, color, enabled });
+    const rule = normalizeColorGroupRule(rec);
+    groups.push({ id, color, enabled, ...rule });
   }
   return groups;
 }

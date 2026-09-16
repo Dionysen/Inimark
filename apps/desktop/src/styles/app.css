@@ -801,9 +801,30 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   flex-shrink: 0;
 }
 
+.inimark-graph-color-group-match {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.inimark-graph-color-group-mode {
+  flex: 0 0 92px;
+  width: 92px;
+  min-width: 92px;
+}
+
+.inimark-graph-color-group-mode .inimark-select__trigger {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 6px 0 8px;
+  font-size: 12px;
+}
+
 .inimark-graph-color-group-query {
   box-sizing: border-box;
-  width: 100%;
+  flex: 1;
+  width: auto;
   min-width: 0;
   height: 28px;
   padding: 0 8px;

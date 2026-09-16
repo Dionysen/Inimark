@@ -1,12 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  applyGraphSuggestion,
   collectPathSuggestions,
-  graphQueryTokenAt,
-  suggestGraphQuery,
+  suggestMatchValue,
   type GraphSuggestCatalog,
-} from "../src/graph/suggest.ts";
+} from "../src/graph/index.ts";
 
 const catalog: GraphSuggestCatalog = {
   tags: ["inbox", "roadmap", "core/intro"],
@@ -17,53 +15,27 @@ const catalog: GraphSuggestCatalog = {
   ],
 };
 
-describe("graphQueryTokenAt", () => {
-  test("finds the token under the caret", () => {
-    expect(graphQueryTokenAt("path:docs tag:in", 16)).toEqual({
-      from: 10,
-      to: 16,
-      text: "tag:in",
-    });
-    expect(graphQueryTokenAt("path:docs ", 10)).toEqual({
-      from: 10,
-      to: 10,
-      text: "",
-    });
-  });
-});
-
-describe("suggestGraphQuery", () => {
-  test("empty token suggests operators", () => {
-    const result = suggestGraphQuery("", 0, catalog);
-    expect(result.items.map((i) => i.insert)).toEqual(["path:", "file:", "tag:"]);
+describe("suggestMatchValue", () => {
+  test("tag mode suggests matching tags", () => {
+    const items = suggestMatchValue("tag", "in", catalog);
+    expect(items.map((i) => i.insert)).toEqual(["inbox", "core/intro"]);
   });
 
-  test("partial operator name filters operators", () => {
-    const result = suggestGraphQuery("ta", 2, catalog);
-    expect(result.items.map((i) => i.insert)).toEqual(["tag:"]);
+  test("path mode suggests folders and files", () => {
+    const items = suggestMatchValue("path", "doc", catalog);
+    expect(items.some((i) => i.insert === "docs")).toBe(true);
+    expect(items.some((i) => i.insert === "docs/en")).toBe(true);
+    expect(items.some((i) => i.insert === "docs/en/Welcome.md")).toBe(true);
   });
 
-  test("tag: suggests matching tags", () => {
-    const result = suggestGraphQuery("tag:in", 6, catalog);
-    expect(result.items.map((i) => i.insert)).toEqual(["tag:inbox", "tag:core/intro"]);
+  test("file mode suggests note names", () => {
+    const items = suggestMatchValue("file", "Wel", catalog);
+    expect(items.some((i) => i.insert === "Welcome")).toBe(true);
   });
 
-  test("path: suggests folders and files", () => {
-    const result = suggestGraphQuery("path:doc", 8, catalog);
-    expect(result.items.some((i) => i.insert === "path:docs")).toBe(true);
-    expect(result.items.some((i) => i.insert === "path:docs/en")).toBe(true);
-    expect(result.items.some((i) => i.insert === "path:docs/en/Welcome.md")).toBe(true);
-  });
-
-  test("file: suggests note names", () => {
-    const result = suggestGraphQuery("file:Wel", 8, catalog);
-    expect(result.items.some((i) => i.insert === "file:Welcome")).toBe(true);
-  });
-
-  test("applyGraphSuggestion replaces the active token", () => {
-    const applied = applyGraphSuggestion("path:docs tag:in", 10, 16, "tag:inbox");
-    expect(applied.query).toBe("path:docs tag:inbox");
-    expect(applied.caret).toBe("path:docs tag:inbox".length);
+  test("name mode suggests note stems", () => {
+    const items = suggestMatchValue("name", "Inb", catalog);
+    expect(items.some((i) => i.insert === "Inbox")).toBe(true);
   });
 });
 

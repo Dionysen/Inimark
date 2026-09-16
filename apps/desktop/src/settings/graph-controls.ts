@@ -1,5 +1,5 @@
 import { t } from "../i18n/index.ts";
-import { createSlider, createToggle, createButton } from "../ui/widgets/index.ts";
+import { createSlider, createToggle, createButton, createSelect, type SelectController } from "../ui/widgets/index.ts";
 import { linkIndex } from "../wikilink/index.ts";
 import { tagIndex } from "../tags/index.ts";
 import {
@@ -7,7 +7,7 @@ import {
   type GraphColorGroup,
   type GraphSettings,
 } from "./store.ts";
-import type { GraphSuggestCatalog } from "../graph/index.ts";
+import type { GraphMatchMode, GraphSuggestCatalog } from "../graph/index.ts";
 import {
   attachGraphQueryAutocomplete,
   type GraphQueryAutocompleteController,
@@ -165,7 +165,7 @@ function newGroupId(): string {
   return `group-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
-/** Ids / enable / color — query text alone does not count as a structural change. */
+/** Ids / enable / color / mode — value text alone does not count as a structural change. */
 function colorGroupsStructureEqual(
   a: readonly GraphColorGroup[],
   b: readonly GraphColorGroup[],
@@ -177,9 +177,26 @@ function colorGroupsStructureEqual(
       !!next &&
       group.id === next.id &&
       group.enabled === next.enabled &&
-      group.color === next.color
+      group.color === next.color &&
+      group.mode === next.mode
     );
   });
+}
+
+function matchModeOptions(): Array<{ value: GraphMatchMode; label: string }> {
+  return [
+    { value: "path", label: t("settings.graph.matchModePath") },
+    { value: "file", label: t("settings.graph.matchModeFile") },
+    { value: "tag", label: t("settings.graph.matchModeTag") },
+    { value: "name", label: t("settings.graph.matchModeName") },
+  ];
+}
+
+function valuePlaceholder(mode: GraphMatchMode): string {
+  if (mode === "path") return t("settings.graph.matchValuePath");
+  if (mode === "file") return t("settings.graph.matchValueFile");
+  if (mode === "tag") return t("settings.graph.matchValueTag");
+  return t("settings.graph.matchValueName");
 }
 
 function suggestCatalog(): GraphSuggestCatalog {
@@ -217,6 +234,7 @@ export function mountGraphControls(
   const bounds: Bound[] = [];
   const mountedGroups: MountedGroup[] = [];
   const queryAutocompletes: GraphQueryAutocompleteController[] = [];
+  const modeSelects: SelectController[] = [];
 
   // Float panel only: keep color groups open; collapse appearance/forces to save height.
   const openState = new Map<string, boolean>([
@@ -379,7 +397,8 @@ export function mountGraphControls(
         ...settings.colorGroups,
         {
           id: newGroupId(),
-          query: "",
+          mode: "tag",
+          value: "",
           color: paletteColorAt(settings.colorGroups.length),
           enabled: true,
         },
@@ -392,6 +411,8 @@ export function mountGraphControls(
   function clearQueryAutocompletes(): void {
     for (const ac of queryAutocompletes) ac.destroy();
     queryAutocompletes.length = 0;
+    for (const select of modeSelects) select.destroy();
+    modeSelects.length = 0;
   }
 
   function emitColorGroups(next: GraphColorGroup[], rerender = true): void {
@@ -441,20 +462,37 @@ export function mountGraphControls(
         emitColorGroups(next, false);
       });
 
+      const modeSelect = createSelect({
+        value: group.mode,
+        options: matchModeOptions(),
+        matchTriggerWidth: true,
+        title: t("settings.graph.matchMode"),
+        onChange(value) {
+          const mode = value as GraphMatchMode;
+          const next = settings.colorGroups.map((g, i) =>
+            i === index ? { ...g, mode } : g,
+          );
+          emitColorGroups(next);
+        },
+      });
+      modeSelect.el.classList.add("inimark-graph-color-group-mode");
+      modeSelects.push(modeSelect);
+
       const queryInput = document.createElement("input");
       queryInput.type = "text";
       queryInput.className = "inimark-graph-color-group-query";
-      queryInput.value = group.query;
-      queryInput.placeholder = t("settings.graph.colorGroupQueryPlaceholder");
+      queryInput.value = group.value;
+      queryInput.placeholder = valuePlaceholder(group.mode);
       queryInput.spellcheck = false;
       queryInput.autocomplete = "off";
 
       const ac = attachGraphQueryAutocomplete({
         input: queryInput,
+        getMode: () => settings.colorGroups[index]?.mode ?? group.mode,
         getCatalog: suggestCatalog,
-        onQueryCommit(query) {
+        onValueCommit(value) {
           const next = settings.colorGroups.map((g, i) =>
-            i === index ? { ...g, query } : g,
+            i === index ? { ...g, value } : g,
           );
           emitColorGroups(next, false);
         },
@@ -498,7 +536,10 @@ export function mountGraphControls(
       const toolbar = document.createElement("div");
       toolbar.className = "inimark-graph-color-group-toolbar";
       toolbar.append(toggle.el, colorInput, actions);
-      row.append(toolbar, queryInput);
+      const matchRow = document.createElement("div");
+      matchRow.className = "inimark-graph-color-group-match";
+      matchRow.append(modeSelect.el, queryInput);
+      row.append(toolbar, matchRow);
       colorList.append(row);
     });
   }

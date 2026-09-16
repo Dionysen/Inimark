@@ -1,12 +1,52 @@
-import { matchNoteQuery, type NoteMatchContext } from "./match.ts";
+import { parseGraphQuery } from "./query.ts";
+import {
+  isGraphMatchMode,
+  matchColorGroup,
+  type GraphMatchMode,
+  type NoteMatchContext,
+} from "./match.ts";
+
+export type { GraphMatchMode };
 
 /** One ordered color group in graph settings (first match wins). */
 export type GraphColorGroup = {
   id: string;
-  query: string;
+  mode: GraphMatchMode;
+  value: string;
   color: string;
   enabled: boolean;
 };
+
+/** Map a legacy free-text query (`path:docs tag:inbox`) onto one mode + value. */
+export function colorGroupRuleFromQuery(query: string): {
+  mode: GraphMatchMode;
+  value: string;
+} {
+  const first = parseGraphQuery(query).terms[0];
+  if (!first) return { mode: "tag", value: "" };
+  if (first.kind === "path" || first.kind === "file" || first.kind === "tag") {
+    return { mode: first.kind, value: first.value };
+  }
+  if (first.kind === "bare") return { mode: "name", value: first.value };
+  return { mode: "tag", value: "" };
+}
+
+export function normalizeColorGroupRule(
+  rec: Record<string, unknown>,
+): { mode: GraphMatchMode; value: string } {
+  if (typeof rec.mode === "string" && isGraphMatchMode(rec.mode)) {
+    return {
+      mode: rec.mode,
+      value: typeof rec.value === "string" ? rec.value : "",
+    };
+  }
+  const query = typeof rec.query === "string" ? rec.query : "";
+  const migrated = colorGroupRuleFromQuery(query);
+  if (typeof rec.value === "string" && rec.value && !migrated.value) {
+    return { mode: migrated.mode, value: rec.value };
+  }
+  return migrated;
+}
 
 /** Default palette when adding groups or repairing invalid colors. */
 export const GRAPH_COLOR_PALETTE = [
@@ -44,14 +84,16 @@ export function resolveNodeColors(
   groups: readonly GraphColorGroup[],
   contextFor: (path: string) => NoteMatchContext,
 ): Map<string, string> {
-  const active = groups.filter((g) => g.enabled && g.query.trim() && isUsableGraphColor(g.color));
+  const active = groups.filter(
+    (g) => g.enabled && g.value.trim() && isUsableGraphColor(g.color),
+  );
   const out = new Map<string, string>();
   if (active.length === 0) return out;
 
   for (const path of paths) {
     const ctx = contextFor(path);
     for (const group of active) {
-      if (matchNoteQuery(ctx, group.query)) {
+      if (matchColorGroup(ctx, group.mode, group.value)) {
         out.set(path, group.color.trim());
         break;
       }
