@@ -48,6 +48,11 @@ export {
 export { setOverlayScrollbarBridge } from "./overlay-scrollbar-bridge.ts";
 export type { LinkNavigationBridge } from "./link-navigation-bridge.ts";
 export {
+  isExternalHref,
+  normalizeExternalHref,
+  openExternalHref,
+} from "./link-navigation.ts";
+export {
   mountReadonlyMarkdownPreview,
   type MarkdownPreviewController,
   type MarkdownPreviewOptions,

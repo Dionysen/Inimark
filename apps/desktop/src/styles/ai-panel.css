@@ -118,8 +118,8 @@
     sans-serif
   );
   font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
-  line-height: var(--editor-line-height, 1.78);
-  letter-spacing: 0.005em;
+  /* Chat/markdown preview spacing (Cursor-like), not editor long-form leading. */
+  line-height: 1.5;
   color: var(--text-primary, var(--inimark-fg));
   word-break: break-word;
 }
@@ -155,7 +155,7 @@
 
 .inimark-ai-bubble pre {
   overflow: auto;
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
   padding: 12px 14px;
   background: var(--bg-code, var(--inimark-surface-raised));
   color: var(--text-primary, var(--inimark-fg));
@@ -208,18 +208,26 @@
 .inimark-ai-bubble hr {
   height: 1px;
   padding: 0;
-  margin: 0.9em 0;
+  margin: 1em 0;
   background: var(--border, var(--inimark-border));
   border: 0;
 }
 
 .inimark-ai-bubble a {
   color: var(--accent, var(--inimark-accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.inimark-ai-bubble a.inimark-ai-wiki.is-unresolved {
+  color: var(--danger, #ef4444);
+  text-decoration-style: dashed;
 }
 
 .inimark-ai-bubble table {
   width: 100%;
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
   border-collapse: collapse;
   border-radius: var(--radius-table, 0);
   overflow: hidden;
@@ -244,7 +252,7 @@
 }
 
 .inimark-ai-bubble .inimark-ai-math--block {
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
   overflow-x: auto;
   text-align: center;
 }
@@ -261,7 +269,7 @@
 }
 
 .inimark-ai-bubble .inimark-ai-mermaid {
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
 }
 
 .inimark-ai-bubble .inimark-ai-mermaid-source {
@@ -287,7 +295,7 @@
 }
 
 .inimark-ai-bubble p {
-  margin: 0 0 var(--editor-paragraph-spacing, 1.05em);
+  margin: 0 0 0.75em;
 }
 
 .inimark-ai-bubble p:last-child {
@@ -296,12 +304,37 @@
 
 .inimark-ai-bubble ul,
 .inimark-ai-bubble ol {
-  margin: 0 0 0.55em;
-  padding-left: 1.2em;
+  margin: 0 0 0.75em;
+  padding-left: 1.4em;
+}
+
+.inimark-ai-bubble li + li {
+  margin-top: 0.25em;
+}
+
+.inimark-ai-bubble h1,
+.inimark-ai-bubble h2,
+.inimark-ai-bubble h3,
+.inimark-ai-bubble h4,
+.inimark-ai-bubble h5,
+.inimark-ai-bubble h6 {
+  margin: 1.1em 0 0.45em;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--text-strong, var(--text-primary, var(--inimark-fg)));
+}
+
+.inimark-ai-bubble h1:first-child,
+.inimark-ai-bubble h2:first-child,
+.inimark-ai-bubble h3:first-child,
+.inimark-ai-bubble h4:first-child,
+.inimark-ai-bubble h5:first-child,
+.inimark-ai-bubble h6:first-child {
+  margin-top: 0;
 }
 
 .inimark-ai-bubble blockquote {
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
   padding: var(--padding-blockquote-y, 4px) var(--padding-blockquote-x, 16px);
   color: var(--blockquote-text, var(--inimark-muted-fg));
   background: var(--blockquote-bg, transparent);
@@ -368,7 +401,7 @@
   grid-template-columns: 1.15em minmax(0, 1fr);
   column-gap: 0.45em;
   row-gap: 0.35em;
-  margin: 0 0 0.55em;
+  margin: 0 0 0.75em;
   padding: 0.65em 0.85em 0.7em;
   color: var(--text-primary, var(--inimark-fg));
   background: var(--md-alert-bg);
@@ -583,8 +616,9 @@
     sans-serif
   );
   font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
-  line-height: var(--editor-line-height, 1.78);
-  letter-spacing: 0.005em;
+  line-height: 1.5;
+  min-height: 1.5em;
+  box-sizing: content-box;
   resize: none;
   overflow-y: hidden;
 }

@@ -1,4 +1,4 @@
-import { hydrateChatMermaid, renderChatMarkdown } from "./markdown-render.ts";
+import { handleChatLinkClick, hydrateChatMermaid, renderChatMarkdown } from "./markdown-render.ts";
 import { formatAnswerAge } from "./relative-time.ts";
 import { formatToolCardSummary, isFinalAssistantAnswer } from "./tool-labels.ts";
 import type { UiChatMessage } from "./types.ts";
@@ -37,6 +37,11 @@ export function mountChatView(host: HTMLElement): ChatViewController {
   const list = document.createElement("div");
   list.className = "inimark-ai-chat-list inimark-scrollbar";
   host.append(list);
+
+  list.addEventListener("click", (event) => {
+    if (!(event instanceof MouseEvent)) return;
+    handleChatLinkClick(event);
+  });
 
   let ageTimer: ReturnType<typeof setInterval> | null = null;
 

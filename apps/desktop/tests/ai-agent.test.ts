@@ -25,6 +25,7 @@ import { formatAnswerAge } from "../src/ai/relative-time.ts";
 import {
   clampComposerInputHeight,
   COMPOSER_MAX_LINES,
+  resolveComposerLineHeightPx,
 } from "../src/ai/composer.ts";
 import { resolveSendAttachments, mergeVaultPathAttachments } from "../src/ai/attachments.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
@@ -328,6 +329,26 @@ describe("clampComposerInputHeight", () => {
     const capped = clampComposerInputHeight(line * 8 + pad, line, pad);
     expect(capped.height).toBe(line * COMPOSER_MAX_LINES + pad);
     expect(capped.scroll).toBe(true);
+  });
+});
+
+describe("resolveComposerLineHeightPx", () => {
+  test("uses computed px line-height when available", () => {
+    expect(
+      resolveComposerLineHeightPx({
+        fontSize: "16px",
+        lineHeight: "24px",
+      } as CSSStyleDeclaration),
+    ).toBe(24);
+  });
+
+  test("falls back to 1.5 × font-size for normal line-height", () => {
+    expect(
+      resolveComposerLineHeightPx({
+        fontSize: "20px",
+        lineHeight: "normal",
+      } as CSSStyleDeclaration),
+    ).toBe(30);
   });
 });
 

@@ -36,10 +36,21 @@ export function clampComposerInputHeight(
   paddingY: number,
   maxLines: number = COMPOSER_MAX_LINES,
 ): { height: number; scroll: boolean } {
-  const min = Math.ceil(lineHeight + paddingY);
-  const max = Math.ceil(lineHeight * maxLines + paddingY);
+  const safeLine = Math.max(1, lineHeight);
+  const min = Math.ceil(safeLine + paddingY);
+  const max = Math.ceil(safeLine * maxLines + paddingY);
   const height = Math.min(Math.max(Math.ceil(scrollHeight), min), max);
   return { height, scroll: scrollHeight > max + 0.5 };
+}
+
+/** Resolve used line-box height in px (falls back from font-size when `line-height: normal`). */
+export function resolveComposerLineHeightPx(style: CSSStyleDeclaration): number {
+  const fontSize = parseFloat(style.fontSize);
+  const safeFont = Number.isFinite(fontSize) && fontSize > 0 ? fontSize : 16;
+  const raw = style.lineHeight;
+  if (!raw || raw === "normal") return safeFont * 1.5;
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : safeFont * 1.5;
 }
 
 function paperclipIcon(): string {
@@ -117,7 +128,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
 
   function syncInputHeight(): void {
     const style = getComputedStyle(textarea);
-    const lineHeight = parseFloat(style.lineHeight) || 18;
+    const lineHeight = resolveComposerLineHeightPx(style);
     const paddingY =
       (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
     textarea.style.height = "0px";
@@ -129,6 +140,13 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     textarea.style.height = `${height}px`;
     textarea.style.overflowY = scroll ? "auto" : "hidden";
   }
+
+  // Re-measure when settings change editor font-size / line-height CSS vars.
+  const fontObserver = new MutationObserver(() => syncInputHeight());
+  fontObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["style"],
+  });
 
   function syncChips(): void {
     chips.replaceChildren();
@@ -215,6 +233,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
       textarea.focus();
     },
     destroy() {
+      fontObserver.disconnect();
       host.replaceChildren();
     },
   };

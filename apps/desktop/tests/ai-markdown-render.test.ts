@@ -1,5 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { setWikiLinkBridge } from "@inimark/editor";
 
+import { handleChatLinkClick } from "../src/ai/markdown/link-click.ts";
 import { renderChatMarkdown } from "../src/ai/markdown-render.ts";
 
 describe("renderChatMarkdown task lists", () => {
@@ -111,5 +113,76 @@ describe("renderChatMarkdown mermaid", () => {
     expect(html).not.toContain("inimark-ai-mermaid");
     expect(html).toContain("<pre>");
     expect(html).toContain("const x = 1");
+  });
+});
+
+describe("renderChatMarkdown links", () => {
+  afterEach(() => {
+    setWikiLinkBridge(null);
+  });
+
+  test("renders markdown and autolinked URLs as anchors", () => {
+    const mdLink = renderChatMarkdown("[Inimark](https://example.com)\n");
+    expect(mdLink).toContain('href="https://example.com"');
+    expect(mdLink).toContain("Inimark");
+
+    const auto = renderChatMarkdown("见 https://example.com/docs 文档\n");
+    expect(auto).toContain('href="https://example.com/docs"');
+  });
+
+  test("renders wiki links with note metadata", () => {
+    const html = renderChatMarkdown("参见 [[安装与启动#macOS|安装指南]]\n");
+    expect(html).toContain("inimark-ai-wiki");
+    expect(html).toContain('data-note="安装与启动"');
+    expect(html).toContain('data-heading="macOS"');
+    expect(html).toContain("安装指南");
+    expect(html).not.toContain("[[");
+  });
+
+  test("marks unresolved wiki links when the vault bridge is absent", () => {
+    const html = renderChatMarkdown("打开 [[不存在的笔记]]\n");
+    expect(html).toContain("is-unresolved");
+    expect(html).toContain('data-unresolved="1"');
+    expect(html).toContain('data-note="不存在的笔记"');
+  });
+
+  test("resolves wiki links when the vault bridge finds the note", () => {
+    setWikiLinkBridge({
+      resolveNote: (name) => (name === "安装与启动" ? "docs/安装与启动.md" : null),
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote: () => {},
+    });
+    const html = renderChatMarkdown("打开 [[安装与启动]]\n");
+    expect(html).toContain("inimark-ai-wiki");
+    expect(html).not.toContain("is-unresolved");
+    expect(html).not.toContain("data-unresolved");
+  });
+});
+
+describe("handleChatLinkClick", () => {
+  afterEach(() => {
+    setWikiLinkBridge(null);
+    document.body.replaceChildren();
+  });
+
+  test("opens wiki notes through the bridge", () => {
+    const openNote = vi.fn();
+    setWikiLinkBridge({
+      resolveNote: () => "a.md",
+      resolveImage: () => null,
+      searchNotes: () => [],
+      openNote,
+    });
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    bubble.innerHTML = renderChatMarkdown("见 [[目标笔记#标题]]\n");
+    document.body.append(bubble);
+    const anchor = bubble.querySelector("a.inimark-ai-wiki");
+    expect(anchor).toBeTruthy();
+    const event = new MouseEvent("click", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "target", { value: anchor });
+    expect(handleChatLinkClick(event)).toBe(true);
+    expect(openNote).toHaveBeenCalledWith("目标笔记", "标题");
   });
 });
