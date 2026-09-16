@@ -27,3 +27,28 @@ export function resolveSendAttachments(options: {
     },
   ];
 }
+
+/** Merge vault paths into the user-visible attachment chips (dedupe by kind+path). */
+export function mergeVaultPathAttachments(
+  existing: readonly ChatAttachment[],
+  items: readonly Array<{ path: string; kind: "file" | "directory" }>,
+  makeId: () => string,
+): ChatAttachment[] {
+  const next = existing.filter((a) => a.kind === "file" || a.kind === "directory");
+  const seen = new Set(next.map((a) => `${a.kind}:${a.path}`));
+  for (const item of items) {
+    const path = item.path.trim();
+    if (!path) continue;
+    const key = `${item.kind}:${path}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const base = path.split(/[/\\]/).pop() || path;
+    next.push({
+      id: makeId(),
+      kind: item.kind,
+      path,
+      label: item.kind === "directory" ? `${base}/` : base,
+    });
+  }
+  return next;
+}

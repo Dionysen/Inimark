@@ -23,9 +23,13 @@ import {
   clampComposerInputHeight,
   COMPOSER_MAX_LINES,
 } from "../src/ai/composer.ts";
-import { resolveSendAttachments } from "../src/ai/attachments.ts";
+import { resolveSendAttachments, mergeVaultPathAttachments } from "../src/ai/attachments.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
 import { initI18n, setLocale } from "../src/i18n/index.ts";
+import {
+  hitVaultPathDropTarget,
+  registerVaultPathDropTarget,
+} from "../src/platform/vault-path-drop.ts";
 import {
   ALL_SIDEBAR_TABS,
   DEFAULT_LEFT_SIDEBAR_TABS,
@@ -369,5 +373,64 @@ describe("resolveSendAttachments", () => {
         labelForPath,
       }),
     ).toEqual([]);
+  });
+});
+
+describe("mergeVaultPathAttachments", () => {
+  test("appends files and folders and dedupes by kind+path", () => {
+    let n = 0;
+    const existing = [
+      { id: "a", kind: "file" as const, path: "a.md", label: "a.md" },
+    ];
+    const merged = mergeVaultPathAttachments(
+      existing,
+      [
+        { path: "a.md", kind: "file" },
+        { path: "docs", kind: "directory" },
+        { path: "b.md", kind: "file" },
+      ],
+      () => `n-${++n}`,
+    );
+    expect(merged).toEqual([
+      { id: "a", kind: "file", path: "a.md", label: "a.md" },
+      { id: "n-1", kind: "directory", path: "docs", label: "docs/" },
+      { id: "n-2", kind: "file", path: "b.md", label: "b.md" },
+    ]);
+  });
+});
+
+describe("vault path drop targets", () => {
+  test("hitVaultPathDropTarget finds the registered host under the pointer", () => {
+    const host = document.createElement("div");
+    host.style.position = "fixed";
+    host.style.left = "10px";
+    host.style.top = "10px";
+    host.style.width = "100px";
+    host.style.height = "40px";
+    document.body.append(host);
+    const drops: string[] = [];
+    const unregister = registerVaultPathDropTarget(host, (items) => {
+      drops.push(...items.map((i) => i.path));
+    });
+    // jsdom layout is often 0×0 — stub geometry for the hit test.
+    host.getBoundingClientRect = () =>
+      ({
+        left: 10,
+        top: 10,
+        right: 110,
+        bottom: 50,
+        width: 100,
+        height: 40,
+        x: 10,
+        y: 10,
+        toJSON() {},
+      }) as DOMRect;
+
+    expect(hitVaultPathDropTarget(20, 20)?.element).toBe(host);
+    expect(hitVaultPathDropTarget(200, 200)).toBeNull();
+    hitVaultPathDropTarget(20, 20)?.onDrop([{ path: "n.md", kind: "file" }]);
+    expect(drops).toEqual(["n.md"]);
+    unregister();
+    host.remove();
   });
 });

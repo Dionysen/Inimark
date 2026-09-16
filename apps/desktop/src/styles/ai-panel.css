@@ -219,6 +219,12 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--inimark-accent) 28%, transparent);
 }
 
+.inimark-ai-composer.is-vault-path-drop-target .inimark-ai-composer-shell {
+  border-color: color-mix(in srgb, var(--inimark-accent) 55%, var(--inimark-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--inimark-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-surface));
+}
+
 .inimark-ai-chips {
   display: flex;
   flex-wrap: wrap;

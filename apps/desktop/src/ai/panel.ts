@@ -15,7 +15,7 @@ import {
   type AttachmentContent,
 } from "./agent/context.ts";
 import type { AgentToolHost } from "./agent/tools.ts";
-import { resolveSendAttachments } from "./attachments.ts";
+import { resolveSendAttachments, mergeVaultPathAttachments } from "./attachments.ts";
 import { mountChatView, type ChatViewController } from "./chat-view.ts";
 import { mountComposer, type ComposerController } from "./composer.ts";
 import { createOpenAiCompatProvider } from "./providers/openai-compat.ts";
@@ -26,6 +26,7 @@ import type {
   UiChatMessage,
   WriteUndoEntry,
 } from "./types.ts";
+import { registerVaultPathDropTarget } from "../platform/vault-path-drop.ts";
 
 export interface AiPanelHost {
   getWorkspace(): Workspace | null;
@@ -126,6 +127,17 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   });
 
   hostEl.append(toolbar, chatHost, composerHost);
+
+  function attachVaultPaths(
+    items: readonly Array<{ path: string; kind: "file" | "directory" }>,
+  ): void {
+    attachments = mergeVaultPathAttachments(attachments, items, newId);
+    composer.setAttachments(attachments);
+  }
+
+  const unregisterVaultDrop = registerVaultPathDropTarget(composerHost, (items) => {
+    attachVaultPaths(items);
+  });
 
   function refreshChat(): void {
     chat.setMessages(uiMessages);
@@ -507,6 +519,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     },
     destroy() {
       stop();
+      unregisterVaultDrop();
       unsubLocale();
       chat.destroy();
       composer.destroy();

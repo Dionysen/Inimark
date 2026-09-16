@@ -7,6 +7,12 @@ import {
   moveWorkspaceTreeNodeInMemory,
   removeWorkspaceTreeNode,
 } from "./platform/workspace-tree.ts";
+import {
+  clearVaultPathDropHighlight,
+  hitVaultPathDropTarget,
+  setVaultPathDropHighlight,
+  type VaultPathDropItem,
+} from "./platform/vault-path-drop.ts";
 import { onLocaleChange, t } from "./i18n/index.ts";
 import {
   collapseAllIcon,
@@ -919,10 +925,11 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     treeHost
       .querySelectorAll(".is-dragging, .is-drop-target")
       .forEach((el) => el.classList.remove("is-dragging", "is-drop-target"));
-    const dest =
+    const external =
       commit && wasActive && clientX != null && clientY != null
-        ? resolveDropDirectoryAt(clientX, clientY)
+        ? hitVaultPathDropTarget(clientX, clientY)
         : null;
+    clearVaultPathDropHighlight();
     setDropTarget(null);
     if (wasActive) {
       suppressTreeClick = true;
@@ -931,8 +938,24 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         suppressTreeClick = false;
       }, 0);
     }
-    if (!commit || !wasActive || dest == null || paths.length === 0) return;
-    if (!canDropOn(dest, paths)) return;
+    if (!commit || !wasActive || paths.length === 0) return;
+
+    if (external) {
+      const items: VaultPathDropItem[] = [];
+      for (const path of paths) {
+        const node = findTreeNode(currentTree, path);
+        if (!node) continue;
+        items.push({ path: node.path, kind: node.kind });
+      }
+      if (items.length > 0) external.onDrop(items);
+      return;
+    }
+
+    const dest =
+      clientX != null && clientY != null
+        ? resolveDropDirectoryAt(clientX, clientY)
+        : null;
+    if (dest == null || !canDropOn(dest, paths)) return;
     void moveNodesToDirectory(paths, dest);
   }
 
@@ -1016,6 +1039,13 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       window.getSelection()?.removeAllRanges();
       treePointerDrag.ghost.style.left = `${moveEvent.clientX - treePointerDrag.offsetX}px`;
       treePointerDrag.ghost.style.top = `${moveEvent.clientY - treePointerDrag.offsetY}px`;
+      const external = hitVaultPathDropTarget(moveEvent.clientX, moveEvent.clientY);
+      if (external) {
+        setDropTarget(null);
+        setVaultPathDropHighlight(external.element);
+        return;
+      }
+      clearVaultPathDropHighlight();
       const dest = resolveDropDirectoryAt(moveEvent.clientX, moveEvent.clientY);
       if (dest == null || !canDropOn(dest, treePointerDrag.paths)) {
         setDropTarget(null);
