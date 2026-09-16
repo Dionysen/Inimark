@@ -1716,7 +1716,7 @@ dependencies = [
 
 [[package]]
 name = "inimark-desktop"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "block2",
  "dispatch2",
