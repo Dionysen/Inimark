@@ -29,6 +29,8 @@ export function parseSseDataPayload(raw: string): ChatStreamEvent[] {
     choices?: Array<{
       delta?: {
         content?: string | null;
+        reasoning_content?: string | null;
+        reasoning?: string | null;
         tool_calls?: Array<{
           index?: number;
           id?: string;
@@ -56,6 +58,13 @@ export function parseSseDataPayload(raw: string): ChatStreamEvent[] {
   if (!choice) return events;
 
   const delta = choice.delta;
+  const reasoning =
+    (typeof delta?.reasoning_content === "string" && delta.reasoning_content) ||
+    (typeof delta?.reasoning === "string" && delta.reasoning) ||
+    "";
+  if (reasoning) {
+    events.push({ type: "reasoning_delta", text: reasoning });
+  }
   if (delta?.content) {
     events.push({ type: "text_delta", text: delta.content });
   }

@@ -50,7 +50,8 @@ textarea {
 /* AI chat bubbles — allow copying reply / user text. */
 .inimark-ai-bubble,
 .inimark-ai-bubble *,
-.inimark-ai-tool-body {
+.inimark-ai-tool-body,
+.inimark-ai-thinking-body {
   -webkit-user-select: text;
   user-select: text;
 }

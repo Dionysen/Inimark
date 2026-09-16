@@ -90,14 +90,35 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       return row;
     }
 
+    if (msg.kind === "assistant" && msg.reasoning) {
+      const thinking = document.createElement("details");
+      thinking.className = "inimark-ai-thinking";
+      // Expand while reasoning streams; collapse once the answer settles.
+      thinking.open = Boolean(msg.reasoningStreaming) || (Boolean(msg.streaming) && !msg.content);
+      const summary = document.createElement("summary");
+      summary.textContent = msg.reasoningStreaming
+        ? t("ai.thinkingStreaming")
+        : t("ai.thinkingProcess");
+      const body = document.createElement("pre");
+      body.className = "inimark-ai-thinking-body";
+      body.textContent = msg.reasoning;
+      thinking.append(summary, body);
+      row.append(thinking);
+    }
+
     const bubble = document.createElement("div");
     bubble.className = "inimark-ai-bubble";
     if (msg.kind === "assistant" || msg.kind === "error") {
-      bubble.innerHTML = renderChatMarkdown(
-        msg.kind === "error" ? `**${t("ai.error")}:** ${msg.content}` : msg.content,
-      );
-      // Mermaid + syntax highlight are async; hydrate only after the stream settles.
-      if (!msg.streaming) void hydrateChatRichContent(bubble);
+      if (msg.kind === "assistant" && !msg.content && msg.reasoning) {
+        // Reasoning-only phase — keep an empty bubble hidden until answer text arrives.
+        bubble.hidden = true;
+      } else {
+        bubble.innerHTML = renderChatMarkdown(
+          msg.kind === "error" ? `**${t("ai.error")}:** ${msg.content}` : msg.content,
+        );
+        // Mermaid + syntax highlight are async; hydrate only after the stream settles.
+        if (!msg.streaming) void hydrateChatRichContent(bubble);
+      }
     } else {
       bubble.textContent = msg.content;
     }

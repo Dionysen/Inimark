@@ -1,5 +1,10 @@
 /** AI secrets / provider prefs — not synced via settings broadcast. */
 
+import {
+  parseAiThinkingMode,
+  type AiThinkingMode,
+} from "./thinking-mode.ts";
+
 const SECRETS_KEY = "inimark:ai-secrets";
 const PREFS_KEY = "inimark:ai-prefs";
 
@@ -14,6 +19,8 @@ export interface AiPrefs {
   /** Attach the active note by default when sending. */
   attachActiveNote: boolean;
   useSystemProxy: boolean;
+  /** Composer thinking preset: fast reply vs deep reasoning. */
+  thinkingMode: AiThinkingMode;
 }
 
 export const DEFAULT_AI_PREFS: AiPrefs = {
@@ -22,6 +29,7 @@ export const DEFAULT_AI_PREFS: AiPrefs = {
   model: "deepseek-chat",
   attachActiveNote: true,
   useSystemProxy: true,
+  thinkingMode: "fast",
 };
 
 export function loadAiSecrets(): AiSecrets {
@@ -57,6 +65,7 @@ export function loadAiPrefs(): AiPrefs {
         parsed.useSystemProxy === undefined
           ? DEFAULT_AI_PREFS.useSystemProxy
           : Boolean(parsed.useSystemProxy),
+      thinkingMode: parseAiThinkingMode(parsed.thinkingMode),
     };
   } catch {
     return { ...DEFAULT_AI_PREFS };

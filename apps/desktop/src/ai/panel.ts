@@ -31,6 +31,10 @@ import {
   getWorkspaceAiChatSessions,
   setWorkspaceAiChatSessions,
 } from "../workspace/runtime.ts";
+import {
+  modelAllowsAgentTools,
+  resolveModelForThinkingMode,
+} from "./thinking-mode.ts";
 import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
   formatDirectoryListing,
@@ -356,6 +360,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     for (const msg of uiMessages) {
       if (msg.streaming) {
         msg.streaming = false;
+        msg.reasoningStreaming = false;
         msg.endedAt ??= now;
       }
     }
@@ -551,10 +556,29 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   }
 
   function handleLoopEvent(event: AgentLoopEvent): void {
+    if (event.type === "reasoning_delta") {
+      const last = uiMessages[uiMessages.length - 1];
+      if (last?.kind === "assistant" && last.streaming) {
+        last.reasoning = (last.reasoning ?? "") + event.text;
+        last.reasoningStreaming = true;
+      } else {
+        uiMessages.push({
+          id: newId(),
+          kind: "assistant",
+          content: "",
+          reasoning: event.text,
+          reasoningStreaming: true,
+          streaming: true,
+        });
+      }
+      refreshChat();
+      return;
+    }
     if (event.type === "assistant_delta") {
       const last = uiMessages[uiMessages.length - 1];
       if (last?.kind === "assistant" && last.streaming) {
         last.content += event.text;
+        last.reasoningStreaming = false;
       } else {
         uiMessages.push({
           id: newId(),
@@ -571,6 +595,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       const last = uiMessages[uiMessages.length - 1];
       if (last?.kind === "assistant") {
         last.streaming = false;
+        last.reasoningStreaming = false;
         last.endedAt = now;
         if (event.content) last.content = event.content;
       } else if (event.content) {
@@ -676,14 +701,16 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     });
 
     const prior = history.slice(0, -1);
+    const model = resolveModelForThinkingMode(prefs.model, composer.getThinkingMode());
 
     await runAgentLoop({
       provider,
-      model: prefs.model,
+      model,
       history: prior,
       userContent,
       host: createToolHost(),
       signal: abort.signal,
+      enableTools: modelAllowsAgentTools(model),
       fallbackLanguage: agentFallbackLanguageLabel(getLocale()),
       onEvent: handleLoopEvent,
     });

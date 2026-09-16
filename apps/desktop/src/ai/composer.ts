@@ -1,5 +1,11 @@
-import { closeIcon, createIconButton } from "../ui/widgets/index.ts";
-import { t } from "../i18n/index.ts";
+import { closeIcon, createIconButton, createMenu } from "../ui/widgets/index.ts";
+import { onLocaleChange, t } from "../i18n/index.ts";
+import { loadAiPrefs, saveAiPrefs } from "./secrets.ts";
+import {
+  AI_THINKING_MODES,
+  parseAiThinkingMode,
+  type AiThinkingMode,
+} from "./thinking-mode.ts";
 import type { ChatAttachment } from "./types.ts";
 
 export interface ComposerController {
@@ -8,6 +14,7 @@ export interface ComposerController {
   setText(value: string): void;
   getAttachments(): ChatAttachment[];
   setAttachments(items: ChatAttachment[]): void;
+  getThinkingMode(): AiThinkingMode;
   setRunning(running: boolean): void;
   focus(): void;
   destroy(): void;
@@ -69,12 +76,20 @@ function folderIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`;
 }
 
+const CHEVRON_DOWN =
+  `<svg class="inimark-icon inimark-ai-thinking-mode__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function thinkingModeLabel(mode: AiThinkingMode): string {
+  return mode === "deep" ? t("ai.thinkingDeep") : t("ai.thinkingFast");
+}
+
 export function mountComposer(host: HTMLElement, options: ComposerOptions): ComposerController {
   host.className = "inimark-ai-composer";
   host.replaceChildren();
 
   let attachments: ChatAttachment[] = [];
   let running = false;
+  let thinkingMode = parseAiThinkingMode(loadAiPrefs().thinkingMode);
 
   const shell = document.createElement("div");
   shell.className = "inimark-ai-composer-shell";
@@ -107,6 +122,84 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   });
   folderBtn.innerHTML = folderIcon();
 
+  const thinkingMenu = createMenu();
+  thinkingMenu.el.classList.add("inimark-ai-thinking-mode-menu");
+
+  const thinkingBtn = document.createElement("button");
+  thinkingBtn.type = "button";
+  thinkingBtn.className = "inimark-control inimark-ai-thinking-mode";
+  thinkingBtn.setAttribute("aria-haspopup", "menu");
+  thinkingBtn.setAttribute("aria-expanded", "false");
+
+  const thinkingLabel = document.createElement("span");
+  thinkingLabel.className = "inimark-ai-thinking-mode__label";
+
+  function syncThinkingButton(): void {
+    thinkingLabel.textContent = thinkingModeLabel(thinkingMode);
+    thinkingBtn.setAttribute("aria-label", t("ai.thinkingMode"));
+    thinkingBtn.title = t("ai.thinkingMode");
+  }
+
+  thinkingBtn.append(thinkingLabel);
+  thinkingBtn.insertAdjacentHTML("beforeend", CHEVRON_DOWN);
+  thinkingMenu.setDismissAnchors([thinkingBtn]);
+
+  function closeThinkingMenu(): void {
+    thinkingMenu.setOpen(false);
+    thinkingBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function persistThinkingMode(mode: AiThinkingMode): void {
+    thinkingMode = mode;
+    const prefs = loadAiPrefs();
+    saveAiPrefs({ ...prefs, thinkingMode: mode });
+    syncThinkingButton();
+  }
+
+  function positionThinkingMenu(): void {
+    const rect = thinkingBtn.getBoundingClientRect();
+    const menuWidth = Math.max(148, thinkingMenu.el.offsetWidth || 148);
+    const menuHeight = thinkingMenu.el.offsetHeight || 88;
+    const left = Math.min(
+      Math.max(8, rect.left),
+      window.innerWidth - menuWidth - 8,
+    );
+    const top = Math.max(8, rect.top - menuHeight - 4);
+    thinkingMenu.el.style.top = `${top}px`;
+    thinkingMenu.el.style.left = `${left}px`;
+    thinkingMenu.el.style.width = `${menuWidth}px`;
+  }
+
+  function renderThinkingMenu(): void {
+    thinkingMenu.clear();
+    thinkingMenu.setPath("");
+    thinkingMenu.addHeading(t("ai.thinkingMode"));
+    for (const mode of AI_THINKING_MODES) {
+      thinkingMenu.addItem({
+        label: thinkingModeLabel(mode),
+        checked: thinkingMode === mode,
+        onClick: () => {
+          persistThinkingMode(mode);
+          closeThinkingMenu();
+        },
+      });
+    }
+  }
+
+  function toggleThinkingMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    if (thinkingMenu.isOpen()) {
+      closeThinkingMenu();
+      return;
+    }
+    renderThinkingMenu();
+    thinkingMenu.setOpen(true);
+    thinkingBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionThinkingMenu());
+  }
+
+  thinkingBtn.addEventListener("click", toggleThinkingMenu);
+
   const sendBtn = createIconButton({
     label: t("ai.send"),
     title: t("ai.send"),
@@ -123,7 +216,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   sendBtn.innerHTML = sendIcon();
   sendBtn.classList.add("inimark-ai-send");
 
-  tools.append(attachBtn, folderBtn);
+  tools.append(attachBtn, folderBtn, thinkingBtn);
   toolbar.append(tools, sendBtn);
 
   function syncInputHeight(): void {
@@ -185,6 +278,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     sendBtn.classList.toggle("is-empty", empty && !running);
     sendBtn.disabled = running ? false : empty;
     textarea.disabled = running;
+    thinkingBtn.disabled = running;
   }
 
   textarea.addEventListener("input", () => {
@@ -206,8 +300,25 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     }
   });
 
+  function onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key === "Escape" && thinkingMenu.isOpen()) closeThinkingMenu();
+  }
+  document.addEventListener("keydown", onDocumentKeydown);
+
+  const unsubLocale = onLocaleChange(() => {
+    textarea.placeholder = t("ai.placeholder");
+    attachBtn.title = t("ai.attach");
+    attachBtn.setAttribute("aria-label", t("ai.attach"));
+    folderBtn.title = t("ai.attachFolder");
+    folderBtn.setAttribute("aria-label", t("ai.attachFolder"));
+    syncThinkingButton();
+    syncSend();
+    if (thinkingMenu.isOpen()) renderThinkingMenu();
+  });
+
   shell.append(chips, textarea, toolbar);
-  host.append(shell);
+  host.append(shell, thinkingMenu.el);
+  syncThinkingButton();
   syncChips();
   syncSend();
   syncInputHeight();
@@ -225,6 +336,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
       attachments = [...items];
       syncChips();
     },
+    getThinkingMode: () => thinkingMode,
     setRunning(next) {
       running = next;
       syncSend();
@@ -234,6 +346,10 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     },
     destroy() {
       fontObserver.disconnect();
+      document.removeEventListener("keydown", onDocumentKeydown);
+      unsubLocale();
+      closeThinkingMenu();
+      thinkingMenu.destroy();
       host.replaceChildren();
     },
   };

@@ -11,6 +11,7 @@ import { executeAgentTool, type AgentToolHost } from "./tools.ts";
 export const DEFAULT_AGENT_MAX_STEPS = 12;
 
 export type AgentLoopEvent =
+  | { type: "reasoning_delta"; text: string }
   | { type: "assistant_delta"; text: string }
   | { type: "assistant_done"; content: string }
   | { type: "tool_start"; call: ChatToolCall }
@@ -28,6 +29,8 @@ export interface RunAgentLoopOptions {
   host: AgentToolHost;
   signal: AbortSignal;
   maxSteps?: number;
+  /** When false, omit tools (e.g. DeepSeek reasoner). Default true. */
+  enableTools?: boolean;
   /**
    * UI language name used when the model cannot infer the user's message language
    * (e.g. "English", "Simplified Chinese (简体中文)").
@@ -53,6 +56,7 @@ function mergeToolCallDeltas(
  */
 export async function runAgentLoop(options: RunAgentLoopOptions): Promise<void> {
   const maxSteps = options.maxSteps ?? DEFAULT_AGENT_MAX_STEPS;
+  const enableTools = options.enableTools !== false;
   const messages: ChatMessage[] = [
     { role: "system", content: buildAgentSystemPrompt(options.fallbackLanguage) },
     ...options.history,
@@ -73,11 +77,13 @@ export async function runAgentLoop(options: RunAgentLoopOptions): Promise<void> 
         {
           model: options.model,
           messages,
-          tools: AGENT_TOOL_DEFINITIONS,
+          tools: enableTools ? AGENT_TOOL_DEFINITIONS : undefined,
         },
         options.signal,
       )) {
-        if (event.type === "text_delta") {
+        if (event.type === "reasoning_delta") {
+          options.onEvent({ type: "reasoning_delta", text: event.text });
+        } else if (event.type === "text_delta") {
           assistantText += event.text;
           options.onEvent({ type: "assistant_delta", text: event.text });
         } else if (event.type === "tool_call_delta") {

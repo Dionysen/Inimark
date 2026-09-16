@@ -127,6 +127,15 @@ describe("SSE parsing", () => {
     expect(events).toEqual([{ type: "text_delta", text: "Hi" }]);
   });
 
+  test("parses reasoning_content deltas", () => {
+    const events = parseSseDataPayload(
+      JSON.stringify({
+        choices: [{ delta: { reasoning_content: "先分析…" } }],
+      }),
+    );
+    expect(events).toEqual([{ type: "reasoning_delta", text: "先分析…" }]);
+  });
+
   test("consumeSseBuffer keeps partial lines", () => {
     const first = consumeSseBuffer('data: {"choices":[{"delta":{"content":"A"}}]}\n data: {"choi');
     expect(first.events).toHaveLength(1);

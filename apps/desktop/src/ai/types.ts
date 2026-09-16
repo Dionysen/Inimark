@@ -18,6 +18,7 @@ export interface ChatMessage {
 
 export type ChatStreamEvent =
   | { type: "text_delta"; text: string }
+  | { type: "reasoning_delta"; text: string }
   | { type: "tool_call_delta"; index: number; id?: string; name?: string; argumentsDelta?: string }
   | { type: "message_end"; message: ChatMessage }
   | { type: "error"; message: string };
@@ -64,6 +65,10 @@ export interface UiChatMessage {
   kind: UiMessageKind;
   /** Markdown or plain text for display. */
   content: string;
+  /** Model reasoning / chain-of-thought (shown in a collapsible block). */
+  reasoning?: string;
+  /** True while reasoning tokens are still streaming. */
+  reasoningStreaming?: boolean;
   tool?: UiToolCard;
   streaming?: boolean;
   /** Epoch ms when this assistant answer finished (for relative age). */

@@ -7,6 +7,7 @@ const EDITABLE_SELECTOR = [
   ".cm-content",
   ".inimark-ai-bubble",
   ".inimark-ai-tool-body",
+  ".inimark-ai-thinking-body",
   '[contenteditable="true"]',
 ].join(", ");
 
