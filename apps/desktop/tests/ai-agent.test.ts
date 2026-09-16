@@ -3,9 +3,11 @@ import { describe, expect, test } from "vitest";
 import { applyUniqueReplace } from "../src/ai/agent/apply-edit.ts";
 import {
   formatDirectoryListing,
+  formatUserTurnWithAttachments,
   packAttachmentContext,
 } from "../src/ai/agent/context.ts";
 import { runAgentLoop } from "../src/ai/agent/loop.ts";
+import { AGENT_SYSTEM_PROMPT } from "../src/ai/agent/tool-defs.ts";
 import { executeAgentTool, type AgentToolHost } from "../src/ai/agent/tools.ts";
 import {
   consumeSseBuffer,
@@ -83,6 +85,14 @@ describe("packAttachmentContext", () => {
     expect(text).toContain("file\ta.md");
     expect(text).toContain("dir\tdir");
   });
+
+  test("formatUserTurnWithAttachments puts the user message before attachments", () => {
+    const turn = formatUserTurnWithAttachments("hello", "### Active note: a.md\n\nQ?");
+    expect(turn.startsWith("User message:\nhello")).toBe(true);
+    expect(turn).toContain("background only");
+    expect(turn).toContain("### Active note: a.md");
+    expect(formatUserTurnWithAttachments("hi", "")).toBe("hi");
+  });
 });
 
 describe("SSE parsing", () => {
@@ -131,6 +141,16 @@ describe("executeAgentTool apply_edit", () => {
     expect(result.ok).toBe(true);
     expect(files.get("note.md")).toBe("alpha gamma");
     expect(result.undo).toEqual({ path: "note.md", before: "alpha beta" });
+  });
+});
+
+describe("AGENT_SYSTEM_PROMPT intent-first", () => {
+  test("requires greeting path: summarize then ask, no vault exploration", () => {
+    expect(AGENT_SYSTEM_PROMPT).toMatch(/Intent first/i);
+    expect(AGENT_SYSTEM_PROMPT).toMatch(/get_active_note at most once/i);
+    expect(AGENT_SYSTEM_PROMPT).toMatch(/Do NOT explore the vault/i);
+    expect(AGENT_SYSTEM_PROMPT).toMatch(/ask what they want/i);
+    expect(AGENT_SYSTEM_PROMPT).toMatch(/not a replacement for their message/i);
   });
 });
 

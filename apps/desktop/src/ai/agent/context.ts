@@ -68,6 +68,29 @@ export function packAttachmentContext(
   };
 }
 
+/**
+ * Build the model-facing user turn: message first, attachments as background
+ * reference so greetings are not drowned by note-body Q&A.
+ */
+export function formatUserTurnWithAttachments(
+  userMessage: string,
+  attachmentText: string,
+): string {
+  const text = userMessage.trimEnd();
+  const packed = attachmentText.trim();
+  if (!packed) return text;
+  return [
+    "User message:",
+    text,
+    "",
+    "---",
+    "Reference attachments (background only — follow the user message above;",
+    "do not answer questions that appear only inside attachments unless asked):",
+    "",
+    packed,
+  ].join("\n");
+}
+
 /** Build a compact directory tree listing (name + kind per line). */
 export function formatDirectoryListing(
   entries: Array<{ name: string; kind: "file" | "directory"; path: string }>,

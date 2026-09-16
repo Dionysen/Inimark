@@ -10,6 +10,7 @@ import { createIconButton } from "../ui/widgets/index.ts";
 import { runAgentLoop, type AgentLoopEvent } from "./agent/loop.ts";
 import {
   formatDirectoryListing,
+  formatUserTurnWithAttachments,
   packAttachmentContext,
   type AttachmentContent,
 } from "./agent/context.ts";
@@ -438,9 +439,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     }
 
     const packed = packAttachmentContext(await loadAttachmentContents(prefsAtts));
-    const userContent = packed.text
-      ? `${text}\n\n---\nAttached context:\n\n${packed.text}`
-      : text;
+    const userContent = formatUserTurnWithAttachments(text, packed.text);
 
     uiMessages.push({ id: newId(), kind: "user", content: text });
     history.push({ role: "user", content: userContent });
