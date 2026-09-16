@@ -42,12 +42,12 @@ Keep the default Base URL unless you need a proxy or regional endpoint.
 
 ## Thinking intensity
 
-Use the control next to the input to change intensity (hidden when the model only supports one level).
+The control next to the input shows **model name (primary) + intensity (secondary)**. Open it to pick a model first, then an intensity level for that model (hover for the submenu). If you have API keys for multiple providers, models are grouped by vendor for quick switching.
 
 - **Off / Low**: Faster and cheaper; good for everyday edits and Q&A.
 - **Medium / High**: More deliberate reasoning; replies may include a collapsible thinking block.
 
-Which levels exist—and whether vault tools stay enabled—depends on the model. Some legacy reasoning aliases disable tools at the deep level.
+Which levels exist—and whether vault tools stay enabled—depends on the model.
 
 ## Attachments and the open note
 

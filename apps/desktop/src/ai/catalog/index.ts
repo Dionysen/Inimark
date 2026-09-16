@@ -25,3 +25,8 @@ export {
   type LegacyThinkingMode,
 } from "./effort.ts";
 export { effortsForPrefs, resolveChatCall, type ResolveChatCallInput } from "./resolve.ts";
+export {
+  activeModelLabelKey,
+  listSwitcherModels,
+  type SwitcherModelEntry,
+} from "./switcher.ts";

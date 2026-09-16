@@ -170,6 +170,8 @@ export const en: Dictionary = {
     historyLimitCancel: "Cancel",
     untitledChat: "New chat",
     thinkingMode: "Thinking intensity",
+    modelPicker: "Model and thinking intensity",
+    modelPickerEmpty: "No models yet. Add an API key in Settings → AI.",
     thinkingFast: "Fast",
     thinkingDeep: "Deep think",
     thinkingProcess: "Thinking",

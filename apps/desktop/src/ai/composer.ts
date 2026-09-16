@@ -1,10 +1,14 @@
 import { closeIcon, createIconButton, createMenu } from "../ui/widgets/index.ts";
 import { onLocaleChange, t } from "../i18n/index.ts";
 import {
+  activeModelLabelKey,
   effortLabelKey,
   effortsForPrefs,
+  listSwitcherModels,
   parseEffortId,
   type EffortId,
+  type ProviderId,
+  type SwitcherModelEntry,
 } from "./catalog/index.ts";
 import { loadAiPrefs, saveAiPrefs } from "./secrets.ts";
 import type { ChatAttachment } from "./types.ts";
@@ -80,25 +84,29 @@ function folderIcon(): string {
 }
 
 const CHEVRON_DOWN =
-  `<svg class="inimark-icon inimark-ai-thinking-mode__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  `<svg class="inimark-icon inimark-ai-model-picker__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function effortLabel(id: EffortId): string {
   return t(effortLabelKey(id));
 }
 
-function availableEfforts() {
-  const prefs = loadAiPrefs();
-  return effortsForPrefs({
-    providerId: prefs.providerId,
-    modelId: prefs.modelId,
-    customModel: prefs.customModel,
-  });
-}
-
-function coerceEffort(preferred: EffortId): EffortId {
-  const list = availableEfforts();
+function coerceEffortFor(
+  providerId: ProviderId,
+  modelId: string,
+  preferred: EffortId,
+  customModel?: string,
+): EffortId {
+  const list = effortsForPrefs({ providerId, modelId, customModel });
   if (list.some((e) => e.id === preferred)) return preferred;
   return list[0]?.id ?? "off";
+}
+
+function isActiveEntry(entry: SwitcherModelEntry, prefs: ReturnType<typeof loadAiPrefs>): boolean {
+  if (entry.providerId !== prefs.providerId) return false;
+  if (entry.providerId === "custom") {
+    return entry.modelId === (prefs.customModel.trim() || prefs.modelId);
+  }
+  return entry.modelId === prefs.modelId;
 }
 
 export function mountComposer(host: HTMLElement, options: ComposerOptions): ComposerController {
@@ -107,7 +115,13 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
 
   let attachments: ChatAttachment[] = [];
   let running = false;
-  let effort = coerceEffort(parseEffortId(loadAiPrefs().effort));
+  let prefs = loadAiPrefs();
+  let effort = coerceEffortFor(
+    prefs.providerId,
+    prefs.modelId,
+    parseEffortId(prefs.effort),
+    prefs.customModel,
+  );
 
   const shell = document.createElement("div");
   shell.className = "inimark-ai-composer-shell";
@@ -140,85 +154,157 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   });
   folderBtn.innerHTML = folderIcon();
 
-  const thinkingMenu = createMenu();
-  thinkingMenu.el.classList.add("inimark-ai-thinking-mode-menu");
+  const modelMenu = createMenu();
+  modelMenu.el.classList.add("inimark-ai-model-picker-menu");
 
-  const thinkingBtn = document.createElement("button");
-  thinkingBtn.type = "button";
-  thinkingBtn.className = "inimark-control inimark-ai-thinking-mode";
-  thinkingBtn.setAttribute("aria-haspopup", "menu");
-  thinkingBtn.setAttribute("aria-expanded", "false");
+  const modelBtn = document.createElement("button");
+  modelBtn.type = "button";
+  modelBtn.className = "inimark-control inimark-ai-model-picker";
+  modelBtn.setAttribute("aria-haspopup", "menu");
+  modelBtn.setAttribute("aria-expanded", "false");
 
-  const thinkingLabel = document.createElement("span");
-  thinkingLabel.className = "inimark-ai-thinking-mode__label";
+  const labelWrap = document.createElement("span");
+  labelWrap.className = "inimark-ai-model-picker__label";
 
-  function syncThinkingButton(): void {
-    const list = availableEfforts();
-    thinkingBtn.hidden = list.length <= 1;
-    thinkingLabel.textContent = effortLabel(effort);
-    thinkingBtn.setAttribute("aria-label", t("ai.thinkingMode"));
-    thinkingBtn.title = t("ai.thinkingMode");
+  const modelNameEl = document.createElement("span");
+  modelNameEl.className = "inimark-ai-model-picker__model";
+
+  const effortEl = document.createElement("span");
+  effortEl.className = "inimark-ai-model-picker__effort";
+
+  labelWrap.append(modelNameEl, effortEl);
+  modelBtn.append(labelWrap);
+  modelBtn.insertAdjacentHTML("beforeend", CHEVRON_DOWN);
+  modelMenu.setDismissAnchors([modelBtn]);
+
+  function syncModelButton(): void {
+    prefs = loadAiPrefs();
+    effort = coerceEffortFor(
+      prefs.providerId,
+      prefs.modelId,
+      parseEffortId(prefs.effort),
+      prefs.customModel,
+    );
+    const modelText = t(activeModelLabelKey(prefs));
+    const effortText = effortLabel(effort);
+    modelNameEl.textContent = modelText;
+    effortEl.textContent = effortText;
+    const title = `${modelText} · ${effortText}`;
+    modelBtn.setAttribute("aria-label", t("ai.modelPicker"));
+    modelBtn.title = title;
   }
 
-  thinkingBtn.append(thinkingLabel);
-  thinkingBtn.insertAdjacentHTML("beforeend", CHEVRON_DOWN);
-  thinkingMenu.setDismissAnchors([thinkingBtn]);
-
-  function closeThinkingMenu(): void {
-    thinkingMenu.setOpen(false);
-    thinkingBtn.setAttribute("aria-expanded", "false");
+  function closeModelMenu(): void {
+    modelMenu.setOpen(false);
+    modelBtn.setAttribute("aria-expanded", "false");
   }
 
-  function persistEffort(next: EffortId): void {
-    effort = coerceEffort(next);
-    const prefs = loadAiPrefs();
-    saveAiPrefs({ ...prefs, effort });
-    syncThinkingButton();
+  function persistSelection(
+    providerId: ProviderId,
+    modelId: string,
+    nextEffort: EffortId,
+  ): void {
+    prefs = loadAiPrefs();
+    const resolvedEffort = coerceEffortFor(
+      providerId,
+      modelId,
+      nextEffort,
+      providerId === "custom" ? modelId : prefs.customModel,
+    );
+    effort = resolvedEffort;
+    saveAiPrefs({
+      ...prefs,
+      providerId,
+      modelId: providerId === "custom" ? prefs.modelId || modelId : modelId,
+      customModel: providerId === "custom" ? modelId : prefs.customModel,
+      effort: resolvedEffort,
+    });
+    prefs = loadAiPrefs();
+    syncModelButton();
   }
 
-  function positionThinkingMenu(): void {
-    const rect = thinkingBtn.getBoundingClientRect();
-    const menuWidth = Math.max(148, thinkingMenu.el.offsetWidth || 148);
-    const menuHeight = thinkingMenu.el.offsetHeight || 88;
+  function positionModelMenu(): void {
+    const rect = modelBtn.getBoundingClientRect();
+    const menuWidth = Math.max(180, modelMenu.el.offsetWidth || 180);
+    const menuHeight = modelMenu.el.offsetHeight || 120;
     const left = Math.min(
       Math.max(8, rect.left),
       window.innerWidth - menuWidth - 8,
     );
     const top = Math.max(8, rect.top - menuHeight - 4);
-    thinkingMenu.el.style.top = `${top}px`;
-    thinkingMenu.el.style.left = `${left}px`;
-    thinkingMenu.el.style.width = `${menuWidth}px`;
+    modelMenu.el.style.top = `${top}px`;
+    modelMenu.el.style.left = `${left}px`;
+    modelMenu.el.style.minWidth = `${menuWidth}px`;
   }
 
-  function renderThinkingMenu(): void {
-    thinkingMenu.clear();
-    thinkingMenu.setPath("");
-    thinkingMenu.addHeading(t("ai.thinkingMode"));
-    for (const profile of availableEfforts()) {
-      thinkingMenu.addItem({
-        label: effortLabel(profile.id),
-        checked: effort === profile.id,
-        onClick: () => {
-          persistEffort(profile.id);
-          closeThinkingMenu();
-        },
+  function renderModelMenu(): void {
+    modelMenu.clear();
+    modelMenu.setPath("");
+    prefs = loadAiPrefs();
+    const entries = listSwitcherModels(prefs);
+    if (entries.length === 0) {
+      modelMenu.setEmpty(t("ai.modelPickerEmpty"));
+      return;
+    }
+
+    const multiProvider = new Set(entries.map((e) => e.providerId)).size > 1;
+    let lastProvider: ProviderId | null = null;
+
+    for (const entry of entries) {
+      if (multiProvider && entry.providerId !== lastProvider) {
+        modelMenu.addHeading(t(entry.providerLabelKey));
+        lastProvider = entry.providerId;
+      }
+
+      const active = isActiveEntry(entry, prefs);
+      const modelLabel =
+        entry.providerId === "custom" && prefs.customModel.trim()
+          ? prefs.customModel.trim()
+          : t(entry.labelKey);
+
+      if (entry.efforts.length <= 1) {
+        const only = entry.efforts[0]?.id ?? "off";
+        modelMenu.addItem({
+          label: modelLabel,
+          meta: effortLabel(only),
+          checked: active,
+          onClick: () => {
+            persistSelection(entry.providerId, entry.modelId, only);
+            closeModelMenu();
+          },
+        });
+        continue;
+      }
+
+      modelMenu.addSubmenuItem({
+        label: modelLabel,
+        meta: active ? effortLabel(effort) : undefined,
+        title: modelLabel,
+        items: entry.efforts.map((profile) => ({
+          label: effortLabel(profile.id),
+          checked: active && effort === profile.id,
+          onClick: () => {
+            persistSelection(entry.providerId, entry.modelId, profile.id);
+            closeModelMenu();
+          },
+        })),
       });
     }
   }
 
-  function toggleThinkingMenu(event: MouseEvent): void {
+  function toggleModelMenu(event: MouseEvent): void {
     event.stopPropagation();
-    if (thinkingMenu.isOpen()) {
-      closeThinkingMenu();
+    if (modelMenu.isOpen()) {
+      closeModelMenu();
       return;
     }
-    renderThinkingMenu();
-    thinkingMenu.setOpen(true);
-    thinkingBtn.setAttribute("aria-expanded", "true");
-    requestAnimationFrame(() => positionThinkingMenu());
+    renderModelMenu();
+    modelMenu.setOpen(true);
+    modelBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionModelMenu());
   }
 
-  thinkingBtn.addEventListener("click", toggleThinkingMenu);
+  modelBtn.addEventListener("click", toggleModelMenu);
 
   const sendBtn = createIconButton({
     label: t("ai.send"),
@@ -236,7 +322,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   sendBtn.innerHTML = sendIcon();
   sendBtn.classList.add("inimark-ai-send");
 
-  tools.append(attachBtn, folderBtn, thinkingBtn);
+  tools.append(attachBtn, folderBtn, modelBtn);
   toolbar.append(tools, sendBtn);
 
   function syncInputHeight(): void {
@@ -254,7 +340,6 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     textarea.style.overflowY = scroll ? "auto" : "hidden";
   }
 
-  // Re-measure when settings change editor font-size / line-height CSS vars.
   const fontObserver = new MutationObserver(() => syncInputHeight());
   fontObserver.observe(document.documentElement, {
     attributes: true,
@@ -298,7 +383,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     sendBtn.classList.toggle("is-empty", empty && !running);
     sendBtn.disabled = running ? false : empty;
     textarea.disabled = running;
-    thinkingBtn.disabled = running;
+    modelBtn.disabled = running;
   }
 
   textarea.addEventListener("input", () => {
@@ -321,7 +406,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   });
 
   function onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === "Escape" && thinkingMenu.isOpen()) closeThinkingMenu();
+    if (event.key === "Escape" && modelMenu.isOpen()) closeModelMenu();
   }
   document.addEventListener("keydown", onDocumentKeydown);
 
@@ -331,14 +416,14 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     attachBtn.setAttribute("aria-label", t("ai.attach"));
     folderBtn.title = t("ai.attachFolder");
     folderBtn.setAttribute("aria-label", t("ai.attachFolder"));
-    syncThinkingButton();
+    syncModelButton();
     syncSend();
-    if (thinkingMenu.isOpen()) renderThinkingMenu();
+    if (modelMenu.isOpen()) renderModelMenu();
   });
 
   shell.append(chips, textarea, toolbar);
-  host.append(shell, thinkingMenu.el);
-  syncThinkingButton();
+  host.append(shell, modelMenu.el);
+  syncModelButton();
   syncChips();
   syncSend();
   syncInputHeight();
@@ -369,8 +454,8 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
       fontObserver.disconnect();
       document.removeEventListener("keydown", onDocumentKeydown);
       unsubLocale();
-      closeThinkingMenu();
-      thinkingMenu.destroy();
+      closeModelMenu();
+      modelMenu.destroy();
       host.replaceChildren();
     },
   };

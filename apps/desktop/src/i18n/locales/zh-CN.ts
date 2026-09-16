@@ -170,6 +170,8 @@ export const zhCN: Dictionary = {
     historyLimitCancel: "取消",
     untitledChat: "新对话",
     thinkingMode: "思考强度",
+    modelPicker: "模型与思考强度",
+    modelPickerEmpty: "暂无可用模型，请先在设置中配置 API Key。",
     thinkingFast: "快速",
     thinkingDeep: "深度思考",
     thinkingProcess: "思考过程",
