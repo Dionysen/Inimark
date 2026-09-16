@@ -5,6 +5,8 @@ const EDITABLE_SELECTOR = [
   ".ProseMirror",
   ".cm-editor",
   ".cm-content",
+  ".inimark-ai-bubble",
+  ".inimark-ai-tool-body",
   '[contenteditable="true"]',
 ].join(", ");
 
@@ -27,7 +29,7 @@ function elementFromTarget(target: EventTarget | null): Element | null {
   return null;
 }
 
-/** True when the event is inside the markdown editor or a text field. */
+/** True when the event is inside the markdown editor, AI chat text, or a text field. */
 export function isEditableChromeTarget(target: EventTarget | null): boolean {
   const el = elementFromTarget(target);
   if (!el) return false;

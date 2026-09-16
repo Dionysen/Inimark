@@ -63,4 +63,22 @@ describe("chrome guards", () => {
     host.remove();
     teardown();
   });
+
+  test("allows selectstart inside AI chat bubbles", () => {
+    const teardown = installChromeGuards(document);
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    const p = document.createElement("p");
+    p.textContent = "hello";
+    bubble.append(p);
+    document.body.append(bubble);
+
+    expect(isEditableChromeTarget(p)).toBe(true);
+    const selectEvent = new Event("selectstart", { cancelable: true, bubbles: true });
+    p.dispatchEvent(selectEvent);
+    expect(selectEvent.defaultPrevented).toBe(false);
+
+    bubble.remove();
+    teardown();
+  });
 });
