@@ -5,7 +5,7 @@ import type {
   ChatStreamEvent,
   WriteUndoEntry,
 } from "../types.ts";
-import { AGENT_SYSTEM_PROMPT, AGENT_TOOL_DEFINITIONS } from "./tool-defs.ts";
+import { AGENT_TOOL_DEFINITIONS, buildAgentSystemPrompt } from "./tool-defs.ts";
 import { executeAgentTool, type AgentToolHost } from "./tools.ts";
 
 export const DEFAULT_AGENT_MAX_STEPS = 12;
@@ -28,6 +28,11 @@ export interface RunAgentLoopOptions {
   host: AgentToolHost;
   signal: AbortSignal;
   maxSteps?: number;
+  /**
+   * UI language name used when the model cannot infer the user's message language
+   * (e.g. "English", "Simplified Chinese (简体中文)").
+   */
+  fallbackLanguage: string;
   onEvent: (event: AgentLoopEvent) => void;
 }
 
@@ -49,7 +54,7 @@ function mergeToolCallDeltas(
 export async function runAgentLoop(options: RunAgentLoopOptions): Promise<void> {
   const maxSteps = options.maxSteps ?? DEFAULT_AGENT_MAX_STEPS;
   const messages: ChatMessage[] = [
-    { role: "system", content: AGENT_SYSTEM_PROMPT },
+    { role: "system", content: buildAgentSystemPrompt(options.fallbackLanguage) },
     ...options.history,
     { role: "user", content: options.userContent },
   ];

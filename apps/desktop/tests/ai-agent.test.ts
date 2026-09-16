@@ -7,7 +7,10 @@ import {
   packAttachmentContext,
 } from "../src/ai/agent/context.ts";
 import { runAgentLoop } from "../src/ai/agent/loop.ts";
-import { AGENT_SYSTEM_PROMPT } from "../src/ai/agent/tool-defs.ts";
+import {
+  agentFallbackLanguageLabel,
+  buildAgentSystemPrompt,
+} from "../src/ai/agent/tool-defs.ts";
 import { executeAgentTool, type AgentToolHost } from "../src/ai/agent/tools.ts";
 import {
   consumeSseBuffer,
@@ -164,11 +167,23 @@ describe("executeAgentTool apply_edit", () => {
 
 describe("AGENT_SYSTEM_PROMPT intent-first", () => {
   test("requires greeting path: summarize then ask, no vault exploration", () => {
-    expect(AGENT_SYSTEM_PROMPT).toMatch(/Intent first/i);
-    expect(AGENT_SYSTEM_PROMPT).toMatch(/get_active_note at most once/i);
-    expect(AGENT_SYSTEM_PROMPT).toMatch(/Do NOT explore the vault/i);
-    expect(AGENT_SYSTEM_PROMPT).toMatch(/ask what they want/i);
-    expect(AGENT_SYSTEM_PROMPT).toMatch(/not a replacement for their message/i);
+    const prompt = buildAgentSystemPrompt("English");
+    expect(prompt).toMatch(/Intent first/i);
+    expect(prompt).toMatch(/get_active_note at most once/i);
+    expect(prompt).toMatch(/Do NOT explore the vault/i);
+    expect(prompt).toMatch(/ask what they want/i);
+    expect(prompt).toMatch(/not a replacement for their message/i);
+  });
+
+  test("instructs language detection with UI fallback", () => {
+    const prompt = buildAgentSystemPrompt("Simplified Chinese (简体中文)");
+    expect(prompt).toMatch(/Language \(do this first every turn\)/i);
+    expect(prompt).toMatch(/Infer the dominant language/i);
+    expect(prompt).toContain("Simplified Chinese (简体中文)");
+    expect(agentFallbackLanguageLabel("en")).toBe("English");
+    expect(agentFallbackLanguageLabel("zh-CN")).toBe(
+      "Simplified Chinese (简体中文)",
+    );
   });
 });
 
@@ -226,6 +241,7 @@ describe("runAgentLoop", () => {
       userContent: "hello",
       host,
       signal: new AbortController().signal,
+      fallbackLanguage: "English",
       onEvent(event) {
         events.push(event.type);
       },

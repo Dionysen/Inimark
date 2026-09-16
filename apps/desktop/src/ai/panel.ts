@@ -1,4 +1,4 @@
-import { onLocaleChange, t } from "../i18n/index.ts";
+import { onLocaleChange, getLocale, t } from "../i18n/index.ts";
 import { isTauri } from "../platform/env.ts";
 import type { Workspace, WorkspaceTreeNode } from "../platform/types.ts";
 import {
@@ -8,6 +8,7 @@ import {
 import { searchVaultIncremental } from "../sidebar/vault-search.ts";
 import { createIconButton } from "../ui/widgets/index.ts";
 import { runAgentLoop, type AgentLoopEvent } from "./agent/loop.ts";
+import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
   formatDirectoryListing,
   formatUserTurnWithAttachments,
@@ -483,6 +484,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       userContent,
       host: createToolHost(),
       signal: abort.signal,
+      fallbackLanguage: agentFallbackLanguageLabel(getLocale()),
       onEvent: handleLoopEvent,
     });
 

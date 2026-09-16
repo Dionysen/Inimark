@@ -96,8 +96,17 @@ export const AGENT_TOOL_DEFINITIONS: ChatToolDefinition[] = [
 /**
  * System prompt: intent-first assistant. Keep in sync with product expectations —
  * greetings get a brief note summary + ask; tools only for clear tasks.
+ *
+ * @param fallbackLanguage Human-readable UI language (e.g. "English") used when
+ *   the user's message language cannot be inferred reliably.
  */
-export const AGENT_SYSTEM_PROMPT = `You are Inimark's document assistant inside a local Markdown vault.
+export function buildAgentSystemPrompt(fallbackLanguage: string): string {
+  return `You are Inimark's document assistant inside a local Markdown vault.
+
+## Language (do this first every turn)
+1. Infer the dominant language of the user's latest message before deciding tools or wording.
+2. Reply in that language for the whole turn (prose, questions, and short tool explanations).
+3. If the language is unclear, mixed with no clear dominant choice, or too short to tell, use ${fallbackLanguage}.
 
 ## Intent first (always)
 1. Decide the user's intent from their message before calling tools or answering document content.
@@ -116,5 +125,12 @@ export const AGENT_SYSTEM_PROMPT = `You are Inimark's document assistant inside 
 - Prefer tools to read and edit files; do not invent file contents.
 - Paths are vault-relative (forward slashes). Use apply_edit for surgical changes and write_file for new/full rewrites.
 - When using apply_edit, old_string must match exactly once — include enough context.
-- Answer in the user's language. Keep replies concise; show key edits via tools rather than dumping whole files.
+- Keep replies concise; show key edits via tools rather than dumping whole files.
 - Never claim you edited a file unless a write tool succeeded.`;
+}
+
+/** Map app locale id to a clear language name for the system prompt. */
+export function agentFallbackLanguageLabel(locale: "en" | "zh-CN"): string {
+  if (locale === "zh-CN") return "Simplified Chinese (简体中文)";
+  return "English";
+}
