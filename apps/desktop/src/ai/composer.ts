@@ -67,6 +67,20 @@ export function resolveComposerLineHeightPx(style: CSSStyleDeclaration): number 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : safeFont * 1.5;
 }
 
+/**
+ * Whether Enter should send the composer message.
+ * Returns false while an IME candidate window is active so Enter confirms composition.
+ */
+export function shouldComposerEnterSend(event: {
+  key: string;
+  shiftKey: boolean;
+  isComposing?: boolean;
+  keyCode?: number;
+}): boolean {
+  if (event.isComposing || event.keyCode === 229) return false;
+  return event.key === "Enter" && !event.shiftKey;
+}
+
 function paperclipIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m21.44 11.05-8.49 8.49a5.25 5.25 0 0 1-7.43-7.43l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.75 1.75 0 0 1-2.47-2.47l8.49-8.48"/></svg>`;
 }
@@ -392,10 +406,9 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   });
 
   textarea.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      if (!running && !sendBtn.disabled) sendBtn.click();
-    }
+    if (!shouldComposerEnterSend(event)) return;
+    event.preventDefault();
+    if (!running && !sendBtn.disabled) sendBtn.click();
   });
 
   shell.addEventListener("mousedown", (event) => {

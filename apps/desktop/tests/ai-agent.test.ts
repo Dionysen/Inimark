@@ -26,6 +26,7 @@ import {
   clampComposerInputHeight,
   COMPOSER_MAX_LINES,
   resolveComposerLineHeightPx,
+  shouldComposerEnterSend,
 } from "../src/ai/composer.ts";
 import { resolveSendAttachments, mergeVaultPathAttachments } from "../src/ai/attachments.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
@@ -338,6 +339,23 @@ describe("clampComposerInputHeight", () => {
     const capped = clampComposerInputHeight(line * 8 + pad, line, pad);
     expect(capped.height).toBe(line * COMPOSER_MAX_LINES + pad);
     expect(capped.scroll).toBe(true);
+  });
+});
+
+describe("shouldComposerEnterSend", () => {
+  test("sends on plain Enter, not Shift+Enter", () => {
+    expect(shouldComposerEnterSend({ key: "Enter", shiftKey: false })).toBe(true);
+    expect(shouldComposerEnterSend({ key: "Enter", shiftKey: true })).toBe(false);
+    expect(shouldComposerEnterSend({ key: "a", shiftKey: false })).toBe(false);
+  });
+
+  test("does not send while IME is composing", () => {
+    expect(
+      shouldComposerEnterSend({ key: "Enter", shiftKey: false, isComposing: true }),
+    ).toBe(false);
+    expect(
+      shouldComposerEnterSend({ key: "Enter", shiftKey: false, keyCode: 229 }),
+    ).toBe(false);
   });
 });
 
