@@ -540,6 +540,167 @@
   overflow: auto;
 }
 
+.inimark-ai-review {
+  flex-shrink: 0;
+  margin: 0 var(--inimark-space-3) var(--inimark-space-2);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-md);
+  background: color-mix(in srgb, var(--inimark-accent, #3b82f6) 8%, var(--inimark-surface));
+  overflow: hidden;
+}
+
+.inimark-ai-review[hidden] {
+  display: none;
+}
+
+.inimark-ai-review__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--inimark-border) 80%, transparent);
+}
+
+.inimark-ai-review__summary {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 10rem;
+  color: var(--inimark-fg);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.inimark-ai-review__actions,
+.inimark-ai-review__file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.inimark-ai-review__btn {
+  min-height: 1.65rem;
+  padding-block: 0.1rem;
+  padding-inline: 0.65rem;
+  font-size: 0.75rem;
+}
+
+.inimark-ai-review__btn--sm {
+  min-height: 1.45rem;
+  padding-inline: 0.5rem;
+  font-size: 0.7rem;
+}
+
+.inimark-ai-review__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 9rem;
+  overflow: auto;
+}
+
+.inimark-ai-review__file {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--inimark-border) 70%, transparent);
+}
+
+.inimark-ai-review__file:last-child {
+  border-bottom: 0;
+}
+
+.inimark-ai-review__file.is-expanded {
+  background: color-mix(in srgb, var(--inimark-accent, #3b82f6) 10%, transparent);
+}
+
+.inimark-ai-review__file-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 0.15rem 0.2rem;
+  border: 0;
+  border-radius: var(--inimark-radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-ai-review__file-main:hover {
+  background: var(--inimark-hover);
+}
+
+.inimark-ai-review__file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.inimark-ai-review__file-counts {
+  flex-shrink: 0;
+  color: var(--inimark-muted-fg);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.inimark-ai-review__diff {
+  border-top: 1px solid var(--inimark-border);
+  max-height: 14rem;
+  overflow: auto;
+  background: var(--inimark-bg);
+}
+
+.inimark-ai-review__diff[hidden] {
+  display: none;
+}
+
+.inimark-ai-review__diff-pre {
+  margin: 0;
+  padding: 0.4rem 0.5rem;
+  font-family: var(
+    --inimark-font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace
+  );
+  font-size: 0.7rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inimark-ai-review__diff-line--add {
+  background: color-mix(in srgb, #22c55e 14%, transparent);
+  color: color-mix(in srgb, #16a34a 70%, var(--inimark-fg));
+}
+
+.inimark-ai-review__diff-line--remove {
+  background: color-mix(in srgb, #ef4444 14%, transparent);
+  color: color-mix(in srgb, #dc2626 70%, var(--inimark-fg));
+}
+
+.inimark-ai-review__diff-line--equal {
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-ai-review__diff-gap,
+.inimark-ai-review__diff-empty {
+  color: var(--inimark-muted-fg);
+  opacity: 0.8;
+  padding: 0.15rem 0;
+}
+
 .inimark-ai-composer {
   flex-shrink: 0;
   padding: var(--inimark-space-2) var(--inimark-space-3) var(--inimark-space-3);

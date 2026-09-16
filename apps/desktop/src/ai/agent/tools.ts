@@ -12,8 +12,15 @@ export interface AgentToolHost {
   >;
   writeFile(path: string, content: string): Promise<void>;
   openNote(path: string): Promise<void>;
-  /** Called after a successful write so the UI can refresh editor state. */
-  onFileWritten?(path: string, content: string): void;
+  /**
+   * Called after a successful write so the UI can refresh editor state.
+   * `aiOwned` marks the write as intentional AI output (skip external-change UX).
+   */
+  onFileWritten?(
+    path: string,
+    content: string,
+    opts?: { aiOwned?: boolean },
+  ): void;
 }
 
 export interface ToolExecResult {
@@ -84,11 +91,11 @@ export async function executeAgentTool(
         const edited = applyUniqueReplace(before, oldString, newString);
         if (!edited.ok) return { ok: false, output: edited.error };
         await host.writeFile(path, edited.text);
-        host.onFileWritten?.(path, edited.text);
+        host.onFileWritten?.(path, edited.text, { aiOwned: true });
         return {
           ok: true,
           output: `Updated ${path}`,
-          undo: { path, before },
+          undo: { path, before, after: edited.text },
         };
       }
       case "write_file": {
@@ -102,11 +109,11 @@ export async function executeAgentTool(
           before = "";
         }
         await host.writeFile(path, content);
-        host.onFileWritten?.(path, content);
+        host.onFileWritten?.(path, content, { aiOwned: true });
         return {
           ok: true,
           output: `Wrote ${path}`,
-          undo: { path, before },
+          undo: { path, before, after: content },
         };
       }
       case "open_note": {

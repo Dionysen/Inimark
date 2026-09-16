@@ -1120,19 +1120,29 @@ export function mountApp(host: HTMLElement): AppController {
     openNote: async (path) => {
       await openWorkspaceFile(path);
     },
-    onFileWritten(path, content) {
+    onFileWritten(path, content, opts) {
       if (path === activeFilePath) {
         const view = editor.getViewState();
         editor.setMarkdown(content);
         editor.restoreViewState(view);
-        shell.setDirty(true);
+        if (opts?.aiOwned) {
+          // AI / review restore already matches disk — avoid external-change banner.
+          fileSync.markOwnWrite();
+          void fileSync.recordBaseline(content);
+          shell.setDirty(false);
+        } else {
+          shell.setDirty(true);
+          scheduleAutoSave();
+        }
         scheduleOutlineSync(content);
-        scheduleAutoSave();
         if (workspace) {
           linkIndex.addFileLinks(path, content);
           scheduleTagIndexSync(content);
         }
         wordCount?.scheduleUpdate();
+      } else if (opts?.aiOwned) {
+        // Non-active AI write: still suppress watch noise if this path becomes active soon.
+        fileSync.markOwnWrite();
       }
       if (workspace) {
         void (async () => {

@@ -55,10 +55,13 @@ Which levels exist—and whether vault tools stay enabled—depends on the model
 - With “Attach current note when empty” enabled, the open note is included silently when you have not attached anything (no chip).
 - Explicit attachments take priority and show as chips; click a chip to open that note.
 
-## History and undo
+## History and review
 
 - Chat history is stored per vault; you can start a new chat, switch, or delete sessions.
-- After the assistant writes a note, **Undo last write** restores the previous content.
+- After the assistant **writes or edits notes**, a review bar appears above the input: changed files with `+added −removed` line counts. Click a file to expand its diff and open the note.
+- **Keep / Keep all**: accept the current on-disk content (without the external disk-change banner).
+- **Discard / Discard all**: restore each file to the content before the AI edits.
+- The toolbar undo control is the same as **Discard all**.
 
 ## Privacy
 

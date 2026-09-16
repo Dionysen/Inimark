@@ -80,4 +80,5 @@ export interface UiChatMessage {
 export interface WriteUndoEntry {
   path: string;
   before: string;
+  after: string;
 }

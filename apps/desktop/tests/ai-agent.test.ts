@@ -172,7 +172,11 @@ describe("executeAgentTool apply_edit", () => {
     );
     expect(result.ok).toBe(true);
     expect(files.get("note.md")).toBe("alpha gamma");
-    expect(result.undo).toEqual({ path: "note.md", before: "alpha beta" });
+    expect(result.undo).toEqual({
+      path: "note.md",
+      before: "alpha beta",
+      after: "alpha gamma",
+    });
   });
 });
 

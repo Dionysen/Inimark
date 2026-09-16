@@ -51,11 +51,12 @@ import {
   loadAiPrefs,
   loadAiSecrets,
 } from "./secrets.ts";
+import { createAiChangeSet } from "./change-set.ts";
+import { mountReviewBar, type ReviewBarController } from "./review-bar.ts";
 import type {
   ChatAttachment,
   ChatMessage,
   UiChatMessage,
-  WriteUndoEntry,
 } from "./types.ts";
 import { registerVaultPathDropTarget } from "../platform/vault-path-drop.ts";
 
@@ -64,7 +65,16 @@ export interface AiPanelHost {
   getActiveFilePath(): string | null;
   getActiveMarkdown(): string;
   openNote(path: string): Promise<void>;
-  onFileWritten(path: string, content: string): void;
+  /**
+   * Refresh editor / tree after a disk write.
+   * Pass `aiOwned: true` for intentional AI (or review discard) writes so the
+   * external disk-change banner is not shown.
+   */
+  onFileWritten(
+    path: string,
+    content: string,
+    opts?: { aiOwned?: boolean },
+  ): void;
 }
 
 export interface AiPanelController {
@@ -118,7 +128,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   let uiMessages: UiChatMessage[] = [];
   let history: ChatMessage[] = [];
   let attachments: ChatAttachment[] = [];
-  let undoStack: WriteUndoEntry[] = [];
+  const changeSet = createAiChangeSet();
   let abort: AbortController | null = null;
   let running = false;
   let sessions: AiChatSession[] = [];
@@ -135,10 +145,10 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       onClick: () => toggleHistoryMenu(),
     },
     {
-      label: t("ai.undoWrite"),
-      title: t("ai.undoWrite"),
+      label: t("ai.review.discardAll"),
+      title: t("ai.review.discardAll"),
       icon: undoWriteIcon,
-      onClick: () => void undoLastWrite(),
+      onClick: () => void discardAllChanges(),
       disabled: true,
     },
     {
@@ -158,6 +168,17 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   const chatHost = document.createElement("div");
   const chat: ChatViewController = mountChatView(chatHost);
 
+  const reviewHost = document.createElement("div");
+  const review: ReviewBarController = mountReviewBar(reviewHost, {
+    onKeepAll: () => keepAllChanges(),
+    onDiscardAll: () => discardAllChanges(),
+    onKeepFile: (path) => keepFile(path),
+    onDiscardFile: (path) => discardFile(path),
+    onOpenFile: async (path) => {
+      await panelHost?.openNote(path);
+    },
+  });
+
   const composerHost = document.createElement("div");
   const composer: ComposerController = mountComposer(composerHost, {
     onSend: (text, atts) => void send(text, atts),
@@ -171,7 +192,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     },
   });
 
-  hostEl.append(toolbar.el, chatHost, composerHost, historyMenu.el);
+  hostEl.append(toolbar.el, chatHost, reviewHost, composerHost, historyMenu.el);
 
   function attachVaultPaths(
     items: readonly Array<{ path: string; kind: "file" | "directory" }>,
@@ -187,7 +208,12 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   function refreshChat(): void {
     chat.setMessages(uiMessages);
     chat.scrollToBottom();
-    undoBtn.disabled = undoStack.length === 0;
+    refreshReview();
+  }
+
+  function refreshReview(): void {
+    undoBtn.disabled = changeSet.isEmpty();
+    review.sync(changeSet);
   }
 
   function reloadSessionsFromWorkspace(): void {
@@ -243,7 +269,6 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     currentSessionId = null;
     uiMessages = [];
     history = [];
-    undoStack = [];
     attachments = [];
     composer.setAttachments(attachments);
     refreshChat();
@@ -255,6 +280,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     running = false;
     composer.setRunning(false);
     closeHistoryMenu();
+    changeSet.clear();
     clearDraftChat();
     reloadSessionsFromWorkspace();
   }
@@ -278,7 +304,6 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     currentSessionId = session.id;
     uiMessages = structuredClone(session.uiMessages);
     history = structuredClone(session.history);
-    undoStack = [];
     attachments = [];
     composer.setAttachments(attachments);
     refreshChat();
@@ -371,23 +396,59 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     persistCurrentSession();
   }
 
-  async function undoLastWrite(): Promise<void> {
-    const entry = undoStack.pop();
-    if (!entry || !panelHost) {
-      refreshChat();
-      return;
-    }
+  async function restoreFileContent(path: string, content: string): Promise<void> {
+    if (!panelHost) return;
     const workspace = panelHost.getWorkspace();
     if (!workspace) return;
-    await writeWorkspaceFile(workspace, entry.path, entry.before);
-    panelHost.onFileWritten(entry.path, entry.before);
-    uiMessages.push({
-      id: newId(),
-      kind: "assistant",
-      content: t("ai.undoDone", { path: entry.path }),
-      endedAt: Date.now(),
-    });
-    refreshChat();
+    const result = await writeWorkspaceFile(workspace, path, content);
+    if (result.status === "error") throw new Error(result.message);
+    panelHost.onFileWritten(path, content, { aiOwned: true });
+  }
+
+  function keepFile(path: string): void {
+    changeSet.remove(path);
+    refreshReview();
+  }
+
+  function keepAllChanges(): void {
+    changeSet.clear();
+    refreshReview();
+  }
+
+  async function discardFile(path: string): Promise<void> {
+    const entry = changeSet.get(path);
+    if (!entry) return;
+    try {
+      await restoreFileContent(path, entry.before);
+      changeSet.remove(path);
+      refreshReview();
+    } catch (error) {
+      uiMessages.push({
+        id: newId(),
+        kind: "error",
+        content: error instanceof Error ? error.message : String(error),
+      });
+      refreshChat();
+    }
+  }
+
+  async function discardAllChanges(): Promise<void> {
+    const entries = changeSet.list();
+    if (entries.length === 0) return;
+    try {
+      for (const entry of entries) {
+        await restoreFileContent(entry.path, entry.before);
+      }
+      changeSet.clear();
+      refreshReview();
+    } catch (error) {
+      uiMessages.push({
+        id: newId(),
+        kind: "error",
+        content: error instanceof Error ? error.message : String(error),
+      });
+      refreshChat();
+    }
   }
 
   function fileLabel(path: string): string {
@@ -552,8 +613,8 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       async openNote(path) {
         await panelHost?.openNote(path);
       },
-      onFileWritten(path, content) {
-        panelHost?.onFileWritten(path, content);
+      onFileWritten(path, content, opts) {
+        panelHost?.onFileWritten(path, content, opts);
       },
     };
   }
@@ -639,8 +700,12 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       return;
     }
     if (event.type === "undo_push") {
-      undoStack.push(event.entry);
-      refreshChat();
+      changeSet.record({
+        path: event.entry.path,
+        before: event.entry.before,
+        after: event.entry.after,
+      });
+      refreshReview();
       return;
     }
     if (event.type === "error") {
@@ -755,8 +820,8 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     historyBtn.setAttribute("aria-label", t("ai.history"));
     newBtn.title = t("ai.newChat");
     newBtn.setAttribute("aria-label", t("ai.newChat"));
-    undoBtn.title = t("ai.undoWrite");
-    undoBtn.setAttribute("aria-label", t("ai.undoWrite"));
+    undoBtn.title = t("ai.review.discardAll");
+    undoBtn.setAttribute("aria-label", t("ai.review.discardAll"));
     if (historyMenu.isOpen()) renderHistoryMenu();
   });
 
@@ -780,6 +845,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       historyMenu.destroy();
       toolbar.destroy();
       chat.destroy();
+      review.destroy();
       composer.destroy();
       hostEl.replaceChildren();
     },
