@@ -29,6 +29,16 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.8 — 2026-09-16
+
+**Release page:** (unreleased)
+
+### What's new
+
+- Fix Windows startup flash of a transparent window with a native title bar: create undecorated and hidden, apply platform chrome, then show; window-state no longer restores decorations / visibility
+
+---
+
 ## 1.0.7 — 2026-09-15
 
 **Release page:** [v1.0.7](https://github.com/Dionysen/Inimark/releases/tag/v1.0.7)

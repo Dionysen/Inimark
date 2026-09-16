@@ -19,16 +19,21 @@ use commands::window_commands::{show_settings_window, toggle_settings_window};
 
 const WINDOW_LABELS: &[&str] = &["main", "settings"];
 
-fn finish_platform_window(_window: &tauri::WebviewWindow) {
-    #[cfg(target_os = "windows")]
-    {
-        let _ = _window.set_shadow(true);
-    }
-}
+/// Window geometry / maximize / fullscreen — not decorations or visibility.
+/// Decorations are platform chrome (custom titlebar); visibility is applied
+/// after chrome so Windows never flashes a transparent native title bar.
+const WINDOW_STATE_FLAGS: StateFlags = StateFlags::from_bits_truncate(
+    StateFlags::SIZE.bits()
+        | StateFlags::POSITION.bits()
+        | StateFlags::MAXIMIZED.bits()
+        | StateFlags::FULLSCREEN.bits(),
+);
 
+/// Apply OS-specific chrome while the window is still hidden, then show main.
 fn apply_platform_chrome(window: &tauri::WebviewWindow) {
     #[cfg(not(target_os = "macos"))]
     {
+        // Config already uses decorations: false; keep this as a hard guarantee.
         let _ = window.set_decorations(false);
     }
     #[cfg(target_os = "windows")]
@@ -40,7 +45,6 @@ fn apply_platform_chrome(window: &tauri::WebviewWindow) {
         let _ = window.set_decorations(true);
         let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
     }
-    finish_platform_window(window);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -50,7 +54,11 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(WINDOW_STATE_FLAGS)
+                .build(),
+        )
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(SitePreviewState::default())
         .invoke_handler(tauri::generate_handler![
@@ -72,7 +80,10 @@ pub fn run() {
             for label in WINDOW_LABELS {
                 if let Some(window) = app.get_webview_window(label) {
                     apply_platform_chrome(&window);
-                    if *label == "settings" {
+                    if *label == "main" {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    } else if *label == "settings" {
                         let _ = window.hide();
                     }
                 }
@@ -91,7 +102,7 @@ pub fn run() {
                     api.prevent_close();
                     let _ = window
                         .app_handle()
-                        .save_window_state(StateFlags::all());
+                        .save_window_state(WINDOW_STATE_FLAGS);
                     let _ = window.hide();
                 }
             }
@@ -105,7 +116,7 @@ pub fn run() {
                     match event {
                         WindowEvent::CloseRequested { .. } => {}
                         WindowEvent::Destroyed => {
-                            let _ = app_handle.save_window_state(StateFlags::all());
+                            let _ = app_handle.save_window_state(WINDOW_STATE_FLAGS);
                             if let Some(settings) = app_handle.get_webview_window("settings") {
                                 let _ = settings.destroy();
                             }
