@@ -197,12 +197,26 @@
 
 .inimark-ai-composer {
   flex-shrink: 0;
-  border-top: 1px solid var(--inimark-border);
-  padding: var(--inimark-space-2);
+  padding: var(--inimark-space-2) var(--inimark-space-3) var(--inimark-space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--inimark-space-2);
   background: var(--inimark-bg);
+}
+
+.inimark-ai-composer-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1);
+  padding: var(--inimark-space-2);
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-md);
+  background: var(--inimark-surface);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--inimark-fg) 4%, transparent);
+}
+
+.inimark-ai-composer-shell:focus-within {
+  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--inimark-accent) 28%, transparent);
 }
 
 .inimark-ai-chips {
@@ -214,7 +228,7 @@
 .inimark-ai-chip {
   appearance: none;
   border: 1px solid var(--inimark-border);
-  background: var(--inimark-surface);
+  background: var(--inimark-content-bg, var(--inimark-bg));
   color: var(--inimark-fg);
   border-radius: 999px;
   padding: 2px 8px;
@@ -230,33 +244,101 @@
   background: var(--inimark-hover);
 }
 
-.inimark-ai-composer-row {
-  display: grid;
-  grid-template-columns: auto auto auto 1fr auto;
-  gap: var(--inimark-space-1);
-  align-items: end;
-}
-
 .inimark-ai-input {
   width: 100%;
-  min-height: 52px;
-  max-height: 160px;
-  resize: vertical;
-  border: 1px solid var(--inimark-border);
-  border-radius: var(--inimark-radius-control);
-  background: var(--inimark-content-bg);
+  min-width: 0;
+  border: none;
+  background: transparent;
   color: var(--inimark-fg);
-  padding: var(--inimark-space-2);
+  padding: 2px 4px;
+  margin: 0;
   font: inherit;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
+  resize: none;
+  overflow-y: hidden;
 }
 
 .inimark-ai-input:focus {
-  outline: 2px solid var(--inimark-focus-ring);
-  outline-offset: 1px;
+  outline: none;
+}
+
+.inimark-ai-input:disabled {
+  opacity: 0.65;
+}
+
+.inimark-ai-composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--inimark-space-2);
+  min-height: 28px;
+}
+
+.inimark-ai-composer-tools {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.inimark-ai-composer-tools .inimark-icon-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  color: var(--inimark-muted-fg);
+  opacity: 0.85;
+}
+
+.inimark-ai-composer-tools .inimark-icon-btn:hover:not(:disabled) {
+  opacity: 1;
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-ai-composer-tools .inimark-icon {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .inimark-ai-send {
-  color: var(--inimark-accent);
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 999px;
+  border: none;
+  background: var(--inimark-accent);
+  color: var(--inimark-accent-fg);
+  opacity: 1;
+}
+
+.inimark-ai-send .inimark-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.inimark-ai-send:hover:not(:disabled) {
+  color: var(--inimark-accent-fg);
+  background: color-mix(in srgb, var(--inimark-accent) 88%, var(--inimark-fg));
+  filter: none;
+}
+
+.inimark-ai-send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.inimark-ai-send.is-empty:disabled,
+.inimark-ai-send:disabled:not(.is-running) {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.inimark-ai-send.is-running {
+  background: color-mix(in srgb, var(--inimark-fg) 55%, var(--inimark-surface));
+  color: var(--inimark-bg);
+}
+
+.inimark-ai-send.is-running:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--inimark-fg) 70%, var(--inimark-surface));
+  color: var(--inimark-bg);
 }

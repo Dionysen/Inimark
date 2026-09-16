@@ -19,6 +19,10 @@ import {
   isFinalAssistantAnswer,
 } from "../src/ai/tool-labels.ts";
 import { formatAnswerAge } from "../src/ai/relative-time.ts";
+import {
+  clampComposerInputHeight,
+  COMPOSER_MAX_LINES,
+} from "../src/ai/composer.ts";
 import type { UiChatMessage } from "../src/ai/types.ts";
 import { initI18n, setLocale } from "../src/i18n/index.ts";
 import {
@@ -284,5 +288,24 @@ describe("formatAnswerAge", () => {
     expect(formatAnswerAge(now - 3 * 3_600_000, now)).toBe("3h ago");
     expect(formatAnswerAge(now - 86_400_000, now)).toBe("1d ago");
     setLocale("zh-CN");
+  });
+});
+
+describe("clampComposerInputHeight", () => {
+  const line = 18;
+  const pad = 4;
+
+  test("grows with content up to five lines then scrolls", () => {
+    expect(clampComposerInputHeight(line + pad, line, pad)).toEqual({
+      height: line + pad,
+      scroll: false,
+    });
+    expect(clampComposerInputHeight(line * 3 + pad, line, pad)).toEqual({
+      height: line * 3 + pad,
+      scroll: false,
+    });
+    const capped = clampComposerInputHeight(line * 8 + pad, line, pad);
+    expect(capped.height).toBe(line * COMPOSER_MAX_LINES + pad);
+    expect(capped.scroll).toBe(true);
   });
 });
