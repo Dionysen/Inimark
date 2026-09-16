@@ -7,7 +7,7 @@ import { mermaidPlugin } from "./markdown/mermaid.ts";
 import { taskListsPlugin } from "./markdown/task-lists.ts";
 import { wikiLinksPlugin } from "./markdown/wiki-links.ts";
 
-export { hydrateChatMermaid } from "./markdown/mermaid.ts";
+export { hydrateChatMermaid, hydrateChatCode, hydrateChatRichContent } from "./markdown/mermaid.ts";
 export { handleChatLinkClick } from "./markdown/link-click.ts";
 
 const md = new MarkdownIt({
@@ -35,6 +35,7 @@ export function renderChatMarkdown(source: string): string {
       "data-heading",
       "data-unresolved",
       "data-embed",
+      "data-lang",
     ],
   });
 }

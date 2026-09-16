@@ -111,8 +111,21 @@ describe("renderChatMarkdown mermaid", () => {
   test("leaves ordinary fences as code blocks", () => {
     const html = renderChatMarkdown("```js\nconst x = 1\n```\n");
     expect(html).not.toContain("inimark-ai-mermaid");
-    expect(html).toContain("<pre>");
+    expect(html).toContain('class="inimark-ai-code"');
+    expect(html).toContain('data-lang="js"');
     expect(html).toContain("const x = 1");
+  });
+});
+
+describe("hydrateChatCode", () => {
+  test("highlights fenced javascript with tok-* spans", async () => {
+    const { hydrateChatCode } = await import("../src/ai/markdown/mermaid.ts");
+    const host = document.createElement("div");
+    host.innerHTML = renderChatMarkdown("```js\nconst answer = 42;\n```\n");
+    await hydrateChatCode(host);
+    const pre = host.querySelector("pre.inimark-ai-code");
+    expect(pre?.getAttribute("data-highlighted")).toBe("1");
+    expect(host.innerHTML).toMatch(/tok-(keyword|literal|name)/);
   });
 });
 

@@ -205,6 +205,18 @@
   white-space: pre-wrap;
 }
 
+/* Same Lezer token colors as the editor / published site. */
+.inimark-ai-bubble pre code .tok-comment { color: var(--tw-code-comment); }
+.inimark-ai-bubble pre code .tok-keyword { color: var(--tw-code-keyword); }
+.inimark-ai-bubble pre code .tok-string { color: var(--tw-code-string); }
+.inimark-ai-bubble pre code .tok-literal { color: var(--tw-code-literal); }
+.inimark-ai-bubble pre code .tok-type { color: var(--tw-code-type); }
+.inimark-ai-bubble pre code .tok-function { color: var(--tw-code-function); }
+.inimark-ai-bubble pre code .tok-name { color: var(--tw-code-name); }
+.inimark-ai-bubble pre code .tok-punctuation { color: var(--tw-code-punctuation); }
+.inimark-ai-bubble pre code .tok-meta { color: var(--tw-code-meta); }
+.inimark-ai-bubble pre code .tok-invalid { color: var(--tw-code-invalid); }
+
 .inimark-ai-bubble hr {
   height: 1px;
   padding: 0;
