@@ -22,6 +22,7 @@ The settings window is **searchable**. Use the search box when you remember a wo
 | Publish | Site name, output, preview | [[Publish a Site]] |
 | Images | Storage intents (pipeline incomplete) | [[Images and Attachments]] |
 | Graph | Physics and visual prefs | [[Relationship Graph]] |
+| AI | Provider, model, API key, thinking-related prefs | [[AI Document Assistant]] |
 | About | Version, updates, proxy for updates | — |
 | Dev | Developer tools (not end-user) | — |
 

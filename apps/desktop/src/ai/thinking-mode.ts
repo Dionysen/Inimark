@@ -1,20 +1,34 @@
-/** Composer thinking-mode presets (fast vs deep reasoning). */
+/**
+ * Thinking / effort helpers.
+ * Product effort lives in `catalog/`; this module re-exports for older imports
+ * and keeps a thin modelAllowsAgentTools for tests that only pass a model id.
+ */
 
-export type AiThinkingMode = "fast" | "deep";
+export {
+  parseEffortId,
+  parseAiThinkingMode,
+  AI_THINKING_MODES,
+  effortLabelKey,
+  type AiThinkingMode,
+  type EffortId,
+} from "./catalog/index.ts";
 
-export const AI_THINKING_MODES: readonly AiThinkingMode[] = ["fast", "deep"];
+export { resolveChatCall } from "./catalog/index.ts";
 
-export function parseAiThinkingMode(raw: unknown): AiThinkingMode {
-  return raw === "deep" ? "deep" : "fast";
+/**
+ * @deprecated Prefer ResolvedChatCall.toolsAllowed from resolveChatCall.
+ * Heuristic kept for unit tests that only have a model string.
+ */
+export function modelAllowsAgentTools(model: string): boolean {
+  return !model.trim().toLowerCase().includes("reasoner");
 }
 
 /**
- * Map the settings model + thinking mode to the request model.
- * DeepSeek: chat ↔ reasoner; other vendors keep the configured model.
+ * @deprecated Prefer resolveChatCall. Maps legacy fast/deep against DeepSeek ids.
  */
 export function resolveModelForThinkingMode(
   settingsModel: string,
-  mode: AiThinkingMode,
+  mode: "fast" | "deep",
 ): string {
   const id = settingsModel.trim().toLowerCase();
   if (mode === "deep") {
@@ -23,9 +37,4 @@ export function resolveModelForThinkingMode(
   }
   if (id === "deepseek-reasoner") return "deepseek-chat";
   return settingsModel;
-}
-
-/** Reasoner-style models generally do not support tool calling. */
-export function modelAllowsAgentTools(model: string): boolean {
-  return !model.trim().toLowerCase().includes("reasoner");
 }

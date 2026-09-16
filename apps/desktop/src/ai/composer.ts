@@ -1,11 +1,12 @@
 import { closeIcon, createIconButton, createMenu } from "../ui/widgets/index.ts";
 import { onLocaleChange, t } from "../i18n/index.ts";
-import { loadAiPrefs, saveAiPrefs } from "./secrets.ts";
 import {
-  AI_THINKING_MODES,
-  parseAiThinkingMode,
-  type AiThinkingMode,
-} from "./thinking-mode.ts";
+  effortLabelKey,
+  effortsForPrefs,
+  parseEffortId,
+  type EffortId,
+} from "./catalog/index.ts";
+import { loadAiPrefs, saveAiPrefs } from "./secrets.ts";
 import type { ChatAttachment } from "./types.ts";
 
 export interface ComposerController {
@@ -14,7 +15,9 @@ export interface ComposerController {
   setText(value: string): void;
   getAttachments(): ChatAttachment[];
   setAttachments(items: ChatAttachment[]): void;
-  getThinkingMode(): AiThinkingMode;
+  getEffort(): EffortId;
+  /** @deprecated Prefer getEffort. */
+  getThinkingMode(): "fast" | "deep";
   setRunning(running: boolean): void;
   focus(): void;
   destroy(): void;
@@ -79,8 +82,23 @@ function folderIcon(): string {
 const CHEVRON_DOWN =
   `<svg class="inimark-icon inimark-ai-thinking-mode__chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-function thinkingModeLabel(mode: AiThinkingMode): string {
-  return mode === "deep" ? t("ai.thinkingDeep") : t("ai.thinkingFast");
+function effortLabel(id: EffortId): string {
+  return t(effortLabelKey(id));
+}
+
+function availableEfforts() {
+  const prefs = loadAiPrefs();
+  return effortsForPrefs({
+    providerId: prefs.providerId,
+    modelId: prefs.modelId,
+    customModel: prefs.customModel,
+  });
+}
+
+function coerceEffort(preferred: EffortId): EffortId {
+  const list = availableEfforts();
+  if (list.some((e) => e.id === preferred)) return preferred;
+  return list[0]?.id ?? "off";
 }
 
 export function mountComposer(host: HTMLElement, options: ComposerOptions): ComposerController {
@@ -89,7 +107,7 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
 
   let attachments: ChatAttachment[] = [];
   let running = false;
-  let thinkingMode = parseAiThinkingMode(loadAiPrefs().thinkingMode);
+  let effort = coerceEffort(parseEffortId(loadAiPrefs().effort));
 
   const shell = document.createElement("div");
   shell.className = "inimark-ai-composer-shell";
@@ -135,7 +153,9 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
   thinkingLabel.className = "inimark-ai-thinking-mode__label";
 
   function syncThinkingButton(): void {
-    thinkingLabel.textContent = thinkingModeLabel(thinkingMode);
+    const list = availableEfforts();
+    thinkingBtn.hidden = list.length <= 1;
+    thinkingLabel.textContent = effortLabel(effort);
     thinkingBtn.setAttribute("aria-label", t("ai.thinkingMode"));
     thinkingBtn.title = t("ai.thinkingMode");
   }
@@ -149,10 +169,10 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     thinkingBtn.setAttribute("aria-expanded", "false");
   }
 
-  function persistThinkingMode(mode: AiThinkingMode): void {
-    thinkingMode = mode;
+  function persistEffort(next: EffortId): void {
+    effort = coerceEffort(next);
     const prefs = loadAiPrefs();
-    saveAiPrefs({ ...prefs, thinkingMode: mode });
+    saveAiPrefs({ ...prefs, effort });
     syncThinkingButton();
   }
 
@@ -174,12 +194,12 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
     thinkingMenu.clear();
     thinkingMenu.setPath("");
     thinkingMenu.addHeading(t("ai.thinkingMode"));
-    for (const mode of AI_THINKING_MODES) {
+    for (const profile of availableEfforts()) {
       thinkingMenu.addItem({
-        label: thinkingModeLabel(mode),
-        checked: thinkingMode === mode,
+        label: effortLabel(profile.id),
+        checked: effort === profile.id,
         onClick: () => {
-          persistThinkingMode(mode);
+          persistEffort(profile.id);
           closeThinkingMenu();
         },
       });
@@ -336,7 +356,8 @@ export function mountComposer(host: HTMLElement, options: ComposerOptions): Comp
       attachments = [...items];
       syncChips();
     },
-    getThinkingMode: () => thinkingMode,
+    getEffort: () => effort,
+    getThinkingMode: () => (effort === "off" ? "fast" : "deep"),
     setRunning(next) {
       running = next;
       syncSend();

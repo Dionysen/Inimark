@@ -32,9 +32,8 @@ import {
   setWorkspaceAiChatSessions,
 } from "../workspace/runtime.ts";
 import {
-  modelAllowsAgentTools,
-  resolveModelForThinkingMode,
-} from "./thinking-mode.ts";
+  resolveChatCall,
+} from "./catalog/index.ts";
 import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
   formatDirectoryListing,
@@ -46,8 +45,12 @@ import type { AgentToolHost } from "./agent/tools.ts";
 import { resolveSendAttachments, mergeVaultPathAttachments } from "./attachments.ts";
 import { mountChatView, type ChatViewController } from "./chat-view.ts";
 import { mountComposer, type ComposerController } from "./composer.ts";
-import { createOpenAiCompatProvider } from "./providers/openai-compat.ts";
-import { loadAiPrefs, loadAiSecrets } from "./secrets.ts";
+import { createProviderForResolved } from "./providers/factory.ts";
+import {
+  getApiKeyForProvider,
+  loadAiPrefs,
+  loadAiSecrets,
+} from "./secrets.ts";
 import type {
   ChatAttachment,
   ChatMessage,
@@ -653,11 +656,32 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     if (running) return;
     const secrets = loadAiSecrets();
     const prefs = loadAiPrefs();
-    if (!secrets.apiKey.trim()) {
+    const apiKey = getApiKeyForProvider(secrets, prefs.providerId);
+    if (!apiKey) {
       uiMessages.push({
         id: newId(),
         kind: "error",
         content: t("ai.missingKey"),
+      });
+      refreshChat();
+      return;
+    }
+
+    const resolved = resolveChatCall({
+      providerId: prefs.providerId,
+      modelId: prefs.modelId,
+      baseUrlOverride: prefs.baseUrlOverride,
+      customBaseUrl: prefs.customBaseUrl,
+      customModel: prefs.customModel,
+      apiKey,
+      effort: composer.getEffort(),
+    });
+
+    if (!resolved.baseUrl.trim()) {
+      uiMessages.push({
+        id: newId(),
+        kind: "error",
+        content: t("ai.missingBaseUrl"),
       });
       refreshChat();
       return;
@@ -693,24 +717,18 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     composer.setRunning(true);
     abort = new AbortController();
 
-    const provider = createOpenAiCompatProvider({
-      id: prefs.providerId,
-      baseUrl: prefs.baseUrl,
-      apiKey: secrets.apiKey,
-      useSystemProxy: prefs.useSystemProxy,
-    });
-
+    const provider = createProviderForResolved(resolved, prefs.useSystemProxy);
     const prior = history.slice(0, -1);
-    const model = resolveModelForThinkingMode(prefs.model, composer.getThinkingMode());
 
     await runAgentLoop({
       provider,
-      model,
+      model: resolved.model,
       history: prior,
       userContent,
       host: createToolHost(),
       signal: abort.signal,
-      enableTools: modelAllowsAgentTools(model),
+      enableTools: resolved.toolsAllowed,
+      extras: resolved.extras,
       fallbackLanguage: agentFallbackLanguageLabel(getLocale()),
       onEvent: handleLoopEvent,
     });

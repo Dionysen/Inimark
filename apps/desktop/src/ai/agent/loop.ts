@@ -29,8 +29,10 @@ export interface RunAgentLoopOptions {
   host: AgentToolHost;
   signal: AbortSignal;
   maxSteps?: number;
-  /** When false, omit tools (e.g. DeepSeek reasoner). Default true. */
+  /** When false, omit tools (e.g. deep thinking without tool support). Default true. */
   enableTools?: boolean;
+  /** Protocol extras from catalog resolve (thinking / reasoning_effort / …). */
+  extras?: Record<string, unknown>;
   /**
    * UI language name used when the model cannot infer the user's message language
    * (e.g. "English", "Simplified Chinese (简体中文)").
@@ -78,6 +80,7 @@ export async function runAgentLoop(options: RunAgentLoopOptions): Promise<void> 
           model: options.model,
           messages,
           tools: enableTools ? AGENT_TOOL_DEFINITIONS : undefined,
+          extras: options.extras,
         },
         options.signal,
       )) {

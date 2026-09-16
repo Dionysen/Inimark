@@ -21,15 +21,16 @@ impl Default for AiStreamState {
     }
 }
 
+/// Protocol-agnostic streaming POST: TS builds url / headers / body.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AiChatStreamArgs {
     request_id: String,
-    base_url: String,
-    api_key: String,
-    model: String,
-    messages: serde_json::Value,
-    tools: Option<serde_json::Value>,
+    url: String,
+    /// Extra request headers (Content-Type is always application/json).
+    #[serde(default)]
+    headers: HashMap<String, String>,
+    body: serde_json::Value,
     use_system_proxy: bool,
 }
 
@@ -39,17 +40,6 @@ struct AiStreamPayload {
     request_id: String,
     kind: &'static str,
     payload: String,
-}
-
-fn join_chat_url(base_url: &str) -> Result<String, String> {
-    let trimmed = base_url.trim().trim_end_matches('/');
-    if trimmed.is_empty() {
-        return Err("baseUrl is empty".into());
-    }
-    if trimmed.ends_with("/chat/completions") {
-        return Ok(trimmed.to_string());
-    }
-    Ok(format!("{trimmed}/chat/completions"))
 }
 
 fn clear_cancel(state: &AiStreamState, request_id: &str) {
@@ -69,14 +59,18 @@ fn emit_stream(app: &AppHandle, request_id: &str, kind: &'static str, payload: S
     );
 }
 
-/// Stream an OpenAI-compatible chat completion; emits `ai-stream` events.
+/// Stream an HTTP POST body; emits raw `chunk` / `done` / `error` via `ai-stream`.
 #[tauri::command]
 pub async fn ai_chat_stream(
     app: AppHandle,
     state: State<'_, AiStreamState>,
     args: AiChatStreamArgs,
 ) -> Result<(), String> {
-    let url = join_chat_url(&args.base_url)?;
+    let url = args.url.trim();
+    if url.is_empty() {
+        return Err("url is empty".into());
+    }
+
     let cancel = Arc::new(AtomicBool::new(false));
     {
         let mut map = state
@@ -86,16 +80,6 @@ pub async fn ai_chat_stream(
         if let Some(prev) = map.insert(args.request_id.clone(), cancel.clone()) {
             prev.store(true, Ordering::SeqCst);
         }
-    }
-
-    let mut body = serde_json::json!({
-        "model": args.model,
-        "messages": args.messages,
-        "stream": true,
-    });
-    if let Some(tools) = args.tools {
-        body["tools"] = tools;
-        body["tool_choice"] = serde_json::json!("auto");
     }
 
     let mut client_builder = reqwest::Client::builder()
@@ -115,15 +99,20 @@ pub async fn ai_chat_stream(
     let client = client_builder.build().map_err(|e| e.to_string())?;
     let request_id = args.request_id.clone();
 
-    let response = match client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", args.api_key))
+    let mut request = client
+        .post(url)
         .header("Content-Type", "application/json")
         .header("Accept", "text/event-stream")
-        .json(&body)
-        .send()
-        .await
-    {
+        .json(&args.body);
+
+    for (key, value) in &args.headers {
+        if key.eq_ignore_ascii_case("content-type") {
+            continue;
+        }
+        request = request.header(key.as_str(), value.as_str());
+    }
+
+    let response = match request.send().await {
         Ok(resp) => resp,
         Err(err) => {
             emit_stream(&app, &request_id, "error", err.to_string());
@@ -145,7 +134,6 @@ pub async fn ai_chat_stream(
     }
 
     let mut stream = response.bytes_stream();
-    let mut buffer = String::new();
 
     while !cancel.load(Ordering::SeqCst) {
         let next = stream.next().await;
@@ -156,37 +144,17 @@ pub async fn ai_chat_stream(
             break;
         }
 
-        let chunk = match item {
-            Ok(bytes) => bytes,
+        match item {
+            Ok(bytes) => {
+                let chunk = String::from_utf8_lossy(&bytes).to_string();
+                if !chunk.is_empty() {
+                    emit_stream(&app, &request_id, "chunk", chunk);
+                }
+            }
             Err(err) => {
                 emit_stream(&app, &request_id, "error", err.to_string());
                 break;
             }
-        };
-
-        buffer.push_str(&String::from_utf8_lossy(&chunk));
-        let mut done = false;
-        while let Some(idx) = buffer.find('\n') {
-            let mut line = buffer[..idx].to_string();
-            buffer = buffer[idx + 1..].to_string();
-            if line.ends_with('\r') {
-                line.pop();
-            }
-            let trimmed = line.trim();
-            if trimmed.is_empty() {
-                continue;
-            }
-            if let Some(data) = trimmed.strip_prefix("data:") {
-                let payload = data.trim();
-                if payload == "[DONE]" {
-                    done = true;
-                    break;
-                }
-                emit_stream(&app, &request_id, "data", payload.to_string());
-            }
-        }
-        if done {
-            break;
         }
     }
 

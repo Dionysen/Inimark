@@ -33,6 +33,8 @@ export interface ChatRequest {
   model: string;
   messages: ChatMessage[];
   tools?: ChatToolDefinition[];
+  /** Protocol extras from catalog resolve (thinking / reasoning_effort / …). */
+  extras?: Record<string, unknown>;
 }
 
 export interface ChatProvider {

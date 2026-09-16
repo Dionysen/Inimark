@@ -1,13 +1,21 @@
 import { t } from "../i18n/index.ts";
 import {
+  createSelect,
   createTextField,
   createToggle,
 } from "../ui/widgets/index.ts";
 import {
+  AI_PROVIDERS,
+  getProviderProfile,
+  type ProviderId,
+} from "../ai/catalog/index.ts";
+import {
+  getApiKeyForProvider,
   loadAiPrefs,
   loadAiSecrets,
   saveAiPrefs,
   saveAiSecrets,
+  setApiKeyForProvider,
   type AiPrefs,
 } from "../ai/secrets.ts";
 
@@ -22,33 +30,70 @@ export function renderAiSettingsPanel(host: HTMLElement): () => void {
     saveAiPrefs(prefs);
   }
 
+  const title = document.createElement("h3");
+  title.className = "inimark-settings-section-title";
+  title.textContent = t("settings.nav.ai");
+
+  function row(titleText: string, desc: string, control: HTMLElement, id?: string): HTMLElement {
+    const el = document.createElement("div");
+    el.className = "inimark-settings-row";
+    if (id) el.dataset.settingId = id;
+    const meta = document.createElement("div");
+    meta.className = "inimark-settings-row-meta";
+    const h = document.createElement("div");
+    h.className = "inimark-settings-row-title";
+    h.textContent = titleText;
+    const d = document.createElement("div");
+    d.className = "inimark-settings-row-desc";
+    d.textContent = desc;
+    meta.append(h, d);
+    const ctrl = document.createElement("div");
+    ctrl.className = "inimark-settings-row-control";
+    ctrl.append(control);
+    el.append(meta, ctrl);
+    return el;
+  }
+
+  const providerSelect = createSelect({
+    value: prefs.providerId,
+    options: AI_PROVIDERS.map((p) => ({
+      value: p.id,
+      label: t(p.labelKey),
+    })),
+    minWidth: 180,
+    onChange(value) {
+      const providerId = value as ProviderId;
+      const provider = getProviderProfile(providerId);
+      const modelId =
+        provider && provider.id !== "custom"
+          ? provider.defaultModelId
+          : prefs.customModel || prefs.modelId;
+      persistPrefs({
+        ...prefs,
+        providerId,
+        modelId: provider?.id === "custom" ? prefs.modelId : modelId,
+        effort:
+          provider?.id === "custom"
+            ? "off"
+            : provider?.models.find((m) => m.id === modelId)?.defaultEffort ??
+              "off",
+      });
+      rebuildDynamic();
+    },
+  });
+  providerSelect.el.dataset.settingId = "ai.provider";
+
   const keyField = createTextField({
-    value: secrets.apiKey,
+    value: getApiKeyForProvider(secrets, prefs.providerId),
     placeholder: "sk-…",
     onChange(value) {
-      secrets = { apiKey: value };
+      secrets = setApiKeyForProvider(secrets, prefs.providerId, value);
       saveAiSecrets(secrets);
     },
   });
   keyField.input.type = "password";
   keyField.input.autocomplete = "off";
   keyField.el.dataset.settingId = "ai.apiKey";
-
-  const baseField = createTextField({
-    value: prefs.baseUrl,
-    onChange(value) {
-      persistPrefs({ ...prefs, baseUrl: value.trim() || prefs.baseUrl });
-    },
-  });
-  baseField.el.dataset.settingId = "ai.baseUrl";
-
-  const modelField = createTextField({
-    value: prefs.model,
-    onChange(value) {
-      persistPrefs({ ...prefs, model: value.trim() || prefs.model });
-    },
-  });
-  modelField.el.dataset.settingId = "ai.model";
 
   const attachToggle = createToggle({
     checked: prefs.attachActiveNote,
@@ -66,32 +111,93 @@ export function renderAiSettingsPanel(host: HTMLElement): () => void {
   });
   proxyToggle.el.dataset.settingId = "ai.useSystemProxy";
 
-  function row(title: string, desc: string, control: HTMLElement, id?: string): HTMLElement {
-    const el = document.createElement("div");
-    el.className = "inimark-settings-row";
-    if (id) el.dataset.settingId = id;
-    const meta = document.createElement("div");
-    meta.className = "inimark-settings-row-meta";
-    const h = document.createElement("div");
-    h.className = "inimark-settings-row-title";
-    h.textContent = title;
-    const d = document.createElement("div");
-    d.className = "inimark-settings-row-desc";
-    d.textContent = desc;
-    meta.append(h, d);
-    el.append(meta, control);
-    return el;
+  const dynamicHost = document.createElement("div");
+  dynamicHost.className = "inimark-settings-ai-dynamic";
+
+  function rebuildDynamic(): void {
+    dynamicHost.replaceChildren();
+    keyField.input.value = getApiKeyForProvider(secrets, prefs.providerId);
+
+    const provider = getProviderProfile(prefs.providerId);
+    const isCustom = prefs.providerId === "custom";
+
+    if (isCustom) {
+      const baseField = createTextField({
+        value: prefs.customBaseUrl,
+        placeholder: "https://api.example.com/v1",
+        onChange(value) {
+          persistPrefs({ ...prefs, customBaseUrl: value.trim() });
+        },
+      });
+      baseField.el.dataset.settingId = "ai.baseUrl";
+
+      const modelField = createTextField({
+        value: prefs.customModel,
+        placeholder: "model-id",
+        onChange(value) {
+          persistPrefs({
+            ...prefs,
+            customModel: value.trim(),
+            modelId: value.trim() || prefs.modelId,
+          });
+        },
+      });
+      modelField.el.dataset.settingId = "ai.model";
+
+      dynamicHost.append(
+        row(t("ai.settings.baseUrl"), t("ai.settings.customBaseUrlDesc"), baseField.el, "ai.baseUrl"),
+        row(t("ai.settings.model"), t("ai.settings.customModelDesc"), modelField.el, "ai.model"),
+      );
+      return;
+    }
+
+    const models = provider?.models ?? [];
+    const modelSelect = createSelect({
+      value: models.some((m) => m.id === prefs.modelId)
+        ? prefs.modelId
+        : provider?.defaultModelId ?? "",
+      options: models.map((m) => ({
+        value: m.id,
+        label: t(m.labelKey),
+      })),
+      minWidth: 180,
+      onChange(value) {
+        const profile = models.find((m) => m.id === value);
+        persistPrefs({
+          ...prefs,
+          modelId: value,
+          effort: profile?.defaultEffort ?? "off",
+        });
+      },
+    });
+    modelSelect.el.dataset.settingId = "ai.model";
+
+    const baseField = createTextField({
+      value: prefs.baseUrlOverride || provider?.defaultBaseUrl || "",
+      onChange(value) {
+        const trimmed = value.trim();
+        const def = provider?.defaultBaseUrl ?? "";
+        persistPrefs({
+          ...prefs,
+          baseUrlOverride: trimmed && trimmed !== def ? trimmed : "",
+        });
+      },
+    });
+    baseField.el.dataset.settingId = "ai.baseUrl";
+
+    dynamicHost.append(
+      row(t("ai.settings.model"), t("ai.settings.modelDesc"), modelSelect.el, "ai.model"),
+      row(t("ai.settings.baseUrl"), t("ai.settings.baseUrlDesc"), baseField.el, "ai.baseUrl"),
+    );
   }
 
-  const title = document.createElement("h3");
-  title.className = "inimark-settings-section-title";
-  title.textContent = t("settings.nav.ai");
+  rebuildDynamic();
 
   host.append(
     title,
+    row(t("ai.settings.provider"), t("ai.settings.providerDesc"), providerSelect.el, "ai.provider"),
     row(t("ai.settings.apiKey"), t("ai.settings.apiKeyDesc"), keyField.el, "ai.apiKey"),
-    row(t("ai.settings.baseUrl"), t("ai.settings.baseUrlDesc"), baseField.el, "ai.baseUrl"),
-    row(t("ai.settings.model"), t("ai.settings.modelDesc"), modelField.el, "ai.model"),
+    dynamicHost,
     row(
       t("ai.settings.attachActive"),
       t("ai.settings.attachActiveDesc"),

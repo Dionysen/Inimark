@@ -125,6 +125,7 @@ const STATIC_ENTRIES: StaticEntry[] = [
   { id: "publish.baseHref", section: "publish", titleKey: "settings.publish.baseHref", descKey: "settings.publish.baseHrefDesc" },
   { id: "publish.home", section: "publish", titleKey: "settings.publish.home", descKey: "settings.publish.homeDesc" },
   // AI
+  { id: "ai.provider", section: "ai", titleKey: "ai.settings.provider", descKey: "ai.settings.providerDesc" },
   { id: "ai.apiKey", section: "ai", titleKey: "ai.settings.apiKey", descKey: "ai.settings.apiKeyDesc" },
   { id: "ai.baseUrl", section: "ai", titleKey: "ai.settings.baseUrl", descKey: "ai.settings.baseUrlDesc" },
   { id: "ai.model", section: "ai", titleKey: "ai.settings.model", descKey: "ai.settings.modelDesc" },

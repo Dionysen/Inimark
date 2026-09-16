@@ -42,6 +42,7 @@ translationKey: moc
 - [[Themes and Appearance]] — themes and chrome
 - [[Publish a Site]] — Publish / SSG
 - [[Settings Overview]] — settings map
+- [[AI Document Assistant]] — providers · models · thinking intensity
 
 ## 04 · Appendix
 

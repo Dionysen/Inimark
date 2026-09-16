@@ -36,8 +36,10 @@ Prefer **Latest** unless you are debugging an older build.
 ### What's new
 
 - New **AI document assistant** (sidebar): streaming chat with attachments; can read and edit notes when you ask (writes are undoable); history, new chat, and undo
+- **Multiple providers**: DeepSeek / OpenAI / Anthropic / Gemini, plus custom OpenAI-compatible endpoints; API keys stored per provider; built-in models via dropdown
+- **Configurable thinking intensity**: each model declares Off / Low / Medium / High levels mapped to native API parameters; deep replies can show a collapsible reasoning block
 - Replies lightly render Markdown (task lists, quotes, code highlighting, math, Mermaid); links open in the browser; `[[wikilinks]]` jump to notes; fonts and theme match the editor
-- Immersive composer: drag files/folders to attach, one-click copy of the final answer; Fast / Deep think modes (Deep think shows a collapsible reasoning block)
+- Immersive composer: drag files/folders to attach, one-click copy of the final answer
 - Intent-first: greetings get a short note summary and a ask-what-you-need—no vault browsing until you ask; replies prefer your message language
 - Fix Windows startup window flash; fix Settings and other windows failing to open after AI was introduced
 
