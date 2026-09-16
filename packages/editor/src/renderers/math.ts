@@ -18,13 +18,14 @@ function escapeHtml(value: string): string {
 export function renderMathToHtml(
   tex: string,
   displayMode: boolean,
+  options?: { output?: "html" | "htmlAndMathml" | "mathml" },
 ): MathRenderResult {
   try {
     const html = katex.renderToString(tex, {
       displayMode,
       throwOnError: false,
       trust: false,
-      output: "htmlAndMathml",
+      output: options?.output ?? "htmlAndMathml",
     });
     const ok = !html.includes("katex-error");
     return ok

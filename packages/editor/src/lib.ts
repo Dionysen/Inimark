@@ -62,6 +62,10 @@ export {
   highlightCodeToHtml,
   highlightFencedCodeInHtml,
 } from "./code-highlight-html.ts";
+export { renderMathToHtml } from "./renderers/math.ts";
+export type { MathRenderResult } from "./renderers/math.ts";
+export { mermaidRenderer } from "./renderers/mermaid.ts";
+export type { MermaidRenderState } from "./renderers/mermaid.ts";
 export {
   attachImePositionGuard,
   isImeComposing,

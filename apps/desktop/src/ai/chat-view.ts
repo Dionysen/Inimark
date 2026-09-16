@@ -1,4 +1,4 @@
-import { renderChatMarkdown } from "./markdown-render.ts";
+import { hydrateChatMermaid, renderChatMarkdown } from "./markdown-render.ts";
 import { formatAnswerAge } from "./relative-time.ts";
 import { formatToolCardSummary, isFinalAssistantAnswer } from "./tool-labels.ts";
 import type { UiChatMessage } from "./types.ts";
@@ -91,6 +91,8 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       bubble.innerHTML = renderChatMarkdown(
         msg.kind === "error" ? `**${t("ai.error")}:** ${msg.content}` : msg.content,
       );
+      // Mermaid is async + expensive; hydrate only after the stream settles.
+      if (!msg.streaming) void hydrateChatMermaid(bubble);
     } else {
       bubble.textContent = msg.content;
     }

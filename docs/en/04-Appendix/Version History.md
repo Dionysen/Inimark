@@ -36,7 +36,7 @@ Prefer **Latest** unless you are debugging an older build.
 ### What's new
 
 - Fix Windows startup flash of a transparent window with a native title bar: start hidden, strip decorations before show on Windows; keep Overlay decorations at creation on macOS so traffic lights stay correctly inset; window-state no longer restores decorations / visibility
-- AI replies lightly render task lists and quotes (including `[!NOTE]`-style callouts); dividers, code blocks/inline code, and table borders also follow the active theme
+- AI replies lightly render task lists and quotes (including `[!NOTE]`-style callouts); dividers, code blocks/inline code, and table borders also follow the active theme; bubble text and the composer use the editor body font, while code uses the editor monospace font (including size and line height); math (KaTeX) and Mermaid diagrams also render (diagrams hydrate after streaming ends)
 - AI document assistant (sidebar tab, default right, draggable to left): DeepSeek / OpenAI-compatible streaming chat, attachments, tool-calling agent that can edit notes (writes are undoable)
 - AI assistant is intent-first: greetings get a short summary of the open note and a ask-what-you-need; no vault browsing or answering questions only found inside the note until the user asks
 - AI replies in the user’s message language when clear; otherwise uses the app UI language from Settings

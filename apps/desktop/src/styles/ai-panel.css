@@ -108,8 +108,19 @@
 .inimark-ai-bubble {
   padding: var(--inimark-space-2) var(--inimark-space-3);
   border-radius: var(--inimark-radius-md);
-  font-size: 13px;
-  line-height: 1.45;
+  font-family: var(
+    --editor-font,
+    -apple-system,
+    "PingFang SC",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
+  line-height: var(--editor-line-height, 1.78);
+  letter-spacing: 0.005em;
+  color: var(--text-primary, var(--inimark-fg));
   word-break: break-word;
 }
 
@@ -145,21 +156,35 @@
 .inimark-ai-bubble pre {
   overflow: auto;
   margin: 0 0 0.55em;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--bg-code, var(--inimark-surface-raised));
   color: var(--text-primary, var(--inimark-fg));
   border: 1px solid var(--border, var(--inimark-border));
   border-radius: var(--radius-code-block, var(--inimark-radius-sm));
-  font-family: var(--font-mono, var(--inimark-font-mono));
-  font-size: var(--font-mono-size, 12px);
+  font-family: var(
+    --font-mono,
+    "SF Mono",
+    "Source Code Pro",
+    Consolas,
+    ui-monospace,
+    monospace
+  );
+  font-size: var(--font-mono-size, 14px);
   line-height: var(--code-line-height, 1.5);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
 .inimark-ai-bubble code {
-  font-family: var(--font-mono, var(--inimark-font-mono));
-  font-size: var(--font-mono-size, 0.92em);
+  font-family: var(
+    --font-mono,
+    "SF Mono",
+    "Source Code Pro",
+    Consolas,
+    ui-monospace,
+    monospace
+  );
+  font-size: var(--font-mono-size, 14px);
   padding: var(--padding-code-inline-y, 0.15em) var(--padding-code-inline-x, 0.35em);
   background: var(--bg-code-inline, color-mix(in srgb, var(--inimark-fg) 6%, transparent));
   color: var(--text-code, inherit);
@@ -218,8 +243,51 @@
   background: var(--table-cell-bg, transparent);
 }
 
-.inimark-ai-bubble p {
+.inimark-ai-bubble .inimark-ai-math--block {
   margin: 0 0 0.55em;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.inimark-ai-bubble .inimark-ai-math--inline {
+  display: inline;
+}
+
+.inimark-ai-bubble .inimark-ai-math[data-math-state="error"],
+.inimark-ai-bubble .math-error {
+  color: var(--danger, #e06c75);
+  font-family: var(--font-mono, var(--inimark-font-mono));
+  font-size: var(--font-mono-size, 14px);
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid {
+  margin: 0 0 0.55em;
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid-source {
+  margin: 0;
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid[data-rendered="1"]:not(.is-error) .inimark-ai-mermaid-source {
+  display: none;
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid-svg {
+  overflow-x: auto;
+  text-align: center;
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid-svg svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.inimark-ai-bubble .inimark-ai-mermaid.is-error .inimark-ai-mermaid-source {
+  border-color: color-mix(in srgb, var(--danger, #e06c75) 45%, var(--border, var(--inimark-border)));
+}
+
+.inimark-ai-bubble p {
+  margin: 0 0 var(--editor-paragraph-spacing, 1.05em);
 }
 
 .inimark-ai-bubble p:last-child {
@@ -390,8 +458,16 @@
   padding: 0 var(--inimark-space-2) var(--inimark-space-2);
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: var(--inimark-font-mono);
-  font-size: 11px;
+  font-family: var(
+    --font-mono,
+    "SF Mono",
+    "Source Code Pro",
+    Consolas,
+    ui-monospace,
+    monospace
+  );
+  font-size: var(--font-mono-size, 14px);
+  line-height: var(--code-line-height, 1.5);
   max-height: 160px;
   overflow: auto;
 }
@@ -494,12 +570,21 @@
   min-width: 0;
   border: none;
   background: transparent;
-  color: var(--inimark-fg);
+  color: var(--text-primary, var(--inimark-fg));
   padding: 2px 4px;
   margin: 0;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.45;
+  font-family: var(
+    --editor-font,
+    -apple-system,
+    "PingFang SC",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
+  line-height: var(--editor-line-height, 1.78);
+  letter-spacing: 0.005em;
   resize: none;
   overflow-y: hidden;
 }

@@ -80,3 +80,36 @@ describe("renderChatMarkdown quotes and callouts", () => {
     expect(caution).toContain('data-alert="warning"');
   });
 });
+
+describe("renderChatMarkdown math", () => {
+  test("renders block math with KaTeX", () => {
+    const html = renderChatMarkdown("$$\nS \\times 2^2 = 4S\n$$\n");
+    expect(html).toContain("inimark-ai-math--block");
+    expect(html).toContain('data-math-state="success"');
+    expect(html).toContain("katex");
+    expect(html).not.toContain("$$");
+  });
+
+  test("renders inline math with KaTeX", () => {
+    const html = renderChatMarkdown("面积为 $4S$ 的圆\n");
+    expect(html).toContain("inimark-ai-math--inline");
+    expect(html).toContain("katex");
+    expect(html).toContain("面积为");
+  });
+});
+
+describe("renderChatMarkdown mermaid", () => {
+  test("emits hydrate placeholders for mermaid fences", () => {
+    const html = renderChatMarkdown("```mermaid\ngraph TD\n  A-->B\n```\n");
+    expect(html).toContain('class="inimark-ai-mermaid"');
+    expect(html).toContain("inimark-ai-mermaid-source");
+    expect(html).toContain("graph TD");
+  });
+
+  test("leaves ordinary fences as code blocks", () => {
+    const html = renderChatMarkdown("```js\nconst x = 1\n```\n");
+    expect(html).not.toContain("inimark-ai-mermaid");
+    expect(html).toContain("<pre>");
+    expect(html).toContain("const x = 1");
+  });
+});
