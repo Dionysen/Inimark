@@ -876,7 +876,7 @@ export function mountSettingsView(
         { value: "modifier", label: t("settings.editor.wikiPreviewModifier") },
         { value: "hover", label: t("settings.editor.wikiPreviewHover") },
       ],
-      minWidth: 220,
+      minWidth: 180,
       onChange(value) {
         update({ wikiLinkPreviewTrigger: value as WikiLinkPreviewTrigger });
       },
