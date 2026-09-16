@@ -712,17 +712,8 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   text-transform: uppercase;
 }
 
-.inimark-graph-float-group.is-collapsed .inimark-graph-float-group-body,
-.inimark-graph-settings-group.is-collapsed .inimark-graph-settings-group-body {
+.inimark-graph-float-group.is-collapsed .inimark-graph-float-group-body {
   display: none;
-}
-
-.inimark-graph-settings-group {
-  margin-bottom: var(--inimark-space-3);
-}
-
-.inimark-graph-settings-group .inimark-graph-group-toggle.inimark-settings-section-title {
-  margin-bottom: var(--inimark-space-2);
 }
 
 .inimark-graph-query-suggest {

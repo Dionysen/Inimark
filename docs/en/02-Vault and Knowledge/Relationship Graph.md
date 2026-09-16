@@ -71,7 +71,7 @@ Use **Restore defaults** if a layout feels chaotic (this also clears color group
 
 Color groups let you tint notes that match a search-style query. Groups are checked **from top to bottom**; the **first match wins**. Notes that match nothing keep the theme default color.
 
-In the graph settings panel, **Appearance**, **Forces**, and **Color groups** are collapsible. The floating panel opens with Color groups expanded and the others collapsed so the query editor stays reachable.
+In the floating graph settings panel, **Appearance**, **Forces**, and **Color groups** are collapsible (Color groups opens by default). The full **Settings → Graph** page uses the same plain section headers as other settings pages.
 
 Each group has:
 

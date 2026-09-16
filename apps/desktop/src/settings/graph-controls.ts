@@ -189,14 +189,10 @@ function suggestCatalog(): GraphSuggestCatalog {
   };
 }
 
-type CollapsibleGroup = {
-  id: string;
+type MountedGroup = {
   titleKey: string;
   titleEl: HTMLElement;
-  body: HTMLElement;
   section: HTMLElement;
-  setOpen: (open: boolean) => void;
-  isOpen: () => boolean;
 };
 
 /** Shared appearance + force controls for settings page and editor float. */
@@ -219,13 +215,13 @@ export function mountGraphControls(
     setValue: (value: boolean | number) => void;
   };
   const bounds: Bound[] = [];
-  const collapsibles: CollapsibleGroup[] = [];
+  const mountedGroups: MountedGroup[] = [];
   const queryAutocompletes: GraphQueryAutocompleteController[] = [];
 
-  // Compact float: keep color groups open; collapse appearance/forces to save height.
+  // Float panel only: keep color groups open; collapse appearance/forces to save height.
   const openState = new Map<string, boolean>([
-    ["appearance", !compact],
-    ["forces", !compact],
+    ["appearance", false],
+    ["forces", false],
     ["colors", true],
   ]);
 
@@ -289,22 +285,33 @@ export function mountGraphControls(
     }
   }
 
-  function mountCollapsible(
+  /**
+   * Float panel: collapsible sections with chevrons.
+   * Settings page: plain section titles (same as other settings groups).
+   */
+  function mountGroup(
     id: string,
     titleKey: string,
     fillBody: (body: HTMLElement) => void,
-  ): CollapsibleGroup {
-    const section = document.createElement(compact ? "section" : "div");
-    section.className = compact
-      ? "inimark-graph-float-group"
-      : "inimark-graph-settings-group";
+  ): MountedGroup {
+    if (!compact) {
+      const title = document.createElement("h3");
+      title.className = "inimark-settings-section-title";
+      title.textContent = t(titleKey);
+      el.append(title);
+      fillBody(el);
+      const group: MountedGroup = { titleKey, titleEl: title, section: el };
+      mountedGroups.push(group);
+      return group;
+    }
+
+    const section = document.createElement("section");
+    section.className = "inimark-graph-float-group";
     section.dataset.groupId = id;
 
     const titleBtn = document.createElement("button");
     titleBtn.type = "button";
-    titleBtn.className = compact
-      ? "inimark-graph-float-group-title inimark-graph-group-toggle"
-      : "inimark-settings-section-title inimark-graph-group-toggle";
+    titleBtn.className = "inimark-graph-float-group-title inimark-graph-group-toggle";
 
     const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     chevron.setAttribute("class", "inimark-graph-group-chevron");
@@ -322,13 +329,10 @@ export function mountGraphControls(
     const label = document.createElement("span");
     label.className = "inimark-graph-group-toggle-label";
     label.textContent = t(titleKey);
-
     titleBtn.append(chevron, label);
 
     const body = document.createElement("div");
-    body.className = compact
-      ? "inimark-graph-float-group-body"
-      : "inimark-graph-settings-group-body";
+    body.className = "inimark-graph-float-group-body";
     fillBody(body);
 
     function setOpen(open: boolean): void {
@@ -344,25 +348,17 @@ export function mountGraphControls(
 
     section.append(titleBtn, body);
     el.append(section);
-
-    const group: CollapsibleGroup = {
-      id,
-      titleKey,
-      titleEl: label,
-      body,
-      section,
-      setOpen,
-      isOpen: () => openState.get(id) ?? true,
-    };
-    collapsibles.push(group);
     setOpen(openState.get(id) ?? true);
+
+    const group: MountedGroup = { titleKey, titleEl: label, section };
+    mountedGroups.push(group);
     return group;
   }
 
-  mountCollapsible("appearance", "settings.group.graphAppearance", (body) => {
+  mountGroup("appearance", "settings.group.graphAppearance", (body) => {
     appendFieldRows(body, APPEARANCE_FIELDS);
   });
-  mountCollapsible("forces", "settings.group.graphForce", (body) => {
+  mountGroup("forces", "settings.group.graphForce", (body) => {
     appendFieldRows(body, FORCE_FIELDS);
   });
 
@@ -507,11 +503,10 @@ export function mountGraphControls(
     });
   }
 
-  const colorsGroup = mountCollapsible("colors", "settings.group.graphColors", (body) => {
-    if (!compact) body.dataset.settingId = "graph.colorGroups";
+  mountGroup("colors", "settings.group.graphColors", (body) => {
+    if (!compact) colorList.dataset.settingId = "graph.colorGroups";
     body.append(colorDesc, colorList, addBtn);
   });
-  if (!compact) colorsGroup.section.classList.add("inimark-graph-color-groups");
 
   renderColorGroups();
 
@@ -539,7 +534,7 @@ export function mountGraphControls(
       for (const bound of bounds) {
         bound.setValue(settings[bound.key] as boolean | number);
       }
-      for (const group of collapsibles) {
+      for (const group of mountedGroups) {
         group.titleEl.textContent = t(group.titleKey);
       }
       colorDesc.textContent = t("settings.graph.colorGroupsDesc");
