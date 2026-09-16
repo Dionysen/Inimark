@@ -50,6 +50,10 @@ export const en: Dictionary = {
       autoHideStatusbar: "Auto-hide status bar",
       themeSettings: "Theme",
       sidebarTabs: "Sidebar tabs",
+      graphView: "Graph view",
+      closeGraphView: "Close graph view",
+      pinGraphView: "Pin graph view to title bar",
+      unpinGraphView: "Unpin graph view from title bar",
     },
   },
   sidebar: {

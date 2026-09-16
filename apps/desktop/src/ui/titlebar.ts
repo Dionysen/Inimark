@@ -14,6 +14,7 @@ import { builtinThemeLabel } from "../themes/labels.ts";
 import type { ThemeManifest } from "../themes/custom-theme-manager.ts";
 import {
   createIconButton,
+  graphTabIcon,
   moreIcon,
   rightSidebarToggleIcon,
   sidebarToggleIcon,
@@ -32,6 +33,8 @@ export interface TitleBarController {
   setTitle(title: string): void;
   setSidebarOpen(open: boolean): void;
   setRightSidebarOpen(open: boolean): void;
+  /** Refresh pinned graph-view titlebar button and More menu chrome. */
+  refreshGraphChrome(): void;
   destroy(): void;
 }
 
@@ -59,6 +62,14 @@ export interface TitleBarMoreMenuActions {
   onOpenSearch: () => void;
 }
 
+/** Editor graph view: More-menu entry + optional titlebar pin. */
+export interface TitleBarGraphActions {
+  isOpen: () => boolean;
+  onToggle: () => void;
+  isPinned: () => boolean;
+  onTogglePin: () => void;
+}
+
 export interface TitleBarImmersiveMenuActions {
   getFocusMode: () => boolean;
   getAutoHideTitlebar: () => boolean;
@@ -79,6 +90,7 @@ export interface TitleBarOptions {
   showMoreMenu?: boolean;
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
+  graphActions?: TitleBarGraphActions;
   /** Open sidebar tab layout configuration. */
   onConfigureSidebarTabs?: () => void;
   /** Mount widgets inside the More-button cluster (e.g. update capsule). */
@@ -121,6 +133,7 @@ export function mountTitleBar(
   const showMoreMenu = options.showMoreMenu ?? Boolean(options.rightSidebarToggle);
   const moreActions = options.moreMenuActions;
   const immersiveActions = options.immersiveMenuActions;
+  const graphActions = options.graphActions;
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
   let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
@@ -158,6 +171,8 @@ export function mountTitleBar(
   center.append(titleEl);
 
   let moreBtn: HTMLButtonElement | null = null;
+  let moreCluster: HTMLDivElement | null = null;
+  let graphPinBtn: HTMLButtonElement | null = null;
   let moreMenu: ReturnType<typeof createMenu> | null = null;
   let destroyMoreClusterExtras: (() => void) | null = null;
   let unsubscribeTheme: (() => void) | null = null;
@@ -166,9 +181,10 @@ export function mountTitleBar(
     moreMenu = createMenu();
     moreMenu.el.classList.add("inimark-titlebar-more-menu");
     moreMenu.setPath("");
-    host.append(moreMenu.el);
+    // Mount on body so fixed positioning is not trapped under titlebar-zone (z-index 15).
+    document.body.append(moreMenu.el);
 
-    const moreCluster = document.createElement("div");
+    moreCluster = document.createElement("div");
     moreCluster.className = "inimark-titlebar-more-cluster";
     markNoDrag(moreCluster);
 
@@ -411,6 +427,31 @@ export function mountTitleBar(
           moreActions.onToggleSourceMode();
         },
       });
+      if (graphActions) {
+        moreMenu.addItem({
+          label: graphActions.isOpen()
+            ? t("titlebar.more.closeGraphView")
+            : t("titlebar.more.graphView"),
+          icon: menuIcons.graphView,
+          selected: graphActions.isOpen(),
+          trailingAction: {
+            icon: menuIcons.pinAnchor,
+            title: graphActions.isPinned()
+              ? t("titlebar.more.unpinGraphView")
+              : t("titlebar.more.pinGraphView"),
+            pressed: graphActions.isPinned(),
+            onClick() {
+              graphActions.onTogglePin();
+              updateGraphPinButton();
+              renderMoreMenu();
+            },
+          },
+          onClick() {
+            closeMoreMenu();
+            graphActions.onToggle();
+          },
+        });
+      }
       moreMenu.addDivider();
     }
 
@@ -521,6 +562,44 @@ export function mountTitleBar(
     moreBtn.setAttribute("aria-label", label);
   }
 
+  function updateGraphPinButton(): void {
+    if (!moreCluster || !moreBtn || !graphActions) return;
+    const pinned = graphActions.isPinned();
+    if (!pinned) {
+      graphPinBtn?.remove();
+      graphPinBtn = null;
+      return;
+    }
+    if (!graphPinBtn) {
+      graphPinBtn = createIconButton({
+        label: t("titlebar.more.graphView"),
+        title: t("titlebar.more.graphView"),
+        onClick() {
+          graphActions.onToggle();
+          updateGraphPinButton();
+          if (moreMenu?.isOpen()) renderMoreMenu();
+        },
+      });
+      graphPinBtn.className =
+        "inimark-sidebar-toggle-btn inimark-titlebar-graph-pin-btn";
+      graphPinBtn.innerHTML = graphTabIcon();
+      markNoDrag(graphPinBtn);
+      graphPinBtn.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      moreCluster.insertBefore(graphPinBtn, moreBtn);
+    }
+    const open = graphActions.isOpen();
+    graphPinBtn.classList.toggle("is-active", open);
+    const label = open
+      ? t("titlebar.more.closeGraphView")
+      : t("titlebar.more.graphView");
+    graphPinBtn.title = label;
+    graphPinBtn.setAttribute("aria-label", label);
+    graphPinBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+
   function updateSidebarToggle(): void {
     if (!sidebarToggleBtn) return;
     // Obsidian-style: titlebar toggle only when sidebar is collapsed.
@@ -548,10 +627,12 @@ export function mountTitleBar(
   updateSidebarToggle();
   updateRightSidebarToggle();
   updateMoreButton();
+  updateGraphPinButton();
   const unsubscribeLocale = onLocaleChange(() => {
     updateSidebarToggle();
     updateRightSidebarToggle();
     updateMoreButton();
+    updateGraphPinButton();
     if (moreMenu?.isOpen()) renderMoreMenu();
   });
 
@@ -569,6 +650,10 @@ export function mountTitleBar(
       if (moreMenu?.isOpen()) {
         requestAnimationFrame(() => positionMoreMenu());
       }
+    },
+    refreshGraphChrome() {
+      updateGraphPinButton();
+      if (moreMenu?.isOpen()) renderMoreMenu();
     },
     destroy() {
       unsubscribeLocale();

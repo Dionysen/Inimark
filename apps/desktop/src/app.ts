@@ -119,6 +119,7 @@ export function mountApp(host: HTMLElement): AppController {
     }
   }
 
+  let shellRef: ReturnType<typeof mountShell> | null = null;
   const shell = mountShell(host, {
     onCloseRequest: () => requestAppClose(),
     mountMoreClusterExtras(cluster) {
@@ -158,6 +159,22 @@ export function mountApp(host: HTMLElement): AppController {
       },
       onOpenSearch: () => openDocumentSearch?.(),
     },
+    graphActions: {
+      isOpen: () => shellRef?.graph.isEditorGraphOpen() ?? false,
+      onToggle: () => {
+        shellRef?.graph.toggleEditorGraph();
+        shellRef?.refreshGraphChrome();
+      },
+      isPinned: () => settings.pinGraphViewInTitlebar,
+      onTogglePin: () => {
+        settings = {
+          ...settings,
+          pinGraphViewInTitlebar: !settings.pinGraphViewInTitlebar,
+        };
+        saveSettings(settings);
+        shellRef?.refreshGraphChrome();
+      },
+    },
     immersiveMenuActions: {
       getFocusMode: () => settings.focusMode,
       getAutoHideTitlebar: () => settings.autoHideTitlebar,
@@ -195,6 +212,10 @@ export function mountApp(host: HTMLElement): AppController {
         },
       });
     },
+  });
+  shellRef = shell;
+  shell.graph.onEditorGraphChange(() => {
+    shell.refreshGraphChrome();
   });
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
@@ -1127,6 +1148,7 @@ export function mountApp(host: HTMLElement): AppController {
     editor.setCodeIndentSize(settings.codeIndentSize);
     shell.applySidebarTabLayout(settings);
     shell.graph.applyGraphSettings(settings.graph);
+    shell.refreshGraphChrome();
     wordCount?.syncChrome();
   };
 

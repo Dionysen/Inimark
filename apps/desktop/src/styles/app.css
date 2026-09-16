@@ -287,11 +287,16 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
 
 .inimark-titlebar-more-menu {
   position: fixed;
-  z-index: 40;
-  width: 13rem;
-  min-width: 13rem;
-  max-width: 13rem;
+  /* Above editor graph overlay (30) and titlebar-zone stacking (15). */
+  z-index: 50;
+  width: 14rem;
+  min-width: 14rem;
+  max-width: 14rem;
   box-sizing: border-box;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item-row {
+  width: 100%;
 }
 
 .inimark-titlebar-more-menu .inimark-menu-item {
@@ -299,6 +304,21 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
   grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content) 0.875rem;
   align-items: center;
   column-gap: 0.5rem;
+}
+
+.inimark-titlebar-more-menu .inimark-menu-item--with-trailing {
+  /* Pin action sits outside the row; drop the submenu-arrow column. */
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content);
+}
+
+.inimark-titlebar-graph-pin-btn {
+  margin-left: 0;
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.inimark-titlebar-graph-pin-btn.is-active {
+  color: var(--inimark-accent);
 }
 
 .inimark-titlebar-more-menu .inimark-menu-item__content {

@@ -53,6 +53,11 @@ export interface GraphPanelController {
   setActiveFile(path: string | null): void;
   setMode(mode: GraphMode): void;
   setEditorHost(host: HTMLElement | null): void;
+  /** Toggle the full-pane editor graph overlay. */
+  toggleEditorGraph(): void;
+  isEditorGraphOpen(): boolean;
+  /** Notify when the editor overlay opens/closes. */
+  onEditorGraphChange(handler: (open: boolean) => void): void;
   applyGraphSettings(settings?: GraphSettings): void;
   /** Obsidian-style timelapse: reveal nodes/links over time. */
   playProgression(): void;
@@ -252,6 +257,7 @@ export function mountGraphPanel(
     : null;
   let mode: GraphMode = options.initialMode ?? "local";
   let openHandler: (path: string) => void = () => { };
+  let editorGraphChangeHandler: ((open: boolean) => void) | null = null;
   let editorHost: HTMLElement | null = null;
   let editorOverlay: HTMLElement | null = null;
   let editorGraph: GraphPanelController | null = null;
@@ -601,11 +607,13 @@ export function mountGraphPanel(
   }
 
   function closeEditorGraph(): void {
+    const wasOpen = Boolean(editorOverlay);
     editorGraph?.destroy();
     editorGraph = null;
     editorOverlay?.remove();
     editorOverlay = null;
     syncOpenButton();
+    if (wasOpen) editorGraphChangeHandler?.(false);
   }
 
   function openEditorGraph(): void {
@@ -624,6 +632,7 @@ export function mountGraphPanel(
     });
     editorGraph.onOpenFile((path) => openHandler(path));
     syncOpenButton();
+    editorGraphChangeHandler?.(true);
   }
 
   function refreshChrome(): void {
@@ -1540,6 +1549,15 @@ export function mountGraphPanel(
       if (editorHost === hostEl) return;
       closeEditorGraph();
       editorHost = hostEl;
+    },
+    toggleEditorGraph() {
+      openEditorGraph();
+    },
+    isEditorGraphOpen() {
+      return Boolean(editorOverlay);
+    },
+    onEditorGraphChange(handler) {
+      editorGraphChangeHandler = handler;
     },
     applyGraphSettings(next) {
       applyGraphSettingsLocal(next ?? loadSettings().graph);

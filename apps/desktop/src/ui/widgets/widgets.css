@@ -690,6 +690,47 @@ html[data-glass="true"] .inimark-select-panel {
   background: var(--inimark-hover);
 }
 
+.inimark-menu-item-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inimark-menu-item-row .inimark-menu-item--with-trailing {
+  flex: 1;
+  min-width: 0;
+}
+
+.inimark-menu-item__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  margin: 1px 2px 1px 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--inimark-radius-control, 6px);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+}
+
+.inimark-menu-item__action:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-menu-item__action.is-pressed {
+  color: var(--inimark-accent);
+}
+
+.inimark-menu-item__action .inimark-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .inimark-menu-item:disabled,
 .inimark-menu-item.is-disabled {
   opacity: 0.45;

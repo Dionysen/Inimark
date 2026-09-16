@@ -129,6 +129,8 @@ export interface AppSettings {
   autoHideStatusbar: boolean;
   /** Collapse the editor titlebar until the pointer enters the top edge. */
   autoHideTitlebar: boolean;
+  /** Pin the editor graph-view control to the left of the titlebar More button. */
+  pinGraphViewInTitlebar: boolean;
   autoSave: boolean;
   /** Milliseconds to wait after edits before auto-saving. */
   autoSaveDelayMs: number;
@@ -257,6 +259,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   firstLineIndent: false,
   autoHideStatusbar: false,
   autoHideTitlebar: false,
+  pinGraphViewInTitlebar: false,
   autoSave: false,
   autoSaveDelayMs: AUTO_SAVE_DELAY_MS_DEFAULT,
   linkUpdateOnMove: "ask",
@@ -481,6 +484,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     autoHideTitlebar: Boolean(
       parsed.autoHideTitlebar ?? DEFAULT_SETTINGS.autoHideTitlebar,
+    ),
+    pinGraphViewInTitlebar: Boolean(
+      parsed.pinGraphViewInTitlebar ?? DEFAULT_SETTINGS.pinGraphViewInTitlebar,
     ),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
     autoSaveDelayMs: normalizeAutoSaveDelayMs(parsed.autoSaveDelayMs),

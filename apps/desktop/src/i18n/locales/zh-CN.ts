@@ -50,6 +50,10 @@ export const zhCN: Dictionary = {
       autoHideStatusbar: "自动隐藏状态栏",
       themeSettings: "主题设置",
       sidebarTabs: "侧栏标签",
+      graphView: "图谱视图",
+      closeGraphView: "关闭图谱视图",
+      pinGraphView: "将图谱视图固定到标题栏",
+      unpinGraphView: "取消固定图谱视图",
     },
   },
   sidebar: {

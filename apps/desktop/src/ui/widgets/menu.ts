@@ -21,6 +21,16 @@ export interface MenuItemOptions {
   checked?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  /**
+   * Optional trailing control (e.g. pin/anchor). Rendered as a sibling button
+   * so the main row click and the action stay independent.
+   */
+  trailingAction?: {
+    icon: string;
+    title: string;
+    pressed?: boolean;
+    onClick: () => void;
+  };
 }
 
 export interface MenuSubmenuOptions {
@@ -43,14 +53,14 @@ export interface MenuController {
   clear(): void;
   setPath(text: string, title?: string): void;
   addHeading(text: string): void;
-  addItem(options: MenuItemOptions): HTMLButtonElement;
+  addItem(options: MenuItemOptions): HTMLElement;
   /** Parent row that reveals a flyout submenu on hover. */
   addSubmenuItem(options: MenuSubmenuOptions): HTMLElement;
   addDivider(): void;
   setEmpty(text: string): void;
   /** Append a grouped block inside the menu body (e.g. scrollable library list). */
   appendGroup(className: string): HTMLElement;
-  addItemTo(target: HTMLElement, options: MenuItemOptions): HTMLButtonElement;
+  addItemTo(target: HTMLElement, options: MenuItemOptions): HTMLElement;
   addDividerTo(target: HTMLElement): void;
   setEmptyIn(target: HTMLElement, text: string): void;
   destroy(): void;
@@ -143,6 +153,41 @@ function buildMenuItemButton(options: MenuItemOptions): HTMLButtonElement {
     btn.addEventListener("click", options.onClick);
   }
   return btn;
+}
+
+/** Build a menu row; wraps with a trailing action button when requested. */
+function buildMenuItem(options: MenuItemOptions): HTMLElement {
+  const btn = buildMenuItemButton(options);
+  if (!options.trailingAction) return btn;
+
+  const row = document.createElement("div");
+  row.className = "inimark-menu-item-row";
+  btn.classList.add("inimark-menu-item--with-trailing");
+
+  const action = document.createElement("button");
+  action.type = "button";
+  action.className = "inimark-menu-item__action";
+  action.title = options.trailingAction.title;
+  action.setAttribute("aria-label", options.trailingAction.title);
+  if (options.trailingAction.pressed) {
+    action.classList.add("is-pressed");
+    action.setAttribute("aria-pressed", "true");
+  } else {
+    action.setAttribute("aria-pressed", "false");
+  }
+  action.innerHTML = options.trailingAction.icon;
+  action.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    options.trailingAction?.onClick();
+  });
+  action.addEventListener("mousedown", (event) => {
+    // Keep the parent menu open while pressing the trailing control.
+    event.stopPropagation();
+  });
+
+  row.append(btn, action);
+  return row;
 }
 
 function markMenuNoDrag(el: HTMLElement): void {
@@ -256,9 +301,9 @@ export function createMenu(): MenuController {
       body.append(heading);
     },
     addItem(options) {
-      const btn = buildMenuItemButton(options);
-      body.append(btn);
-      return btn;
+      const item = buildMenuItem(options);
+      body.append(item);
+      return item;
     },
     addSubmenuItem(options) {
       const wrap = document.createElement("div");
@@ -389,9 +434,9 @@ export function createMenu(): MenuController {
       return group;
     },
     addItemTo(target, options) {
-      const btn = buildMenuItemButton(options);
-      target.append(btn);
-      return btn;
+      const item = buildMenuItem(options);
+      target.append(item);
+      return item;
     },
     addDividerTo(target) {
       const divider = document.createElement("div");
@@ -434,4 +479,6 @@ export const menuIcons = {
   immersive: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 9V5a1 1 0 0 1 1-1h4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M20 9V5a1 1 0 0 0-1-1h-4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 15v4a1 1 0 0 0 1 1h4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M20 15v4a1 1 0 0 1-1 1h-4"/></svg>`,
   theme: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 22a10 10 0 1 1 10-10c0 2.2-1.8 4-4 4h-1.5a1.5 1.5 0 0 0-1.4 2 2.5 2.5 0 0 1-2.4 3.3Z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor"/><circle cx="12" cy="8" r="1.1" fill="currentColor"/><circle cx="16.5" cy="11.5" r="1.1" fill="currentColor"/></svg>`,
   sidebarTabs: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 9h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M9 9v11"/></svg>`,
+  graphView: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><circle cx="7" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="17" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="12" cy="17" r="2.25" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9 8.2 15 8.2"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="m8.2 9 2.8 5.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="m15.8 9-2.8 5.5"/></svg>`,
+  pinAnchor: `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 13v8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M8.5 3.5h7l-1.2 5.5h2.4L12 13 7.3 9h2.4L8.5 3.5z"/></svg>`,
 } as const;
