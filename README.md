@@ -176,22 +176,24 @@ docs/                      Help vault + marketing landing (docs/landing)
 | --- | --- |
 | Node.js | 20+ |
 | pnpm | 10+ (pinned via `packageManager`) |
-| Rust | stable (needed for `pnpm tauri` / desktop builds) |
+| Rust | stable (needed for `pnpm inimark:tauri` / `pnpm vellum:tauri`) |
 
 ### Commands
 
 ```bash
 pnpm install
 
-# Desktop frontend (use tauri for the full native shell)
-pnpm dev
+# Inimark
+pnpm inimark:dev
+pnpm inimark:tauri dev
 
-# Tauri desktop debug
-pnpm tauri dev
+# Vellum
+pnpm vellum:dev
+pnpm vellum:tauri dev
 
 # Tests
 pnpm test:editor
-pnpm test:inimark
+pnpm inimark:test
 pnpm test
 
 # Typecheck / build all

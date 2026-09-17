@@ -166,22 +166,24 @@ docs/                  产品帮助库 + 宣传落地页（docs/landing）
 | --- | --- |
 | Node.js | 20+ |
 | pnpm | 10+（仓库已锁定 `packageManager`） |
-| Rust | stable（跑 `pnpm tauri` / 桌面构建需要） |
+| Rust | stable（跑 `pnpm inimark:tauri` / `pnpm vellum:tauri` 需要） |
 
 ### 常用命令
 
 ```bash
 pnpm install
 
-# 桌面开发（Vite 前端；完整桌面能力请用 tauri）
-pnpm dev
+# Inimark
+pnpm inimark:dev
+pnpm inimark:tauri dev
 
-# Tauri 桌面调试
-pnpm tauri dev
+# Vellum
+pnpm vellum:dev
+pnpm vellum:tauri dev
 
 # 测试
 pnpm test:editor
-pnpm test:inimark
+pnpm inimark:test
 pnpm test
 
 # 类型检查 / 全量构建

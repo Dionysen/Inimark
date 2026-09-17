@@ -75,7 +75,7 @@ For development builds you need a local toolchain:
 | --- | --- |
 | Node.js | 20+ |
 | pnpm | 10+ |
-| Rust | stable (needed for `pnpm tauri dev`) |
+| Rust | stable (needed for `pnpm inimark:tauri dev`) |
 
 ```bash
 pnpm install
@@ -84,17 +84,17 @@ pnpm install
 pnpm test:editor
 
 # Desktop integration tests
-pnpm test:inimark
+pnpm inimark:test
 
 # Editor in the browser
-pnpm dev
+pnpm inimark:dev
 
 # Tauri desktop
-pnpm tauri dev
+pnpm inimark:tauri dev
 ```
 
 > [!WARNING]
-> The first `pnpm tauri dev` compiles Rust crates and can take a while. Install [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS.
+> The first `pnpm inimark:tauri dev` compiles Rust crates and can take a while. Install [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS.
 
 ## Architecture sketch
 
