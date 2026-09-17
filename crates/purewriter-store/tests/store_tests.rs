@@ -1,8 +1,8 @@
 mod common;
 
 use purewriter_store::{
-    export_pwb, unpack_pwb, CreateArticle, CreateCategory, CreateFolder, Error, Library,
-    UpdateArticle,
+    export_pwb, merge_db_into_library, unpack_pwb, CreateArticle, CreateCategory, CreateFolder,
+    Error, Library, UpdateArticle,
 };
 
 use common::FixtureLib;
@@ -203,4 +203,110 @@ fn pwb_round_trip() {
     assert!(backup.is_file());
     let lib = Library::open(fx.path()).unwrap();
     assert_eq!(lib.list_articles(None, None, false).unwrap().len(), 1);
+}
+
+#[test]
+fn merge_articles_lww_by_update_time() {
+    use rusqlite::Connection;
+
+    let dest_fx = FixtureLib::create(false);
+    let src_fx = FixtureLib::create(false);
+
+    let article_id = {
+        let mut dest = Library::open(dest_fx.path()).unwrap();
+        let art = dest
+            .create_article(CreateArticle {
+                title: "old-title".into(),
+                content: "old-body".into(),
+                folder_id: "Default".into(),
+                ..Default::default()
+            })
+            .unwrap();
+        art.id
+    };
+    {
+        let dest_db = Connection::open(dest_fx.room_path()).unwrap();
+        dest_db
+            .execute(
+                "UPDATE Article SET updateTime = 100, titleUpdateTime = 100 WHERE id = ?1",
+                [&article_id],
+            )
+            .unwrap();
+    }
+
+    {
+        let src_db = Connection::open(src_fx.room_path()).unwrap();
+        src_db
+            .execute(
+                "INSERT INTO Article (
+                  id, title, content, summary, count, extension, preview, preview1,
+                  updateTime, createTime, folderId, categoryId, editorId, rank,
+                  titleUpdateTime, rankUpdateTime, folderIdUpdateTime, categoryIdUpdateTime, extensionUpdateTime,
+                  deleted, deletedTime, autoChapter, autoChapterUpdateTime, orderKey, structureUpdateTime
+                ) VALUES (?1, 'new-title', 'new-body', 'new', 8, 'txt', 0, 0,
+                  500, 1, 'Default', NULL, 0, 0, 500, 0, 0, 0, 0, 0, 0, 0, 0, NULL, 0)",
+                [&article_id],
+            )
+            .unwrap();
+    }
+
+    let dest = Library::open(dest_fx.path()).unwrap();
+    let report = merge_db_into_library(&dest, &src_fx.room_path()).unwrap();
+    assert!(report.changed);
+    assert!(report.articles_upserted >= 1);
+    let merged = dest.get_article(&article_id).unwrap();
+    assert_eq!(merged.content, "new-body");
+    assert_eq!(merged.title, "new-title");
+}
+
+#[test]
+fn merge_respects_newer_tombstone() {
+    use rusqlite::Connection;
+
+    let dest_fx = FixtureLib::create(false);
+    let src_fx = FixtureLib::create(false);
+
+    let article_id = {
+        let mut dest = Library::open(dest_fx.path()).unwrap();
+        let art = dest
+            .create_article(CreateArticle {
+                title: "alive".into(),
+                content: "x".into(),
+                folder_id: "Default".into(),
+                ..Default::default()
+            })
+            .unwrap();
+        art.id
+    };
+    {
+        let dest_db = Connection::open(dest_fx.room_path()).unwrap();
+        dest_db
+            .execute(
+                "UPDATE Article SET updateTime = 100, deleted = 0, deletedTime = 0 WHERE id = ?1",
+                [&article_id],
+            )
+            .unwrap();
+    }
+
+    {
+        let src_db = Connection::open(src_fx.room_path()).unwrap();
+        src_db
+            .execute(
+                "INSERT INTO Article (
+                  id, title, content, summary, count, extension, preview, preview1,
+                  updateTime, createTime, folderId, categoryId, editorId, rank,
+                  titleUpdateTime, rankUpdateTime, folderIdUpdateTime, categoryIdUpdateTime, extensionUpdateTime,
+                  deleted, deletedTime, autoChapter, autoChapterUpdateTime, orderKey, structureUpdateTime
+                ) VALUES (?1, 'alive', 'x', 'x', 1, 'txt', 0, 0,
+                  100, 1, 'Default', NULL, 0, 0, 100, 0, 0, 0, 0, 1, 900, 0, 0, NULL, 0)",
+                [&article_id],
+            )
+            .unwrap();
+    }
+
+    let dest = Library::open(dest_fx.path()).unwrap();
+    merge_db_into_library(&dest, &src_fx.room_path()).unwrap();
+    let merged = dest.get_article(&article_id).unwrap();
+    assert_eq!(merged.deleted, 1);
+    assert_eq!(merged.deleted_time, 900);
 }

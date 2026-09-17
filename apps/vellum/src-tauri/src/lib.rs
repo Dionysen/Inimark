@@ -1,6 +1,6 @@
 use tauri::Manager;
 
-use dionysen_cloud_sync::CloudSyncState;
+use dionysen_git_sync::GitSyncState;
 use dionysen_shell::{
     handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
 };
@@ -24,13 +24,13 @@ pub fn run() {
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(WINDOW_STATE_FLAGS)
-                .with_filter(|label| label != "oauth-login")
+                .with_filter(|label| label != "git-oauth-login")
                 .build(),
         )
         .manage(window_policy)
         .manage(pw_commands::PwState::default())
-        .manage(CloudSyncState::new().unwrap_or_else(|e| {
-            panic!("failed to open cloud-sync vault: {e}");
+        .manage(GitSyncState::new().unwrap_or_else(|e| {
+            panic!("failed to open git-sync vault: {e}");
         }))
         .invoke_handler(tauri::generate_handler![
             dionysen_shell::show_settings_window,
@@ -51,22 +51,16 @@ pub fn run() {
             pw_commands::pw_set_setting,
             pw_commands::pw_pwb_export,
             pw_commands::pw_pwb_import,
-            dionysen_cloud_sync::commands::cs_begin_oauth,
-            dionysen_cloud_sync::commands::cs_complete_oauth,
-            dionysen_cloud_sync::commands::cs_get_session,
-            dionysen_cloud_sync::commands::cs_get_profile,
-            dionysen_cloud_sync::commands::cs_logout,
-            dionysen_cloud_sync::commands::cs_list_siblings,
-            dionysen_cloud_sync::commands::cs_adopt_session,
-            dionysen_cloud_sync::commands::cs_configure_oss,
-            dionysen_cloud_sync::commands::cs_oss_list,
-            dionysen_cloud_sync::commands::cs_oss_get,
-            dionysen_cloud_sync::commands::cs_oss_put,
-            dionysen_cloud_sync::commands::cs_oss_delete,
-            dionysen_cloud_sync::commands::cs_oss_head,
-            dionysen_cloud_sync::commands::cs_open_url,
-            dionysen_cloud_sync::commands::cs_open_oauth_login,
-            dionysen_cloud_sync::commands::cs_ensure_access_token,
+            pw_commands::pw_git_sync_now,
+            dionysen_git_sync::commands::gs_begin_oauth,
+            dionysen_git_sync::commands::gs_complete_oauth,
+            dionysen_git_sync::commands::gs_get_session,
+            dionysen_git_sync::commands::gs_logout,
+            dionysen_git_sync::commands::gs_open_oauth_login,
+            dionysen_git_sync::commands::gs_open_url,
+            dionysen_git_sync::commands::gs_ensure_repo,
+            dionysen_git_sync::commands::gs_sync_now,
+            dionysen_git_sync::commands::gs_list_remote_backups,
         ])
         .setup(|app| {
             let policy = app.state::<WindowPolicy>();

@@ -8,7 +8,7 @@ import {
   type SettingsViewController,
 } from "@dionysen/settings-kit";
 import { createSelect, createSlider } from "@dionysen/ui";
-import { renderAccountSection } from "../cloud/account-settings.ts";
+import { renderAccountSection } from "../git-sync/account-settings.ts";
 import { onLocaleChange, t, type LocaleId } from "../i18n/index.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import { closeWindow } from "@dionysen/shell";
@@ -45,10 +45,10 @@ function searchEntries(): SettingSearchItem[] {
       getDescription: () => t("settings.account.loginHint"),
     },
     {
-      id: "account-oss",
+      id: "account-sync",
       section: "account",
-      getTitle: () => t("settings.account.ossTitle"),
-      getDescription: () => t("settings.account.ossHint"),
+      getTitle: () => t("settings.account.syncNow"),
+      getDescription: () => t("settings.account.syncHint"),
     },
     {
       id: "appearance-locale",

@@ -14,7 +14,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 dionysen-shell = { path = "../../../crates/dionysen-shell" }
-dionysen-cloud-sync = { path = "../../../crates/dionysen-cloud-sync" }
+dionysen-git-sync = { path = "../../../crates/dionysen-git-sync" }
 purewriter-store = { path = "../../../crates/purewriter-store" }
 tauri = { version = "2", features = ["macos-private-api"] }
 serde = { version = "1", features = ["derive"] }

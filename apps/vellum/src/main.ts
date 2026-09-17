@@ -11,7 +11,7 @@ import { applySettings, loadSettings } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
-import { installOauthDeepLinkHandler } from "./cloud/oauth-deeplink.ts";
+import { installGitOauthDeepLinkHandler } from "./git-sync/oauth-deeplink.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
@@ -32,7 +32,7 @@ const teardownShortcuts = mountShortcutHandler({
   close: () => void closeWindow(),
 });
 let teardownDeepLink: (() => void) | undefined;
-void installOauthDeepLinkHandler().then((fn) => {
+void installGitOauthDeepLinkHandler().then((fn) => {
   teardownDeepLink = fn;
 });
 

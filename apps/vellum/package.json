@@ -12,7 +12,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@dionysen/cloud-sync": "workspace:*",
+    "@dionysen/git-sync": "workspace:*",
     "@dionysen/i18n": "workspace:*",
     "@dionysen/purewriter-store": "workspace:*",
     "@dionysen/settings-kit": "workspace:*",

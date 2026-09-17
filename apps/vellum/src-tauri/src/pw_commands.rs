@@ -230,3 +230,24 @@ pub fn pw_pwb_import(state: State<'_, PwState>, path: String) -> Result<String, 
     *guard = Some(reopened);
     Ok(backup.display().to_string())
 }
+
+/// Sync open library with GitHub/Gitee PWB backups (uses existing library lock).
+#[tauri::command]
+pub fn pw_git_sync_now(
+    pw: State<'_, PwState>,
+    git: State<'_, dionysen_git_sync::GitSyncState>,
+    app_id: String,
+) -> Result<dionysen_git_sync::SyncResult, CommandError> {
+    let guard = pw.lib.lock().map_err(|e| CommandError {
+        code: "lock".into(),
+        message: e.to_string(),
+    })?;
+    let lib = guard.as_ref().ok_or(CommandError {
+        code: "not_open".into(),
+        message: "library is not open — open a Pure Writer folder first".into(),
+    })?;
+    dionysen_git_sync::sync_with_library(&git, &app_id, lib).map_err(|e| CommandError {
+        code: "git_sync".into(),
+        message: e,
+    })
+}
