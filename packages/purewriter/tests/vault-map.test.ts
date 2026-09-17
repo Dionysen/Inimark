@@ -6,7 +6,7 @@ import {
   normalizeVaultPath,
   splitNotePath,
 } from "../src/paths.ts";
-import { libraryToVault, vaultToLibrary } from "../src/vault-map.ts";
+import { libraryToVault, syncLibraryWithVault, vaultToLibrary } from "../src/vault-map.ts";
 import type { VaultContent } from "../src/types.ts";
 
 describe("paths", () => {
@@ -51,6 +51,34 @@ describe("paths", () => {
         extension: "md",
       }),
     ).toBe("长篇/a/b/c.md");
+  });
+
+  it("sanitizes Windows-illegal title characters", () => {
+    expect(
+      joinNotePath({
+        folderName: "拾羽",
+        categoryName: null,
+        title: "一次出游 | 黑光",
+        extension: "txt",
+      }),
+    ).toBe("拾羽/一次出游 _ 黑光.txt");
+    expect(
+      joinNotePath({
+        folderName: "Default",
+        categoryName: "小说",
+        title: "中学*",
+        extension: "txt",
+      }),
+    ).toBe("Default/小说/中学_.txt");
+    expect(
+      joinNotePath({
+        folderName: "废纸篓",
+        categoryName: null,
+        title: "",
+        extension: "txt",
+        fallbackTitle: "abc123",
+      }),
+    ).toBe("废纸篓/abc123.txt");
   });
 
   it("hashHex is stable", () => {
@@ -98,5 +126,24 @@ describe("vault ↔ library mapping", () => {
     expect(byPath.get("诗/致橡树.txt")).toBe("我如果爱你\n");
     expect(byPath.get("长篇/大纲/开篇.md")).toBe("# 开篇\n\n正文");
     expect(byPath.get("长篇/a/b/深层.md")).toBe("deep");
+  });
+
+  it("syncLibraryWithVault updates content and preserves article ids", () => {
+    const library = vaultToLibrary(
+      {
+        notes: [{ path: "诗/夜.md", content: "旧" }],
+      },
+      { nowMs: 1000 },
+    );
+    const id = library.articles[0]!.id;
+    const synced = syncLibraryWithVault(library, {
+      notes: [
+        { path: "诗/夜.md", content: "新正文", mtimeMs: 2000 },
+        { path: "诗/晨.md", content: "新增" },
+      ],
+    }, { nowMs: 2000 });
+
+    expect(synced.articles.find((a) => a.id === id)?.content).toBe("新正文");
+    expect(synced.articles.some((a) => a.title === "晨")).toBe(true);
   });
 });

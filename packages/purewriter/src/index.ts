@@ -24,6 +24,7 @@ export {
   isNoteFileName,
   splitNotePath,
   joinNotePath,
+  sanitizePathSegment,
   hashHex,
   formatOrderKey,
   buildSummary,
@@ -36,7 +37,12 @@ export {
   ROOM_IDENTITY_HASH,
   vaultToLibrary,
   libraryToVault,
+  articlePathIndex,
+  syncLibraryWithVault,
 } from "./vault-map.ts";
+
+/** Sidecar under `.inimark/` storing the original Pure Writer Room.db bytes. */
+export const PUREWRITER_SOURCE_DB_FILE = "purewriter-source.db";
 
 /** @deprecated Prefer {@link vaultToLibrary} — same function, backup-oriented name. */
 export { vaultToLibrary as serializeVault } from "./vault-map.ts";
@@ -50,6 +56,7 @@ export {
   resetRoomSqlJsForTests,
   decodeRoomDatabase,
   encodeRoomDatabase,
+  syncRoomDatabaseWithVault,
   decodeRoomDatabaseAsync,
   encodeRoomDatabaseAsync,
 } from "./room-codec.ts";

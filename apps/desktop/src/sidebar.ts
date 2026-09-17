@@ -170,6 +170,8 @@ export interface SidebarController {
   onToggleSidebar(handler: () => void): void;
   onFileSelect(handler: (path: string, options?: FileSelectOptions) => void | Promise<void>): void;
   onOpenFolder(handler: () => void | Promise<void>): void;
+  onImportPureWriter(handler: () => void | Promise<void>): void;
+  onExportPureWriter(handler: () => void | Promise<void>): void;
   onOpenSettings(handler: () => void): void;
   onManageLibraries(handler: () => void): void;
   onCloseLibrary(handler: () => void): void;
@@ -627,6 +629,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   const handlers = {
     fileSelect: (_path: string, _options?: FileSelectOptions): void | Promise<void> => {},
     openFolder: (): void | Promise<void> => {},
+    importPureWriter: (): void | Promise<void> => {},
+    exportPureWriter: (): void | Promise<void> => {},
     openSettings: (): void => {},
     manageLibraries: (): void => {},
     closeLibrary: (): void => {},
@@ -797,6 +801,22 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       onClick() {
         closeMenu();
         void handlers.openFolder();
+      },
+    });
+    menu.addItemTo(actionsGroup, {
+      label: t("sidebar.library.importPureWriter"),
+      icon: menuIcons.import,
+      onClick() {
+        closeMenu();
+        void handlers.importPureWriter();
+      },
+    });
+    menu.addItemTo(actionsGroup, {
+      label: t("sidebar.library.exportPureWriter"),
+      icon: menuIcons.export,
+      onClick() {
+        closeMenu();
+        void handlers.exportPureWriter();
       },
     });
     menu.addItemTo(actionsGroup, {
@@ -3013,6 +3033,12 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     onOpenFolder(handler) {
       handlers.openFolder = handler;
+    },
+    onImportPureWriter(handler) {
+      handlers.importPureWriter = handler;
+    },
+    onExportPureWriter(handler) {
+      handlers.exportPureWriter = handler;
     },
     onOpenSettings(handler) {
       handlers.openSettings = handler;

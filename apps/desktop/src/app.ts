@@ -14,6 +14,15 @@ import "./styles/app.css";
 import { t } from "./i18n/index.ts";
 import { showLibraryAddedToast } from "./libraries/added-toast.ts";
 import {
+  exportVaultToPureWriterFile,
+  importPureWriterToVault,
+  pickImportDestinationFolder,
+  pickPureWriterExportPath,
+  pickPureWriterSourceFile,
+  suggestExportFileName,
+  encodeVaultToRoomDb,
+} from "./libraries/purewriter-io.ts";
+import {
   getLastLibraryId,
   getLibraryById,
   getLibrarySession,
@@ -932,6 +941,84 @@ export function mountApp(host: HTMLElement): AppController {
     await activateWorkspace(picked.workspace, { restoreSession: false });
   }
 
+  async function importPureWriterLibrary(): Promise<void> {
+    if (!isTauri()) {
+      showStatusToast(shell.mainColumn, t("sidebar.library.tauriOnly"));
+      return;
+    }
+    const source = await pickPureWriterSourceFile();
+    if (!source) return;
+    const dest = await pickImportDestinationFolder();
+    if (!dest) return;
+    if (!(await confirmDiscardChanges())) return;
+
+    showStatusToast(shell.mainColumn, t("sidebar.library.importing"));
+    try {
+      const { noteCount } = await importPureWriterToVault(source, dest);
+      persistLibrarySession();
+      shell.ai.persistActiveSession();
+      await flushWorkspace();
+      const opened = await openWorkspaceByPath(dest);
+      if (opened.status !== "picked") {
+        throw new Error(opened.status === "error" ? opened.message : "open failed");
+      }
+      showLibraryAddedToast(shell.mainColumn, opened.workspace.rootName);
+      showStatusToast(
+        shell.mainColumn,
+        t("sidebar.library.importDone", { count: noteCount }),
+      );
+      await activateWorkspace(opened.workspace, { restoreSession: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      showStatusToast(shell.mainColumn, t("sidebar.library.importFailed", { message }));
+      console.error("Pure Writer import failed", error);
+    }
+  }
+
+  async function exportPureWriterLibrary(): Promise<void> {
+    if (!isTauri()) {
+      showStatusToast(shell.mainColumn, t("sidebar.library.tauriOnly"));
+      return;
+    }
+    if (!workspace) {
+      showStatusToast(shell.mainColumn, t("sidebar.library.exportNeedLibrary"));
+      return;
+    }
+
+    await flushWorkspace();
+    let folderCount = 0;
+    let articleCount = 0;
+    try {
+      const preview = await encodeVaultToRoomDb(workspace.rootPath);
+      folderCount = preview.library.folders.filter((f) => !f.deleted).length;
+      articleCount = preview.library.articles.filter((a) => !a.deleted).length;
+    } catch {
+      /* dialog still opens with a generic name */
+    }
+
+    const target = await pickPureWriterExportPath(
+      suggestExportFileName(workspace.rootName, folderCount || 1, articleCount || 0),
+    );
+    if (!target) return;
+
+    showStatusToast(shell.mainColumn, t("sidebar.library.exporting"));
+    try {
+      const result = await exportVaultToPureWriterFile(
+        workspace.rootPath,
+        target.path,
+        target.format,
+      );
+      showStatusToast(
+        shell.mainColumn,
+        t("sidebar.library.exportDone", { count: result.noteCount }),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      showStatusToast(shell.mainColumn, t("sidebar.library.exportFailed", { message }));
+      console.error("Pure Writer export failed", error);
+    }
+  }
+
   async function openSettings(): Promise<void> {
     try {
       await openSettingsWindow();
@@ -1023,6 +1110,8 @@ export function mountApp(host: HTMLElement): AppController {
 
   shell.sidebar.onFileSelect((path, options) => void openWorkspaceFile(path, options));
   shell.sidebar.onOpenFolder(() => void openFolder());
+  shell.sidebar.onImportPureWriter(() => void importPureWriterLibrary());
+  shell.sidebar.onExportPureWriter(() => void exportPureWriterLibrary());
   shell.sidebar.onOpenSettings(() => void openSettings());
   shell.sidebar.onManageLibraries(() => {
     void openSettingsWindow({ section: "libraries" });

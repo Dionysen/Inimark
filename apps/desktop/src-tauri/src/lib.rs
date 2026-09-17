@@ -14,6 +14,7 @@ use commands::proxy_commands::get_system_proxy_url;
 use commands::publish_commands::{
     publish_start_preview, publish_stop_preview, publish_write_site, SitePreviewState,
 };
+use commands::purewriter_commands::{purewriter_pack_pwb, purewriter_unpack_pwb};
 use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
 use commands::update_commands::check_app_update;
 use commands::window_commands::{show_settings_window, toggle_settings_window};
@@ -81,7 +82,9 @@ pub fn run() {
             publish_stop_preview,
             resolve_inimark_docs_vault,
             ai_chat_stream,
-            ai_chat_cancel
+            ai_chat_cancel,
+            purewriter_unpack_pwb,
+            purewriter_pack_pwb
         ])
         .setup(|app| {
             for label in WINDOW_LABELS {

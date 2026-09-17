@@ -23,6 +23,9 @@ importers:
       '@inimark/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@inimark/purewriter':
+        specifier: workspace:*
+        version: link:../../packages/purewriter
       '@inimark/site-render':
         specifier: workspace:*
         version: link:../../packages/site-render
@@ -56,6 +59,9 @@ importers:
       mermaid:
         specifier: ^11.15.0
         version: 11.17.2
+      sql.js:
+        specifier: ^1.14.2
+        version: 1.14.2
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0
@@ -63,6 +69,9 @@ importers:
       '@types/markdown-it':
         specifier: ^14.2.0
         version: 14.2.0
+      '@types/sql.js':
+        specifier: ^1.4.9
+        version: 1.4.11
       happy-dom:
         specifier: ^20.9.0
         version: 20.14.0

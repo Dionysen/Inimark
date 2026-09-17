@@ -58,19 +58,52 @@ export function splitNotePath(path: string): {
   return { folderName, categoryName, title, extension };
 }
 
+/** Characters Windows rejects in a single path segment. */
+const WIN_ILLEGAL = /[<>:"/\\|?*\u0000-\u001f]/g;
+
+/**
+ * Make a single path segment safe for Windows / cross-platform vault files.
+ * Pure Writer titles may contain `*` / `|` / empty strings that cannot be filenames.
+ */
+export function sanitizePathSegment(name: string, fallback = "untitled"): string {
+  let s = name.replace(WIN_ILLEGAL, "_").replace(/\s+/g, " ").trim();
+  // Windows forbids trailing dots/spaces in the final segment.
+  s = s.replace(/[. ]+$/g, "");
+  if (!s) s = fallback;
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(s)) {
+    s = `_${s}`;
+  }
+  if (s.length > 120) s = s.slice(0, 120);
+  return s;
+}
+
 /** Build a vault-relative note path from Pure Writer placement fields. */
 export function joinNotePath(parts: {
   folderName: string;
   categoryName: string | null | undefined;
   title: string;
   extension: string;
+  /** Used when title sanitizes empty / collides. */
+  fallbackTitle?: string;
 }): string {
   const ext = parts.extension.toLowerCase() === "md" ? "md" : "txt";
-  const file = `${parts.title}.${ext}`;
+  const folder = sanitizePathSegment(parts.folderName, "Folder");
+  const title = sanitizePathSegment(
+    parts.title,
+    parts.fallbackTitle ? sanitizePathSegment(parts.fallbackTitle, "untitled") : "untitled",
+  );
+  const file = `${title}.${ext}`;
   if (parts.categoryName) {
-    return normalizeVaultPath(`${parts.folderName}/${parts.categoryName}/${file}`);
+    const category = parts.categoryName
+      .split("/")
+      .map((seg) => sanitizePathSegment(seg, "Category"))
+      .filter(Boolean)
+      .join("/");
+    return normalizeVaultPath(
+      category ? `${folder}/${category}/${file}` : `${folder}/${file}`,
+    );
   }
-  return normalizeVaultPath(`${parts.folderName}/${file}`);
+  return normalizeVaultPath(`${folder}/${file}`);
 }
 
 /**

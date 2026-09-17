@@ -1,6 +1,7 @@
 import initSqlJs, { type Database, type SqlJsStatic } from "sql.js";
 
 import { ROOM_DDL } from "./room-schema.ts";
+import { normalizeVaultPath } from "./paths.ts";
 import type {
   PureWriterArticle,
   PureWriterCategory,
@@ -8,8 +9,15 @@ import type {
   PureWriterLibrary,
   PureWriterSetting,
   RoomCodecOptions,
+  VaultContent,
+  VaultMapOptions,
 } from "./types.ts";
-import { ROOM_IDENTITY_HASH, ROOM_USER_VERSION } from "./vault-map.ts";
+import {
+  ROOM_IDENTITY_HASH,
+  ROOM_USER_VERSION,
+  articlePathIndex,
+  syncLibraryWithVault,
+} from "./vault-map.ts";
 
 let sqlJsPromise: Promise<SqlJsStatic> | null = null;
 
@@ -328,6 +336,161 @@ export function encodeRoomDatabase(
     db.run(`PRAGMA user_version = ${userVersion}`);
 
     return db.export();
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Update article bodies inside an existing Room.db while preserving every other
+ * table (Daily, History, Shortcut, UserMessage, …) for Pure Writer fidelity.
+ */
+export function syncRoomDatabaseWithVault(
+  SQL: SqlJsStatic,
+  sourceDbBytes: Uint8Array,
+  vault: VaultContent,
+  options: VaultMapOptions = {},
+): { bytes: Uint8Array; library: PureWriterLibrary } {
+  const original = decodeRoomDatabase(SQL, sourceDbBytes);
+  const originalIds = new Set(original.articles.map((a) => a.id));
+  const library = syncLibraryWithVault(original, vault, options);
+  const db = new SQL.Database(sourceDbBytes);
+  try {
+    const update = db.prepare(`
+      UPDATE Article SET
+        content = ?, summary = ?, count = ?, updateTime = ?,
+        titleUpdateTime = ?, extensionUpdateTime = ?
+      WHERE id = ?
+    `);
+    const pathIndex = articlePathIndex(library);
+
+    for (const note of vault.notes) {
+      const id = pathIndex.get(normalizeVaultPath(note.path));
+      if (!id || !originalIds.has(id)) continue;
+      const article = library.articles.find((a) => a.id === id);
+      if (!article) continue;
+      update.run([
+        article.content,
+        article.summary,
+        article.count,
+        article.updateTime,
+        article.titleUpdateTime,
+        article.extensionUpdateTime,
+        article.id,
+      ]);
+    }
+    update.free();
+
+    // New notes (not in the original DB) — insert full rows.
+    const insert = db.prepare(`
+      INSERT OR REPLACE INTO Article (
+        id, title, content, summary, count, extension, preview, preview1,
+        updateTime, createTime, folderId, categoryId, editorId, rank,
+        titleUpdateTime, rankUpdateTime, folderIdUpdateTime, categoryIdUpdateTime,
+        extensionUpdateTime, deleted, deletedTime, autoChapter, autoChapterUpdateTime,
+        orderKey, structureUpdateTime
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
+    for (const article of library.articles) {
+      if (originalIds.has(article.id)) continue;
+      insert.run([
+        article.id,
+        article.title,
+        article.content,
+        article.summary,
+        article.count,
+        article.extension,
+        article.preview,
+        article.preview1,
+        article.updateTime,
+        article.createTime,
+        article.folderId,
+        article.categoryId,
+        article.editorId,
+        article.rank,
+        article.titleUpdateTime,
+        article.rankUpdateTime,
+        article.folderIdUpdateTime,
+        article.categoryIdUpdateTime,
+        article.extensionUpdateTime,
+        article.deleted,
+        article.deletedTime,
+        article.autoChapter,
+        article.autoChapterUpdateTime,
+        article.orderKey,
+        article.structureUpdateTime,
+      ]);
+    }
+    insert.free();
+
+    // Folders / categories added for new notes.
+    const folderInsert = db.prepare(`
+      INSERT OR IGNORE INTO Folder (
+        id, name, createdTime, description, rank, deleted, deletedTime,
+        selectedArticleId, selectedArticleId1, selectedOutlineId, extension,
+        updateTime, rankUpdateTime, autoChapter, autoChapterUpdateTime,
+        autoChapterResetForCategory, autoChapterResetForCategoryUpdateTime,
+        autoChapterReplaceBadPrefix, autoChapterReplaceBadPrefixUpdateTime,
+        tags, tagsUpdateTime, rankMode, rankModeUpdateTime
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
+    for (const f of library.folders) {
+      folderInsert.run([
+        f.id,
+        f.name,
+        f.createdTime,
+        f.description,
+        f.rank,
+        f.deleted,
+        f.deletedTime,
+        f.selectedArticleId,
+        f.selectedArticleId1,
+        f.selectedOutlineId,
+        f.extension,
+        f.updateTime,
+        f.rankUpdateTime,
+        f.autoChapter,
+        f.autoChapterUpdateTime,
+        f.autoChapterResetForCategory,
+        f.autoChapterResetForCategoryUpdateTime,
+        f.autoChapterReplaceBadPrefix,
+        f.autoChapterReplaceBadPrefixUpdateTime,
+        f.tags,
+        f.tagsUpdateTime,
+        f.rankMode,
+        f.rankModeUpdateTime,
+      ]);
+    }
+    folderInsert.free();
+
+    const categoryInsert = db.prepare(`
+      INSERT OR IGNORE INTO Category (
+        id, folderId, name, createdTime, collapsed, rank, description,
+        rankUpdateTime, folderIdUpdateTime, updateTime, deleted, deletedTime,
+        orderKey, structureUpdateTime
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
+    for (const c of library.categories) {
+      categoryInsert.run([
+        c.id,
+        c.folderId,
+        c.name,
+        c.createdTime,
+        c.collapsed,
+        c.rank,
+        c.description,
+        c.rankUpdateTime,
+        c.folderIdUpdateTime,
+        c.updateTime,
+        c.deleted,
+        c.deletedTime,
+        c.orderKey,
+        c.structureUpdateTime,
+      ]);
+    }
+    categoryInsert.free();
+
+    return { bytes: db.export(), library };
   } finally {
     db.close();
   }

@@ -201,6 +201,7 @@ export function libraryToVault(
   const categoryById = new Map(library.categories.map((c) => [c.id, c]));
 
   const notes: VaultNote[] = [];
+  const usedPaths = new Set<string>();
 
   const articles = [...library.articles].sort((a, b) => {
     if (a.folderId !== b.folderId) return a.folderId.localeCompare(b.folderId);
@@ -226,13 +227,26 @@ export function libraryToVault(
       categoryName = category.name;
     }
 
-    notes.push({
-      path: joinNotePath({
+    let path = joinNotePath({
+      folderName: folder.name,
+      categoryName,
+      title: article.title,
+      extension: article.extension,
+      fallbackTitle: article.id,
+    });
+    if (usedPaths.has(path)) {
+      path = joinNotePath({
         folderName: folder.name,
         categoryName,
-        title: article.title,
+        title: `${article.title}_${article.id.slice(0, 8)}`,
         extension: article.extension,
-      }),
+        fallbackTitle: article.id,
+      });
+    }
+    usedPaths.add(path);
+
+    notes.push({
+      path,
       content: article.content,
       mtimeMs: article.updateTime,
       birthtimeMs: article.createTime,
@@ -240,4 +254,121 @@ export function libraryToVault(
   }
 
   return { notes };
+}
+
+/**
+ * Build vault-relative path → article id using the same rules as {@link libraryToVault}.
+ * Includes trash and soft-deleted rows so re-exports can still match edited notes.
+ */
+export function articlePathIndex(library: PureWriterLibrary): Map<string, string> {
+  const folderById = new Map(library.folders.map((f) => [f.id, f]));
+  const categoryById = new Map(library.categories.map((c) => [c.id, c]));
+  const index = new Map<string, string>();
+
+  for (const article of library.articles) {
+    const folder = folderById.get(article.folderId);
+    if (!folder) continue;
+    let categoryName: string | null = null;
+    if (article.categoryId) {
+      const category = categoryById.get(article.categoryId);
+      if (!category) continue;
+      categoryName = category.name;
+    }
+    const path = joinNotePath({
+      folderName: folder.name,
+      categoryName,
+      title: article.title,
+      extension: article.extension,
+      fallbackTitle: article.id,
+    });
+    // First writer wins on rare sanitize collisions (import uses disambiguation).
+    if (!index.has(path)) {
+      index.set(path, article.id);
+    }
+  }
+  return index;
+}
+
+/**
+ * Push current vault note bodies into an existing Pure Writer library while
+ * preserving ids, ranks, folders, settings, and soft-deleted rows.
+ *
+ * Notes that are new in the vault are appended via {@link vaultToLibrary} rules.
+ * Articles missing from the vault are left untouched (keeps Pure Writer extras intact).
+ */
+export function syncLibraryWithVault(
+  library: PureWriterLibrary,
+  vault: VaultContent,
+  options: VaultMapOptions = {},
+): PureWriterLibrary {
+  const now = options.nowMs ?? Date.now();
+  const pathToId = articlePathIndex(library);
+  const articlesById = new Map(library.articles.map((a) => [a.id, { ...a }]));
+  const unmatchedNotes: VaultNote[] = [];
+
+  for (const note of vault.notes) {
+    const path = normalizeVaultPath(note.path);
+    const id = pathToId.get(path);
+    if (!id) {
+      unmatchedNotes.push(note);
+      continue;
+    }
+    const article = articlesById.get(id);
+    if (!article) {
+      unmatchedNotes.push(note);
+      continue;
+    }
+    const updateTime = note.mtimeMs ?? now;
+    article.content = note.content;
+    article.summary = buildSummary(note.content);
+    article.count = [...note.content].length;
+    article.updateTime = updateTime;
+    article.titleUpdateTime = updateTime;
+    article.extensionUpdateTime = updateTime;
+    articlesById.set(id, article);
+  }
+
+  const synced: PureWriterLibrary = {
+    ...library,
+    articles: [...articlesById.values()],
+    folders: library.folders.map((f) => ({ ...f })),
+    categories: library.categories.map((c) => ({ ...c })),
+    settings: library.settings.map((s) => ({ ...s })),
+  };
+
+  if (unmatchedNotes.length === 0) return synced;
+
+  const addition = vaultToLibrary({ notes: unmatchedNotes }, {
+    ...options,
+    nowMs: now,
+    defaultFolderId: options.defaultFolderId ?? DEFAULT_FOLDER_ID,
+    defaultFolderName:
+      options.defaultFolderName ??
+      synced.folders.find((f) => f.id === DEFAULT_FOLDER_ID)?.name ??
+      "Default",
+  });
+
+  const folderIds = new Set(synced.folders.map((f) => f.id));
+  for (const folder of addition.folders) {
+    if (!folderIds.has(folder.id)) {
+      synced.folders.push(folder);
+      folderIds.add(folder.id);
+    }
+  }
+  const categoryIds = new Set(synced.categories.map((c) => c.id));
+  for (const category of addition.categories) {
+    if (!categoryIds.has(category.id)) {
+      synced.categories.push(category);
+      categoryIds.add(category.id);
+    }
+  }
+  const existingArticleIds = new Set(synced.articles.map((a) => a.id));
+  for (const article of addition.articles) {
+    if (!existingArticleIds.has(article.id)) {
+      synced.articles.push(article);
+      existingArticleIds.add(article.id);
+    }
+  }
+
+  return synced;
 }
