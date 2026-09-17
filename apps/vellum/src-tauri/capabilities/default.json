@@ -21,6 +21,7 @@
     "core:window:allow-start-dragging",
     "core:webview:allow-create-webview-window",
     "process:default",
+    "dialog:default",
     "window-state:default",
     "deep-link:default",
     "allow-app"

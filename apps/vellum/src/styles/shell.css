@@ -326,22 +326,98 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   -webkit-app-region: no-drag;
 }
 
-.vellum-library-toolbar {
+.vellum-library-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.vellum-library-book-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 32px;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  gap: 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.vellum-library-book-btn::after {
+  content: "▾";
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.vellum-library-book-btn.is-open::after {
+  content: "▴";
+}
+
+.vellum-library-book-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.vellum-library-book-btn:not(:disabled):hover,
+.vellum-library-book-btn.is-open {
+  background: var(--bg-hover);
+}
+
+.vellum-library-book-menu {
+  position: absolute;
+  top: calc(32px + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 240px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-menu);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.vellum-library-book-menu[hidden] {
+  display: none;
+}
+
+.vellum-library-book-menu-item {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.vellum-library-book-menu-item:hover,
+.vellum-library-book-menu-item.is-active {
+  background: var(--bg-hover);
+}
+
+.vellum-library-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-}
-
-.vellum-library-path {
-  flex: 1 1 100%;
-  min-width: 0;
-  height: 28px;
-  padding: 0 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 12px;
 }
 
 .vellum-library-btn {
@@ -374,11 +450,11 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: rgba(201, 120, 0, 0.08);
 }
 
-.vellum-library-folders,
-.vellum-library-articles {
+.vellum-library-tree {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0.15rem;
+  min-height: 0;
 }
 
 .vellum-library-section-label {
@@ -394,6 +470,65 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding: 0.35rem 0.45rem;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.vellum-library-empty--nested {
+  padding-left: 1.35rem;
+}
+
+.vellum-library-volume {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vellum-library-volume-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0.35rem 0.4rem;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.vellum-library-volume.is-selected > .vellum-library-volume-head,
+.vellum-library-volume-head:hover {
+  background: var(--bg-hover);
+}
+
+.vellum-library-volume-chevron {
+  width: 0.85rem;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.vellum-library-volume-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.vellum-library-volume-count {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.vellum-library-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .vellum-library-item {
@@ -412,9 +547,10 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover);
 }
 
-.vellum-library-article {
+.vellum-library-chapter {
   color: var(--text-secondary);
   font-size: 12px;
+  padding-left: 1.35rem;
 }
 
 .vellum-editor-column {

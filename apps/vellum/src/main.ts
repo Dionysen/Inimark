@@ -23,14 +23,16 @@ initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
 applySettings(bootSettings);
 
 const teardownShell = bootShellChrome({
-  editableSelector: ".vellum-plaintext-editor, textarea, [contenteditable='true'], .vellum-library-path",
+  editableSelector: ".vellum-plaintext-editor, textarea, [contenteditable='true']",
 });
 const teardownClose = bindCloseRequested();
 const teardownTooltips = initTooltipLayer();
 const teardownShortcutGuard = installNativeShortcutGuard();
+let librarySave: (() => Promise<void>) | null = null;
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void closeWindow(),
+  save: () => void librarySave?.(),
 });
 let teardownDeepLink: (() => void) | undefined;
 void installGitOauthDeepLinkHandler().then((fn) => {
@@ -82,6 +84,7 @@ const library = mountLibraryPanel(libraryHost, {
     statusEl.textContent = message;
   },
 });
+librarySave = () => library.save();
 
 editorColumn.append(statusEl, editorHost);
 body.append(libraryHost, editorColumn);

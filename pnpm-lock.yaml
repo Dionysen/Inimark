@@ -120,6 +120,9 @@ importers:
       '@tauri-apps/plugin-deep-link':
         specifier: ^2.4.0
         version: 2.4.10
+      '@tauri-apps/plugin-dialog':
+        specifier: ^2.2.2
+        version: 2.7.3
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0

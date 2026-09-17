@@ -5,7 +5,7 @@ import {
   type ShortcutBinding,
 } from "@dionysen/shortcut-kit";
 
-export type AppShortcutId = "open-settings" | "close";
+export type AppShortcutId = "open-settings" | "close" | "save";
 
 export const SHORTCUTS_STORAGE_KEY = "vellum-shortcuts";
 
@@ -17,6 +17,7 @@ export const DEFAULT_SHORTCUTS: ShortcutBinding[] = [
     keys: ["Ctrl", ","],
   },
   { id: "close", label: "Close", group: "File", keys: ["Ctrl", "W"] },
+  { id: "save", label: "Save", group: "File", keys: ["Ctrl", "S"] },
 ];
 
 export const shortcutStore = createShortcutStore({

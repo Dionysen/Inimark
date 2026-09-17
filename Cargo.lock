@@ -5881,6 +5881,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-deep-link",
+ "tauri-plugin-dialog",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-window-state",

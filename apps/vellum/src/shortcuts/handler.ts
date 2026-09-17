@@ -8,7 +8,11 @@ export type ShortcutCommandMap = Partial<
   Record<AppShortcutId, ShortcutCommandHandler>
 >;
 
-const ALWAYS_ALLOWED: readonly AppShortcutId[] = ["close", "open-settings"];
+const ALWAYS_ALLOWED: readonly AppShortcutId[] = [
+  "close",
+  "open-settings",
+  "save",
+];
 
 export function mountShortcutHandler(
   commands: ShortcutCommandMap,

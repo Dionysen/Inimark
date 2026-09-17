@@ -1,16 +1,33 @@
 # Vellum — Pure Writer compatibility
 
-Vellum can open a Pure Writer desktop folder (the directory that contains `App/Room.db`) as its document library.
+Vellum can open a Pure Writer desktop folder (the directory that contains `App/Room.db`) as its document library. Opening validates the folder: if `App/Room.db` is missing, the open fails with a clear error.
+
+## Hierarchy
+
+Vellum presents Pure Writer data as **book → volume → chapter**:
+
+| Vellum | Pure Writer (`Room.db`) |
+|--------|-------------------------|
+| Book | Folder |
+| Volume | Category |
+| Chapter | Article |
+
+Books without volumes still work: chapters with no category appear under **Uncategorized**.
 
 ## Usage
 
-1. Launch Vellum.
-2. Paste the library path (e.g. `C:\Users\...\Documents\PureWriter`) and click **Open**.
-3. Select a folder / article; edit in the plaintext surface; **Save** writes back to `Room.db`.
+1. Launch Vellum. If you opened a library before, it restores that path automatically.
+2. Click **Open library** and choose a Pure Writer root folder (e.g. `~/PureWriter`). The folder must contain `App/Room.db`.
+3. Use the **book name** button at the top of the left sidebar to switch books.
+4. Expand a volume and click a chapter to edit it in the plaintext surface.
+5. Save with **Save** or **Ctrl+S** (writes chapter content back to `Room.db`).
+6. **New** creates a chapter in the currently selected book and volume (or Uncategorized if none is selected).
+
+Last library path and last selected book are remembered locally for the next launch.
 
 ## Cloud sync (GitHub / Gitee)
 
-Vellum can sign in with **GitHub** or **Gitee**. After login it creates (or reuses) a private repo `vellum-pwb-sync` and syncs Pure Writer `.pwb` backups:
+Vellum can sign in with **GitHub** or **Gitee**. After login it creates (or reuses) a private repo and syncs Pure Writer `.pwb` backups:
 
 1. Pull remote `backups/*.pwb`
 2. Merge into the open library (field-level last-write-wins on Room.db timestamps)
