@@ -44,6 +44,8 @@ export const zhCN: Dictionary = {
       search: "搜索",
       sourceMode: "源码模式",
       exitSourceMode: "退出源码模式",
+      convertToMarkdown: "转换为 Markdown",
+      convertToPlaintext: "转换为纯文本",
       immersiveEditing: "沉浸编辑",
       focusMode: "专注模式",
       autoHideTitlebar: "自动隐藏顶栏",
@@ -142,6 +144,8 @@ export const zhCN: Dictionary = {
       moveHere: "移动到此处",
       delete: "删除",
       openDefault: "用默认应用打开",
+      convertToMarkdown: "转换为 Markdown",
+      convertToPlaintext: "转换为纯文本",
       addBookmark: "添加收藏",
       removeBookmark: "取消收藏",
       vaultRoot: "仓库根目录",
@@ -495,9 +499,12 @@ export const zhCN: Dictionary = {
       typewriterDesc: "写作时将光标行垂直居中。",
       focus: "专注模式",
       focusDesc: "淡化光标以外的块，让当前段落更突出。",
-      firstLineIndent: "首行缩进",
-      firstLineIndentDesc:
-        "顶层段落首行缩进约两个汉字宽度（仅显示，不写入 Markdown）。列表与引用不受影响。",
+      firstLineIndentMarkdown: "Markdown 首行缩进",
+      firstLineIndentMarkdownDesc:
+        "Markdown 顶层段落首行缩进约两个汉字宽度（仅显示，不写入文件）。列表与引用不受影响。默认关闭。",
+      firstLineIndentPlaintext: "纯文本首行缩进",
+      firstLineIndentPlaintextDesc:
+        "`.txt` 顶层段落首行缩进约两个汉字宽度（仅显示）。默认开启。",
       autoHideStatusbar: "状态栏工具自动隐藏",
       autoHideStatusbarDesc: "自动隐藏右下角状态栏工具，鼠标移入该区域时再显示。",
       autoHideTitlebar: "顶栏自动隐藏",

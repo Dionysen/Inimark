@@ -33,7 +33,9 @@ Each library keeps its own session (active file, expanded folders, caret / scrol
 | `.txt` plain text (font / line height / paragraph spacing / first-line indent only — no Markdown) | Dotfiles / dot-folders (names starting with `.`) |
 | Folders you create | |
 
-`.txt` files appear in the tree and open in the editor, but they are **not** included in wikilink / tag indexes, the graph, or site publish. Source mode is disabled for `.txt`.
+`.txt` files appear in the tree and open in the editor, but they are **not** included in wikilink / tag indexes, the graph, or site publish. Source mode is disabled for `.txt`. Convert between Markdown and plain text from the file context menu or the titlebar **More** menu (renames the extension).
+
+First-line indent is configured separately for Markdown and plain text (**Settings → Editor**); defaults are off for Markdown and on for `.txt`.
 
 Images still embed when linked — organize them on disk and see [[Images and Attachments]].
 

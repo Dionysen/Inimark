@@ -25,7 +25,7 @@ import {
   upsertLibrary,
   type FileViewState,
 } from "./libraries/store.ts";
-import { isTauri, joinWorkspacePath, fileNameFromPath, documentFormatFromPath, isMarkdownFile } from "./platform/env.ts";
+import { isTauri, joinWorkspacePath, fileNameFromPath, documentFormatFromPath, isMarkdownFile, isPlainTextFile } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
 import { mountUpdatePreflightHandler } from "./update-bridge.ts";
 import { createAutoUpdateService } from "./update/auto-update.ts";
@@ -137,6 +137,14 @@ export function mountApp(host: HTMLElement): AppController {
       onForward: () => void goHistoryForward(),
       canRename: () => Boolean(workspace && activeFilePath),
       onRename: () => shell.sidebar.renameActiveFile(),
+      canConvertFormat: () => {
+        if (!activeFilePath) return false;
+        const name = fileNameFromPath(activeFilePath);
+        return isMarkdownFile(name) || isPlainTextFile(name);
+      },
+      isConvertTargetPlaintext: () =>
+        Boolean(activeFilePath && isMarkdownFile(fileNameFromPath(activeFilePath))),
+      onConvertFormat: () => void shell.sidebar.convertActiveFileFormat(),
       canCopyPath: () => Boolean(workspace && activeFilePath),
       onCopyFileName: () => {
         if (!activeFilePath) return;
@@ -1037,6 +1045,14 @@ export function mountApp(host: HTMLElement): AppController {
         if (result.choice === "cancel") {
           // Still remap index paths; content left as-is.
           linkIndex.remapPaths(pairs);
+          for (const pair of pairs) {
+            if (isMarkdownFile(pair.from) && !isMarkdownFile(pair.to)) {
+              linkIndex.removeFile(pair.to);
+              tagIndex.removeFile(pair.to);
+            } else if (!isMarkdownFile(pair.from) && isMarkdownFile(pair.to)) {
+              linkIndex.registerFile(pair.to);
+            }
+          }
           linkIndex.persistCache(workspace!.rootPath);
           tagIndex.remapPaths(pairs);
           shell.graph.refresh();
@@ -1068,6 +1084,22 @@ export function mountApp(host: HTMLElement): AppController {
       }
       linkIndex.persistCache(workspace!.rootPath);
       tagIndex.remapPaths(pairs);
+
+      // Extension-only renames (md ↔ txt): drop non-markdown from knowledge indexes,
+      // and register newly minted markdown notes.
+      for (const pair of pairs) {
+        if (isMarkdownFile(pair.from) && !isMarkdownFile(pair.to)) {
+          linkIndex.removeFile(pair.to);
+          tagIndex.removeFile(pair.to);
+        } else if (!isMarkdownFile(pair.from) && isMarkdownFile(pair.to)) {
+          linkIndex.registerFile(pair.to);
+          const opened = await readWorkspaceFile(workspace!, pair.to);
+          if (opened.status === "opened") {
+            linkIndex.addFileLinks(pair.to, opened.text);
+            tagIndex.setFileTags(pair.to, opened.text);
+          }
+        }
+      }
 
       navHistory.remap(pairs);
       sessionFileViews = remapFileViews(sessionFileViews, pairs);

@@ -39,7 +39,7 @@ import { listLibraries, type LibraryRecord } from "./libraries/store.ts";
 import { detectPlatform } from "./platform/platform.ts";
 import type { Workspace, WorkspaceTreeNode } from "./platform/types.ts";
 import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
-import { joinWorkspacePath } from "./platform/env.ts";
+import { joinWorkspacePath, isMarkdownFile, isPlainTextFile } from "./platform/env.ts";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
@@ -160,6 +160,8 @@ export interface SidebarController {
   renameSelection(): void;
   /** Rename the currently open file (expands tree + inline rename). */
   renameActiveFile(): void;
+  /** Convert the active `.md` ↔ `.txt` note by renaming the extension. */
+  convertActiveFileFormat(): Promise<void>;
   /** Open the add-bookmark dialog for the currently open file. */
   bookmarkActiveFile(): Promise<void>;
   deleteSelection(): Promise<void>;
@@ -1928,6 +1930,19 @@ export function mountSidebar(host: HTMLElement): SidebarController {
           renameBookmarkFile(node);
         },
       });
+      if (isMarkdownFile(node.name) || isPlainTextFile(node.name)) {
+        const toPlaintext = isMarkdownFile(node.name);
+        contextMenu.addItem({
+          label: toPlaintext
+            ? t("sidebar.ctx.convertToPlaintext")
+            : t("sidebar.ctx.convertToMarkdown"),
+          icon: menuIcons.convertFormat,
+          onClick() {
+            closeContextMenu();
+            void convertNoteFormat(node);
+          },
+        });
+      }
       contextMenu.addItem({
         label: t("sidebar.ctx.copyPath"),
         icon: menuIcons.copy,
@@ -2192,6 +2207,19 @@ export function mountSidebar(host: HTMLElement): SidebarController {
         startInlineRename(node);
       },
     });
+    if (node.kind === "file" && (isMarkdownFile(node.name) || isPlainTextFile(node.name))) {
+      const toPlaintext = isMarkdownFile(node.name);
+      contextMenu.addItem({
+        label: toPlaintext
+          ? t("sidebar.ctx.convertToPlaintext")
+          : t("sidebar.ctx.convertToMarkdown"),
+        icon: menuIcons.convertFormat,
+        onClick() {
+          closeContextMenu();
+          void convertNoteFormat(node);
+        },
+      });
+    }
     contextMenu.addItem({
       label: t("sidebar.ctx.copyPath"),
       icon: menuIcons.copy,
@@ -2527,6 +2555,35 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     input.addEventListener("blur", () => {
       void commit();
     });
+  }
+
+  /**
+   * Rename a note's extension between Markdown and plain text (`.md` ↔ `.txt`).
+   * Content is unchanged; editor format follows the new path via `onEntriesMoved`.
+   */
+  async function convertNoteFormat(node: WorkspaceTreeNode): Promise<string | null> {
+    if (!currentWorkspace || node.kind !== "file") return null;
+    const toMarkdown = isPlainTextFile(node.name);
+    const toPlaintext = isMarkdownFile(node.name);
+    if (!toMarkdown && !toPlaintext) return null;
+
+    const stem = node.name.replace(/\.(md|markdown|mdown|txt)$/i, "");
+    const targetExt = toMarkdown ? ".md" : ".txt";
+    const parent = parentRelativePath(node.path);
+    const siblingNames = new Set(
+      getSiblingNodes(parent)
+        .filter((n) => n.path !== node.path)
+        .map((n) => n.name.toLowerCase()),
+    );
+    const nextName = uniqueChildName(siblingNames, stem || t("common.untitled"), targetExt);
+    return renameNode(node, nextName);
+  }
+
+  async function convertActiveFileFormat(): Promise<void> {
+    if (!activePath) return;
+    const node = findTreeNode(currentTree, activePath);
+    if (!node || node.kind !== "file") return;
+    await convertNoteFormat(node);
   }
 
   async function renameNode(node: WorkspaceTreeNode, nextName: string): Promise<string> {
@@ -2944,6 +3001,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     pasteClipboard,
     renameSelection,
     renameActiveFile,
+    convertActiveFileFormat,
     bookmarkActiveFile,
     deleteSelection,
     isTreeShortcutContext,

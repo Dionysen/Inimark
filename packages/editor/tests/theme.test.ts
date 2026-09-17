@@ -31,7 +31,12 @@ describe("built-in editor themes", () => {
 
   test("first-line indent is display-only CSS gated by html data attribute", () => {
     const typoraThemeCss = readFileSync("src/styles/theme-typora.css", "utf8");
-    expect(typoraThemeCss).toContain('html[data-first-line-indent="true"] .ProseMirror > p');
+    expect(typoraThemeCss).toContain(
+      'html[data-first-line-indent-md="true"] .typora-web-wrap[data-doc-format="markdown"] .ProseMirror > p',
+    );
+    expect(typoraThemeCss).toContain(
+      'html[data-first-line-indent-txt="true"] .typora-web-wrap[data-doc-format="plaintext"] .ProseMirror > p',
+    );
     expect(typoraThemeCss).toContain("text-indent: 2em");
   });
 });

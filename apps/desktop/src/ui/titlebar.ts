@@ -51,6 +51,10 @@ export interface TitleBarMoreMenuActions {
   onForward: () => void;
   canRename: () => boolean;
   onRename: () => void;
+  canConvertFormat?: () => boolean;
+  /** True when the active file is Markdown (convert target is plain text). */
+  isConvertTargetPlaintext?: () => boolean;
+  onConvertFormat?: () => void;
   canCopyPath: () => boolean;
   onCopyFileName: () => void;
   onCopyRelativePath: () => void;
@@ -369,6 +373,19 @@ export function mountTitleBar(
           moreActions.onRename();
         },
       });
+      if (moreActions.canConvertFormat?.()) {
+        const toPlaintext = moreActions.isConvertTargetPlaintext?.() ?? false;
+        moreMenu.addItem({
+          label: toPlaintext
+            ? t("titlebar.more.convertToPlaintext")
+            : t("titlebar.more.convertToMarkdown"),
+          icon: menuIcons.convertFormat,
+          onClick() {
+            closeMoreMenu();
+            moreActions.onConvertFormat?.();
+          },
+        });
+      }
       moreMenu.addSubmenuItem({
         label: t("titlebar.more.copy"),
         icon: menuIcons.copy,

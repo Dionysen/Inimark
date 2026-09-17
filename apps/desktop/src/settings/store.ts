@@ -121,10 +121,15 @@ export interface AppSettings {
   /** Dim blocks away from the caret so the active paragraph stands out. */
   focusMode: boolean;
   /**
-   * Display-only first-line indent (~2 CJK em) on top-level paragraphs.
-   * Not stored in Markdown; lists / quotes stay unindented.
+   * Display-only first-line indent (~2 CJK em) on top-level paragraphs in Markdown.
+   * Not stored in the file; lists / quotes stay unindented.
    */
-  firstLineIndent: boolean;
+  firstLineIndentMarkdown: boolean;
+  /**
+   * Display-only first-line indent for plain-text (`.txt`) notes.
+   * Defaults on — typography-focused plain writing.
+   */
+  firstLineIndentPlaintext: boolean;
   /** Hide bottom-right status bar tools until the pointer enters that corner. */
   autoHideStatusbar: boolean;
   /** Collapse the editor titlebar until the pointer enters the top edge. */
@@ -256,7 +261,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   codeIndentSize: CODE_INDENT_SIZE_DEFAULT,
   typewriterMode: false,
   focusMode: false,
-  firstLineIndent: false,
+  firstLineIndentMarkdown: false,
+  firstLineIndentPlaintext: true,
   autoHideStatusbar: false,
   autoHideTitlebar: false,
   pinGraphViewInTitlebar: false,
@@ -380,7 +386,8 @@ export function applySettings(settings: AppSettings): void {
 
   root.dataset.typewriter = settings.typewriterMode ? "true" : "false";
   root.dataset.focusMode = settings.focusMode ? "true" : "false";
-  root.dataset.firstLineIndent = settings.firstLineIndent ? "true" : "false";
+  root.dataset.firstLineIndentMd = settings.firstLineIndentMarkdown ? "true" : "false";
+  root.dataset.firstLineIndentTxt = settings.firstLineIndentPlaintext ? "true" : "false";
   root.dataset.autoHideStatusbar = settings.autoHideStatusbar ? "true" : "false";
   root.dataset.autoHideTitlebar = settings.autoHideTitlebar ? "true" : "false";
   root.dataset.autoHideLibraryBar = settings.autoHideLibraryBar ? "true" : "false";
@@ -476,7 +483,15 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     typewriterMode: Boolean(parsed.typewriterMode ?? DEFAULT_SETTINGS.typewriterMode),
     focusMode: Boolean(parsed.focusMode ?? DEFAULT_SETTINGS.focusMode),
-    firstLineIndent: Boolean(parsed.firstLineIndent ?? DEFAULT_SETTINGS.firstLineIndent),
+    firstLineIndentMarkdown: Boolean(
+      "firstLineIndentMarkdown" in parsed
+        ? parsed.firstLineIndentMarkdown
+        : ((parsed as { firstLineIndent?: boolean }).firstLineIndent ??
+          DEFAULT_SETTINGS.firstLineIndentMarkdown),
+    ),
+    firstLineIndentPlaintext: Boolean(
+      parsed.firstLineIndentPlaintext ?? DEFAULT_SETTINGS.firstLineIndentPlaintext,
+    ),
     autoHideStatusbar: Boolean(
       parsed.autoHideStatusbar ??
         (parsed as { immersiveEditing?: boolean }).immersiveEditing ??

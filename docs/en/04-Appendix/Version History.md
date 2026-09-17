@@ -36,6 +36,8 @@ Prefer **Latest** unless you are debugging an older build.
 ### What's new
 
 - Support **`.txt` plain-text notes** in the file tree: edit with font / line height / paragraph spacing / first-line indent only — no Markdown parsing, source mode, wikilinks, tags, graph, or publish
+- First-line indent is **per format**: Markdown off by default, plain text on by default (separate settings)
+- Convert between Markdown and plain text from the file context menu or the titlebar More menu (renames the extension; content unchanged)
 - New **AI document assistant** (sidebar): streaming chat with attachments; can read and edit notes when you ask (writes are undoable); history, new chat, and undo
 - **Multiple providers**: DeepSeek / OpenAI / Anthropic / Gemini, plus custom OpenAI-compatible endpoints; API keys stored per provider; built-in models via dropdown
 - **Configurable thinking intensity**: each model declares Off / Low / Medium / High levels mapped to native API parameters; deep replies can show a collapsible reasoning block

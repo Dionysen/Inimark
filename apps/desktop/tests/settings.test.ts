@@ -108,14 +108,27 @@ describe("settings store", () => {
     expect(document.documentElement.dataset.focusMode).toBe("false");
   });
 
-  test("persists first-line indent and applies data-first-line-indent", () => {
-    expect(DEFAULT_SETTINGS.firstLineIndent).toBe(false);
-    saveSettings({ ...DEFAULT_SETTINGS, firstLineIndent: true });
-    expect(loadSettings().firstLineIndent).toBe(true);
+  test("persists first-line indent per format and applies data attributes", () => {
+    expect(DEFAULT_SETTINGS.firstLineIndentMarkdown).toBe(false);
+    expect(DEFAULT_SETTINGS.firstLineIndentPlaintext).toBe(true);
+    saveSettings({ ...DEFAULT_SETTINGS, firstLineIndentMarkdown: true });
+    expect(loadSettings().firstLineIndentMarkdown).toBe(true);
     applySettings(loadSettings());
-    expect(document.documentElement.dataset.firstLineIndent).toBe("true");
-    applySettings({ ...DEFAULT_SETTINGS, firstLineIndent: false });
-    expect(document.documentElement.dataset.firstLineIndent).toBe("false");
+    expect(document.documentElement.dataset.firstLineIndentMd).toBe("true");
+    expect(document.documentElement.dataset.firstLineIndentTxt).toBe("true");
+    applySettings({ ...DEFAULT_SETTINGS, firstLineIndentMarkdown: false });
+    expect(document.documentElement.dataset.firstLineIndentMd).toBe("false");
+    applySettings({ ...DEFAULT_SETTINGS, firstLineIndentPlaintext: false });
+    expect(document.documentElement.dataset.firstLineIndentTxt).toBe("false");
+  });
+
+  test("migrates legacy firstLineIndent into Markdown setting", () => {
+    memory.set(
+      "inimark:settings",
+      JSON.stringify({ firstLineIndent: true }),
+    );
+    expect(loadSettings().firstLineIndentMarkdown).toBe(true);
+    expect(loadSettings().firstLineIndentPlaintext).toBe(true);
   });
 
   test("persists and clamps code indent size", () => {

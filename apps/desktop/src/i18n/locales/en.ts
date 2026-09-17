@@ -44,6 +44,8 @@ export const en: Dictionary = {
       search: "Search",
       sourceMode: "Source mode",
       exitSourceMode: "Exit source mode",
+      convertToMarkdown: "Convert to Markdown",
+      convertToPlaintext: "Convert to plain text",
       immersiveEditing: "Immersive editing",
       focusMode: "Focus mode",
       autoHideTitlebar: "Auto-hide title bar",
@@ -142,6 +144,8 @@ export const en: Dictionary = {
       moveHere: "Move here",
       delete: "Delete",
       openDefault: "Open with Default App",
+      convertToMarkdown: "Convert to Markdown",
+      convertToPlaintext: "Convert to plain text",
       addBookmark: "Add bookmark",
       removeBookmark: "Remove bookmark",
       vaultRoot: "Vault root",
@@ -496,9 +500,12 @@ export const en: Dictionary = {
       typewriterDesc: "Keep the caret line vertically centered while writing.",
       focus: "Focus mode",
       focusDesc: "Dim blocks away from the caret so the active paragraph stands out.",
-      firstLineIndent: "First-line indent",
-      firstLineIndentDesc:
-        "Indent the first line of each top-level paragraph by two character widths (display only; not saved in Markdown). Lists and quotes are unchanged.",
+      firstLineIndentMarkdown: "Markdown first-line indent",
+      firstLineIndentMarkdownDesc:
+        "Indent the first line of each top-level Markdown paragraph by two character widths (display only; not saved). Lists and quotes are unchanged. Off by default.",
+      firstLineIndentPlaintext: "Plain-text first-line indent",
+      firstLineIndentPlaintextDesc:
+        "Indent the first line of each top-level `.txt` paragraph by two character widths (display only). On by default.",
       autoHideStatusbar: "Auto-hide status bar tools",
       autoHideStatusbarDesc:
         "Hide the bottom-right status bar tools until the pointer enters that area.",

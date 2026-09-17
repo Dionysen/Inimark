@@ -724,19 +724,35 @@ export function mountSettingsView(
       ),
     );
 
-    const firstLineIndent = createToggle({
-      checked: settings.firstLineIndent,
-      title: t("settings.editor.firstLineIndent"),
+    const firstLineIndentMd = createToggle({
+      checked: settings.firstLineIndentMarkdown,
+      title: t("settings.editor.firstLineIndentMarkdown"),
       onChange(checked) {
-        update({ firstLineIndent: checked });
+        update({ firstLineIndentMarkdown: checked });
       },
     });
     body.append(
       createRow(
-        t("settings.editor.firstLineIndent"),
-        t("settings.editor.firstLineIndentDesc"),
-        firstLineIndent.el,
-        "editor.firstLineIndent",
+        t("settings.editor.firstLineIndentMarkdown"),
+        t("settings.editor.firstLineIndentMarkdownDesc"),
+        firstLineIndentMd.el,
+        "editor.firstLineIndentMarkdown",
+      ),
+    );
+
+    const firstLineIndentTxt = createToggle({
+      checked: settings.firstLineIndentPlaintext,
+      title: t("settings.editor.firstLineIndentPlaintext"),
+      onChange(checked) {
+        update({ firstLineIndentPlaintext: checked });
+      },
+    });
+    body.append(
+      createRow(
+        t("settings.editor.firstLineIndentPlaintext"),
+        t("settings.editor.firstLineIndentPlaintextDesc"),
+        firstLineIndentTxt.el,
+        "editor.firstLineIndentPlaintext",
       ),
     );
 
