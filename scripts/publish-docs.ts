@@ -94,7 +94,7 @@ function readCss(absPath: string): string {
 
 function resolveKatexCss(): string {
   const katexPkg = require.resolve("katex/package.json", {
-    paths: [join(root, "packages/editor"), join(root, "apps/desktop")],
+    paths: [join(root, "packages/editor"), join(root, "apps/inimark")],
   });
   return readCss(join(dirname(katexPkg), "dist", "katex.min.css"));
 }
@@ -148,9 +148,9 @@ async function main(): Promise<void> {
     );
   }
 
-  const { CODE_THEMES } = await import("../apps/desktop/src/themes/code-themes.ts");
+  const { CODE_THEMES } = await import("../apps/inimark/src/themes/code-themes.ts");
   const { buildPublishCodeThemeCss } = await import(
-    "../apps/desktop/src/themes/code-bridge.ts"
+    "../apps/inimark/src/themes/code-bridge.ts"
   );
 
   const lightCodeId = config.lightCodeTheme || "github-light";
@@ -163,7 +163,7 @@ async function main(): Promise<void> {
     CODE_THEMES.find((t) => t.id === "github-dark")!;
 
   const themeVariablesCss = [
-    readCss(join(root, "apps/desktop/src/styles/themes.css")),
+    readCss(join(root, "apps/inimark/src/styles/themes.css")),
     buildPublishCodeThemeCss(lightCode.variables, darkCode.variables),
     resolveKatexCss(),
   ].join("\n\n");
@@ -197,7 +197,7 @@ async function main(): Promise<void> {
     themeIds: [...BUILTIN_THEMES],
     mermaidRuntimeJs: readFileSync(
       require.resolve("mermaid/dist/mermaid.min.js", {
-        paths: [join(root, "packages/editor"), join(root, "apps/desktop")],
+        paths: [join(root, "packages/editor"), join(root, "apps/inimark")],
       }),
       "utf8",
     ),
@@ -213,7 +213,7 @@ async function main(): Promise<void> {
   const landing = await loadMarketingLandingFromFs({
     vaultPath: opts.vault,
     version: pkg.version || "0.0.0",
-    fallbackIconPath: join(root, "apps/desktop/src-tauri/icons/icon.png"),
+    fallbackIconPath: join(root, "apps/inimark/src-tauri/icons/icon.png"),
   });
   if (landing) {
     built = applyMarketingLanding(built, landing);

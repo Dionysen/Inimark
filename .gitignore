@@ -8,7 +8,7 @@ target/
 !.env.example
 
 # Tauri
-apps/desktop/src-tauri/gen/
+apps/inimark/src-tauri/gen/
 .tauri-keys/
 
 # Upstream clone (local reference only)
@@ -27,4 +27,4 @@ packages/editor/dist/
 .cursor
 docs/.inimark/
 .obsidian
-apps/desktop/tests/.tmp-docs-deploy/
+apps/inimark/tests/.tmp-docs-deploy/

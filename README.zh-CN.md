@@ -149,7 +149,7 @@
 ### 架构
 
 ```
-apps/desktop/          Tauri 2 桌面壳 + Vite/TS UI
+apps/inimark/          Tauri 2 桌面壳 + Vite/TS UI
 packages/editor/       @inimark/editor — typora-web 风格 WYSIWYG（ProseMirror）
 packages/site-render/  库 → 静态站的 SSG 模型（Publish）
 crates/inimark-ssg/    写入 dist / 本地预览等原生 I/O
@@ -157,7 +157,7 @@ docs/                  产品帮助库 + 宣传落地页（docs/landing）
 ```
 
 - **编辑器核心**（`@inimark/editor`）：源自 [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web)（MIT）。详见 `NOTICE` 与 `packages/editor/UPSTREAM-LICENSE`。
-- **桌面应用**（`@inimark/desktop`）：Tauri 2 + Vite；Rust 侧负责文件、更新、发布写入等原生能力。
+- **Inimark 应用**（`@inimark/app`）：Tauri 2 + Vite；Rust 侧负责文件、更新、发布写入等原生能力。
 - **文档站**：`pnpm docs:build` 构建帮助库；存在 `docs/landing` 时，站点根路径为宣传主页，文档在 `/docs/` 下。
 
 ### 环境要求
@@ -181,7 +181,7 @@ pnpm tauri dev
 
 # 测试
 pnpm test:editor
-pnpm test:desktop
+pnpm test:inimark
 pnpm test
 
 # 类型检查 / 全量构建
@@ -196,7 +196,7 @@ pnpm docs:deploy
 ### 开发提示
 
 - 改编辑器行为 → `packages/editor`（单元测试与 specs 在同包）。
-- 改桌面壳、库管理、发布面板 → `apps/desktop`。
+- 改桌面壳、库管理、发布面板 → `apps/inimark`。
 - 改发布 HTML/CSS/路径 → `packages/site-render`；宣传页源文件在 `docs/landing/`。
 - 版本号可用 `pnpm bump-version`；图标替换可用 `pnpm replace-icon`。
 

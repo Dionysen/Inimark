@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-  "apps/desktop/src-tauri",
+  "apps/inimark/src-tauri",
   "apps/vellum/src-tauri",
   "crates/dionysen-shell",
   "crates/inimark-ssg",

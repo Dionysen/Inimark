@@ -693,7 +693,7 @@
 }
 
 /* ─── Floating editor chrome (shared with table toolbars) ────────── */
-/* Mirrors apps/desktop app.css context-menu tokens so body-mounted
+/* Mirrors apps/inimark app.css context-menu tokens so body-mounted
    editor UI matches the right-click menu in every theme. */
 .inimark-glass {
   background: var(--inimark-glass-bg, var(--inimark-surface-raised, var(--inimark-surface, #fff)));

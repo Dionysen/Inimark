@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    vellum_desktop_lib::run();
+    vellum_app_lib::run();
 }

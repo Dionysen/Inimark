@@ -18,7 +18,7 @@ importers:
         specifier: ^4.20.5
         version: 4.23.13
 
-  apps/desktop:
+  apps/inimark:
     dependencies:
       '@dionysen/i18n':
         specifier: workspace:*

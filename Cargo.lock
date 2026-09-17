@@ -1844,7 +1844,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "inimark-desktop"
+name = "inimark-app"
 version = "1.0.9"
 dependencies = [
  "block2",
@@ -4988,7 +4988,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "vellum-desktop"
+name = "vellum-app"
 version = "0.1.0"
 dependencies = [
  "dionysen-shell",

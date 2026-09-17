@@ -80,7 +80,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: ./apps/desktop/src-tauri -> target
+          workspaces: ./apps/inimark/src-tauri -> target
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -110,7 +110,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          projectPath: apps/desktop/src-tauri
+          projectPath: apps/inimark/src-tauri
           tagName: v__VERSION__
           releaseName: Inimark v__VERSION__
           releaseBody: ${{ steps.notes.outputs.body }}

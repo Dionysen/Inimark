@@ -1,12 +1,12 @@
 [package]
-name = "vellum-desktop"
+name = "vellum-app"
 version = "0.1.0"
-description = "Vellum — minimal Dionysen writing shell"
+description = "Vellum - minimal Dionysen writing shell"
 authors = ["Dionysen"]
 edition = "2021"
 
 [lib]
-name = "vellum_desktop_lib"
+name = "vellum_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

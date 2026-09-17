@@ -34,16 +34,16 @@ After install, launch Inimark and open a local vault. In-app updates read `lates
 ### First launch (what to do)
 
 1. Open Inimark.
-2. **Open folder** (or drop a folder) to create / select a library — this help vault is the repo’s `docs/` directory.
-3. Optionally set **Settings → Appearance → Locale** (`en` / `zh-CN` / system).
+2. **Open folder** (or drop a folder) to create / select a library �?this help vault is the repo’s `docs/` directory.
+3. Optionally set **Settings �?Appearance �?Locale** (`en` / `zh-CN` / system).
 4. Skim [[Interface Tour]], then write a throwaway note to feel WYSIWYG.
 
 ### When the OS blocks the app
 
 | Platform | Typical fix |
 | --- | --- |
-| macOS | **Privacy & Security** → allow / Open Anyway; or right-click → Open once |
-| Windows | SmartScreen → More info → Run anyway (only if you trust the GitHub asset) |
+| macOS | **Privacy & Security** �?allow / Open Anyway; or right-click �?Open once |
+| Windows | SmartScreen �?More info �?Run anyway (only if you trust the GitHub asset) |
 | Linux | Mark AppImage executable (`chmod +x`) if the desktop requires it |
 
 More: [[FAQ and Troubleshooting]].
@@ -53,7 +53,7 @@ More: [[FAQ and Troubleshooting]].
 1. Launch Inimark
 2. **Open folder** and select the repo’s `docs/` directory
 3. Start from [[Welcome]] or [[MOC-English Docs]]
-4. When ready, open Settings → **Publish** (see [[Publish a Site]])
+4. When ready, open Settings �?**Publish** (see [[Publish a Site]])
 
 ### Checklist
 
@@ -63,7 +63,7 @@ More: [[FAQ and Troubleshooting]].
 
 ## Updates
 
-Inimark can check GitHub Releases for updates (see **Settings → About**). Prefer staying on Latest unless you are debugging a specific build.
+Inimark can check GitHub Releases for updates (see **Settings �?About**). Prefer staying on Latest unless you are debugging a specific build.
 
 Per-version download links and changelogs: [[Version History]].
 
@@ -84,7 +84,7 @@ pnpm install
 pnpm test:editor
 
 # Desktop integration tests
-pnpm test:desktop
+pnpm test:inimark
 
 # Editor in the browser
 pnpm dev
@@ -98,9 +98,9 @@ pnpm tauri dev
 
 ## Architecture sketch
 
-- **`apps/desktop`** — shell, sidebars, settings, Publish UI
-- **`packages/editor`** — ProseMirror WYSIWYG (the writing surface)
-- **`site-render` + `inimark-ssg`** — build HTML, then preview or write `dist/`
+- **`apps/inimark`** �?shell, sidebars, settings, Publish UI
+- **`packages/editor`** �?ProseMirror WYSIWYG (the writing surface)
+- **`site-render` + `inimark-ssg`** �?build HTML, then preview or write `dist/`
 
 The desktop shell drives the editor; Publish goes through site-render into the SSG.
 

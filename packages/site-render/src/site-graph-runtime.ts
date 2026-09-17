@@ -1,8 +1,8 @@
 /**
  * Browser runtime for published site graphs (preview + modal).
- * Ported from apps/desktop graph-panel forces / camera / draw (defaults only).
- * Label fade math: keep in sync with apps/desktop/src/sidebar/graph-label.ts.
- * Hover fade math: keep in sync with apps/desktop/src/sidebar/graph-hover.ts.
+ * Ported from apps/inimark graph-panel forces / camera / draw (defaults only).
+ * Label fade math: keep in sync with apps/inimark/src/sidebar/graph-label.ts.
+ * Hover fade math: keep in sync with apps/inimark/src/sidebar/graph-hover.ts.
  * Embedded into SITE_JS as a string — keep self-contained (no imports).
  */
 export const SITE_GRAPH_JS = `

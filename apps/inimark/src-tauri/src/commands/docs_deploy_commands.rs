@@ -9,7 +9,7 @@ pub fn resolve_inimark_docs_vault() -> Result<String, String> {
         return Err("Docs vault resolution is only available in development builds.".into());
     }
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    // apps/desktop/src-tauri → repo root → docs
+    // apps/inimark/src-tauri → repo root → docs
     let docs = manifest.join("../../../docs");
     let docs = docs
         .canonicalize()

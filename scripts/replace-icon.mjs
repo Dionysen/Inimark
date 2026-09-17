@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Generate multi-platform icons from apps/desktop/app-icon.png and replace
- * apps/desktop/src-tauri/icons/.
+ * Generate multi-platform icons from apps/inimark/app-icon.png and replace
+ * apps/inimark/src-tauri/icons/.
  *
  * Usage:
  *   pnpm replace-icon
@@ -24,9 +24,9 @@ const sharp = require("sharp");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const defaultSource = path.join(root, "apps/desktop/app-icon.png");
-const iconsDir = path.join(root, "apps/desktop/src-tauri/icons");
-const desktopAppIcon = path.join(root, "apps/desktop/app-icon.png");
+const defaultSource = path.join(root, "apps/inimark/app-icon.png");
+const iconsDir = path.join(root, "apps/inimark/src-tauri/icons");
+const desktopAppIcon = path.join(root, "apps/inimark/app-icon.png");
 
 const DOCK_OPTICAL_SCALE = 0.82;
 const CANVAS_SIZE = 1024;
@@ -87,7 +87,7 @@ async function createMacSource(src) {
 function runTauriIcon(input, output) {
   fs.mkdirSync(output, { recursive: true });
   execSync(
-    `pnpm --filter @inimark/desktop exec tauri icon "${input}" --output "${output}"`,
+    `pnpm --filter @inimark/app exec tauri icon "${input}" --output "${output}"`,
     { cwd: root, stdio: "inherit" },
   );
 }
@@ -110,7 +110,7 @@ function copyDir(src, dest) {
 
 if (!fs.existsSync(sourcePath)) {
   console.error(`Source icon not found: ${sourcePath}`);
-  console.error("Place a square PNG at apps/desktop/app-icon.png and retry.");
+  console.error("Place a square PNG at apps/inimark/app-icon.png and retry.");
   process.exit(1);
 }
 
@@ -144,7 +144,7 @@ try {
     console.log(`Updated master source: ${desktopAppIcon}`);
   }
 
-  console.log("\nIcons written to apps/desktop/src-tauri/icons/");
+  console.log("\nIcons written to apps/inimark/src-tauri/icons/");
   console.log("  Windows / Linux: full size + Apple-like corners");
   console.log("  macOS (.icns):   82% optical scale + same corners");
 } catch (error) {

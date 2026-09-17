@@ -8,11 +8,11 @@
  *
  * Updates:
  *   - package.json (root)
- *   - apps/desktop/package.json
+ *   - apps/inimark/package.json
  *   - packages/editor/package.json
- *   - apps/desktop/src-tauri/tauri.conf.json   ← used by GitHub Release / tauri-action
- *   - apps/desktop/src-tauri/Cargo.toml
- *   - apps/desktop/src/settings/view.ts (web fallbacks)
+ *   - apps/inimark/src-tauri/tauri.conf.json   ← used by GitHub Release / tauri-action
+ *   - apps/inimark/src-tauri/Cargo.toml
+ *   - apps/inimark/src/settings/view.ts (web fallbacks)
  *
  * Then:
  *   1. Update docs/en/04-Appendix/Version History.md (and zh 版本历史)
@@ -99,10 +99,10 @@ function updateCargoLock(relativePath) {
   const prev = readFileSync(path, "utf8");
   // Cargo.lock may use LF or CRLF depending on the checkout platform.
   const next = prev.replace(
-    /(name = "inimark-desktop"\r?\nversion = ")[^"]*(")/,
+    /(name = "inimark-app"\r?\nversion = ")[^"]*(")/,
     `$1${version}$2`,
   );
-  const alreadyAtTarget = /name = "inimark-desktop"\r?\nversion = "([^"]*)"/.exec(prev)?.[1] === version;
+  const alreadyAtTarget = /name = "inimark-app"\r?\nversion = "([^"]*)"/.exec(prev)?.[1] === version;
   if (next === prev && !alreadyAtTarget) {
     console.error(`Failed to update version in ${relativePath}`);
     process.exit(1);
@@ -114,12 +114,12 @@ function updateCargoLock(relativePath) {
 console.log(`Bumping version → ${version}\n`);
 
 updateJsonVersion("package.json");
-updateJsonVersion("apps/desktop/package.json");
+updateJsonVersion("apps/inimark/package.json");
 updateJsonVersion("packages/editor/package.json");
-updateJsonVersion("apps/desktop/src-tauri/tauri.conf.json");
-updateCargoToml("apps/desktop/src-tauri/Cargo.toml");
-updateCargoLock("apps/desktop/src-tauri/Cargo.lock");
-updateViewFallbacks("apps/desktop/src/settings/view.ts");
+updateJsonVersion("apps/inimark/src-tauri/tauri.conf.json");
+updateCargoToml("apps/inimark/src-tauri/Cargo.toml");
+updateCargoLock("apps/inimark/src-tauri/Cargo.lock");
+updateViewFallbacks("apps/inimark/src/settings/view.ts");
 
 console.log(`
 Done. Next:

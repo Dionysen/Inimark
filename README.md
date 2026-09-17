@@ -149,7 +149,7 @@ Full docs:
 ### Architecture
 
 ```
-apps/desktop/              Inimark — Tauri 2 + Vite/TS product UI
+apps/inimark/              Inimark — Tauri 2 + Vite/TS product UI
 apps/vellum/               Vellum — plaintext writing app (shared shell)
 packages/ui/               @dionysen/ui — shared widgets + design tokens
 packages/shell/            @dionysen/shell — window chrome, platform, scrollbars
@@ -166,8 +166,8 @@ docs/                      Help vault + marketing landing (docs/landing)
 
 - **Shared shell** (`@dionysen/*`): reusable desktop chrome for Inimark and Vellum — not product logic.
 - **Editor core** (`@inimark/editor`): derived from [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web) (MIT). See `NOTICE` and `packages/editor/UPSTREAM-LICENSE`.
-- **Desktop app** (`@inimark/desktop`): Tauri 2 + Vite; Rust handles files, updates, publish writes, and other native I/O.
-- **Vellum** (`@vellum/desktop`): plaintext writing scaffold on the same Dionysen shell (`pnpm vellum:dev` / `pnpm vellum:tauri`).
+- **Inimark app** (`@inimark/app`): Tauri 2 + Vite; Rust handles files, updates, publish writes, and other native I/O.
+- **Vellum** (`@vellum/app`): plaintext writing scaffold on the same Dionysen shell (`pnpm vellum:dev` / `pnpm vellum:tauri`).
 - **Docs site**: `pnpm docs:build` builds the help vault. With `docs/landing` present, the site root is the marketing homepage and docs live under `/docs/`.
 
 ### Prerequisites
@@ -191,7 +191,7 @@ pnpm tauri dev
 
 # Tests
 pnpm test:editor
-pnpm test:desktop
+pnpm test:inimark
 pnpm test
 
 # Typecheck / build all
@@ -206,7 +206,7 @@ pnpm docs:deploy
 ### Where to change what
 
 - Editor behavior → `packages/editor` (unit tests and specs live there).
-- Shell, libraries, publish UI → `apps/desktop`.
+- Shell, libraries, publish UI → `apps/inimark`.
 - Published HTML/CSS/paths → `packages/site-render`; marketing page sources in `docs/landing/`.
 - Version bump: `pnpm bump-version`. Icon replace: `pnpm replace-icon`.
 
