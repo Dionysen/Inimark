@@ -306,6 +306,132 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--inimark-content-bg);
 }
 
+.vellum-library-host {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  min-height: 0;
+  display: flex;
+}
+
+.vellum-library {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 0.5rem;
+  gap: 0.35rem;
+  -webkit-app-region: no-drag;
+}
+
+.vellum-library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.vellum-library-path {
+  flex: 1 1 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.vellum-library-btn {
+  height: 28px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vellum-library-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.vellum-library-btn:not(:disabled):hover {
+  background: var(--bg-hover);
+}
+
+.vellum-library-banner {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #c97800;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid rgba(201, 120, 0, 0.35);
+  border-radius: var(--radius-control);
+  background: rgba(201, 120, 0, 0.08);
+}
+
+.vellum-library-folders,
+.vellum-library-articles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vellum-library-section-label {
+  margin: 0.45rem 0 0.15rem;
+  padding: 0 0.45rem;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vellum-library-empty {
+  padding: 0.35rem 0.45rem;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.vellum-library-item {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0.35rem 0.45rem;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.vellum-library-item:hover,
+.vellum-library-item.is-active {
+  background: var(--bg-hover);
+}
+
+.vellum-library-article {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.vellum-editor-column {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.vellum-library-status {
+  flex-shrink: 0;
+  min-height: 1.25rem;
+  padding: 0.25rem 1rem;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
 .vellum-editor-host {
   flex: 1;
   min-width: 0;

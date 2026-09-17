@@ -156,9 +156,11 @@ packages/shell/            @dionysen/shell — window chrome, platform, scrollba
 packages/settings-kit/     @dionysen/settings-kit — settings window framework
 packages/shortcut-kit/     @dionysen/shortcut-kit — shortcut matching / persistence
 packages/i18n/             @dionysen/i18n — locale engine (catalogs stay in apps)
+packages/purewriter-store/ @dionysen/purewriter-store — Pure Writer library IPC types (Vellum)
 packages/editor/           @inimark/editor — Typora-style WYSIWYG (ProseMirror)
 packages/site-render/      Vault → static site SSG model (Publish)
 crates/dionysen-shell/     Shared dual-window Tauri policy
+crates/purewriter-store/   Pure Writer Room.db + PWB full-fidelity store (Vellum)
 crates/inimark-ssg/        Native I/O for writing dist / local preview
 vendor/wry/                Patched wry (macOS traffic lights)
 docs/                      Help vault + marketing landing (docs/landing)

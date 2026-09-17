@@ -5,6 +5,7 @@ members = [
   "apps/vellum/src-tauri",
   "crates/dionysen-shell",
   "crates/inimark-ssg",
+  "crates/purewriter-store",
 ]
 
 [workspace.package]

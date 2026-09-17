@@ -1,0 +1,22 @@
+[package]
+name = "purewriter-store"
+version = "0.1.0"
+description = "Pure Writer local library: Room.db + PWB full-fidelity access"
+authors = ["Dionysen"]
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
+md-5 = "0.10"
+hex = "0.4"
+fs4 = "0.12"
+sevenz-rust = "0.6"
+uuid = { version = "1", features = ["v4"] }
+rand = "0.8"
+
+[dev-dependencies]
+tempfile = "3"

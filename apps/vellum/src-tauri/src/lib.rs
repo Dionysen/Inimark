@@ -4,6 +4,8 @@ use dionysen_shell::{
     handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
 };
 
+mod pw_commands;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let window_policy = WindowPolicy::default();
@@ -16,9 +18,26 @@ pub fn run() {
                 .build(),
         )
         .manage(window_policy)
+        .manage(pw_commands::PwState::default())
         .invoke_handler(tauri::generate_handler![
             dionysen_shell::show_settings_window,
             dionysen_shell::toggle_settings_window,
+            pw_commands::pw_open,
+            pw_commands::pw_close,
+            pw_commands::pw_schema_status,
+            pw_commands::pw_list_folders,
+            pw_commands::pw_list_categories,
+            pw_commands::pw_list_articles,
+            pw_commands::pw_get_article,
+            pw_commands::pw_create_folder,
+            pw_commands::pw_create_category,
+            pw_commands::pw_create_article,
+            pw_commands::pw_update_article,
+            pw_commands::pw_trash_article,
+            pw_commands::pw_list_settings,
+            pw_commands::pw_set_setting,
+            pw_commands::pw_pwb_export,
+            pw_commands::pw_pwb_import,
         ])
         .setup(|app| {
             let policy = app.state::<WindowPolicy>();

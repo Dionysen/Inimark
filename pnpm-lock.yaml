@@ -96,6 +96,9 @@ importers:
       '@dionysen/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@dionysen/purewriter-store':
+        specifier: workspace:*
+        version: link:../../packages/purewriter-store
       '@dionysen/settings-kit':
         specifier: workspace:*
         version: link:../../packages/settings-kit
@@ -221,6 +224,18 @@ importers:
 
   packages/i18n:
     devDependencies:
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
+  packages/purewriter-store:
+    devDependencies:
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+      tsx:
+        specifier: ^4.20.5
+        version: 4.23.13
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
