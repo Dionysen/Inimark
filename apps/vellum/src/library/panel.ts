@@ -1,5 +1,6 @@
 import {
   formatStoreError,
+  pwClose,
   pwCreateArticle,
   pwGetArticle,
   pwListArticles,
@@ -13,40 +14,82 @@ import {
   type OpenLibraryResult,
   type SchemaStatus,
 } from "@dionysen/purewriter-store";
+import { createIconButton, createPanelToolbar } from "@dionysen/ui";
+import {
+  clearLastLibrary,
+  getLastLibraryId,
+  getLibraryById,
+  listLibraries,
+  upsertLibrary,
+  type LibraryRecord,
+} from "../libraries/store.ts";
+import {
+  newFileIcon,
+  saveIcon,
+  sidebarToggleIcon,
+} from "../ui/product-icons.ts";
+import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 
 export interface LibraryPanel {
   el: HTMLElement;
   /** Persist the open article’s editor content. No-op when nothing is open or writes are blocked. */
   save(): Promise<void>;
+  setSidebarOpen(open: boolean): void;
   destroy(): void;
 }
 
 export interface LibraryPanelOptions {
-  onArticleOpen: (title: string, content: string, id: string) => void;
+  /** `id` is null when the library is closed / no chapter is open. */
+  onArticleOpen: (title: string, content: string, id: string | null) => void;
   onStatus: (message: string) => void;
+  onOpenSettings: () => void;
+  onToggleSidebar: () => void;
   t: (key: string, params?: Record<string, string | number>) => string;
   getEditorContent: () => string;
   getOpenArticleId: () => string | null;
 }
 
-const PATH_KEY = "vellum-purewriter-path";
 const BOOK_KEY = "vellum-purewriter-book-id";
 /** Sentinel for articles with no Category (uncategorized volume). */
 const UNCATEGORIZED = "__uncategorized__";
 
+function markNoDrag(el: HTMLElement): void {
+  el.setAttribute("data-tauri-drag-region", "false");
+  el.style.setProperty("-webkit-app-region", "no-drag");
+}
+
 /**
- * Pure Writer library chrome: open a validated library root, switch books (Folder),
- * and browse volumes (Category) → chapters (Article).
+ * Pure Writer library chrome: floating library dock, book switcher,
+ * panel toolbar (new/save), and volumes → chapters.
  */
 export function mountLibraryPanel(
   host: HTMLElement,
   options: LibraryPanelOptions,
 ): LibraryPanel {
   const el = document.createElement("aside");
-  el.className = "vellum-library inimark-scrollbar";
+  el.className = "vellum-library";
 
-  const header = document.createElement("div");
-  header.className = "vellum-library-header";
+  // Same chrome row as Inimark: titlebar-height topbar with collapse near the divider.
+  const topbar = document.createElement("div");
+  topbar.className = "inimark-sidebar-topbar";
+  topbar.setAttribute("data-tauri-drag-region", "deep");
+
+  const collapseBtn = createIconButton({
+    label: options.t("common.collapseSidebar"),
+    title: options.t("common.collapseSidebar"),
+    html: sidebarToggleIcon(true),
+    onClick: options.onToggleSidebar,
+  });
+  collapseBtn.className =
+    "inimark-sidebar-toggle-btn inimark-sidebar-collapse-btn";
+  markNoDrag(collapseBtn);
+  topbar.append(collapseBtn);
+
+  const body = document.createElement("div");
+  body.className = "vellum-library-body";
+
+  const bookWrap = document.createElement("div");
+  bookWrap.className = "vellum-library-book-wrap";
 
   const bookBtn = document.createElement("button");
   bookBtn.type = "button";
@@ -58,28 +101,33 @@ export function mountLibraryPanel(
   bookMenu.className = "vellum-library-book-menu";
   bookMenu.hidden = true;
 
-  const actions = document.createElement("div");
-  actions.className = "vellum-library-actions";
+  bookWrap.append(bookBtn, bookMenu);
 
-  const openBtn = document.createElement("button");
-  openBtn.type = "button";
-  openBtn.className = "vellum-library-btn";
-  openBtn.textContent = options.t("library.openLibrary");
+  const toolbar = createPanelToolbar([
+    {
+      label: options.t("library.newChapter"),
+      title: options.t("library.newChapter"),
+      icon: newFileIcon,
+      disabled: true,
+      onClick() {
+        void createChapter();
+      },
+    },
+    {
+      label: options.t("library.save"),
+      title: options.t("library.save"),
+      icon: saveIcon,
+      disabled: true,
+      onClick() {
+        void save();
+      },
+    },
+  ]);
+  const newBtn = toolbar.buttons[0]!;
+  const saveBtn = toolbar.buttons[1]!;
 
-  const newBtn = document.createElement("button");
-  newBtn.type = "button";
-  newBtn.className = "vellum-library-btn";
-  newBtn.textContent = options.t("library.newChapter");
-  newBtn.disabled = true;
-
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.className = "vellum-library-btn";
-  saveBtn.textContent = options.t("library.save");
-  saveBtn.disabled = true;
-
-  actions.append(openBtn, newBtn, saveBtn);
-  header.append(bookBtn, bookMenu, actions);
+  const scroll = document.createElement("div");
+  scroll.className = "vellum-library-scroll inimark-scrollbar";
 
   const banner = document.createElement("div");
   banner.className = "vellum-library-banner";
@@ -88,10 +136,13 @@ export function mountLibraryPanel(
   const treeEl = document.createElement("div");
   treeEl.className = "vellum-library-tree";
 
-  el.append(header, banner, treeEl);
+  scroll.append(bookWrap, toolbar.el, banner, treeEl);
+  body.append(scroll);
+  el.append(topbar, body);
   host.append(el);
 
   let opened: OpenLibraryResult | null = null;
+  let activeLibrary: LibraryRecord | null = null;
   let books: Folder[] = [];
   let selectedBookId: string | null = null;
   let volumes: Category[] = [];
@@ -106,8 +157,8 @@ export function mountLibraryPanel(
     bookBtn.classList.remove("is-open");
   };
 
-  const renderBanner = (schema: SchemaStatus) => {
-    if (schema.writesAllowed) {
+  const renderBanner = (schema: SchemaStatus | null) => {
+    if (!schema || schema.writesAllowed) {
       banner.hidden = true;
       banner.textContent = "";
       return;
@@ -271,6 +322,22 @@ export function mountLibraryPanel(
     }
   };
 
+  const resetContent = () => {
+    opened = null;
+    books = [];
+    volumes = [];
+    chapters = [];
+    selectedBookId = null;
+    selectedVolumeId = null;
+    openArticleId = null;
+    renderBanner(null);
+    updateBookButton();
+    renderBookMenu();
+    renderTree();
+    newBtn.disabled = true;
+    saveBtn.disabled = true;
+  };
+
   const selectBook = async (bookId: string) => {
     selectedBookId = bookId;
     localStorage.setItem(BOOK_KEY, bookId);
@@ -318,12 +385,13 @@ export function mountLibraryPanel(
       options.onStatus(options.t("library.needPath"));
       return;
     }
-    openBtn.disabled = true;
     options.onStatus(options.t("library.opening"));
     closeBookMenu();
     try {
       opened = await pwOpen(path);
-      localStorage.setItem(PATH_KEY, opened.root);
+      activeLibrary = upsertLibrary(opened.root);
+      dock.setActive(activeLibrary);
+      dock.refreshList();
       renderBanner(opened.schema);
       openArticleId = null;
       selectedVolumeId = null;
@@ -349,19 +417,10 @@ export function mountLibraryPanel(
         options.onStatus(options.t("library.openedReadonly"));
       }
     } catch (e) {
-      opened = null;
-      books = [];
-      volumes = [];
-      chapters = [];
-      selectedBookId = null;
-      updateBookButton();
-      renderBookMenu();
-      renderTree();
-      newBtn.disabled = true;
-      saveBtn.disabled = true;
+      activeLibrary = null;
+      dock.setActive(null);
+      resetContent();
       options.onStatus(formatStoreError(e));
-    } finally {
-      openBtn.disabled = false;
     }
   };
 
@@ -372,7 +431,7 @@ export function mountLibraryPanel(
         directory: true,
         multiple: false,
         title: options.t("library.pickTitle"),
-        defaultPath: localStorage.getItem(PATH_KEY) ?? undefined,
+        defaultPath: activeLibrary?.rootPath ?? listLibraries()[0]?.rootPath,
       });
       if (selected === null) return;
       const root = typeof selected === "string" ? selected : selected;
@@ -382,6 +441,33 @@ export function mountLibraryPanel(
         e instanceof Error ? e.message : formatStoreError(e),
       );
     }
+  };
+
+  const switchLibrary = async (id: string) => {
+    if (id === activeLibrary?.id) return;
+    const record = getLibraryById(id);
+    if (!record) {
+      options.onStatus(options.t("library.missingRecord"));
+      dock.refreshList();
+      return;
+    }
+    await openLibraryAt(record.rootPath);
+  };
+
+  const closeLibrary = async () => {
+    closeBookMenu();
+    try {
+      await pwClose();
+    } catch {
+      // ignore — library may already be closed
+    }
+    activeLibrary = null;
+    clearLastLibrary();
+    dock.setActive(null);
+    dock.refreshList();
+    resetContent();
+    options.onArticleOpen("", "", null);
+    options.onStatus(options.t("library.closed"));
   };
 
   const save = async () => {
@@ -399,6 +485,32 @@ export function mountLibraryPanel(
     }
   };
 
+  const createChapter = async () => {
+    if (!selectedBookId || !opened?.schema.writesAllowed) return;
+    try {
+      const art = await pwCreateArticle({
+        title: options.t("app.untitled"),
+        content: "",
+        folderId: selectedBookId,
+        categoryId: selectedVolumeId,
+      });
+      chapters = await pwListArticles(selectedBookId, null, false);
+      if (selectedVolumeId) collapsedVolumes.delete(selectedVolumeId);
+      else collapsedVolumes.delete(UNCATEGORIZED);
+      await openChapter(art.id);
+    } catch (e) {
+      options.onStatus(formatStoreError(e));
+    }
+  };
+
+  const dock: LibraryDock = mountLibraryDock(el, {
+    t: options.t,
+    onOpenSettings: options.onOpenSettings,
+    onAddLibrary: () => void pickAndOpenLibrary(),
+    onSwitchLibrary: (id) => void switchLibrary(id),
+    onCloseLibrary: () => void closeLibrary(),
+  });
+
   bookBtn.addEventListener("click", (ev) => {
     ev.stopPropagation();
     if (bookBtn.disabled) return;
@@ -410,44 +522,31 @@ export function mountLibraryPanel(
 
   document.addEventListener("click", closeBookMenu);
 
-  openBtn.addEventListener("click", () => void pickAndOpenLibrary());
-
-  newBtn.addEventListener("click", () => {
-    void (async () => {
-      if (!selectedBookId || !opened?.schema.writesAllowed) return;
-      try {
-        const art = await pwCreateArticle({
-          title: options.t("app.untitled"),
-          content: "",
-          folderId: selectedBookId,
-          categoryId: selectedVolumeId,
-        });
-        chapters = await pwListArticles(selectedBookId, null, false);
-        if (selectedVolumeId) collapsedVolumes.delete(selectedVolumeId);
-        else collapsedVolumes.delete(UNCATEGORIZED);
-        await openChapter(art.id);
-      } catch (e) {
-        options.onStatus(formatStoreError(e));
-      }
-    })();
-  });
-
-  saveBtn.addEventListener("click", () => void save());
-
   updateBookButton();
   renderTree();
 
   // Restore last library on launch.
-  const rememberedPath = localStorage.getItem(PATH_KEY);
-  if (rememberedPath) {
-    void openLibraryAt(rememberedPath);
+  const lastId = getLastLibraryId();
+  const last = lastId ? getLibraryById(lastId) : listLibraries()[0] ?? null;
+  if (last) {
+    void openLibraryAt(last.rootPath);
   }
 
   return {
     el,
     save,
+    setSidebarOpen(open) {
+      collapseBtn.innerHTML = sidebarToggleIcon(open);
+      const label = open
+        ? options.t("common.collapseSidebar")
+        : options.t("common.expandSidebar");
+      collapseBtn.title = label;
+      collapseBtn.setAttribute("aria-label", label);
+    },
     destroy: () => {
       document.removeEventListener("click", closeBookMenu);
+      toolbar.destroy();
+      dock.destroy();
       el.remove();
     },
   };

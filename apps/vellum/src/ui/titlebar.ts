@@ -7,21 +7,31 @@ import {
   usesNativeWindowControls,
 } from "@dionysen/shell";
 import {
+  createIconButton,
   windowCloseIcon,
   windowMaximizeIcon,
   windowMinimizeIcon,
   windowRestoreIcon,
 } from "@dionysen/ui";
 import { t } from "../i18n/index.ts";
+import { sidebarToggleIcon } from "./product-icons.ts";
 
 export interface TitleBarController {
   setTitle(title: string): void;
+  /** Sync expand-toggle visibility (hidden while sidebar is open). */
+  setSidebarOpen(open: boolean): void;
   destroy(): void;
+}
+
+export interface SidebarToggleOptions {
+  open: boolean;
+  onToggle: () => void;
 }
 
 export interface TitleBarOptions {
   title?: string;
   controlMode?: "full" | "close-only";
+  sidebarToggle?: SidebarToggleOptions;
   onClose?: () => void | Promise<void>;
 }
 
@@ -30,7 +40,7 @@ function markNoDrag(el: HTMLElement): void {
   el.style.setProperty("-webkit-app-region", "no-drag");
 }
 
-/** Minimal product titlebar with optional window chrome buttons. */
+/** Product titlebar with optional sidebar expand toggle and window chrome. */
 export function mountTitleBar(
   host: HTMLElement,
   options: TitleBarOptions = {},
@@ -38,6 +48,7 @@ export function mountTitleBar(
   const controlMode = options.controlMode ?? "full";
   const showControls =
     !usesNativeWindowControls() && supportsWindowChrome();
+  let sidebarOpen = options.sidebarToggle?.open ?? true;
 
   host.className = "inimark-titlebar";
   host.setAttribute("data-tauri-drag-region", "deep");
@@ -45,6 +56,25 @@ export function mountTitleBar(
 
   const leading = document.createElement("div");
   leading.className = "inimark-titlebar-leading";
+
+  let sidebarToggleBtn: HTMLButtonElement | null = null;
+  if (options.sidebarToggle) {
+    sidebarToggleBtn = createIconButton({
+      label: sidebarOpen
+        ? t("common.collapseSidebar")
+        : t("common.expandSidebar"),
+      title: sidebarOpen
+        ? t("common.collapseSidebar")
+        : t("common.expandSidebar"),
+      onClick: options.sidebarToggle.onToggle,
+    });
+    sidebarToggleBtn.className = "inimark-sidebar-toggle-btn";
+    sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
+    // Obsidian-style: titlebar only shows the expand control while collapsed.
+    sidebarToggleBtn.hidden = sidebarOpen;
+    markNoDrag(sidebarToggleBtn);
+    leading.append(sidebarToggleBtn);
+  }
 
   const center = document.createElement("div");
   center.className = "inimark-titlebar-center";
@@ -107,6 +137,17 @@ export function mountTitleBar(
   return {
     setTitle(title: string) {
       titleEl.textContent = title;
+    },
+    setSidebarOpen(open: boolean) {
+      sidebarOpen = open;
+      if (!sidebarToggleBtn) return;
+      sidebarToggleBtn.hidden = open;
+      sidebarToggleBtn.innerHTML = sidebarToggleIcon(open);
+      const label = open
+        ? t("common.collapseSidebar")
+        : t("common.expandSidebar");
+      sidebarToggleBtn.title = label;
+      sidebarToggleBtn.setAttribute("aria-label", label);
     },
     destroy() {
       unlistenMaximize?.();

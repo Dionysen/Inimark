@@ -17,13 +17,14 @@ Books without volumes still work: chapters with no category appear under **Uncat
 ## Usage
 
 1. Launch Vellum. If you opened a library before, it restores that path automatically.
-2. Click **Open library** and choose a Pure Writer root folder (e.g. `~/PureWriter`). The folder must contain `App/Room.db`.
-3. Use the **book name** button at the top of the left sidebar to switch books.
-4. Expand a volume and click a chapter to edit it in the plaintext surface.
-5. Save with **Save** or **Ctrl+S** (writes chapter content back to `Room.db`).
-6. **New** creates a chapter in the currently selected book and volume (or Uncategorized if none is selected).
+2. Use the floating **library bar** at the bottom of the left sidebar:
+   - Click the pill to switch among saved libraries, **Add library**, or **Close library**.
+   - Click the **settings** gear to open Settings.
+3. Use the **book name** button at the top of the sidebar to switch books. The icon toolbar under it creates a chapter (**New**) or saves the open chapter (**Save** / Ctrl+S).
+4. Collapse the sidebar with the toggle in the sidebar top bar (aligned with the titlebar, near the divider). When collapsed, expand it again from the titlebar leading edge (same pattern as Inimark).
+5. Expand a volume and click a chapter to edit it in the plaintext surface.
 
-Last library path and last selected book are remembered locally for the next launch.
+Saved libraries (path + name) and the last selected book are remembered locally for the next launch.
 
 ## Cloud sync (GitHub / Gitee)
 

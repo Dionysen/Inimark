@@ -222,6 +222,17 @@ html.platform-macos .inimark-titlebar-controls--native {
 }
 
 html.platform-macos .inimark-titlebar-leading {
+  padding-left: var(--inimark-space-3);
+}
+
+html.platform-macos .inimark-sidebar-topbar {
+  height: var(--inimark-titlebar-height);
+  overflow: visible;
+  padding-left: calc(var(--inimark-mac-traffic-lights-width) + var(--inimark-space-2));
+  -webkit-app-region: drag;
+}
+
+html.platform-macos .vellum-shell.is-sidebar-closed .inimark-titlebar-leading {
   padding-left: calc(var(--inimark-space-3) + var(--inimark-mac-traffic-lights-width));
 }
 
@@ -294,44 +305,143 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-shell {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--vellum-library-width, 280px) 1fr;
   height: 100%;
   position: relative;
+  background: var(--inimark-bg);
 }
 
-.vellum-main-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  background: var(--inimark-content-bg);
+.vellum-shell.is-sidebar-closed {
+  grid-template-columns: 0 1fr;
 }
 
 .vellum-library-host {
-  width: 280px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
   min-height: 0;
+  min-width: 0;
   display: flex;
+  position: relative;
+  overflow: visible;
+  border-right: 1px solid var(--border);
+  background: var(--bg-secondary, var(--inimark-bg));
+}
+
+.vellum-library-host.is-collapsed {
+  border-right: none;
+  pointer-events: none;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.vellum-main {
+  display: grid;
+  grid-template-rows: var(--inimark-titlebar-height) 1fr;
+  min-height: 0;
+  min-width: 0;
+  background: var(--inimark-content-bg);
+  position: relative;
+}
+
+.vellum-titlebar-zone {
+  position: relative;
+  min-height: 0;
+  z-index: 15;
 }
 
 .vellum-library {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: auto;
-  padding: 0.5rem;
-  gap: 0.35rem;
+  overflow: visible;
+  position: relative;
   -webkit-app-region: no-drag;
 }
 
-.vellum-library-header {
+.vellum-library-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.vellum-library-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem;
+  padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  position: relative;
+}
+
+.inimark-sidebar-topbar {
+  height: var(--inimark-titlebar-height);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-1);
+  padding: 0 var(--inimark-space-2);
+  background: transparent;
+  -webkit-app-region: drag;
+  overflow: hidden;
+}
+
+.vellum-library-book-wrap {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.inimark-sidebar-collapse-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.inimark-titlebar-leading {
+  gap: var(--inimark-space-1);
+  padding-right: var(--inimark-space-2);
+}
+
+.inimark-sidebar-toggle-btn {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--inimark-chrome-btn-size);
+  height: var(--inimark-chrome-btn-size);
+  min-width: var(--inimark-chrome-btn-size);
+  border: 0;
+  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  padding: 0;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-sidebar-toggle-btn[hidden] {
+  display: none !important;
+}
+
+.inimark-sidebar-toggle-btn:hover {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-sidebar-toggle-btn:active {
+  transform: scale(0.96);
+}
+
+.inimark-icon--sidebar-toggle {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .vellum-library-book-btn {
@@ -378,7 +488,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-library-book-menu {
   position: absolute;
-  top: calc(32px + 0.35rem);
+  top: calc(100% + 0.25rem);
   left: 0;
   right: 0;
   z-index: 30;
@@ -414,30 +524,10 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover);
 }
 
-.vellum-library-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-}
-
-.vellum-library-btn {
-  height: 28px;
-  padding: 0 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.vellum-library-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.vellum-library-btn:not(:disabled):hover {
-  background: var(--bg-hover);
+.vellum-library .inimark-panel-toolbar {
+  flex-shrink: 0;
+  justify-content: flex-start;
+  padding: 0.1rem 0.15rem;
 }
 
 .vellum-library-banner {
@@ -553,6 +643,228 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding-left: 1.35rem;
 }
 
+/* Sidebar dock + library bar (ported from Inimark; shared class names for visual parity) */
+.inimark-sidebar-dock {
+  position: absolute;
+  left: var(--inimark-space-2);
+  right: var(--inimark-space-2);
+  bottom: var(--inimark-space-2);
+  z-index: 2;
+  isolation: isolate;
+}
+
+.inimark-sidebar-dock .inimark-menu {
+  isolation: isolate;
+  background: var(--bg-menu, var(--inimark-surface-raised));
+  border: 1px solid var(--inimark-border);
+  box-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
+}
+
+.inimark-library-bar,
+html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
+  --_o: var(--sidebar-chrome-opacity, 1);
+  --_blur: calc(var(--inimark-lg-blur, 10px) * (0.55 + 0.45 * var(--_o)));
+  --_sat: var(--inimark-lg-saturate, 180%);
+  --_bright: var(--inimark-lg-brightness, 1.05);
+  --_tint: var(--inimark-lg-tint, 255 255 255);
+  --_fill: calc(var(--inimark-lg-fill, 0.22) * var(--_o));
+  --_border: calc(var(--inimark-lg-border, 0.42) * var(--_o));
+  isolation: isolate;
+  background: linear-gradient(135deg,
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-hi, 0.3) * var(--_o))),
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-mid, 0.06) * var(--_o))) 40%,
+      rgb(var(--_tint) / calc(var(--inimark-lg-sheen-lo, 0.14) * var(--_o))));
+  -webkit-backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
+  backdrop-filter: blur(var(--_blur)) saturate(var(--_sat)) brightness(var(--_bright));
+  border: 1px solid rgb(255 255 255 / var(--_border));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
+    inset 0 0 10px 2px rgb(255 255 255 / calc(0.1 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.06 * var(--_o))),
+    0 8px 28px rgb(0 0 0 / calc(0.14 * var(--_o)));
+}
+
+.inimark-library-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: rgb(var(--_tint) / var(--_fill));
+}
+
+.inimark-library-bar::after,
+html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
+    inset 0 -14px 28px rgb(255 255 255 / calc(0.06 * var(--_o)));
+  background: linear-gradient(90deg,
+      transparent 8%,
+      rgb(255 255 255 / calc(0.35 * var(--_o))) 48%,
+      transparent 92%);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top center;
+  mix-blend-mode: screen;
+}
+
+.inimark-library-bar > *,
+.inimark-sidebar-dock .inimark-menu > * {
+  position: relative;
+  z-index: 2;
+}
+
+.inimark-library-bar-wrap {
+  position: relative;
+  transition: transform 420ms cubic-bezier(0.22, 1.7, 0.36, 1);
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:hover) {
+  transform: translateY(-1px);
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:active) {
+  transition-duration: 80ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+  transform: translateY(1px) scale(0.985);
+}
+
+.inimark-library-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 2.5rem;
+  margin: 0;
+  padding: 0.45rem 2.55rem 0.45rem 0.85rem;
+  border-radius: 999px;
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    box-shadow 420ms cubic-bezier(0.22, 1.5, 0.36, 1),
+    border-color 200ms ease,
+    filter 200ms ease;
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:hover) .inimark-library-bar {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
+    inset 0 0 12px 3px rgb(255 255 255 / calc(0.12 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.05 * var(--_o))),
+    0 10px 32px rgb(0 0 0 / calc(0.2 * var(--_o))),
+    0 2px 6px rgb(0 0 0 / calc(0.1 * var(--_o)));
+}
+
+.inimark-library-bar-wrap:has(.inimark-library-bar:active) .inimark-library-bar {
+  transition-duration: 80ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / calc(0.32 * var(--_o))),
+    inset 0 2px 8px rgb(0 0 0 / calc(0.12 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
+    0 4px 14px rgb(0 0 0 / calc(0.12 * var(--_o)));
+}
+
+.inimark-library-bar:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--inimark-accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.inimark-library-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.inimark-library-bar > .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.inimark-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.inimark-library-bar-settings {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0.3rem;
+  z-index: 4;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  margin-block: auto;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.inimark-library-bar-settings:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.inimark-library-menu .inimark-menu__section {
+  min-height: 0;
+}
+
+.inimark-library-menu__scroll {
+  flex: 0 1 auto;
+  max-height: 50vh;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.inimark-library-menu__actions {
+  flex-shrink: 0;
+}
+
+.inimark-sidebar-dock .inimark-menu {
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 0.45rem);
+  min-width: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  --inimark-lg-fill: 0.28;
+  --inimark-lg-blur: 12px;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: bottom center;
+}
+
+.inimark-sidebar-dock .inimark-menu.is-open {
+  transform: translateY(0) scale(1);
+}
+
+:root[data-appearance="dark"] .inimark-library-bar,
+:root[data-appearance="dark"] .inimark-sidebar-dock .inimark-menu {
+  --inimark-lg-fill: 0.14;
+  --inimark-lg-brightness: 1.08;
+  --inimark-lg-sheen-hi: 0.22;
+  --inimark-lg-sheen-mid: 0.04;
+  --inimark-lg-sheen-lo: 0.1;
+}
+
+:root[data-appearance="dark"] .inimark-sidebar-dock .inimark-menu {
+  --inimark-lg-fill: 0.2;
+}
+
 .vellum-editor-column {
   flex: 1;
   min-width: 0;
@@ -601,11 +913,15 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-git-sync-status-host {
   position: absolute;
-  left: 10px;
+  left: calc(var(--vellum-library-width, 280px) + 12px);
   bottom: 8px;
   z-index: 20;
   pointer-events: none;
   max-width: min(420px, calc(100% - 24px));
+}
+
+.vellum-shell.is-sidebar-closed .vellum-git-sync-status-host {
+  left: 12px;
 }
 
 .vellum-git-sync-status {
