@@ -55,9 +55,9 @@ const en: Dictionary = {
       signedInAs: "Signed in as {{name}}",
       unknownUser: "Aliyun user",
       loginHint:
-        "Opens your browser to authorize Vellum. Login identifies you; OSS still needs your own AccessKey.",
+        "Opens an in-app Aliyun main-account login window. Login identifies you; OSS still needs your own AccessKey.",
       blankPageHint:
-        "If the tab stays blank, wait a moment or allow scripts from *.aliyun.com / *.alicdn.com. After signing in, the browser should jump back via vellum://.",
+        "Login opens inside Vellum (avoids blank pages in Arc/Chrome). If needed, also allow *.alicdn.com in any external browser you use.",
       adopt: "Use {{app}} session ({{name}})",
       ossTitle: "Object Storage (OSS)",
       ossHint:
@@ -149,9 +149,9 @@ const zhCN: Dictionary = {
       signedInAs: "已登录：{{name}}",
       unknownUser: "阿里云用户",
       loginHint:
-        "将打开浏览器完成授权。登录只用于识别身份；读写云盘仍需填写你自己的 AccessKey。",
+        "将在应用内打开阿里云主账号登录窗口。登录只用于识别身份；读写云盘仍需填写你自己的 AccessKey。",
       blankPageHint:
-        "若浏览器一直空白，请稍等或放行 *.aliyun.com / *.alicdn.com 脚本。登录成功后应通过 vellum:// 跳回应用。",
+        "登录会在 Vellum 内嵌窗口打开（避免 Arc/Chrome 空白页）。若仍异常，请确认能访问 *.alicdn.com。",
       adopt: "使用 {{app}} 的登录（{{name}}）",
       ossTitle: "对象存储（OSS）",
       ossHint:

@@ -24,6 +24,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(WINDOW_STATE_FLAGS)
+                .with_filter(|label| label != "oauth-login")
                 .build(),
         )
         .manage(window_policy)
@@ -64,6 +65,7 @@ pub fn run() {
             dionysen_cloud_sync::commands::cs_oss_delete,
             dionysen_cloud_sync::commands::cs_oss_head,
             dionysen_cloud_sync::commands::cs_open_url,
+            dionysen_cloud_sync::commands::cs_open_oauth_login,
             dionysen_cloud_sync::commands::cs_ensure_access_token,
         ])
         .setup(|app| {

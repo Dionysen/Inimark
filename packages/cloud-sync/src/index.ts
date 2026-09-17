@@ -29,6 +29,7 @@ export {
   login,
   logout,
   parseOauthCallbackUrl,
+  OAUTH_CALLBACK_EVENT,
 } from "./aliyun/auth.ts";
 export {
   configureOss,

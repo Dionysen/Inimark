@@ -20,18 +20,28 @@ import {
   csGetSession,
   csListSiblings,
   csLogout,
+  csOpenOauthLogin,
   csOpenUrl,
 } from "../tauri-bridge.ts";
 
 const DEFAULT_SCOPE = "openid aliuid profile";
 
+/** Event name emitted by the in-app OAuth webview when callback is hit. */
+export const OAUTH_CALLBACK_EVENT = "cloud-sync-oauth-callback";
+
 export interface LoginOptions {
   region?: OauthRegion;
+  /**
+   * Open login in the system browser instead of the in-app window.
+   * Prefer the in-app window — Arc/Chrome often render Aliyun login as a blank page.
+   */
+  useSystemBrowser?: boolean;
 }
 
 /**
- * Start Aliyun OAuth in the system browser.
- * Call {@link completeLoginFromCallback} when the deep-link returns.
+ * Start Aliyun OAuth. By default opens an in-app login window.
+ * Call {@link completeLoginFromCallback} when the callback URL arrives
+ * (webview event or deep link).
  */
 export async function login(
   config: CloudSyncAppConfig,
@@ -52,8 +62,12 @@ export async function login(
     state,
     scope: config.scope ?? DEFAULT_SCOPE,
   });
-  // Prefer login.htm (resolved Location) — empty 302 from /oauth2/v1/auth can blank the tab.
-  await csOpenUrl(browserUrl || authorizeUrl);
+  const target = browserUrl || authorizeUrl;
+  if (options.useSystemBrowser) {
+    await csOpenUrl(target);
+  } else {
+    await csOpenOauthLogin(target);
+  }
   return { authorizeUrl, browserUrl, state };
 }
 

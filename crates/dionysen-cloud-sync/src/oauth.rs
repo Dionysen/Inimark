@@ -49,6 +49,14 @@ impl OauthRegion {
             Self::Intl => "https://oauth.alibabacloud.com/v1/userinfo",
         }
     }
+
+    /// Main (root) account login page — preferred over RAM-user `signin.../login.htm`.
+    pub fn account_login_base(self) -> &'static str {
+        match self {
+            Self::Cn => "https://account.aliyun.com/login/login.htm",
+            Self::Intl => "https://account.alibabacloud.com/login/login.htm",
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -101,9 +109,10 @@ pub fn build_authorize_url(
     )
 }
 
-/// Aliyun's `/oauth2/v1/auth` often replies with an empty-bodied 302 to `login.htm`.
-/// Some browsers leave a blank tab on that response; open the Location target instead.
-pub fn resolve_browser_login_url(authorize_url: &str) -> Result<String> {
+/// Aliyun's `/oauth2/v1/auth` replies with an empty-bodied 302 to RAM `login.htm`.
+/// Rewrite that to the main-account login page (`account.*.com`) so users land on
+/// 主账号登录 instead of RAM 用户登录. Some browsers also blank on the empty 302.
+pub fn resolve_browser_login_url(authorize_url: &str, region: OauthRegion) -> Result<String> {
     let client = reqwest::blocking::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(std::time::Duration::from_secs(20))
@@ -124,12 +133,32 @@ pub fn resolve_browser_login_url(authorize_url: &str) -> Result<String> {
                 .map_err(|e| Error::Http(e.to_string()))?
                 .to_string();
             if loc.starts_with("https://") || loc.starts_with("http://") {
-                return Ok(loc);
+                return Ok(prefer_main_account_login_url(&loc, region).unwrap_or(loc));
             }
         }
     }
     // Non-redirect (e.g. JSON error) — fall back so the browser still shows the message.
     Ok(authorize_url.to_string())
+}
+
+/// Convert `signin.../login.htm?callback=<oauth>` → `account.../login.htm?oauth_callback=<oauth>`.
+pub fn prefer_main_account_login_url(signin_login_url: &str, region: OauthRegion) -> Option<String> {
+    let parsed = url::Url::parse(signin_login_url).ok()?;
+    let host = parsed.host_str().unwrap_or("");
+    // Already on account login — keep as-is.
+    if host.starts_with("account.") {
+        return Some(signin_login_url.to_string());
+    }
+    let callback = parsed
+        .query_pairs()
+        .find(|(k, _)| k == "callback")
+        .map(|(_, v)| v.into_owned())?;
+    let mut out = url::Url::parse(region.account_login_base()).ok()?;
+    {
+        let mut q = out.query_pairs_mut();
+        q.append_pair("oauth_callback", &callback);
+    }
+    Some(out.to_string())
 }
 
 pub fn exchange_code(
@@ -346,6 +375,15 @@ mod tests {
     }
 
     #[test]
+    fn prefer_main_account_rewrites_ram_login() {
+        let ram = "https://signin.aliyun.com/login.htm?callback=https%3A%2F%2Fsignin.aliyun.com%2Foauth2%2Fv1%2Fauth%3Fauthorization_request%3Dabc";
+        let main = prefer_main_account_login_url(ram, OauthRegion::Cn).unwrap();
+        assert!(main.starts_with("https://account.aliyun.com/login/login.htm?"));
+        assert!(main.contains("oauth_callback="));
+        assert!(main.contains("authorization_request%3Dabc"));
+    }
+
+    #[test]
     fn resolve_login_url_follows_empty_302() {
         let url = build_authorize_url(
             OauthRegion::Cn,
@@ -355,9 +393,11 @@ mod tests {
             "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
             "openid aliuid profile",
         );
-        let browser = resolve_browser_login_url(&url).expect("resolve");
+        let browser = resolve_browser_login_url(&url, OauthRegion::Cn).expect("resolve");
         assert!(
-            browser.contains("login.htm") || browser == url,
+            browser.contains("account.aliyun.com/login/login.htm")
+                || browser.contains("login.htm")
+                || browser == url,
             "unexpected browser url: {browser}"
         );
     }

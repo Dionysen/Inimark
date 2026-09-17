@@ -99,6 +99,10 @@ export function csOpenUrl(url: string): Promise<void> {
   return invoke("cs_open_url", { url });
 }
 
+export function csOpenOauthLogin(url: string): Promise<void> {
+  return invoke("cs_open_oauth_login", { url });
+}
+
 export function csEnsureAccessToken(appId: string): Promise<SessionSummary> {
   return invoke("cs_ensure_access_token", { input: { appId } });
 }

@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default capabilities for Vellum",
-  "windows": ["main", "settings"],
+  "windows": ["main", "settings", "oauth-login"],
   "permissions": [
     "core:default",
     "core:window:default",
@@ -19,6 +19,7 @@
     "core:window:allow-destroy",
     "core:window:allow-is-maximized",
     "core:window:allow-start-dragging",
+    "core:webview:allow-create-webview-window",
     "process:default",
     "window-state:default",
     "deep-link:default",

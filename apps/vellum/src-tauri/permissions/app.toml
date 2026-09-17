@@ -36,5 +36,6 @@ commands.allow = [
   "cs_oss_delete",
   "cs_oss_head",
   "cs_open_url",
+  "cs_open_oauth_login",
   "cs_ensure_access_token",
 ]

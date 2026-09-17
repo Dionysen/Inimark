@@ -5,7 +5,7 @@ use std::sync::Mutex;
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine;
 use serde::Deserialize;
-use tauri::State;
+use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
 use crate::error::Error;
 use crate::oauth::{
@@ -18,6 +18,11 @@ use crate::vault::{
 };
 
 type CmdResult<T> = std::result::Result<T, String>;
+
+/// Window label for the in-app Aliyun login webview.
+pub const OAUTH_WINDOW_LABEL: &str = "oauth-login";
+/// Frontend listens for this when the webview hits `vellum://oauth/callback?...`.
+pub const OAUTH_CALLBACK_EVENT: &str = "cloud-sync-oauth-callback";
 
 pub struct CloudSyncState {
     vault: Mutex<Vault>,
@@ -88,8 +93,8 @@ pub fn cs_begin_oauth(
         &input.code_challenge,
         &input.scope,
     );
-    let browser_url =
-        resolve_browser_login_url(&authorize_url).unwrap_or_else(|_| authorize_url.clone());
+    let browser_url = resolve_browser_login_url(&authorize_url, region)
+        .unwrap_or_else(|_| authorize_url.clone());
     Ok(BeginOauthResult {
         authorize_url,
         browser_url,
@@ -340,6 +345,58 @@ pub fn cs_open_url(url: String) -> CmdResult<()> {
         return Err(crate::error::Error::msg("only http(s) URLs may be opened").into());
     }
     open::that(trimmed).map_err(|e| e.to_string())
+}
+
+/// Open Aliyun login inside an app webview (avoids Arc/Chrome blank SPA shells).
+/// Intercepts custom-scheme callback and emits [`OAUTH_CALLBACK_EVENT`].
+#[tauri::command]
+pub fn cs_open_oauth_login(app: AppHandle, url: String) -> CmdResult<()> {
+    let trimmed = url.trim().to_string();
+    if !(trimmed.starts_with("https://") || trimmed.starts_with("http://")) {
+        return Err("only http(s) login URLs are allowed".into());
+    }
+    let external: url::Url = trimmed
+        .parse()
+        .map_err(|e: url::ParseError| e.to_string())?;
+
+    if let Some(existing) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
+        let _ = existing.destroy();
+    }
+
+    let app_nav = app.clone();
+    WebviewWindowBuilder::new(&app, OAUTH_WINDOW_LABEL, WebviewUrl::External(external))
+        .title("阿里云登录")
+        .inner_size(520.0, 780.0)
+        .resizable(true)
+        .center()
+        .on_navigation(move |nav_url| {
+            if !is_oauth_callback_url(nav_url) {
+                return true;
+            }
+            let callback = nav_url.as_str().to_string();
+            let _ = app_nav.emit(OAUTH_CALLBACK_EVENT, callback);
+            if let Some(win) = app_nav.get_webview_window(OAUTH_WINDOW_LABEL) {
+                let _ = win.close();
+            }
+            false
+        })
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn is_oauth_callback_url(url: &url::Url) -> bool {
+    let has_code = url.query_pairs().any(|(k, _)| k == "code");
+    let has_state = url.query_pairs().any(|(k, _)| k == "state");
+    if !has_code || !has_state {
+        return false;
+    }
+    // Custom app scheme (vellum://...) or explicit oauth/callback path.
+    let scheme = url.scheme();
+    if scheme != "http" && scheme != "https" {
+        return true;
+    }
+    url.path().contains("oauth/callback")
 }
 
 /// Ensure access token is fresh when within 120s of expiry.
