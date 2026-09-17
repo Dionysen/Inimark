@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  hasCopyableTextSelection,
   isBrowserShortcut,
+  isSelectableTarget,
   isTextEditingShortcut,
   shouldBlockNativeShortcut,
 } from "../src/shortcuts/guard.ts";
@@ -84,5 +86,55 @@ describe("shortcut guard", () => {
     }
 
     host.remove();
+  });
+
+  test("allows Ctrl+C when AI bubble text is selected", () => {
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    const text = document.createTextNode("hello from ai");
+    bubble.append(text);
+    document.body.append(bubble);
+
+    const range = document.createRange();
+    range.selectNodeContents(bubble);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    expect(hasCopyableTextSelection()).toBe(true);
+
+    const chrome = document.createElement("button");
+    document.body.append(chrome);
+    const event = keyEvent({ key: "c", ctrlKey: true });
+    Object.defineProperty(event, "target", { value: chrome });
+    expect(shouldBlockNativeShortcut(event)).toBe(false);
+
+    sel?.removeAllRanges();
+    chrome.remove();
+    bubble.remove();
+  });
+
+  test("allows Ctrl+C when focus is inside an AI bubble", () => {
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    bubble.tabIndex = 0;
+    bubble.textContent = "reply";
+    document.body.append(bubble);
+    expect(isSelectableTarget(bubble)).toBe(true);
+
+    const event = keyEvent({ key: "c", ctrlKey: true });
+    Object.defineProperty(event, "target", { value: bubble });
+    expect(shouldBlockNativeShortcut(event)).toBe(false);
+
+    bubble.remove();
+  });
+
+  test("still blocks Ctrl+R on AI chrome", () => {
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    document.body.append(bubble);
+    const event = keyEvent({ key: "r", ctrlKey: true });
+    Object.defineProperty(event, "target", { value: bubble });
+    expect(shouldBlockNativeShortcut(event)).toBe(true);
+    bubble.remove();
   });
 });

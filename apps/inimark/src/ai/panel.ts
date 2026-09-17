@@ -195,7 +195,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   hostEl.append(toolbar.el, chatHost, reviewHost, composerHost, historyMenu.el);
 
   function attachVaultPaths(
-    items: readonly Array<{ path: string; kind: "file" | "directory" }>,
+    items: readonly { path: string; kind: "file" | "directory" }[],
   ): void {
     attachments = mergeVaultPathAttachments(attachments, items, newId);
     composer.setAttachments(attachments);

@@ -27,7 +27,7 @@ describe("chrome guards", () => {
     expect(isEditableChromeTarget(label)).toBe(false);
   });
 
-  test("suppresses native context menu and selectstart outside editor", () => {
+  test("suppresses native context menu outside editable surfaces", () => {
     const teardown = installChromeGuards(document);
     const label = document.createElement("div");
     document.body.append(label);
@@ -45,6 +45,28 @@ describe("chrome guards", () => {
     expect(preventSpy).toHaveBeenCalled();
 
     label.remove();
+    teardown();
+  });
+
+  test("allows native context menu inside AI chat bubbles for copy", () => {
+    const teardown = installChromeGuards(document);
+    const bubble = document.createElement("div");
+    bubble.className = "inimark-ai-bubble";
+    const p = document.createElement("p");
+    p.textContent = "hello";
+    bubble.append(p);
+    document.body.append(bubble);
+
+    const menuEvent = new MouseEvent("contextmenu", {
+      cancelable: true,
+      bubbles: true,
+    });
+    const preventSpy = vi.spyOn(menuEvent, "preventDefault");
+    p.dispatchEvent(menuEvent);
+    expect(preventSpy).not.toHaveBeenCalled();
+    expect(menuEvent.defaultPrevented).toBe(false);
+
+    bubble.remove();
     teardown();
   });
 

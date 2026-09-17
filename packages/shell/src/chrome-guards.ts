@@ -59,8 +59,8 @@ export interface ChromeGuardsOptions {
 /**
  * Install document-level guards shared by the main editor window and settings.
  * - Blocks text selection outside the editor / text inputs (WKWebView-safe).
- * - Always suppresses the native browser context menu; feature menus still open
- *   via their own `contextmenu` listeners.
+ * - Suppresses the native browser context menu outside editable / selectable
+ *   surfaces; feature menus still open via their own `contextmenu` listeners.
  */
 export function installChromeGuards(
   doc: Document = document,
@@ -83,7 +83,10 @@ export function installChromeGuards(
   };
 
   const onContextMenu = (event: Event): void => {
-    // Always kill the OS/browser menu. Custom menus (file tree, …) still fire.
+    // Allow the native menu on selectable / editable surfaces so Copy works
+    // (AI chat, inputs). Editors install their own capture handler and still
+    // suppress the OS menu. Everywhere else: keep chrome chrome-only.
+    if (isEditableChromeTarget(event.target, editableSelector)) return;
     event.preventDefault();
   };
 

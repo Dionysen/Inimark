@@ -70,6 +70,14 @@ export function mountShortcutHandler<TAction extends string>(
           Boolean(isFileTreeFocused?.(event.target)) ||
           Boolean(isTreeShortcutContext?.());
         if (!inTree) continue;
+        // Prefer OS text clipboard when the user selected copyable text
+        // (e.g. AI chat) over explorer cut/copy of file paths.
+        if (
+          (id === "tree-copy" || id === "tree-cut") &&
+          guard.hasCopyableTextSelection()
+        ) {
+          continue;
+        }
       }
 
       if (inEditor && !alwaysAllowed.includes(id)) {

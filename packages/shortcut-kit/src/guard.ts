@@ -1,6 +1,11 @@
 export interface ShortcutGuardOptions {
   /** CSS selector for editor hosts where browser shortcuts must stay available. */
   editorSelector?: string;
+  /**
+   * Read-only selectable surfaces (e.g. AI chat bubbles) where copy / select-all
+   * must reach the WebView even though the target is not a text field.
+   */
+  selectableSelector?: string;
   /** Selector for the shortcut-recording capture field. */
   recordingSelector?: string;
 }
@@ -10,6 +15,13 @@ const DEFAULT_EDITOR_SELECTOR = [
   ".ProseMirror",
   ".cm-editor",
   ".cm-content",
+].join(", ");
+
+/** Default AI / preview surfaces that allow mouse selection + copy. */
+const DEFAULT_SELECTABLE_SELECTOR = [
+  ".inimark-ai-bubble",
+  ".inimark-ai-tool-body",
+  ".inimark-ai-thinking-body",
 ].join(", ");
 
 const DEFAULT_RECORDING_SELECTOR =
@@ -29,6 +41,8 @@ function elementFromTarget(target: EventTarget | null): Element | null {
 
 export function createShortcutGuard(options: ShortcutGuardOptions = {}) {
   const editorSelector = options.editorSelector ?? DEFAULT_EDITOR_SELECTOR;
+  const selectableSelector =
+    options.selectableSelector ?? DEFAULT_SELECTABLE_SELECTOR;
   const recordingSelector =
     options.recordingSelector ?? DEFAULT_RECORDING_SELECTOR;
 
@@ -40,6 +54,18 @@ export function createShortcutGuard(options: ShortcutGuardOptions = {}) {
   function isInEditor(target: EventTarget | null): boolean {
     const el = elementFromTarget(target);
     return Boolean(el?.closest(editorSelector));
+  }
+
+  function isSelectableTarget(target: EventTarget | null): boolean {
+    const el = elementFromTarget(target);
+    return Boolean(el?.closest(selectableSelector));
+  }
+
+  /** True when the document has a non-empty text selection (copyable). */
+  function hasCopyableTextSelection(doc: Document = document): boolean {
+    const sel = doc.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
+    return sel.toString().length > 0;
   }
 
   function isEditableTarget(target: EventTarget | null): boolean {
@@ -67,6 +93,16 @@ export function createShortcutGuard(options: ShortcutGuardOptions = {}) {
       return ["a", "c", "v", "x", "z", "y"].includes(key);
     }
     return false;
+  }
+
+  /**
+   * Clipboard chords that must work for read-only selections (AI bubbles, …).
+   * Cut is included because browsers treat it as copy on non-editable text.
+   */
+  function isSelectionClipboardShortcut(event: KeyboardEvent): boolean {
+    if (!isTextEditingShortcut(event)) return false;
+    const key = event.key.toLowerCase();
+    return key === "c" || key === "a" || key === "x";
   }
 
   /** Browser / WebView shortcuts we never want the host to handle. */
@@ -120,6 +156,15 @@ export function createShortcutGuard(options: ShortcutGuardOptions = {}) {
 
     if (isInEditor(event.target)) return false;
 
+    // Selected text in AI chat (or focus inside a selectable bubble) must be
+    // copyable even though chrome is otherwise non-editable.
+    if (
+      isSelectionClipboardShortcut(event) &&
+      (hasCopyableTextSelection() || isSelectableTarget(event.target))
+    ) {
+      return false;
+    }
+
     if (isBrowserShortcut(event)) return true;
 
     if (isEditableTarget(event.target)) {
@@ -153,8 +198,11 @@ export function createShortcutGuard(options: ShortcutGuardOptions = {}) {
     isInEditor,
     /** Alias kept for Inimark markdown editor call sites. */
     isInMarkdownEditor: isInEditor,
+    isSelectableTarget,
+    hasCopyableTextSelection,
     isEditableTarget,
     isTextEditingShortcut,
+    isSelectionClipboardShortcut,
     isBrowserShortcut,
     shouldBlockNativeShortcut,
     blockNativeShortcut,
