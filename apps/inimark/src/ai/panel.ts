@@ -205,9 +205,9 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     attachVaultPaths(items);
   });
 
-  function refreshChat(): void {
+  function refreshChat(opts?: { pin?: boolean }): void {
     chat.setMessages(uiMessages);
-    chat.scrollToBottom();
+    if (opts?.pin) chat.scrollToBottom();
     refreshReview();
   }
 
@@ -271,7 +271,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     history = [];
     attachments = [];
     composer.setAttachments(attachments);
-    refreshChat();
+    refreshChat({ pin: true });
   }
 
   function syncWorkspace(): void {
@@ -306,7 +306,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     history = structuredClone(session.history);
     attachments = [];
     composer.setAttachments(attachments);
-    refreshChat();
+    refreshChat({ pin: true });
     closeHistoryMenu();
   }
 
@@ -775,7 +775,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     // Chips stay as the user’s explicit attachments only (never silent active-note).
     attachments = attachments.filter((a) => a.kind === "file" || a.kind === "directory");
     composer.setAttachments(attachments);
-    refreshChat();
+    refreshChat({ pin: true });
     persistCurrentSession();
 
     running = true;

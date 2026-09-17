@@ -538,6 +538,7 @@
   color: var(--inimark-muted-fg);
   max-height: 160px;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .inimark-ai-review {
