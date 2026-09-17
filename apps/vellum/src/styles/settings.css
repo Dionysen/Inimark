@@ -980,3 +980,57 @@ html.platform-windows .inimark-settings-nav-topbar {
     grid-template-columns: 1fr;
   }
 }
+/* —— Cloud account / OSS —— */
+.vellum-cloud-account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2, 8px);
+}
+
+.vellum-cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.vellum-settings-btn {
+  appearance: none;
+  border: 1px solid var(--inimark-border, #ccc);
+  background: var(--bg-secondary, transparent);
+  color: var(--inimark-fg, inherit);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.vellum-settings-btn:hover {
+  border-color: var(--inimark-accent, #4a90d9);
+}
+
+.vellum-settings-input {
+  width: min(100%, 360px);
+  box-sizing: border-box;
+  border: 1px solid var(--inimark-border, #ccc);
+  background: var(--inimark-bg, #fff);
+  color: var(--inimark-fg, inherit);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: inherit;
+}
+
+.vellum-cloud-status {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--inimark-muted-fg, #666);
+}
+
+.vellum-cloud-status--ok {
+  color: var(--inimark-success, #1a7f37);
+}
+
+.vellum-cloud-status--error {
+  color: var(--inimark-danger, #cf222e);
+}

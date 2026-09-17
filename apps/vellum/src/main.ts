@@ -11,6 +11,7 @@ import { applySettings, loadSettings } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
+import { installOauthDeepLinkHandler } from "./cloud/oauth-deeplink.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
@@ -29,6 +30,10 @@ const teardownShortcutGuard = installNativeShortcutGuard();
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void closeWindow(),
+});
+let teardownDeepLink: (() => void) | undefined;
+void installOauthDeepLinkHandler().then((fn) => {
+  teardownDeepLink = fn;
 });
 
 const root = document.querySelector<HTMLElement>("#app");
@@ -83,6 +88,7 @@ root.append(titleHost, body);
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
+  teardownDeepLink?.();
   teardownClose();
   teardownShell();
   teardownTooltips();

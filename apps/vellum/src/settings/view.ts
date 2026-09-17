@@ -8,6 +8,7 @@ import {
   type SettingsViewController,
 } from "@dionysen/settings-kit";
 import { createSelect, createSlider } from "@dionysen/ui";
+import { renderAccountSection } from "../cloud/account-settings.ts";
 import { onLocaleChange, t, type LocaleId } from "../i18n/index.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import { closeWindow } from "@dionysen/shell";
@@ -28,7 +29,7 @@ import { isShortcutRecordingActive } from "../shortcuts/guard.ts";
 
 export type { SettingsViewController };
 
-const SECTIONS = ["appearance", "editor", "about"] as const;
+const SECTIONS = ["account", "appearance", "editor", "about"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
 function isSectionId(value: string): value is SectionId {
@@ -37,6 +38,18 @@ function isSectionId(value: string): value is SectionId {
 
 function searchEntries(): SettingSearchItem[] {
   return [
+    {
+      id: "account-login",
+      section: "account",
+      getTitle: () => t("settings.account.loginTitle"),
+      getDescription: () => t("settings.account.loginHint"),
+    },
+    {
+      id: "account-oss",
+      section: "account",
+      getTitle: () => t("settings.account.ossTitle"),
+      getDescription: () => t("settings.account.ossHint"),
+    },
     {
       id: "appearance-locale",
       section: "appearance",
@@ -186,6 +199,7 @@ function renderAbout(body: HTMLElement): void {
 
 export function mountSettingsView(host: HTMLElement): SettingsViewController {
   let settings = loadSettings();
+  let teardownAccount: (() => void) | null = null;
 
   const sections: SettingsSectionDef[] = SECTIONS.map((id) => ({
     id,
@@ -193,7 +207,11 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     subtitle: () => t(`settings.subtitle.${id}`),
     render(body) {
       body.replaceChildren();
-      if (id === "appearance") {
+      teardownAccount?.();
+      teardownAccount = null;
+      if (id === "account") {
+        teardownAccount = renderAccountSection(body);
+      } else if (id === "appearance") {
         renderAppearance(body, settings, (partial) => {
           settings = patchSettings(partial);
         });
@@ -209,9 +227,9 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
       searchEntries().filter((e) => e.section === id),
   }));
 
-  return mountSettingsShell(host, {
+  const controller = mountSettingsShell(host, {
     sections,
-    defaultSectionId: "appearance",
+    defaultSectionId: "account",
     strings: {
       searchPlaceholder: () => t("settings.search"),
       noMatch: () => t("settings.noMatch"),
@@ -236,9 +254,17 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     formatShortcutDisplay,
     isShortcutRecordingActive,
     resolveFallbackSection: (requested) =>
-      isSectionId(requested) ? requested : "appearance",
+      isSectionId(requested) ? requested : "account",
     navWidthKey: "vellum-settings-nav-width",
   });
+
+  const originalDestroy = controller.destroy.bind(controller);
+  controller.destroy = () => {
+    teardownAccount?.();
+    teardownAccount = null;
+    originalDestroy();
+  };
+  return controller;
 }
 
 export type { LocaleId };

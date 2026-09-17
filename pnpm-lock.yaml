@@ -93,6 +93,9 @@ importers:
 
   apps/vellum:
     dependencies:
+      '@dionysen/cloud-sync':
+        specifier: workspace:*
+        version: link:../../packages/cloud-sync
       '@dionysen/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -114,6 +117,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^2.5.0
         version: 2.11.1
+      '@tauri-apps/plugin-deep-link':
+        specifier: ^2.4.0
+        version: 2.4.10
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0
@@ -124,6 +130,18 @@ importers:
       vite:
         specifier: ^6.3.5
         version: 6.4.3(@types/node@26.4.1)(tsx@4.23.13)
+
+  packages/cloud-sync:
+    devDependencies:
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+      tsx:
+        specifier: ^4.20.5
+        version: 4.23.13
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
 
   packages/editor:
     dependencies:
@@ -809,7 +827,6 @@ packages:
     resolution: {integrity: sha512-excjX8DfsIcJ10x1Kzr4RcWe1edC9PquDRRPx3YVCvQv+U5p7Yin2s32ftzikXojb1PIFc/9Mt28/y+iRklkrw==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@img/sharp-libvips-linux-arm@1.2.4':
     resolution: {integrity: sha512-bFI7xcKFELdiNCVov8e44Ia4u2byA+l3XtsAj+Q8tfCwO6BQ8iDojYdvoPMqsKDkuoOo+X6HZA0s0q11ANMQ8A==}
@@ -845,7 +862,6 @@ packages:
     resolution: {integrity: sha512-+LpyBk7L44ZIXwz/VYfglaX/okxezESc6UxDSoyo2Ks6Jxc4Y7sGjpgU9s4PMgqgjj1gZCylTieNamqA1MF7Dg==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@img/sharp-linux-arm64@0.34.5':
     resolution: {integrity: sha512-bKQzaJRY/bkPOXyKx5EVup7qkaojECG6NLYswgktOZjaXecSAeCWiZwwiFf3/Y+O1HrauiE3FVsGxFg8c24rZg==}
@@ -1188,6 +1204,9 @@ packages:
 
   '@tauri-apps/plugin-clipboard-manager@2.3.3':
     resolution: {integrity: sha512-KnyoTs9gj1yEgDkSPUNjOIOHjJTr5wk8IWcYMOWxYTIJCip6QwlyPW8u2X+6bd6kHM4fAdZNpxoal0gy/TwJbg==}
+
+  '@tauri-apps/plugin-deep-link@2.4.10':
+    resolution: {integrity: sha512-SuXI47ORUzYuwG6c8dluLDrStTvli5bAZDRa2+VuUEzK/9TEa7FZz7UKXBQriL7+CPFXRHQsz5tSocc47tRXQQ==}
 
   '@tauri-apps/plugin-dialog@2.7.3':
     resolution: {integrity: sha512-CRgE+7TP4tvq9MjBU6f04NLTFIqVMLKHk3hAqlhil00ngK9ACTrXPH3oHpKMProxILodd3YjBoKbMwSI4IEcfA==}
@@ -2906,6 +2925,10 @@ snapshots:
       '@tauri-apps/cli-win32-x64-msvc': 2.11.4
 
   '@tauri-apps/plugin-clipboard-manager@2.3.3':
+    dependencies:
+      '@tauri-apps/api': 2.11.1
+
+  '@tauri-apps/plugin-deep-link@2.4.10':
     dependencies:
       '@tauri-apps/api': 2.11.1
 

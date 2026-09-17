@@ -7,6 +7,7 @@ import {
   isTauri,
 } from "@dionysen/shell";
 import { initTooltipLayer } from "@dionysen/ui";
+import { installOauthDeepLinkHandler } from "./cloud/oauth-deeplink.ts";
 import { initI18n } from "./i18n/index.ts";
 import { mountSettingsView } from "./settings/view.ts";
 import {
@@ -35,6 +36,10 @@ const teardownShortcutGuard = installNativeShortcutGuard();
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void closeWindow(),
+});
+let teardownDeepLink: (() => void) | undefined;
+void installOauthDeepLinkHandler().then((fn) => {
+  teardownDeepLink = fn;
 });
 
 const host = document.querySelector<HTMLElement>("#app");
@@ -82,6 +87,7 @@ if (isTauri()) {
 
 window.addEventListener("beforeunload", () => {
   unlistenSettings?.();
+  teardownDeepLink?.();
   teardownShell();
   teardownTooltips();
   teardownShortcutGuard();

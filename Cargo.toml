@@ -4,6 +4,7 @@ members = [
   "apps/inimark/src-tauri",
   "apps/vellum/src-tauri",
   "crates/dionysen-shell",
+  "crates/dionysen-cloud-sync",
   "crates/inimark-ssg",
   "crates/purewriter-store",
 ]

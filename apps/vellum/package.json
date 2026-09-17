@@ -12,13 +12,15 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@dionysen/cloud-sync": "workspace:*",
     "@dionysen/i18n": "workspace:*",
     "@dionysen/purewriter-store": "workspace:*",
     "@dionysen/settings-kit": "workspace:*",
     "@dionysen/shell": "workspace:*",
     "@dionysen/shortcut-kit": "workspace:*",
     "@dionysen/ui": "workspace:*",
-    "@tauri-apps/api": "^2.5.0"
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-deep-link": "^2.4.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",

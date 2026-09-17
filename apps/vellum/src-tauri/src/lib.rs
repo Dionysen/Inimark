@@ -1,5 +1,6 @@
 use tauri::Manager;
 
+use dionysen_cloud_sync::CloudSyncState;
 use dionysen_shell::{
     handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
 };
@@ -10,8 +11,16 @@ mod pw_commands;
 pub fn run() {
     let window_policy = WindowPolicy::default();
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(any(target_os = "macos", windows, target_os = "linux"))]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|_app, _argv, _cwd| {}));
+    }
+
+    builder
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(WINDOW_STATE_FLAGS)
@@ -19,6 +28,9 @@ pub fn run() {
         )
         .manage(window_policy)
         .manage(pw_commands::PwState::default())
+        .manage(CloudSyncState::new().unwrap_or_else(|e| {
+            panic!("failed to open cloud-sync vault: {e}");
+        }))
         .invoke_handler(tauri::generate_handler![
             dionysen_shell::show_settings_window,
             dionysen_shell::toggle_settings_window,
@@ -38,6 +50,21 @@ pub fn run() {
             pw_commands::pw_set_setting,
             pw_commands::pw_pwb_export,
             pw_commands::pw_pwb_import,
+            dionysen_cloud_sync::commands::cs_begin_oauth,
+            dionysen_cloud_sync::commands::cs_complete_oauth,
+            dionysen_cloud_sync::commands::cs_get_session,
+            dionysen_cloud_sync::commands::cs_get_profile,
+            dionysen_cloud_sync::commands::cs_logout,
+            dionysen_cloud_sync::commands::cs_list_siblings,
+            dionysen_cloud_sync::commands::cs_adopt_session,
+            dionysen_cloud_sync::commands::cs_configure_oss,
+            dionysen_cloud_sync::commands::cs_oss_list,
+            dionysen_cloud_sync::commands::cs_oss_get,
+            dionysen_cloud_sync::commands::cs_oss_put,
+            dionysen_cloud_sync::commands::cs_oss_delete,
+            dionysen_cloud_sync::commands::cs_oss_head,
+            dionysen_cloud_sync::commands::cs_open_url,
+            dionysen_cloud_sync::commands::cs_ensure_access_token,
         ])
         .setup(|app| {
             let policy = app.state::<WindowPolicy>();
