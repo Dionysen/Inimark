@@ -46,6 +46,7 @@ Prefer **Latest** unless you are debugging an older build.
 - Immersive composer: drag files/folders to attach, one-click copy of the final answer
 - Intent-first: greetings get a short note summary and a ask-what-you-need—no vault browsing until you ask; replies prefer your message language
 - Fix Windows startup window flash; fix Settings and other windows failing to open after AI was introduced
+- New package `@inimark/purewriter`: round-trip vault notes with Pure Writer `Room.db` / `.pwb` (for upcoming import/export)
 
 ---
 

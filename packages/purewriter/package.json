@@ -1,0 +1,29 @@
+{
+  "name": "@inimark/purewriter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serialize and deserialize Inimark vault notes to Pure Writer (纯纯写作) library data",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.2"
+  },
+  "optionalDependencies": {
+    "7zip-bin": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/sql.js": "^1.4.9",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
