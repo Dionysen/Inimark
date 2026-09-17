@@ -57,7 +57,7 @@ Inserting an empty `![]()` image mark can open a file picker. Today this may ins
 
 ## What the file tree shows
 
-The Files sidebar lists **Markdown** notes (`.md` / `.markdown` / `.mdown`). Image files can still be embedded when the link index resolves them, but they are not managed as first-class tree rows today. Organize assets in folders on disk; open notes to edit.
+The Files sidebar lists editable notes (`.md` / `.markdown` / `.mdown`, plus plain-text `.txt`). Image files can still be embedded when the link index resolves them, but they are not managed as first-class tree rows today. Organize assets in folders on disk; open notes to edit.
 
 ## Publish behavior
 

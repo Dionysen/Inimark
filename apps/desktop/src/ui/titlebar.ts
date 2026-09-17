@@ -58,6 +58,8 @@ export interface TitleBarMoreMenuActions {
   canAddBookmark: () => boolean;
   onAddBookmark: () => void;
   isSourceMode: () => boolean;
+  /** When false, source-mode menu entry is hidden (e.g. `.txt` files). */
+  canToggleSourceMode?: () => boolean;
   onToggleSourceMode: () => void;
   onOpenSearch: () => void;
 }
@@ -416,17 +418,19 @@ export function mountTitleBar(
         },
       });
       moreMenu.addDivider();
-      moreMenu.addItem({
-        label: moreActions.isSourceMode()
-          ? t("titlebar.more.exitSourceMode")
-          : t("titlebar.more.sourceMode"),
-        icon: menuIcons.sourceMode,
-        meta: formatShortcutDisplay(["Ctrl", "/"]),
-        onClick() {
-          closeMoreMenu();
-          moreActions.onToggleSourceMode();
-        },
-      });
+      if (moreActions.canToggleSourceMode?.() !== false) {
+        moreMenu.addItem({
+          label: moreActions.isSourceMode()
+            ? t("titlebar.more.exitSourceMode")
+            : t("titlebar.more.sourceMode"),
+          icon: menuIcons.sourceMode,
+          meta: formatShortcutDisplay(["Ctrl", "/"]),
+          onClick() {
+            closeMoreMenu();
+            moreActions.onToggleSourceMode();
+          },
+        });
+      }
       if (graphActions) {
         moreMenu.addItem({
           label: graphActions.isOpen()

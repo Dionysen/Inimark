@@ -522,7 +522,7 @@ describe("local markdown files", () => {
     }
   });
 
-  test("picks Markdown folders recursively and sorts directories before files", async () => {
+  test("picks note folders recursively (.md + .txt) and sorts directories before files", async () => {
     const oldPicker = window.showDirectoryPicker;
     const nestedMd = {
       name: "b.md",
@@ -534,6 +534,12 @@ describe("local markdown files", () => {
       name: "ignore.txt",
       async getFile() {
         return new File(["ignore"], "ignore.txt", { type: "text/plain" });
+      },
+    };
+    const rootTxt = {
+      name: "z.txt",
+      async getFile() {
+        return new File(["z"], "z.txt", { type: "text/plain" });
       },
     };
     const nestedDir = {
@@ -552,7 +558,7 @@ describe("local markdown files", () => {
     window.showDirectoryPicker = async () => ({
       name: "root",
       async *entries() {
-        yield ["z.txt", nestedTxt];
+        yield ["z.txt", rootTxt];
         yield ["a.MDOWN", topMd];
         yield ["Folder", nestedDir];
       },
@@ -565,8 +571,12 @@ describe("local markdown files", () => {
       expect(result.tree.children?.map((entry) => `${entry.kind}:${entry.name}`)).toEqual([
         "directory:Folder",
         "file:a.MDOWN",
+        "file:z.txt",
       ]);
-      expect(result.tree.children?.[0]?.children?.map((entry) => entry.name)).toEqual(["b.md"]);
+      expect(result.tree.children?.[0]?.children?.map((entry) => entry.name)).toEqual([
+        "b.md",
+        "ignore.txt",
+      ]);
     } finally {
       window.showDirectoryPicker = oldPicker;
     }

@@ -59,6 +59,9 @@ function countCharacters(text: string): number {
 }
 
 function getPlainText(editor: Editor): string {
+  if (editor.getFormat() === "plaintext") {
+    return editor.getMarkdown();
+  }
   if (editor.isSourceMode()) {
     return stripMarkdownForCount(editor.getMarkdown());
   }
@@ -251,6 +254,9 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   }
 
   function syncSourceModeButton(): void {
+    const supported = editor.getFormat() === "markdown";
+    sourceModeBtn.hidden = !supported;
+    if (!supported) return;
     const on = editor.isSourceMode();
     sourceModeBtn.classList.toggle("is-active", on);
     sourceModeBtn.setAttribute("aria-pressed", String(on));
@@ -317,6 +323,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
 
   sourceModeBtn.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (editor.getFormat() !== "markdown") return;
     editor.toggleSource();
     syncSourceModeButton();
     scheduleUpdate();

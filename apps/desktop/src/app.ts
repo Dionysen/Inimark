@@ -25,7 +25,7 @@ import {
   upsertLibrary,
   type FileViewState,
 } from "./libraries/store.ts";
-import { isTauri, joinWorkspacePath, fileNameFromPath } from "./platform/env.ts";
+import { isTauri, joinWorkspacePath, fileNameFromPath, documentFormatFromPath, isMarkdownFile } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
 import { mountUpdatePreflightHandler } from "./update-bridge.ts";
 import { createAutoUpdateService } from "./update/auto-update.ts";
@@ -153,6 +153,7 @@ export function mountApp(host: HTMLElement): AppController {
       canAddBookmark: () => Boolean(workspace && activeFilePath),
       onAddBookmark: () => void shell.sidebar.bookmarkActiveFile(),
       isSourceMode: () => editor.isSourceMode(),
+      canToggleSourceMode: () => editor.getFormat() === "markdown",
       onToggleSourceMode: () => {
         editor.toggleSource();
         wordCount?.syncChrome();
@@ -234,7 +235,7 @@ export function mountApp(host: HTMLElement): AppController {
       scheduleAutoSave();
       scheduleOutlineSync(md);
       wordCount?.scheduleUpdate();
-      if (workspace && activeFilePath) {
+      if (workspace && activeFilePath && isMarkdownFile(activeFilePath)) {
         linkIndex.addFileLinks(activeFilePath, md);
         scheduleTagIndexSync(md);
       }
@@ -402,6 +403,10 @@ export function mountApp(host: HTMLElement): AppController {
     if (outlineTimer != null) clearTimeout(outlineTimer);
     outlineTimer = setTimeout(() => {
       outlineTimer = null;
+      if (editor.getFormat() === "plaintext") {
+        shell.rightSidebar.setContent("");
+        return;
+      }
       shell.rightSidebar.setContent(md ?? editor.getMarkdown());
     }, 120);
   }
@@ -427,6 +432,7 @@ export function mountApp(host: HTMLElement): AppController {
     const text = md ?? pendingTagMarkdown;
     pendingTagMarkdown = null;
     if (!workspace || !activeFilePath || text == null) return;
+    if (!isMarkdownFile(activeFilePath)) return;
     tagIndex.setFileTags(activeFilePath, text);
   }
   cleanups.push(() => {
@@ -477,6 +483,7 @@ export function mountApp(host: HTMLElement): AppController {
 
   function currentMarkdownForSave(): string {
     const raw = editor.getMarkdown();
+    if (editor.getFormat() === "plaintext") return raw;
     if (!settings.markdownFormat.formatOnSave) return raw;
     return formatMarkdown(raw, settings.markdownFormat);
   }
@@ -532,20 +539,28 @@ export function mountApp(host: HTMLElement): AppController {
     options?: { toast?: boolean },
   ): Promise<void> {
     const view = editor.getViewState();
+    if (activeFilePath) {
+      const nextFormat = documentFormatFromPath(activeFilePath) ?? "markdown";
+      editor.setFormat(nextFormat);
+    }
     editor.setMarkdown(text);
     editor.restoreViewState(view);
     shell.setDirty(false);
     diskBanner.hide();
     pendingDiskRevision = null;
     scheduleOutlineSync(text);
-    if (workspace && activeFilePath) {
+    if (workspace && activeFilePath && isMarkdownFile(activeFilePath)) {
       linkIndex.addFileLinks(activeFilePath, text);
       flushTagIndex(text);
       shell.graph.setActiveFile(activeFilePath);
       shell.tags.setActiveFile(activeFilePath);
+    } else {
+      shell.graph.setActiveFile(null);
+      shell.tags.setActiveFile(null);
     }
     await fileSync.recordBaseline(text);
     wordCount?.scheduleUpdate();
+    wordCount?.syncChrome();
     if (options?.toast !== false) {
       showStatusToast(shell.mainColumn, t("editor.disk.reloadedToast"));
     }
@@ -625,7 +640,10 @@ export function mountApp(host: HTMLElement): AppController {
       fileSync.markOwnWrite();
       const result = await writeWorkspaceFile(workspace, activeFilePath, markdown);
       if (result.status === "saved") {
-        if (settings.markdownFormat.formatOnSave) {
+        if (
+          editor.getFormat() === "markdown" &&
+          settings.markdownFormat.formatOnSave
+        ) {
           const current = editor.getMarkdown();
           if (current !== markdown) {
             editor.setMarkdown(markdown);
@@ -639,11 +657,16 @@ export function mountApp(host: HTMLElement): AppController {
         // Content-only save: vault topology is unchanged — skip full tree rescan /
         // sidebar remount (those fight window drag on the main thread).
         shell.sidebar.setActiveFile(activeFilePath);
-        linkIndex.addFileLinks(activeFilePath, markdown);
-        linkIndex.persistCache(workspace.rootPath);
-        flushTagIndex(markdown);
-        shell.graph.setActiveFile(activeFilePath);
-        shell.tags.setActiveFile(activeFilePath);
+        if (isMarkdownFile(activeFilePath)) {
+          linkIndex.addFileLinks(activeFilePath, markdown);
+          linkIndex.persistCache(workspace.rootPath);
+          flushTagIndex(markdown);
+          shell.graph.setActiveFile(activeFilePath);
+          shell.tags.setActiveFile(activeFilePath);
+        } else {
+          shell.graph.setActiveFile(null);
+          shell.tags.setActiveFile(null);
+        }
         await fileSync.recordBaseline(markdown);
         persistLibrarySession();
         return true;
@@ -679,6 +702,7 @@ export function mountApp(host: HTMLElement): AppController {
   }
 
   function resetToUntitled(): void {
+    editor.setFormat("markdown");
     editor.newMarkdownFile();
     activeFilePath = null;
     diskBanner.hide();
@@ -691,6 +715,7 @@ export function mountApp(host: HTMLElement): AppController {
     shell.setDirty(false);
     persistLibrarySession();
     scheduleOutlineSync("");
+    wordCount?.syncChrome();
   }
 
   async function confirmDiscardChanges(): Promise<boolean> {
@@ -728,21 +753,33 @@ export function mountApp(host: HTMLElement): AppController {
         return;
       }
 
+      editor.setFormat(documentFormatFromPath(path) ?? "markdown");
       editor.setMarkdown(result.text);
       activeFilePath = path;
       shell.setFileName(result.name);
       shell.sidebar.setActiveFile(path);
-      shell.graph.setActiveFile(path);
-      shell.tags.setActiveFile(path);
+      if (isMarkdownFile(path)) {
+        shell.graph.setActiveFile(path);
+        shell.tags.setActiveFile(path);
+      } else {
+        shell.graph.setActiveFile(null);
+        shell.tags.setActiveFile(null);
+      }
       shell.setDirty(false);
       scheduleOutlineSync(result.text);
       recordRecentFile(activeLibraryId, path);
       navHistory.record(path);
       await bindActiveFileSync(result.text);
+      wordCount?.syncChrome();
     } else {
       shell.sidebar.setActiveFile(path);
-      shell.graph.setActiveFile(path);
-      shell.tags.setActiveFile(path);
+      if (isMarkdownFile(path)) {
+        shell.graph.setActiveFile(path);
+        shell.tags.setActiveFile(path);
+      } else {
+        shell.graph.setActiveFile(null);
+        shell.tags.setActiveFile(null);
+      }
     }
 
     const query = options?.query?.trim();
@@ -1049,10 +1086,16 @@ export function mountApp(host: HTMLElement): AppController {
         // keep UI in sync with sidebar active path.
         shell.setFileName(activeFilePath.split(/[/\\]/).pop() ?? activeFilePath);
         shell.sidebar.setActiveFile(activeFilePath);
-        shell.graph.setActiveFile(activeFilePath);
-        shell.tags.setActiveFile(activeFilePath);
+        if (isMarkdownFile(activeFilePath)) {
+          shell.graph.setActiveFile(activeFilePath);
+          shell.tags.setActiveFile(activeFilePath);
+        } else {
+          shell.graph.setActiveFile(null);
+          shell.tags.setActiveFile(null);
+        }
         const opened = await readWorkspaceFile(workspace!, activeFilePath);
         if (opened.status === "opened") {
+          editor.setFormat(documentFormatFromPath(activeFilePath) ?? "markdown");
           editor.setMarkdown(opened.text);
           shell.setDirty(false);
           scheduleOutlineSync(opened.text);
@@ -1061,6 +1104,7 @@ export function mountApp(host: HTMLElement): AppController {
             editor.restoreViewState(toEditorViewState(saved));
           }
           await bindActiveFileSync(opened.text);
+          wordCount?.syncChrome();
         }
         persistLibrarySession();
       } else {
@@ -1135,11 +1179,12 @@ export function mountApp(host: HTMLElement): AppController {
           scheduleAutoSave();
         }
         scheduleOutlineSync(content);
-        if (workspace) {
+        if (workspace && isMarkdownFile(path)) {
           linkIndex.addFileLinks(path, content);
           scheduleTagIndexSync(content);
         }
         wordCount?.scheduleUpdate();
+        wordCount?.syncChrome();
       } else if (opts?.aiOwned) {
         // Non-active AI write: still suppress watch noise if this path becomes active soon.
         fileSync.markOwnWrite();

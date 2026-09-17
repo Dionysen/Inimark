@@ -1,4 +1,10 @@
-const MD_FILE = /\.(md|markdown|mdown)$/i;
+export {
+  documentFormatFromPath,
+  isEditableNoteFile,
+  isMarkdownFile,
+  isPlainTextFile,
+} from "@inimark/editor";
+export type { DocumentFormat } from "@inimark/editor";
 
 export function isTauri(): boolean {
   return (
@@ -24,8 +30,4 @@ export function joinWorkspacePath(root: string, relative: string): string {
   const normalizedRoot = root.replace(/[/\\]+$/, "");
   const normalizedRel = relative.replace(/^[/\\]+/, "").replace(/\//g, sep);
   return `${normalizedRoot}${sep}${normalizedRel}`;
-}
-
-export function isMarkdownFile(name: string): boolean {
-  return MD_FILE.test(name);
 }

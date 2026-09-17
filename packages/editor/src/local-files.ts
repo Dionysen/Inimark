@@ -1,3 +1,5 @@
+import { isEditableNoteFile } from "./document-format.ts";
+
 export type FileResult =
   | { status: "opened"; name: string }
   | { status: "saved"; name: string; handle?: FileSystemFileHandle }
@@ -52,7 +54,7 @@ async function readDirectoryEntries(
     if ("entries" in handle) {
       const child = await readDirectoryEntries(handle, path);
       if ((child.children?.length ?? 0) > 0) children.push(child);
-    } else if (/\.(md|markdown|mdown)$/i.test(handle.name)) {
+    } else if (isEditableNoteFile(handle.name)) {
       children.push({ name: handle.name, path, kind: "file", handle });
     }
   }

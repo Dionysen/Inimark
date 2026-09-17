@@ -38,7 +38,7 @@ import {
   createEmbeddedCodeMirrorEditor,
   type EmbeddedCodeMirrorEditor,
 } from "./code-highlighter.ts";
-import { defaultPlugins } from "./editor.ts";
+import { defaultPlugins, plaintextPlugins } from "./editor.ts";
 import { ensureEditableDocEnd } from "./editable-doc-end.ts";
 import { handleEditorSurfaceMouseDown } from "./click-focus.ts";
 import {
@@ -52,6 +52,14 @@ import {
 import { isFocusMode as readFocusMode, setFocusMode as dispatchFocusMode } from "./modes.ts";
 import { parse } from "./parser.ts";
 import { schema } from "./schema.ts";
+import type { DocumentFormat } from "./document-format.ts";
+import {
+  parsePlaintext,
+  plaintextOffsetToPos,
+  plaintextPosToOffset,
+  plaintextSchema,
+  serializePlaintext,
+} from "./plaintext.ts";
 import {
   clearSearchRevealInView,
   revealSearchMatchInView,
@@ -63,6 +71,17 @@ import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 import { isImeComposing } from "./ime-position.ts";
 import { getCodeIndentSize, setCodeIndentSize } from "./code-indent.ts";
 
+/** Commands that remain meaningful when Markdown features are disabled. */
+const PLAINTEXT_COMMANDS = new Set<string>([
+  "cut",
+  "copy",
+  "paste",
+  "delete",
+  "copy-as-html",
+  "copy-as-plain-text",
+  "paste-as-plain-text",
+  "insert-datetime",
+]);
 export interface FindSession {
   options: FindOptions;
   matches: MdMatch[];
@@ -98,11 +117,18 @@ export interface EditorOptions {
 }
 
 export interface Editor {
-  /** Current markdown — renders source from the live PM doc, or returns the textarea contents in source mode. */
+  /** Current document text — markdown serialization, or plaintext line join. */
   getMarkdown(): string;
   /** Replace the document. Works in either rendered or source mode. */
   setMarkdown(md: string): void;
-  /** Flip between rendered and raw-source views. ⌘/ does the same. */
+  /** Active document format (`markdown` vs `.txt` plaintext). */
+  getFormat(): DocumentFormat;
+  /**
+   * Switch document format. Rebuilds the editor surface; source mode is
+   * forced off when entering plaintext.
+   */
+  setFormat(format: DocumentFormat): void;
+  /** Flip between rendered and raw-source views. No-op in plaintext. ⌘/ does the same. */
   toggleSource(): void;
   /** Whether the editor is currently in raw-source mode. */
   isSourceMode(): boolean;
@@ -177,6 +203,7 @@ export function createEditor(
   let view: EditorView;
   let sourceView: EmbeddedCodeMirrorEditor | null = null;
   let inSource = false;
+  let format: DocumentFormat = "markdown";
   let typewriterMode = false;
   let typewriterRaf: number | null = null;
   /** Skip typewriter recenter until this timestamp (outline jump pins heading to top). */
@@ -191,11 +218,40 @@ export function createEditor(
   function mdMatchesToPmRanges(md: string, matches: MdMatch[]) {
     const ranges: Array<{ from: number; to: number }> = [];
     for (const match of matches) {
-      const from = mdOffsetToRenderedPos(md, match.from);
-      const to = mdOffsetToRenderedPos(md, match.to);
+      const from = offsetToRenderedPos(md, match.from);
+      const to = offsetToRenderedPos(md, match.to);
       if (from < to) ranges.push({ from, to });
     }
     return ranges;
+  }
+
+  function parseContent(text: string) {
+    if (format === "plaintext") return parsePlaintext(text);
+    return text ? ensureEditableDocEnd(parse(text)) : schema.nodes.doc.createAndFill()!;
+  }
+
+  function serializeContent(doc: import("prosemirror-model").Node): string {
+    return format === "plaintext" ? serializePlaintext(doc) : serialize(doc);
+  }
+
+  function offsetToRenderedPos(content: string, offset: number): number {
+    if (format === "plaintext") return plaintextOffsetToPos(view.state.doc, offset);
+    return mdOffsetToRenderedPos(content, offset);
+  }
+
+  function renderedPosToOffset(doc: import("prosemirror-model").Node, pos: number): number {
+    if (format === "plaintext") return plaintextPosToOffset(doc, pos);
+    return renderedPosToMdOffset(doc, pos);
+  }
+
+  function pluginsForFormat() {
+    return format === "plaintext"
+      ? plaintextPlugins({ cursorWidget: false })
+      : defaultPlugins({ cursorWidget: false });
+  }
+
+  function activeSchema() {
+    return format === "plaintext" ? plaintextSchema : schema;
   }
 
   function scrollToRenderedPos(pos: number): void {
@@ -228,7 +284,7 @@ export function createEditor(
       return session;
     }
 
-    const md = serialize(view.state.doc);
+    const md = serializeContent(view.state.doc);
     const pmMatches = mdMatchesToPmRanges(md, matches);
     if (index < 0 || !pmMatches[index]) {
       clearFindHighlights(view);
@@ -244,7 +300,7 @@ export function createEditor(
     if (!findSession) {
       return { options: { query: "" }, matches: [], index: -1 };
     }
-    const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+    const md = inSource ? getSourceMarkdown() : serializeContent(view.state.doc);
     const matches = collectMdMatches(md, findSession.options);
     let index = preferredIndex ?? findSession.index;
     if (matches.length === 0) index = -1;
@@ -396,17 +452,17 @@ export function createEditor(
   }
 
   function buildView(initialMd: string): EditorView {
-    const parsed = initialMd ? parse(initialMd) : schema.nodes.doc.createAndFill()!;
-    const doc = ensureEditableDocEnd(parsed);
+    const doc = parseContent(initialMd);
     const base = EditorState.create({
-      schema,
+      schema: activeSchema(),
       doc,
-      plugins: defaultPlugins({ cursorWidget: false }),
+      plugins: pluginsForFormat(),
     });
     // Fire one no-op transaction so normalize's appendTransaction runs
     // and method-B marks (em, strong, autolink, etc.) apply on first
     // render. EditorState.create alone runs `state.init` but not
     // `appendTransaction`, leaving parsed-from-seed docs with raw text.
+    // Plaintext has no normalize plugin; the same selection seed is harmless.
     const state = base.apply(base.tr.setSelection(TextSelection.atStart(doc)));
     const v: EditorView = new EditorView(editorHost, {
       state,
@@ -422,7 +478,7 @@ export function createEditor(
           scheduleScrollCursorToCenter();
         }
         if (tr.docChanged) {
-          options.onChange?.(serialize(next.doc));
+          options.onChange?.(serializeContent(next.doc));
           if (findOpen && findSession) refreshFindSession();
         }
       },
@@ -465,7 +521,7 @@ export function createEditor(
   /** Replace the rendered document while keeping PM history (undo/redo). */
   function applyRenderedMarkdown(nextMd: string): void {
     const focusMode = readFocusMode(view.state);
-    const newDoc = parseMarkdownDoc(nextMd);
+    const newDoc = format === "plaintext" ? parsePlaintext(nextMd) : parseMarkdownDoc(nextMd);
     const { doc } = view.state;
     let tr = view.state.tr.replaceWith(0, doc.content.size, newDoc.content);
     tr = tr.setSelection(TextSelection.atStart(tr.doc));
@@ -485,6 +541,7 @@ export function createEditor(
   function syncModeClasses(): void {
     wrap.classList.toggle("tw-focus-mode", readFocusMode(view.state));
     wrap.classList.toggle("tw-typewriter-mode", typewriterMode);
+    wrap.dataset.docFormat = format;
   }
 
   function getSourceMarkdown(): string {
@@ -503,18 +560,18 @@ export function createEditor(
     }
     const sel = view.state.selection;
     try {
-      const anchor = renderedPosToMdOffset(view.state.doc, sel.from);
-      const head = renderedPosToMdOffset(view.state.doc, sel.to);
+      const anchor = renderedPosToOffset(view.state.doc, sel.from);
+      const head = renderedPosToOffset(view.state.doc, sel.to);
       return { anchor, head };
     } catch {
-      const len = serialize(view.state.doc).length;
+      const len = serializeContent(view.state.doc).length;
       return { anchor: len, head: len };
     }
   }
 
   function setRenderedSelectionFromMdOffsets(md: string, anchor: number, head: number): void {
-    const from = Math.min(mdOffsetToRenderedPos(md, anchor), view.state.doc.content.size);
-    const to = Math.min(mdOffsetToRenderedPos(md, head), view.state.doc.content.size);
+    const from = Math.min(offsetToRenderedPos(md, anchor), view.state.doc.content.size);
+    const to = Math.min(offsetToRenderedPos(md, head), view.state.doc.content.size);
     try {
       const sel = safeTextSelection(view.state.doc, from, to);
       view.dispatch(view.state.tr.setSelection(sel));
@@ -532,10 +589,11 @@ export function createEditor(
   }
 
   function enterSource(): void {
+    if (format === "plaintext") return;
     suppressTypewriterScroll();
     const snapshot = captureScrollSnapshot(false);
     const { anchor, head } = currentMdSelection();
-    const md = serialize(view.state.doc);
+    const md = serializeContent(view.state.doc);
     sourceHost.replaceChildren();
     sourceView = createEmbeddedCodeMirrorEditor({
       parent: sourceHost,
@@ -626,6 +684,7 @@ export function createEditor(
     const t = e.target as Element | null;
     if (!t) return;
     if (!editorHost.contains(t) && !sourceHost.contains(t)) return;
+    if (format === "plaintext") return;
     e.preventDefault();
     e.stopPropagation();
     if (inSource) exitSource();
@@ -647,6 +706,7 @@ export function createEditor(
   }
 
   view = buildView(options.initialContent ?? "");
+  syncModeClasses();
   // Capture so caret placement runs before ProseMirror's default mousedown handling.
   host.addEventListener("mousedown", onEditorSurfaceMouseDown, true);
   wrap.addEventListener(
@@ -659,7 +719,7 @@ export function createEditor(
 
   const controller: Editor = {
     getMarkdown(): string {
-      return inSource ? getSourceMarkdown() : serialize(view.state.doc);
+      return inSource ? getSourceMarkdown() : serializeContent(view.state.doc);
     },
     setMarkdown(md: string): void {
       if (inSource) {
@@ -669,7 +729,29 @@ export function createEditor(
       }
       options.onContentReplaced?.();
     },
+    getFormat(): DocumentFormat {
+      return format;
+    },
+    setFormat(next: DocumentFormat): void {
+      if (next === format) return;
+      let content: string;
+      if (inSource) {
+        content = getSourceMarkdown();
+        sourceView?.destroy();
+        sourceView = null;
+        sourceHost.replaceChildren();
+        sourceHost.hidden = true;
+        editorHost.hidden = false;
+        inSource = false;
+      } else {
+        content = serializeContent(view.state.doc);
+      }
+      format = next;
+      rebuild(content);
+      options.onContentReplaced?.();
+    },
     toggleSource(): void {
+      if (format === "plaintext") return;
       if (inSource) exitSource();
       else enterSource();
       options.onContentReplaced?.();
@@ -776,6 +858,10 @@ export function createEditor(
       return true;
     },
     scrollToHeading(text, line) {
+      if (format === "plaintext") {
+        // No headings in plaintext — fall back to text search reveal.
+        return this.revealSearchMatch({ query: text, line });
+      }
       if (inSource) exitSource();
       const needle = text.trim();
       if (!needle) return false;
@@ -890,8 +976,8 @@ export function createEditor(
         const anchor = Math.max(0, state.anchor);
         const head = Math.max(0, state.head ?? state.anchor);
 
-        if (state.sourceMode) {
-          const md = serialize(view.state.doc);
+        if (state.sourceMode && format === "markdown") {
+          const md = serializeContent(view.state.doc);
           const clampedAnchor = Math.min(anchor, md.length);
           const clampedHead = Math.min(head, md.length);
           setRenderedSelectionFromMdOffsets(md, clampedAnchor, clampedHead);
@@ -902,7 +988,7 @@ export function createEditor(
           sourceView?.view.dispatch({ selection: { anchor: a, head: h } });
         } else {
           if (inSource) exitSource();
-          const md = serialize(view.state.doc);
+          const md = serializeContent(view.state.doc);
           const clampedAnchor = Math.min(anchor, md.length);
           const clampedHead = Math.min(head, md.length);
           setRenderedSelectionFromMdOffsets(md, clampedAnchor, clampedHead);
@@ -923,6 +1009,7 @@ export function createEditor(
       scrollHost.scrollTo({ top: scrollHost.scrollHeight, behavior: "smooth" });
     },
     executeCommand(name) {
+      if (format === "plaintext" && !PLAINTEXT_COMMANDS.has(name)) return false;
       if (inSource) exitSource();
       return executeEditorCommand(view, name);
     },
@@ -933,10 +1020,10 @@ export function createEditor(
       }
       const { from, to } = view.state.selection;
       if (from === to) return "";
-      const md = serialize(view.state.doc);
-      const start = renderedPosToMdOffset(view.state.doc, from);
-      const end = renderedPosToMdOffset(view.state.doc, to);
-      return md.slice(start, end);
+      const md = serializeContent(view.state.doc);
+      const start = renderedPosToOffset(view.state.doc, from);
+      const end = renderedPosToOffset(view.state.doc, to);
+      return md.slice(Math.min(start, end), Math.max(start, end));
     },
     configureFind(options) {
       findOpen = true;
@@ -975,7 +1062,7 @@ export function createEditor(
     },
     replaceCurrent(replacement) {
       if (!findSession || findSession.index < 0) return findSession!;
-      const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+      const md = inSource ? getSourceMarkdown() : serializeContent(view.state.doc);
       const match = findSession.matches[findSession.index]!;
       const keepIndex = findSession.index;
       if (inSource) {
@@ -988,7 +1075,7 @@ export function createEditor(
     },
     replaceAll(replacement) {
       if (!findSession || findSession.matches.length === 0) return 0;
-      const md = inSource ? getSourceMarkdown() : serialize(view.state.doc);
+      const md = inSource ? getSourceMarkdown() : serializeContent(view.state.doc);
       const matches = findSession.matches;
       const count = matches.length;
       if (inSource) {

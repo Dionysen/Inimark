@@ -10,6 +10,7 @@ import type { EditorView } from "prosemirror-view";
 import { getClipboardBridge, writeTextToClipboard } from "./clipboard-bridge.ts";
 import { insertMarkdownFromText } from "./paste.ts";
 import { parseInline } from "./inline-parse.ts";
+import { insertPlaintextAtSelection, plaintextSchema } from "./plaintext.ts";
 
 /** Skip inline mark normalization for a plain-text paste transaction. */
 export const PASTE_PLAIN_TEXT_META = "pastePlainText";
@@ -107,7 +108,8 @@ export function sliceToHtml(slice: Slice, schema: Schema): string {
 /** Serialize a document slice to visible plain text (no markdown delimiters). */
 export function sliceToPlainText(slice: Slice, schema: Schema): string {
   const content = stripSliceDelimiters(slice, schema);
-  return content.textBetween(0, content.size, "\n\n");
+  const blockSep = schema === plaintextSchema ? "\n" : "\n\n";
+  return content.textBetween(0, content.size, blockSep);
 }
 
 /** Copy the current selection as HTML source to the clipboard. */
@@ -131,6 +133,9 @@ export async function copySelectionAsPlainText(view: EditorView): Promise<boolea
 function insertPlainText(view: EditorView, raw: string): boolean {
   const text = raw.replace(/\r\n/g, "\n");
   if (!text) return false;
+  if (view.state.schema === plaintextSchema) {
+    return insertPlaintextAtSelection(view, text);
+  }
   const { from, to } = view.state.selection;
   view.dispatch(
     view.state.tr
@@ -149,7 +154,7 @@ export async function pasteFromClipboard(
 ): Promise<boolean> {
   const raw = await readClipboardText();
   if (!raw) return false;
-  if (plain) return insertPlainText(view, raw);
+  if (plain || view.state.schema === plaintextSchema) return insertPlainText(view, raw);
   return insertMarkdownFromText(view, raw);
 }
 

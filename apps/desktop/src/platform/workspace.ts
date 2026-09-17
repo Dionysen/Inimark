@@ -11,7 +11,7 @@ import {
   saveDirectoryHandle,
 } from "../libraries/handles.ts";
 import { libraryIdFromPath, upsertLibrary } from "../libraries/store.ts";
-import { fileNameFromPath, isTauri, joinWorkspacePath } from "./env.ts";
+import { fileNameFromPath, isEditableNoteFile, isTauri, joinWorkspacePath } from "./env.ts";
 import type {
   Workspace,
   WorkspaceFileResult,
@@ -242,7 +242,7 @@ async function readTauriDirectory(
           };
         }
 
-        if (/\.(md|markdown|mdown)$/i.test(entry.name)) {
+        if (isEditableNoteFile(entry.name)) {
           return {
             name: entry.name,
             path: relativePath,

@@ -4,6 +4,7 @@ import { keymap } from "prosemirror-keymap";
 import { baseKeymap } from "prosemirror-commands";
 import { history, undo, redo } from "prosemirror-history";
 
+import { pasteAsPlainText } from "./clipboard.ts";
 import { cursorRenderPlugin } from "./cursor-render.ts";
 import { syntaxHintsPlugin } from "./decorations.ts";
 import { documentMetadataPlugin } from "./document-metadata.ts";
@@ -21,6 +22,7 @@ import { commonShortcutKeymap } from "./shortcuts.ts";
 import { editableDocEndPlugin, ensureEditableDocEnd } from "./editable-doc-end.ts";
 import { clickFocusPlugin } from "./click-focus.ts";
 import { isRenderedNavigablePointer, tryNavigateFromClick } from "./link-navigation.ts";
+import { insertPlaintextAtSelection } from "./plaintext.ts";
 
 // Wiki links and external URLs open on plain click; Cmd/Ctrl+hover shows a preview card.
 // Internal markdown links still open on Cmd/Ctrl+click.
@@ -82,6 +84,45 @@ export function defaultPlugins(options: { cursorWidget?: boolean } = {}): Plugin
   // Feature keymap wins over baseKeymap — features that override Enter /
   // Backspace for block exits rely on this ordering.
   if (Object.keys(featureKeymap).length > 0) plugins.push(keymap(featureKeymap));
+  plugins.push(keymap(baseKeymap));
+  return plugins;
+}
+
+/**
+ * Plugins for `.txt` / plaintext mode: history, find, focus/typewriter-friendly
+ * chrome, and base editing — no Markdown input rules, features, or wiki.
+ */
+export function plaintextPlugins(options: { cursorWidget?: boolean } = {}): Plugin[] {
+  const { cursorWidget = true } = options;
+  const plaintextPastePlugin = new Plugin({
+    props: {
+      handlePaste(_view, event) {
+        const text = event.clipboardData?.getData("text/plain");
+        if (text == null) return false;
+        event.preventDefault();
+        return insertPlaintextAtSelection(_view, text);
+      },
+    },
+  });
+  const plugins: Plugin[] = [
+    history(),
+    keymap({
+      "Mod-z": undo,
+      "Mod-y": redo,
+      "Mod-Shift-z": redo,
+      "Mod-Shift-v": (_state, _dispatch, view) => {
+        if (!view) return false;
+        void pasteAsPlainText(view);
+        return true;
+      },
+    }),
+    focusModePlugin(),
+    plaintextPastePlugin,
+    searchRevealPlugin(),
+    findReplacePlugin(),
+    clickFocusPlugin(),
+  ];
+  if (cursorWidget) plugins.push(cursorRenderPlugin());
   plugins.push(keymap(baseKeymap));
   return plugins;
 }

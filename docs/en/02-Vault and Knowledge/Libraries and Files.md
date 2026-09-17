@@ -30,7 +30,10 @@ Each library keeps its own session (active file, expanded folders, caret / scrol
 | Shown | Not shown as rows |
 | --- | --- |
 | `.md` / `.markdown` / `.mdown` notes | Image and other binary files |
-| Folders you create | Dotfiles / dot-folders (names starting with `.`) |
+| `.txt` plain text (font / line height / paragraph spacing / first-line indent only — no Markdown) | Dotfiles / dot-folders (names starting with `.`) |
+| Folders you create | |
+
+`.txt` files appear in the tree and open in the editor, but they are **not** included in wikilink / tag indexes, the graph, or site publish. Source mode is disabled for `.txt`.
 
 Images still embed when linked — organize them on disk and see [[Images and Attachments]].
 

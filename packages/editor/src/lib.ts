@@ -12,6 +12,13 @@ export type {
   EditorViewState,
   FindSession,
 } from "./editor-api.ts";
+export type { DocumentFormat } from "./document-format.ts";
+export {
+  documentFormatFromPath,
+  isEditableNoteFile,
+  isMarkdownFile,
+  isPlainTextFile,
+} from "./document-format.ts";
 export type { FindOptions, MdMatch } from "./find-in-markdown.ts";
 export type { SearchRevealOptions } from "./search-reveal.ts";
 export type { EditorCommandName } from "./commands.ts";

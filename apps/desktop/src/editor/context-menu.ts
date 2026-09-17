@@ -251,6 +251,24 @@ function buildIconRows(): IconAction[][] {
   ];
 }
 
+/** Clipboard + search only — no Markdown formatting for `.txt`. */
+function buildPlaintextIconRows(): IconAction[][] {
+  return [
+    [
+      { kind: "command", name: "cut", label: t("editor.ctx.cut"), icon: ICONS.cut },
+      { kind: "command", name: "copy", label: t("editor.ctx.copy"), icon: ICONS.copy },
+      { kind: "command", name: "paste", label: t("editor.ctx.paste"), icon: ICONS.paste },
+      { kind: "command", name: "delete", label: t("editor.ctx.delete"), icon: ICONS.trash },
+      {
+        kind: "search",
+        label: t("editor.ctx.search"),
+        shortcut: modShortcut("F"),
+        icon: ICONS.search,
+      },
+    ],
+  ];
+}
+
 function buildSubmenus(): SubmenuRow[] {
   return [
     {
@@ -593,10 +611,11 @@ export function mountEditorContextMenu(
   }
 
   function renderMenu(): void {
-    const iconRows = buildIconRows().map((row) =>
+    const plaintext = editor.getFormat() === "plaintext";
+    const iconRows = (plaintext ? buildPlaintextIconRows() : buildIconRows()).map((row) =>
       row.filter((action) => action.kind !== "search" || onOpenSearch),
     );
-    const submenuRows = buildSubmenus();
+    const submenuRows = plaintext ? [] : buildSubmenus();
     menu.replaceChildren();
 
     for (const row of iconRows) {
@@ -626,6 +645,8 @@ export function mountEditorContextMenu(
       }
       menu.append(rowEl);
     }
+
+    if (submenuRows.length === 0) return;
 
     const divider = document.createElement("div");
     divider.className = "inimark-editor-context-divider";
