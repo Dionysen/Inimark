@@ -51,7 +51,8 @@ pub fn run() {
             pw_commands::pw_set_setting,
             pw_commands::pw_pwb_export,
             pw_commands::pw_pwb_import,
-            pw_commands::pw_git_sync_now,
+            pw_commands::pw_git_push_now,
+            pw_commands::pw_git_restore,
             dionysen_git_sync::commands::gs_begin_oauth,
             dionysen_git_sync::commands::gs_complete_oauth,
             dionysen_git_sync::commands::gs_get_session,
@@ -59,7 +60,7 @@ pub fn run() {
             dionysen_git_sync::commands::gs_open_oauth_login,
             dionysen_git_sync::commands::gs_open_url,
             dionysen_git_sync::commands::gs_ensure_repo,
-            dionysen_git_sync::commands::gs_sync_now,
+            dionysen_git_sync::commands::gs_init_repo,
             dionysen_git_sync::commands::gs_list_remote_backups,
         ])
         .setup(|app| {

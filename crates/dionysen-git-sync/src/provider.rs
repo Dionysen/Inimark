@@ -62,18 +62,30 @@ fn gitee_token_q(oauth: &OauthRecord) -> Vec<(&str, String)> {
     vec![("access_token", oauth.access_token.clone())]
 }
 
-/// Ensure private repo `vellum-pwb-sync` exists; create if missing.
-pub fn ensure_private_repo(oauth: &OauthRecord) -> Result<RepoBinding> {
+/// Ensure a private repo with the given name exists; create if missing.
+pub fn ensure_private_repo(oauth: &OauthRecord, repo_name: &str) -> Result<RepoBinding> {
+    let name = repo_name.trim();
+    if name.is_empty() {
+        return Err(Error::msg("repo name is empty"));
+    }
+    if !name
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.')
+    {
+        return Err(Error::msg(
+            "repo name may only contain letters, digits, '-', '_' and '.'",
+        ));
+    }
     match oauth.provider {
-        GitProvider::Github => ensure_github_repo(oauth),
-        GitProvider::Gitee => ensure_gitee_repo(oauth),
+        GitProvider::Github => ensure_github_repo(oauth, name),
+        GitProvider::Gitee => ensure_gitee_repo(oauth, name),
     }
 }
 
-fn ensure_github_repo(oauth: &OauthRecord) -> Result<RepoBinding> {
+fn ensure_github_repo(oauth: &OauthRecord, repo_name: &str) -> Result<RepoBinding> {
     let client = http_client()?;
     let headers = auth_headers(oauth)?;
-    let full = format!("{}/{}", oauth.login, DEFAULT_REPO_NAME);
+    let full = format!("{}/{}", oauth.login, repo_name);
     let get = client
         .get(format!("https://api.github.com/repos/{full}"))
         .headers(headers.clone())
@@ -88,7 +100,7 @@ fn ensure_github_repo(oauth: &OauthRecord) -> Result<RepoBinding> {
         return Err(Error::Http(format!("github get repo ({status}): {text}")));
     }
     let body = json!({
-        "name": DEFAULT_REPO_NAME,
+        "name": repo_name,
         "private": true,
         "auto_init": true,
         "description": "Vellum Pure Writer PWB backups (managed by app)"
@@ -118,10 +130,10 @@ fn parse_github_repo(text: String) -> Result<RepoBinding> {
     })
 }
 
-fn ensure_gitee_repo(oauth: &OauthRecord) -> Result<RepoBinding> {
+fn ensure_gitee_repo(oauth: &OauthRecord, repo_name: &str) -> Result<RepoBinding> {
     let client = http_client()?;
     let headers = auth_headers(oauth)?;
-    let full = format!("{}/{}", oauth.login, DEFAULT_REPO_NAME);
+    let full = format!("{}/{}", oauth.login, repo_name);
     let get = client
         .get(format!("https://gitee.com/api/v5/repos/{full}"))
         .headers(headers.clone())
@@ -141,7 +153,7 @@ fn ensure_gitee_repo(oauth: &OauthRecord) -> Result<RepoBinding> {
         .headers(headers)
         .query(&gitee_token_q(oauth))
         .form(&[
-            ("name", DEFAULT_REPO_NAME),
+            ("name", repo_name),
             ("private", "true"),
             ("auto_init", "true"),
             ("description", "Vellum Pure Writer PWB backups (managed by app)"),
@@ -278,6 +290,73 @@ pub fn upload_backup(
         GitProvider::Github => put_github_file(oauth, repo, path, bytes, message, None),
         GitProvider::Gitee => put_gitee_file(oauth, repo, path, bytes, message, None),
     }
+}
+
+/// Create or update a text/binary file (e.g. manifest.json).
+pub fn upsert_file(
+    oauth: &OauthRecord,
+    repo: &RepoBinding,
+    path: &str,
+    bytes: &[u8],
+    message: &str,
+) -> Result<()> {
+    let existing = get_file_meta(oauth, repo, path)?;
+    let sha = existing.as_ref().and_then(|f| f.sha.as_deref());
+    match oauth.provider {
+        GitProvider::Github => put_github_file(oauth, repo, path, bytes, message, sha),
+        GitProvider::Gitee => put_gitee_file(oauth, repo, path, bytes, message, sha),
+    }
+}
+
+pub fn get_file_meta(
+    oauth: &OauthRecord,
+    repo: &RepoBinding,
+    path: &str,
+) -> Result<Option<RemoteFile>> {
+    let client = http_client()?;
+    let headers = auth_headers(oauth)?;
+    let (url, with_token) = match oauth.provider {
+        GitProvider::Github => (
+            format!(
+                "https://api.github.com/repos/{}/contents/{}",
+                repo.full_name, path
+            ),
+            false,
+        ),
+        GitProvider::Gitee => (
+            format!(
+                "https://gitee.com/api/v5/repos/{}/contents/{}",
+                repo.full_name, path
+            ),
+            true,
+        ),
+    };
+    let mut req = client.get(&url).headers(headers);
+    if with_token {
+        req = req.query(&gitee_token_q(oauth));
+    }
+    let resp = req.send().map_err(|e| Error::Http(e.to_string()))?;
+    if resp.status().as_u16() == 404 {
+        return Ok(None);
+    }
+    let status = resp.status();
+    let text = resp.text().map_err(|e| Error::Http(e.to_string()))?;
+    if !status.is_success() {
+        return Err(Error::Http(format!("get file meta ({status}): {text}")));
+    }
+    let v: Value = serde_json::from_str(&text)?;
+    Ok(Some(RemoteFile {
+        path: v["path"].as_str().unwrap_or(path).to_string(),
+        sha: v["sha"].as_str().map(|s| s.to_string()),
+        size: v["size"].as_u64(),
+        download_url: v["download_url"].as_str().map(|s| s.to_string()),
+    }))
+}
+
+pub fn download_path(oauth: &OauthRecord, repo: &RepoBinding, path: &str) -> Result<Vec<u8>> {
+    let meta = get_file_meta(oauth, repo, path)?
+        .ok_or_else(|| Error::Sync(format!("file not found: {path}")))?;
+    download_file(oauth, repo, &meta)
 }
 
 pub fn delete_backup(oauth: &OauthRecord, repo: &RepoBinding, file: &RemoteFile) -> Result<()> {

@@ -7,8 +7,11 @@ use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder
 
 use crate::error::Error;
 use crate::oauth::{authorize_url, exchange_code};
-use crate::provider::list_backup_files;
-use crate::sync::{after_login_bind_repo, ensure_repo_for_app, sync_open_library, SyncResult};
+use crate::sync::{
+    download_backup_to, ensure_repo_for_app, init_repo_for_app, list_backups_detailed, push_backup,
+    restore_backup, BackupMeta, PushResult, RestoreMode, RestoreResult, SyncStatusPayload,
+    STATUS_EVENT,
+};
 use crate::vault::{now_secs, GitProvider, PendingAuth, SessionSummary, Vault};
 
 type CmdResult<T> = std::result::Result<T, String>;
@@ -141,10 +144,9 @@ fn complete_oauth_exchange(
             return Err(err.to_string());
         }
     };
-    let repo = after_login_bind_repo(&record).map_err(|e| e.to_string())?;
+    // Do not auto-create a repo — user chooses the name and initializes explicitly.
     let v = state.vault()?;
     v.set_oauth(&app_id, record).map_err(|e| e.to_string())?;
-    v.set_repo(&app_id, repo).map_err(|e| e.to_string())?;
     v.session_summary(&app_id).map_err(|e| e.to_string())
 }
 
@@ -305,6 +307,23 @@ pub fn gs_open_oauth_login(app: AppHandle, url: String) -> CmdResult<()> {
     Ok(())
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InitRepoInput {
+    pub app_id: String,
+    pub repo_name: String,
+}
+
+#[tauri::command]
+pub fn gs_init_repo(
+    state: State<'_, GitSyncState>,
+    input: InitRepoInput,
+) -> CmdResult<SessionSummary> {
+    let v = state.vault()?;
+    init_repo_for_app(&v, &input.app_id, &input.repo_name).map_err(|e| e.to_string())?;
+    v.session_summary(&input.app_id).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub fn gs_ensure_repo(
     state: State<'_, GitSyncState>,
@@ -315,59 +334,69 @@ pub fn gs_ensure_repo(
     v.session_summary(&input.app_id).map_err(|e| e.to_string())
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SyncNowInput {
-    pub app_id: String,
-    pub library_root: String,
-}
-
-/// Sync using a library path. Prefer Vellum `pw_git_sync_now` when a library is already open.
-#[tauri::command]
-pub fn gs_sync_now(
-    state: State<'_, GitSyncState>,
-    input: SyncNowInput,
-) -> CmdResult<SyncResult> {
-    let lib = purewriter_store::Library::open(&input.library_root).map_err(|e| e.to_string())?;
-    let v = state.vault()?;
-    sync_open_library(&v, &input.app_id, &lib).map_err(|e| e.to_string())
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RemoteBackupInfo {
-    pub path: String,
-    pub size: Option<u64>,
-}
-
 #[tauri::command]
 pub fn gs_list_remote_backups(
     state: State<'_, GitSyncState>,
     input: AppIdInput,
-) -> CmdResult<Vec<RemoteBackupInfo>> {
+) -> CmdResult<Vec<BackupMeta>> {
     let v = state.vault()?;
-    let oauth = v
-        .get_oauth(&input.app_id)?
-        .ok_or_else(|| "not logged in".to_string())?;
-    let repo = v
-        .get_repo(&input.app_id)?
-        .ok_or_else(|| "repo not bound".to_string())?;
-    let files = list_backup_files(&oauth, &repo).map_err(|e| e.to_string())?;
-    Ok(files
-        .into_iter()
-        .map(|f| RemoteBackupInfo {
-            path: f.path,
-            size: f.size,
-        })
-        .collect())
+    list_backups_detailed(&v, &input.app_id).map_err(|e| e.to_string())
 }
 
-/// Public helper for Vellum to sync with an already-open [`Library`].
-pub fn sync_with_library(
+pub fn emit_status(app: &AppHandle, state: &str, message: Option<String>, error: Option<String>) {
+    let _ = app.emit(
+        STATUS_EVENT,
+        SyncStatusPayload {
+            state: state.into(),
+            message,
+            error,
+        },
+    );
+}
+
+/// Push open-library snapshot. Prefer [`push_with_library`] from Vellum.
+pub fn push_with_library(
+    app: &AppHandle,
     state: &GitSyncState,
     app_id: &str,
     lib: &purewriter_store::Library,
-) -> CmdResult<SyncResult> {
+) -> CmdResult<PushResult> {
+    emit_status(app, "syncing", Some("pushing backup…".into()), None);
     let v = state.vault()?;
-    sync_open_library(&v, app_id, lib).map_err(|e| e.to_string())
+    match push_backup(&v, app_id, lib) {
+        Ok(r) => {
+            emit_status(
+                app,
+                "ok",
+                Some(format!("pushed {}", r.path)),
+                None,
+            );
+            Ok(r)
+        }
+        Err(e) => {
+            let msg = e.to_string();
+            emit_status(app, "error", None, Some(msg.clone()));
+            Err(msg)
+        }
+    }
+}
+
+pub fn merge_restore_with_library(
+    state: &GitSyncState,
+    app_id: &str,
+    lib: &purewriter_store::Library,
+    remote_path: &str,
+) -> CmdResult<RestoreResult> {
+    let v = state.vault()?;
+    restore_backup(&v, app_id, lib, remote_path, RestoreMode::Merge).map_err(|e| e.to_string())
+}
+
+pub fn download_backup_for_overwrite(
+    state: &GitSyncState,
+    app_id: &str,
+    remote_path: &str,
+    dest: &std::path::Path,
+) -> CmdResult<()> {
+    let v = state.vault()?;
+    download_backup_to(&v, app_id, remote_path, dest).map_err(|e| e.to_string())
 }

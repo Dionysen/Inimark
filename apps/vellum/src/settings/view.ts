@@ -51,6 +51,12 @@ function searchEntries(): SettingSearchItem[] {
       getDescription: () => t("settings.account.syncHint"),
     },
     {
+      id: "account-restore",
+      section: "account",
+      getTitle: () => t("settings.account.restoreBackup"),
+      getDescription: () => t("settings.account.restoreTitle"),
+    },
+    {
       id: "appearance-locale",
       section: "appearance",
       getTitle: () => t("settings.appearance.locale"),

@@ -22,7 +22,8 @@ commands.allow = [
   "pw_set_setting",
   "pw_pwb_export",
   "pw_pwb_import",
-  "pw_git_sync_now",
+  "pw_git_push_now",
+  "pw_git_restore",
   "gs_begin_oauth",
   "gs_complete_oauth",
   "gs_get_session",
@@ -30,6 +31,6 @@ commands.allow = [
   "gs_open_oauth_login",
   "gs_open_url",
   "gs_ensure_repo",
-  "gs_sync_now",
+  "gs_init_repo",
   "gs_list_remote_backups",
 ]

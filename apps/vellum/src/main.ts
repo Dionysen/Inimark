@@ -12,6 +12,7 @@ import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { installGitOauthDeepLinkHandler } from "./git-sync/oauth-deeplink.ts";
+import { mountGitSyncStatusBar } from "./git-sync/status-bar.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
@@ -85,10 +86,17 @@ const library = mountLibraryPanel(libraryHost, {
 editorColumn.append(statusEl, editorHost);
 body.append(libraryHost, editorColumn);
 root.append(titleHost, body);
+
+const syncStatusHost = document.createElement("div");
+syncStatusHost.className = "vellum-git-sync-status-host";
+root.append(syncStatusHost);
+const teardownSyncStatus = mountGitSyncStatusBar(syncStatusHost);
+
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
   teardownDeepLink?.();
+  teardownSyncStatus();
   teardownClose();
   teardownShell();
   teardownTooltips();

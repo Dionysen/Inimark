@@ -1034,3 +1034,71 @@ html.platform-windows .inimark-settings-nav-topbar {
 .vellum-cloud-status--error {
   color: var(--inimark-danger, #cf222e);
 }
+
+.vellum-restore-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.vellum-restore-panel {
+  width: min(560px, 100%);
+  max-height: min(70vh, 640px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--inimark-bg, #fff);
+  color: var(--inimark-fg, inherit);
+  border-radius: 10px;
+  border: 1px solid var(--inimark-border, #ddd);
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.vellum-restore-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.vellum-restore-list {
+  flex: 1;
+  min-height: 120px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vellum-restore-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid var(--inimark-border, #e5e5e5);
+  border-radius: 8px;
+}
+
+.vellum-restore-meta-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vellum-restore-meta-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--inimark-muted-fg, #666);
+}
+
+.vellum-restore-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}

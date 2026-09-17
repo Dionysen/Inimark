@@ -4,22 +4,25 @@ import {
   generateState,
 } from "./pkce.ts";
 import type {
+  BackupMeta,
   GitProvider,
   GitSyncAppConfig,
+  PushResult,
+  RestoreResult,
   SessionSummary,
-  SyncResult,
 } from "./types.ts";
 import {
   gsBeginOauth,
   gsCompleteOauth,
   gsEnsureRepo,
   gsGetSession,
+  gsInitRepo,
   gsListRemoteBackups,
   gsLogout,
   gsOpenOauthLogin,
   gsOpenUrl,
-  gsSyncNow,
-  pwGitSyncNow,
+  pwGitPushNow,
+  pwGitRestore,
 } from "./tauri-bridge.ts";
 
 export const LOCAL_GIT_OAUTH_REDIRECT_URI =
@@ -27,6 +30,7 @@ export const LOCAL_GIT_OAUTH_REDIRECT_URI =
 
 export const OAUTH_SESSION_EVENT = "git-sync-session-changed";
 export const OAUTH_ERROR_EVENT = "git-sync-oauth-error";
+export const STATUS_EVENT = "git-sync-status";
 
 export interface LoginOptions {
   useSystemBrowser?: boolean;
@@ -114,30 +118,39 @@ export function logout(appId: string): Promise<SessionSummary> {
   return gsLogout(appId);
 }
 
+export function initRepo(appId: string, repoName: string): Promise<SessionSummary> {
+  return gsInitRepo(appId, repoName);
+}
+
 export function ensureRepo(appId: string): Promise<SessionSummary> {
   return gsEnsureRepo(appId);
 }
 
-export function listRemoteBackups(appId: string) {
+export function listRemoteBackups(appId: string): Promise<BackupMeta[]> {
   return gsListRemoteBackups(appId);
 }
 
-export function syncOpenLibrary(appId: string): Promise<SyncResult> {
-  return pwGitSyncNow(appId);
+/** Export local library as .pwb and append-push to the bound repo. */
+export function pushBackup(appId: string): Promise<PushResult> {
+  return pwGitPushNow(appId);
 }
 
-export function syncLibraryPath(
+export function restoreBackup(
   appId: string,
-  libraryRoot: string,
-): Promise<SyncResult> {
-  return gsSyncNow(appId, libraryRoot);
+  remotePath: string,
+  mode: "overwrite" | "merge",
+): Promise<RestoreResult> {
+  return pwGitRestore(appId, remotePath, mode);
 }
 
 export type {
+  BackupMeta,
   GitProvider,
   GitSyncAppConfig,
   ProviderConfig,
-  RemoteBackupInfo,
+  PushResult,
+  RestoreResult,
   SessionSummary,
-  SyncResult,
+  SyncStatusPayload,
+  SyncStatusState,
 } from "./types.ts";

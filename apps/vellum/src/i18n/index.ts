@@ -56,17 +56,31 @@ const en: Dictionary = {
       signedInAs: "Signed in as {{name}}",
       unknownUser: "Git user",
       loginHint:
-        "Sign in once. Vellum creates a private repo and syncs Pure Writer .pwb backups automatically.",
+        "Sign in with GitHub or Gitee. Then choose a private repo name to store .pwb backups.",
       needClientId:
         "OAuth client_id is empty — set it in apps/vellum/src/git-sync/config.ts (see packages/git-sync/README.md).",
+      repoNeedInit:
+        "Choose a private repository name (created under your account on first init), then push the first backup.",
+      repoInit: "Create repo & push",
       repoBound: "Repository: {{repo}}",
       lastSync: "Last sync: {{time}}",
       neverSynced: "never",
       syncNow: "Sync now",
+      restoreBackup: "Restore backup",
+      syncing: "Syncing…",
       syncHint:
-        "Sync downloads remote .pwb backups, merges into the open library, then uploads a new snapshot when local data changed. Open a Pure Writer library first.",
-      syncOk:
-        "Sync done — pulled {{pulled}} backup(s), pushed {{pushed}}, remote now has {{remote}}.",
+        "Sync now exports the open library as a .pwb and uploads it. Restore lists cloud backups. Open a Pure Writer library first.",
+      pushOk: "Pushed {{path}} · remote backups: {{remote}}",
+      restoreTitle: "Cloud backups",
+      restoreLoading: "Loading backups…",
+      restoreEmpty: "No remote backups yet.",
+      restoreClose: "Close",
+      restoreMeta: "Device {{device}} · {{size}} · {{articles}} articles · {{words}} words",
+      restoreMerge: "Merge",
+      restoreOverwrite: "Overwrite",
+      restoreOverwriteConfirm:
+        "Overwrite will replace the local Room.db with this backup. Continue?",
+      restoreDone: "Restore finished.",
       loadFailed: "Could not load account state: {{error}}",
       tauriOnly: "Cloud sync requires the desktop app.",
     },
@@ -87,6 +101,12 @@ const en: Dictionary = {
       body: "A minimal Dionysen writing shell with Pure Writer library support. Optional GitHub/Gitee login syncs .pwb backups to a private repo.",
       version: "Version {{version}}",
     },
+  },
+  syncStatus: {
+    idle: "Not synced",
+    syncing: "Syncing…",
+    ok: "Synced",
+    error: "Sync error: {{error}}",
   },
 };
 
@@ -144,17 +164,30 @@ const zhCN: Dictionary = {
       signedInAs: "已登录：{{name}}",
       unknownUser: "Git 用户",
       loginHint:
-        "登录一次即可。Vellum 会创建私有仓库，并自动同步纯纯写作的 .pwb 备份。",
+        "使用 GitHub 或 Gitee 登录后，选择私有仓库名称来存放 .pwb 备份。",
       needClientId:
         "OAuth client_id 为空 — 请在 apps/vellum/src/git-sync/config.ts 中填写（见 packages/git-sync/README.md）。",
+      repoNeedInit:
+        "请填写私有仓库名称（首次初始化时会在你的账号下创建），然后推送第一份备份。",
+      repoInit: "创建仓库并推送",
       repoBound: "仓库：{{repo}}",
       lastSync: "上次同步：{{time}}",
       neverSynced: "从未",
       syncNow: "立即同步",
+      restoreBackup: "恢复备份",
+      syncing: "正在同步…",
       syncHint:
-        "同步会下载远端 .pwb、合并进当前打开的文档库，并在本地有变更时追加上传新快照。请先打开纯纯写作库。",
-      syncOk:
-        "同步完成 — 拉取 {{pulled}} 份备份，推送 {{pushed}}，远端现有 {{remote}} 份。",
+        "「立即同步」会把当前打开的文档库导出为 .pwb 并上传。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
+      pushOk: "已推送 {{path}} · 远端备份 {{remote}} 份",
+      restoreTitle: "云端备份",
+      restoreLoading: "正在加载备份列表…",
+      restoreEmpty: "还没有云端备份。",
+      restoreClose: "关闭",
+      restoreMeta: "设备 {{device}} · {{size}} · {{articles}} 篇文章 · {{words}} 字",
+      restoreMerge: "合并",
+      restoreOverwrite: "覆盖",
+      restoreOverwriteConfirm: "覆盖会用该备份替换本地 Room.db，确定继续？",
+      restoreDone: "恢复完成。",
       loadFailed: "无法加载账号状态：{{error}}",
       tauriOnly: "云同步仅在桌面应用中可用。",
     },
@@ -175,6 +208,12 @@ const zhCN: Dictionary = {
       body: "基于 Dionysen 的轻量写作壳，兼容纯纯写作本地库。可选 GitHub/Gitee 登录，将 .pwb 备份同步到私有仓库。",
       version: "版本 {{version}}",
     },
+  },
+  syncStatus: {
+    idle: "未同步",
+    syncing: "正在同步…",
+    ok: "已同步",
+    error: "同步出错：{{error}}",
   },
 };
 

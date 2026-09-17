@@ -233,11 +233,12 @@ pub fn pw_pwb_import(state: State<'_, PwState>, path: String) -> Result<String, 
 
 /// Sync open library with GitHub/Gitee PWB backups (uses existing library lock).
 #[tauri::command]
-pub fn pw_git_sync_now(
+pub fn pw_git_push_now(
+    app: tauri::AppHandle,
     pw: State<'_, PwState>,
     git: State<'_, dionysen_git_sync::GitSyncState>,
     app_id: String,
-) -> Result<dionysen_git_sync::SyncResult, CommandError> {
+) -> Result<dionysen_git_sync::PushResult, CommandError> {
     let guard = pw.lib.lock().map_err(|e| CommandError {
         code: "lock".into(),
         message: e.to_string(),
@@ -246,8 +247,97 @@ pub fn pw_git_sync_now(
         code: "not_open".into(),
         message: "library is not open — open a Pure Writer folder first".into(),
     })?;
-    dionysen_git_sync::sync_with_library(&git, &app_id, lib).map_err(|e| CommandError {
+    dionysen_git_sync::push_with_library(&app, &git, &app_id, lib).map_err(|e| CommandError {
         code: "git_sync".into(),
         message: e,
     })
+}
+
+#[tauri::command]
+pub fn pw_git_restore(
+    app: tauri::AppHandle,
+    pw: State<'_, PwState>,
+    git: State<'_, dionysen_git_sync::GitSyncState>,
+    app_id: String,
+    remote_path: String,
+    mode: String,
+) -> Result<dionysen_git_sync::RestoreResult, CommandError> {
+    dionysen_git_sync::emit_status(
+        &app,
+        "syncing",
+        Some(format!("restoring {remote_path}…")),
+        None,
+    );
+
+    let result = if mode == "overwrite" {
+        let dest = {
+            let cache = std::env::temp_dir().join(format!(
+                "vellum-restore-{}-{}.pwb",
+                app_id,
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_millis())
+                    .unwrap_or(0)
+            ));
+            dionysen_git_sync::download_backup_for_overwrite(&git, &app_id, &remote_path, &cache)
+                .map_err(|e| CommandError {
+                    code: "git_sync".into(),
+                    message: e,
+                })?;
+            cache
+        };
+
+        let mut guard = pw.lib.lock().map_err(|e| CommandError {
+            code: "lock".into(),
+            message: e.to_string(),
+        })?;
+        let lib = guard.take().ok_or(CommandError {
+            code: "not_open".into(),
+            message: "library is not open — open a Pure Writer folder first".into(),
+        })?;
+        let root = lib.root().to_path_buf();
+        match lib.import_pwb_replace(&dest) {
+            Ok(_) => {
+                let reopened = Library::open(&root).map_err(map_err)?;
+                *guard = Some(reopened);
+                Ok(dionysen_git_sync::RestoreResult {
+                    mode: "overwrite".into(),
+                    merge: None,
+                })
+            }
+            Err(e) => {
+                // Best-effort reopen
+                if let Ok(reopened) = Library::open(&root) {
+                    *guard = Some(reopened);
+                }
+                Err(map_err(e))
+            }
+        }
+    } else {
+        let guard = pw.lib.lock().map_err(|e| CommandError {
+            code: "lock".into(),
+            message: e.to_string(),
+        })?;
+        let lib = guard.as_ref().ok_or(CommandError {
+            code: "not_open".into(),
+            message: "library is not open — open a Pure Writer folder first".into(),
+        })?;
+        dionysen_git_sync::merge_restore_with_library(&git, &app_id, lib, &remote_path).map_err(
+            |e| CommandError {
+                code: "git_sync".into(),
+                message: e,
+            },
+        )
+    };
+
+    match &result {
+        Ok(_) => dionysen_git_sync::emit_status(
+            &app,
+            "ok",
+            Some("restore finished".into()),
+            None,
+        ),
+        Err(e) => dionysen_git_sync::emit_status(&app, "error", None, Some(e.message.clone())),
+    }
+    result
 }

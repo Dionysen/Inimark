@@ -297,6 +297,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 .vellum-main-body {
@@ -460,4 +461,42 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   margin: 0 0 0.75rem;
   color: var(--inimark-muted-fg);
   line-height: 1.5;
+}
+
+.vellum-git-sync-status-host {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  z-index: 20;
+  pointer-events: none;
+  max-width: min(420px, calc(100% - 24px));
+}
+
+.vellum-git-sync-status {
+  pointer-events: auto;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vellum-git-sync-status[data-state="syncing"] {
+  color: var(--accent);
+}
+
+.vellum-git-sync-status[data-state="ok"] {
+  color: #1a7f37;
+}
+
+.vellum-git-sync-status[data-state="error"] {
+  color: #cf222e;
+  white-space: normal;
+  max-height: 4.5em;
+  overflow: auto;
 }

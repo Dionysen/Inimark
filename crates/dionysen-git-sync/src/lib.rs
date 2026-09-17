@@ -12,9 +12,13 @@ mod sync;
 mod vault;
 
 pub use commands::{
-    sync_with_library, GitSyncState, OAUTH_ERROR_EVENT, OAUTH_SESSION_EVENT, OAUTH_WINDOW_LABEL,
+    download_backup_for_overwrite, emit_status, merge_restore_with_library, push_with_library,
+    GitSyncState, OAUTH_ERROR_EVENT, OAUTH_SESSION_EVENT, OAUTH_WINDOW_LABEL,
 };
 pub use error::{Error, Result};
 pub use oauth_local::LOCAL_GIT_OAUTH_REDIRECT_URI;
-pub use sync::SyncResult;
+pub use provider::DEFAULT_REPO_NAME;
+pub use sync::{
+    BackupMeta, PushResult, RestoreResult, SyncStatusPayload, STATUS_EVENT,
+};
 pub use vault::{GitProvider, SessionSummary};

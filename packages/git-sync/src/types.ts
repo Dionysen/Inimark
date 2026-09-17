@@ -25,10 +25,23 @@ export interface SessionSummary {
   configured: boolean;
 }
 
-export interface SyncResult {
-  pulled: number;
-  pushed: boolean;
+export interface PushResult {
+  path: string;
+  remoteBackupCount: number;
   pruned: number;
+}
+
+export interface BackupMeta {
+  path: string;
+  deviceId: string;
+  createdAt: string;
+  size: number;
+  articleCount: number;
+  wordCount: number;
+}
+
+export interface RestoreResult {
+  mode: string;
   merge?: {
     foldersUpserted: number;
     categoriesUpserted: number;
@@ -37,10 +50,12 @@ export interface SyncResult {
     sources: number;
     changed: boolean;
   } | null;
-  remoteBackupCount: number;
 }
 
-export interface RemoteBackupInfo {
-  path: string;
-  size?: number | null;
+export type SyncStatusState = "idle" | "syncing" | "error" | "ok";
+
+export interface SyncStatusPayload {
+  state: SyncStatusState | string;
+  message?: string | null;
+  error?: string | null;
 }
