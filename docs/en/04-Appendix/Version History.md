@@ -48,6 +48,7 @@ Prefer **Latest** unless you are debugging an older build.
 - Fix Windows startup window flash; fix Settings and other windows failing to open after AI was introduced
 - Fix AI panel: selected reply text can be copied with Ctrl+C / right-click Copy (shortcut chrome no longer swallows clipboard chords)
 - Fix AI panel while streaming: More / history menus stay open; thinking drawer scrolls with stick-to-bottom
+- AI chat prose (bubbles + composer) is 2px smaller than the editor body font size
 
 ---
 

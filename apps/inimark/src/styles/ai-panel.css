@@ -5,6 +5,10 @@
   height: 100%;
   background: var(--inimark-bg);
   color: var(--inimark-fg);
+  /* Chat prose tracks editor size, slightly smaller for denser sidebar reading. */
+  --inimark-ai-font-size: calc(
+    var(--editor-font-size, var(--inimark-editor-font-size, 16px)) - 2px
+  );
 }
 
 .inimark-ai-chat {
@@ -99,7 +103,7 @@
     Arial,
     sans-serif
   );
-  font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
+  font-size: var(--inimark-ai-font-size);
   /* Chat/markdown preview spacing (Cursor-like), not editor long-form leading. */
   line-height: 1.5;
   color: var(--text-primary, var(--inimark-fg));
@@ -812,7 +816,7 @@
     Arial,
     sans-serif
   );
-  font-size: var(--editor-font-size, var(--inimark-editor-font-size, 16px));
+  font-size: var(--inimark-ai-font-size);
   line-height: 1.5;
   min-height: 1.5em;
   box-sizing: content-box;
