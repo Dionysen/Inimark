@@ -30,6 +30,45 @@ export async function closeWindow(): Promise<void> {
   await win.close();
 }
 
+/**
+ * Bind native CloseRequested to a close handler.
+ *
+ * Required for the main window: `dionysen-shell` always calls `prevent_close()`
+ * so the frontend can run prompts (or destroy directly). Without this listener,
+ * traffic-light / OS chrome close is permanently blocked.
+ *
+ * @param onClose - Invoked after preventDefault. Defaults to {@link closeWindow}.
+ * @returns Teardown that unregisters the listener.
+ */
+export function bindCloseRequested(
+  onClose: () => void | Promise<void> = () => closeWindow(),
+): () => void {
+  if (!isTauri()) return () => {};
+
+  let unlisten: (() => void) | null = null;
+  let cancelled = false;
+
+  void import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
+    if (cancelled) return;
+    const win = getCurrentWindow();
+    const stop = await win.onCloseRequested((event) => {
+      event.preventDefault();
+      void onClose();
+    });
+    if (cancelled) {
+      stop();
+      return;
+    }
+    unlisten = stop;
+  });
+
+  return () => {
+    cancelled = true;
+    unlisten?.();
+    unlisten = null;
+  };
+}
+
 export async function isWindowMaximized(): Promise<boolean> {
   if (!isTauri()) return false;
   const { getCurrentWindow } = await import("@tauri-apps/api/window");

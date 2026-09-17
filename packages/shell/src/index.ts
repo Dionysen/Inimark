@@ -11,6 +11,7 @@ export {
   minimizeWindow,
   toggleMaximizeWindow,
   closeWindow,
+  bindCloseRequested,
   isWindowMaximized,
   onWindowMaximizedChange,
   onWindowFullscreenChange,

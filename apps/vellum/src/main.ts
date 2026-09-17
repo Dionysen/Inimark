@@ -1,5 +1,6 @@
 import "./styles/shell.css";
 import {
+  bindCloseRequested,
   bootShellChrome,
   closeWindow,
   initPlatform,
@@ -22,6 +23,7 @@ applySettings(bootSettings);
 const teardownShell = bootShellChrome({
   editableSelector: ".vellum-plaintext-editor, textarea, [contenteditable='true'], .vellum-library-path",
 });
+const teardownClose = bindCloseRequested();
 const teardownTooltips = initTooltipLayer();
 const teardownShortcutGuard = installNativeShortcutGuard();
 const teardownShortcuts = mountShortcutHandler({
@@ -81,6 +83,7 @@ root.append(titleHost, body);
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
+  teardownClose();
   teardownShell();
   teardownTooltips();
   teardownShortcutGuard();
