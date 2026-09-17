@@ -1,0 +1,38 @@
+{
+  "name": "@dionysen/theme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome-scoped app theme runtime, pack I/O, and settings UI",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./themes.css": "./src/styles/themes.css",
+    "./theme-settings.css": "./src/styles/theme-settings.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dionysen/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-fs": "^2.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": { "optional": true },
+    "@tauri-apps/plugin-dialog": { "optional": true },
+    "@tauri-apps/plugin-fs": { "optional": true }
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2.2.2",
+    "@tauri-apps/plugin-fs": "^2.2.1",
+    "happy-dom": "^20.9.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

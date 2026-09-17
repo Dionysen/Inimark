@@ -12,7 +12,12 @@ import {
   loadPersistedWidth,
   persistWidth,
 } from "@dionysen/ui";
+import { initThemeManager } from "@dionysen/theme";
 import { initI18n, t } from "./i18n/index.ts";
+import {
+  configureVellumTheme,
+  migrateLegacyAppearanceFromSettings,
+} from "./themes/configure.ts";
 import { applySettings, loadSettings } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
@@ -38,6 +43,8 @@ function loadSidebarOpen(): boolean {
 initPlatform();
 const bootSettings = loadSettings();
 initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
+migrateLegacyAppearanceFromSettings();
+configureVellumTheme();
 applySettings(bootSettings);
 
 const teardownShell = bootShellChrome({
@@ -60,7 +67,12 @@ void installGitOauthDeepLinkHandler().then((fn) => {
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("Missing #app mount point");
 
-const shell = root;
+void initThemeManager().then(() => {
+  // Mount continues below after theme is ready — body of shell setup.
+  mountShell(root);
+});
+
+function mountShell(shell: HTMLElement): void {
 shell.className = "vellum-shell";
 
 let sidebarOpen = loadSidebarOpen();
@@ -195,3 +207,4 @@ window.addEventListener("beforeunload", () => {
   library.destroy();
   editor.destroy();
 });
+}

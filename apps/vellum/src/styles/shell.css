@@ -1,52 +1,7 @@
 @import "@dionysen/ui/tokens.css";
 @import "./shell-token-alias.css";
 @import "@dionysen/ui/widgets.css";
-
-/* Minimal theme tokens for light / dark appearance stubs. */
-:root,
-:root[data-appearance="dark"] {
-  color-scheme: dark;
-  --bg-primary: #1b1d24;
-  --bg-secondary: #111217;
-  --bg-surface: #1b1d24;
-  --bg-menu: #101116;
-  --bg-hover: rgba(255, 255, 255, 0.08);
-  --bg-tertiary: #1b1d24;
-  --bg-input: #0c0c10;
-  --text-primary: #c1c3c2;
-  --text-secondary: #818286;
-  --accent: #74a7fe;
-  --border: rgba(145, 145, 145, 0.16);
-  --scrollbar-thumb: #aaaaaa;
-  --scrollbar-thumb-hover: #6b6b6b;
-  --scrollbar-track: transparent;
-  --radius-scrollbar: 2px;
-  --scrollbar-size: 6px;
-  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --editor-font-size: 16px;
-  --radius-control: 4px;
-  --control-height: 32px;
-  --control-padding-x: 10px;
-  --control-font-size: 13px;
-}
-
-:root[data-appearance="light"] {
-  color-scheme: light;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f4f5f7;
-  --bg-surface: #ffffff;
-  --bg-menu: #ffffff;
-  --bg-hover: rgba(0, 0, 0, 0.06);
-  --bg-tertiary: #eef0f3;
-  --bg-input: #ffffff;
-  --text-primary: #1f2328;
-  --text-secondary: #656d76;
-  --accent: #0969da;
-  --border: rgba(31, 35, 40, 0.12);
-  --scrollbar-thumb: #9aa0a6;
-  --scrollbar-thumb-hover: #6e7781;
-}
+@import "@dionysen/theme/themes.css";
 
 *,
 *::before,

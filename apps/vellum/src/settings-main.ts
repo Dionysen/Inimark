@@ -1,14 +1,20 @@
 import "./styles/shell.css";
 import "./styles/settings.css";
+import "@dionysen/theme/theme-settings.css";
 import {
   bootShellChrome,
   closeWindow,
   initPlatform,
   isTauri,
 } from "@dionysen/shell";
+import { initThemeManager } from "@dionysen/theme";
 import { initTooltipLayer } from "@dionysen/ui";
 import { installGitOauthDeepLinkHandler } from "./git-sync/oauth-deeplink.ts";
 import { initI18n } from "./i18n/index.ts";
+import {
+  configureVellumTheme,
+  migrateLegacyAppearanceFromSettings,
+} from "./themes/configure.ts";
 import { mountSettingsView } from "./settings/view.ts";
 import {
   applySettings,
@@ -26,6 +32,8 @@ import { mountShortcutHandler } from "./shortcuts/handler.ts";
 initPlatform();
 const bootSettings = loadSettings();
 initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
+migrateLegacyAppearanceFromSettings();
+configureVellumTheme();
 applySettings(bootSettings);
 
 const teardownShell = bootShellChrome({
@@ -45,52 +53,54 @@ void installGitOauthDeepLinkHandler().then((fn) => {
 const host = document.querySelector<HTMLElement>("#app");
 if (!host) throw new Error("Missing #app mount point");
 
-const view = mountSettingsView(host);
+void initThemeManager().then(() => {
+  const view = mountSettingsView(host);
 
-function applyPendingSection(): void {
-  const hash = location.hash.replace(/^#/, "");
-  if (hash) {
-    view.navigateToSection(hash);
-    history.replaceState(null, "", location.pathname + location.search);
-    return;
-  }
-  const stored = localStorage.getItem(SETTINGS_NAVIGATE_SECTION_KEY);
-  if (!stored) return;
-  localStorage.removeItem(SETTINGS_NAVIGATE_SECTION_KEY);
-  view.navigateToSection(stored);
-}
-
-applyPendingSection();
-
-window.addEventListener("storage", (event) => {
-  if (event.key === SETTINGS_STORAGE_KEY) {
-    applySettings(loadSettings());
-    view.refresh();
-  }
-  if (event.key === SETTINGS_NAVIGATE_SECTION_KEY && event.newValue) {
-    view.navigateToSection(event.newValue);
+  function applyPendingSection(): void {
+    const hash = location.hash.replace(/^#/, "");
+    if (hash) {
+      view.navigateToSection(hash);
+      history.replaceState(null, "", location.pathname + location.search);
+      return;
+    }
+    const stored = localStorage.getItem(SETTINGS_NAVIGATE_SECTION_KEY);
+    if (!stored) return;
     localStorage.removeItem(SETTINGS_NAVIGATE_SECTION_KEY);
+    view.navigateToSection(stored);
   }
-});
 
-let unlistenSettings: (() => void) | undefined;
-if (isTauri()) {
-  void import("@tauri-apps/api/event").then(async ({ listen }) => {
-    unlistenSettings = await listen(SETTINGS_SYNC_EVENT, (event) => {
-      const payload = parseSettingsSyncPayload(event.payload);
-      if (!payload || !isExternalSettingsSync(payload)) return;
-      applySettings(payload.settings);
+  applyPendingSection();
+
+  window.addEventListener("storage", (event) => {
+    if (event.key === SETTINGS_STORAGE_KEY) {
+      applySettings(loadSettings());
       view.refresh();
-    });
+    }
+    if (event.key === SETTINGS_NAVIGATE_SECTION_KEY && event.newValue) {
+      view.navigateToSection(event.newValue);
+      localStorage.removeItem(SETTINGS_NAVIGATE_SECTION_KEY);
+    }
   });
-}
 
-window.addEventListener("beforeunload", () => {
-  unlistenSettings?.();
-  teardownDeepLink?.();
-  teardownShell();
-  teardownTooltips();
-  teardownShortcutGuard();
-  teardownShortcuts();
-  view.destroy();
+  let unlistenSettings: (() => void) | undefined;
+  if (isTauri()) {
+    void import("@tauri-apps/api/event").then(async ({ listen }) => {
+      unlistenSettings = await listen(SETTINGS_SYNC_EVENT, (event) => {
+        const payload = parseSettingsSyncPayload(event.payload);
+        if (!payload || !isExternalSettingsSync(payload)) return;
+        applySettings(payload.settings);
+        view.refresh();
+      });
+    });
+  }
+
+  window.addEventListener("beforeunload", () => {
+    unlistenSettings?.();
+    teardownDeepLink?.();
+    teardownShell();
+    teardownTooltips();
+    teardownShortcutGuard();
+    teardownShortcuts();
+    view.destroy();
+  });
 });

@@ -9,7 +9,7 @@ import {
   type SiteConfig,
 } from "@inimark/site-render";
 
-import themesCss from "../styles/themes.css?raw";
+import themesCss from "@dionysen/theme/themes.css?raw";
 import widgetsCss from "../../../../packages/editor/src/styles/widgets.css?raw";
 import themeTyporaCss from "../../../../packages/editor/src/styles/theme-typora.css?raw";
 import katexCss from "katex/dist/katex.min.css?raw";

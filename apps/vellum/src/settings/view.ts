@@ -8,12 +8,12 @@ import {
   type SettingsViewController,
 } from "@dionysen/settings-kit";
 import { createSelect, createSlider } from "@dionysen/ui";
+import { renderChromeThemePanel } from "@dionysen/theme";
 import { renderAccountSection } from "../git-sync/account-settings.ts";
 import { onLocaleChange, t, type LocaleId } from "../i18n/index.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import { closeWindow } from "@dionysen/shell";
 import {
-  type AppearanceMode,
   type AppLocale,
   type AppSettings,
   FONT_SIZE_MAX,
@@ -65,8 +65,8 @@ function searchEntries(): SettingSearchItem[] {
     {
       id: "appearance-theme",
       section: "appearance",
-      getTitle: () => t("settings.appearance.theme"),
-      getDescription: () => t("settings.appearance.themeDesc"),
+      getTitle: () => t("settings.theme.appearanceMode"),
+      getDescription: () => t("settings.theme.appearanceModeDesc"),
     },
     {
       id: "editor-font-size",
@@ -130,7 +130,7 @@ function renderAppearance(
   body: HTMLElement,
   settings: AppSettings,
   onPatch: (partial: Partial<AppSettings>) => void,
-): void {
+): () => void {
   body.append(createSectionTitle(t("settings.nav.appearance")));
 
   const locale = createSelect({
@@ -151,22 +151,11 @@ function renderAppearance(
     ),
   );
 
-  const theme = createSelect({
-    value: settings.appearance,
-    options: [
-      { value: "light", label: t("settings.appearance.themeLight") },
-      { value: "dark", label: t("settings.appearance.themeDark") },
-    ],
-    onChange: (value) => onPatch({ appearance: value as AppearanceMode }),
-  });
-  body.append(
-    createRow(
-      t("settings.appearance.theme"),
-      t("settings.appearance.themeDesc"),
-      theme.el,
-      "appearance-theme",
-    ),
-  );
+  const themeHost = document.createElement("div");
+  themeHost.className = "vellum-theme-panel-host";
+  themeHost.dataset.settingId = "appearance-theme";
+  body.append(themeHost);
+  return renderChromeThemePanel(themeHost);
 }
 
 function renderEditor(
@@ -206,6 +195,7 @@ function renderAbout(body: HTMLElement): void {
 export function mountSettingsView(host: HTMLElement): SettingsViewController {
   let settings = loadSettings();
   let teardownAccount: (() => void) | null = null;
+  let teardownTheme: (() => void) | null = null;
 
   const sections: SettingsSectionDef[] = SECTIONS.map((id) => ({
     id,
@@ -215,10 +205,12 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
       body.replaceChildren();
       teardownAccount?.();
       teardownAccount = null;
+      teardownTheme?.();
+      teardownTheme = null;
       if (id === "account") {
         teardownAccount = renderAccountSection(body);
       } else if (id === "appearance") {
-        renderAppearance(body, settings, (partial) => {
+        teardownTheme = renderAppearance(body, settings, (partial) => {
           settings = patchSettings(partial);
         });
       } else if (id === "editor") {
@@ -268,6 +260,8 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
   controller.destroy = () => {
     teardownAccount?.();
     teardownAccount = null;
+    teardownTheme?.();
+    teardownTheme = null;
     originalDestroy();
   };
   return controller;

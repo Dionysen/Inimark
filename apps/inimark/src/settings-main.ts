@@ -1,9 +1,10 @@
 import "./styles/shell.css";
 import "./styles/settings.css";
-import "./styles/theme-settings.css";
+import "@dionysen/theme/theme-settings.css";
 import { bootShellChrome, closeWindow, initPlatform, isTauri } from "@dionysen/shell";
 import { initImePositionGuard } from "./platform/ime-position.ts";
 import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
+import { configureInimarkTheme } from "./themes/configure.ts";
 import { initThemeManager } from "./themes/manager.ts";
 import { initI18n } from "./i18n/index.ts";
 import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
@@ -27,6 +28,7 @@ import {
 initPlatform();
 const bootSettings = loadSettings();
 initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
+configureInimarkTheme();
 const teardownShellChrome = bootShellChrome({
   eventName: FULLSCREEN_CHANGE_EVENT,
 });

@@ -16,6 +16,7 @@
     "@dionysen/settings-kit": "workspace:*",
     "@dionysen/shell": "workspace:*",
     "@dionysen/shortcut-kit": "workspace:*",
+    "@dionysen/theme": "workspace:*",
     "@dionysen/ui": "workspace:*",
     "@inimark/editor": "workspace:*",
     "@inimark/site-render": "workspace:*",

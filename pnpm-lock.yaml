@@ -32,6 +32,9 @@ importers:
       '@dionysen/shortcut-kit':
         specifier: workspace:*
         version: link:../../packages/shortcut-kit
+      '@dionysen/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@dionysen/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -111,6 +114,9 @@ importers:
       '@dionysen/shortcut-kit':
         specifier: workspace:*
         version: link:../../packages/shortcut-kit
+      '@dionysen/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@dionysen/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -123,6 +129,9 @@ importers:
       '@tauri-apps/plugin-dialog':
         specifier: ^2.2.2
         version: 2.7.3
+      '@tauri-apps/plugin-fs':
+        specifier: ^2.2.1
+        version: 2.5.2
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0
@@ -311,6 +320,31 @@ importers:
         specifier: workspace:*
         version: link:../editor
     devDependencies:
+      happy-dom:
+        specifier: ^20.9.0
+        version: 20.14.0
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@26.4.1)(happy-dom@20.14.0)(jsdom@30.0.1)(tsx@4.23.13)
+
+  packages/theme:
+    dependencies:
+      '@dionysen/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: ^2.2.2
+        version: 2.7.3
+      '@tauri-apps/plugin-fs':
+        specifier: ^2.2.1
+        version: 2.5.2
       happy-dom:
         specifier: ^20.9.0
         version: 20.14.0
