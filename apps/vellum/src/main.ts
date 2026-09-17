@@ -84,16 +84,30 @@ const titleHost = document.createElement("div");
 const editorColumn = document.createElement("div");
 editorColumn.className = "vellum-editor-column";
 
-const statusEl = document.createElement("div");
-statusEl.className = "vellum-library-status";
-
 const editorHost = document.createElement("div");
 editorHost.className = "vellum-editor-host";
 
 let openArticleId: string | null = null;
+let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearAutosave(): void {
+  if (autosaveTimer !== null) {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+  }
+}
+
+function scheduleAutosave(): void {
+  clearAutosave();
+  autosaveTimer = setTimeout(() => {
+    autosaveTimer = null;
+    void librarySave?.();
+  }, 800);
+}
 
 const editor = mountPlaintextEditor(editorHost, {
   placeholder: t("editor.placeholder"),
+  onChange: () => scheduleAutosave(),
 });
 
 function applySidebarWidth(): void {
@@ -127,14 +141,13 @@ const library = mountLibraryPanel(libraryHost, {
   getEditorContent: () => editor.getValue(),
   getOpenArticleId: () => openArticleId,
   onArticleOpen: (title, content, id) => {
+    clearAutosave();
     openArticleId = id;
     editor.setValue(content);
     titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
     if (id) editor.focus();
   },
-  onStatus: (message) => {
-    statusEl.textContent = message;
-  },
+  onStatus: () => {},
   onOpenSettings: () => void openSettingsWindow(),
   onToggleSidebar: toggleSidebar,
 });
@@ -156,7 +169,7 @@ const columnResize = attachColumnResize(libraryHost, {
   },
 });
 
-editorColumn.append(statusEl, editorHost);
+editorColumn.append(editorHost);
 titlebarZone.append(titleHost);
 mainColumn.append(titlebarZone, editorColumn);
 shell.append(libraryHost, mainColumn);
@@ -169,6 +182,7 @@ const teardownSyncStatus = mountGitSyncStatusBar(syncStatusHost);
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
+  clearAutosave();
   teardownDeepLink?.();
   teardownSyncStatus();
   columnResize.destroy();

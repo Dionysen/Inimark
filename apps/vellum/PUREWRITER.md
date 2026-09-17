@@ -20,9 +20,9 @@ Books without volumes still work: chapters with no category appear under **Uncat
 2. Use the floating **library bar** at the bottom of the left sidebar:
    - Click the pill to switch among saved libraries, **Add library**, or **Close library**.
    - Click the **settings** gear to open Settings.
-3. Use the **book name** button at the top of the sidebar to switch books. The icon toolbar under it creates a chapter (**New**) or saves the open chapter (**Save** / Ctrl+S).
+3. Use the **book name** button at the top of the sidebar to switch books. **New** creates a chapter in the selected volume (or Uncategorized).
 4. Collapse the sidebar with the toggle in the sidebar top bar (aligned with the titlebar, near the divider). When collapsed, expand it again from the titlebar leading edge (same pattern as Inimark).
-5. Expand a volume and click a chapter to edit it in the plaintext surface.
+5. Expand a volume and click a chapter to edit it. Edits autosave after 0.8s of idle typing; **Ctrl+S** still saves immediately.
 
 Saved libraries (path + name) and the last selected book are remembered locally for the next launch.
 

@@ -14,7 +14,14 @@ import {
   type OpenLibraryResult,
   type SchemaStatus,
 } from "@dionysen/purewriter-store";
-import { createIconButton, createPanelToolbar } from "@dionysen/ui";
+import {
+  createIconButton,
+  createPanelToolbar,
+  createTreeBranch,
+  createTreeChildren,
+  createTreeHost,
+  createTreeItem,
+} from "@dionysen/ui";
 import {
   clearLastLibrary,
   getLastLibraryId,
@@ -23,11 +30,7 @@ import {
   upsertLibrary,
   type LibraryRecord,
 } from "../libraries/store.ts";
-import {
-  newFileIcon,
-  saveIcon,
-  sidebarToggleIcon,
-} from "../ui/product-icons.ts";
+import { newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 
 export interface LibraryPanel {
@@ -60,7 +63,7 @@ function markNoDrag(el: HTMLElement): void {
 
 /**
  * Pure Writer library chrome: floating library dock, book switcher,
- * panel toolbar (new/save), and volumes → chapters.
+ * panel toolbar, and volumes → chapters via shared `@dionysen/ui` tree.
  */
 export function mountLibraryPanel(
   host: HTMLElement,
@@ -69,7 +72,6 @@ export function mountLibraryPanel(
   const el = document.createElement("aside");
   el.className = "vellum-library";
 
-  // Same chrome row as Inimark: titlebar-height topbar with collapse near the divider.
   const topbar = document.createElement("div");
   topbar.className = "inimark-sidebar-topbar";
   topbar.setAttribute("data-tauri-drag-region", "deep");
@@ -113,31 +115,22 @@ export function mountLibraryPanel(
         void createChapter();
       },
     },
-    {
-      label: options.t("library.save"),
-      title: options.t("library.save"),
-      icon: saveIcon,
-      disabled: true,
-      onClick() {
-        void save();
-      },
-    },
   ]);
   const newBtn = toolbar.buttons[0]!;
-  const saveBtn = toolbar.buttons[1]!;
-
-  const scroll = document.createElement("div");
-  scroll.className = "vellum-library-scroll inimark-scrollbar";
 
   const banner = document.createElement("div");
   banner.className = "vellum-library-banner";
   banner.hidden = true;
 
-  const treeEl = document.createElement("div");
-  treeEl.className = "vellum-library-tree";
+  const summary = document.createElement("div");
+  summary.className = "vellum-library-section-label";
+  summary.hidden = true;
 
-  scroll.append(banner, treeEl);
-  body.append(bookWrap, toolbar.el, scroll);
+  const treeHost = createTreeHost(options.t("library.treeAria"));
+  treeHost.classList.add("vellum-library-tree");
+  markNoDrag(treeHost);
+
+  body.append(bookWrap, toolbar.el, banner, summary, treeHost);
   el.append(topbar, body);
   host.append(el);
 
@@ -150,6 +143,7 @@ export function mountLibraryPanel(
   let openArticleId: string | null = null;
   /** Volume under which New creates a chapter; null = uncategorized. */
   let selectedVolumeId: string | null = null;
+  /** Collapsed volume keys (absent = expanded). */
   const collapsedVolumes = new Set<string>();
 
   const closeBookMenu = () => {
@@ -210,115 +204,109 @@ export function mountLibraryPanel(
     return chapters.filter((c) => c.categoryId === volumeKey);
   };
 
-  const renderTree = () => {
-    treeEl.replaceChildren();
-    if (!opened || !selectedBookId) {
-      const empty = document.createElement("div");
-      empty.className = "vellum-library-empty";
-      empty.textContent = options.t("library.openHint");
-      treeEl.append(empty);
-      return;
-    }
-
-    const section = document.createElement("div");
-    section.className = "vellum-library-section-label";
-    section.textContent = options.t("library.volumesAndChapters", {
-      count: chapters.length,
-    });
-    treeEl.append(section);
-
-    const volumeEntries: { key: string; name: string }[] = volumes.map((v) => ({
+  const volumeEntries = (): { key: string; name: string }[] => {
+    const entries: { key: string; name: string }[] = volumes.map((v) => ({
       key: v.id,
       name: v.name,
     }));
     const uncategorized = chaptersForVolume(UNCATEGORIZED);
     if (uncategorized.length > 0 || volumes.length === 0) {
-      volumeEntries.push({
+      entries.push({
         key: UNCATEGORIZED,
         name: options.t("library.uncategorized"),
       });
     }
+    return entries;
+  };
 
-    if (volumeEntries.length === 0) {
+  const renderTree = () => {
+    treeHost.replaceChildren();
+
+    if (!opened || !selectedBookId) {
+      summary.hidden = true;
       const empty = document.createElement("div");
       empty.className = "vellum-library-empty";
-      empty.textContent = options.t("library.noChapters");
-      treeEl.append(empty);
+      empty.textContent = options.t("library.openHint");
+      treeHost.append(empty);
       return;
     }
 
-    for (const vol of volumeEntries) {
+    const entries = volumeEntries();
+    summary.hidden = false;
+    summary.textContent = options.t("library.volumeChapterSummary", {
+      volumes: volumes.length,
+      chapters: chapters.length,
+    });
+
+    if (entries.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "vellum-library-empty";
+      empty.textContent = options.t("library.noChapters");
+      treeHost.append(empty);
+      return;
+    }
+
+    for (const vol of entries) {
       const volChapters = chaptersForVolume(vol.key);
-      const collapsed = collapsedVolumes.has(vol.key);
-
-      const group = document.createElement("div");
-      group.className = "vellum-library-volume";
-      if (
+      const expanded = !collapsedVolumes.has(vol.key);
+      const selected =
         (vol.key === UNCATEGORIZED && selectedVolumeId === null) ||
-        vol.key === selectedVolumeId
-      ) {
-        group.classList.add("is-selected");
-      }
+        vol.key === selectedVolumeId;
 
-      const head = document.createElement("button");
-      head.type = "button";
-      head.className = "vellum-library-volume-head";
-      head.setAttribute("aria-expanded", collapsed ? "false" : "true");
-
-      const chevron = document.createElement("span");
-      chevron.className = "vellum-library-volume-chevron";
-      chevron.textContent = collapsed ? "▸" : "▾";
-
-      const label = document.createElement("span");
-      label.className = "vellum-library-volume-name";
-      label.textContent = vol.name;
+      const branch = createTreeBranch();
+      const row = createTreeItem({
+        kind: "directory",
+        label: vol.name,
+        path: `volume:${vol.key}`,
+        depth: 0,
+        expanded,
+        selected,
+        showIcons: false,
+        onClick() {
+          selectedVolumeId = vol.key === UNCATEGORIZED ? null : vol.key;
+          if (collapsedVolumes.has(vol.key)) collapsedVolumes.delete(vol.key);
+          else collapsedVolumes.add(vol.key);
+          renderTree();
+        },
+      });
 
       const count = document.createElement("span");
-      count.className = "vellum-library-volume-count";
+      count.className = "vellum-tree-count";
       count.textContent = String(volChapters.length);
+      row.append(count);
+      branch.append(row);
 
-      head.append(chevron, label, count);
-      chevron.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        if (collapsedVolumes.has(vol.key)) collapsedVolumes.delete(vol.key);
-        else collapsedVolumes.add(vol.key);
-        renderTree();
-      });
-      head.addEventListener("click", () => {
-        selectedVolumeId = vol.key === UNCATEGORIZED ? null : vol.key;
-        collapsedVolumes.delete(vol.key);
-        renderTree();
-      });
-      group.append(head);
-
-      if (!collapsed) {
-        const list = document.createElement("div");
-        list.className = "vellum-library-chapters";
+      if (expanded) {
+        const children = createTreeChildren(0);
         if (volChapters.length === 0) {
           const empty = document.createElement("div");
           empty.className = "vellum-library-empty vellum-library-empty--nested";
           empty.textContent = options.t("library.noChaptersInVolume");
-          list.append(empty);
+          children.append(empty);
         } else {
           for (const chapter of volChapters) {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "vellum-library-item vellum-library-chapter";
-            if (chapter.id === openArticleId) btn.classList.add("is-active");
-            btn.textContent = chapter.title || options.t("app.untitled");
-            btn.title = chapter.id;
-            btn.addEventListener("click", () => {
-              selectedVolumeId =
-                vol.key === UNCATEGORIZED ? null : vol.key;
-              void openChapter(chapter.id);
+            const chapterBranch = createTreeBranch();
+            const chapterRow = createTreeItem({
+              kind: "file",
+              label: chapter.title || options.t("app.untitled"),
+              path: `chapter:${chapter.id}`,
+              depth: 1,
+              active: chapter.id === openArticleId,
+              showIcons: false,
+              onClick() {
+                selectedVolumeId =
+                  vol.key === UNCATEGORIZED ? null : vol.key;
+                void openChapter(chapter.id);
+              },
             });
-            list.append(btn);
+            chapterBranch.append(chapterRow);
+            children.append(chapterBranch);
           }
         }
-        group.append(list);
+        branch.append(children);
       }
 
-      treeEl.append(group);
+      treeHost.append(branch);
     }
   };
 
@@ -335,7 +323,6 @@ export function mountLibraryPanel(
     renderBookMenu();
     renderTree();
     newBtn.disabled = true;
-    saveBtn.disabled = true;
   };
 
   const selectBook = async (bookId: string) => {
@@ -350,13 +337,6 @@ export function mountLibraryPanel(
     collapsedVolumes.clear();
     renderTree();
     newBtn.disabled = !opened?.schema.writesAllowed;
-    saveBtn.disabled = true;
-    options.onStatus(
-      options.t("library.bookOpened", {
-        name: currentBook()?.name ?? bookId,
-        count: chapters.length,
-      }),
-    );
   };
 
   const openChapter = async (id: string) => {
@@ -365,7 +345,6 @@ export function mountLibraryPanel(
     selectedVolumeId = art.categoryId;
     renderTree();
     options.onArticleOpen(art.title, art.content, art.id);
-    saveBtn.disabled = !opened?.schema.writesAllowed;
   };
 
   const pickInitialBook = (list: Folder[]): string | null => {
@@ -406,7 +385,6 @@ export function mountLibraryPanel(
         chapters = [];
         renderTree();
         newBtn.disabled = true;
-        saveBtn.disabled = true;
         options.onStatus(
           opened.schema.writesAllowed
             ? options.t("library.openedEmpty")
@@ -476,10 +454,6 @@ export function mountLibraryPanel(
     try {
       await pwUpdateArticle(id, { content: options.getEditorContent() });
       options.onStatus(options.t("library.saved"));
-      if (selectedBookId) {
-        chapters = await pwListArticles(selectedBookId, null, false);
-        renderTree();
-      }
     } catch (e) {
       options.onStatus(formatStoreError(e));
     }
@@ -525,7 +499,6 @@ export function mountLibraryPanel(
   updateBookButton();
   renderTree();
 
-  // Restore last library on launch.
   const lastId = getLastLibraryId();
   const last = lastId ? getLibraryById(lastId) : listLibraries()[0] ?? null;
   if (last) {

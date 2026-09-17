@@ -375,19 +375,56 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Match Inimark sidebar panel inset used by createPanelToolbar */
   --vellum-library-inset: var(--inimark-space-2);
 }
 
-.vellum-library-scroll {
+.vellum-library-book-wrap {
+  flex-shrink: 0;
+  position: relative;
+  padding: var(--inimark-space-1) var(--vellum-library-inset) 0;
+}
+
+.vellum-library .inimark-panel-toolbar {
+  flex-shrink: 0;
+  justify-content: flex-start;
+  padding-left: var(--vellum-library-inset);
+  padding-right: var(--vellum-library-inset);
+}
+
+.vellum-library-section-label {
+  flex-shrink: 0;
+  margin: 0.35rem 0 0;
+  padding: 0 var(--vellum-library-inset);
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.vellum-library-tree.inimark-tree {
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  padding: 0 var(--vellum-library-inset);
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+}
+
+.vellum-tree-count {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-right: 0.15rem;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.vellum-library-empty {
+  padding: 0.35rem var(--inimark-control-padding-x, 0.45rem);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.vellum-library-empty--nested {
+  padding-left: calc(
+    var(--tree-indent-base, 0.5rem) + var(--tree-indent-hint-size, 14px) + 0.75rem
+  );
 }
 
 .inimark-sidebar-topbar {
@@ -400,20 +437,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: transparent;
   -webkit-app-region: drag;
   overflow: hidden;
-}
-
-.vellum-library-book-wrap {
-  flex-shrink: 0;
-  position: relative;
-  padding: var(--inimark-space-1) var(--vellum-library-inset) 0;
-}
-
-.vellum-library .inimark-panel-toolbar {
-  flex-shrink: 0;
-  justify-content: flex-start;
-  /* createPanelToolbar already pads with space-1 / space-2 — keep shared metrics */
-  padding-left: var(--vellum-library-inset);
-  padding-right: var(--vellum-library-inset);
 }
 
 .inimark-sidebar-collapse-btn {
@@ -546,6 +569,8 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-banner {
+  flex-shrink: 0;
+  margin: 0 var(--vellum-library-inset, var(--inimark-space-2));
   font-size: 11px;
   line-height: 1.35;
   color: #c97800;
@@ -553,109 +578,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   border: 1px solid rgba(201, 120, 0, 0.35);
   border-radius: var(--radius-control);
   background: rgba(201, 120, 0, 0.08);
-}
-
-.vellum-library-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-height: 0;
-}
-
-.vellum-library-section-label {
-  margin: 0.45rem 0 0.15rem;
-  padding: 0 var(--inimark-control-padding-x, 0.45rem);
-  font-size: 11px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.vellum-library-empty {
-  padding: 0.35rem var(--inimark-control-padding-x, 0.45rem);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.vellum-library-empty--nested {
-  padding-left: 1.35rem;
-}
-
-.vellum-library-volume {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.vellum-library-volume-head {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  padding: 0.35rem 0.4rem;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.vellum-library-volume.is-selected > .vellum-library-volume-head,
-.vellum-library-volume-head:hover {
-  background: var(--bg-hover);
-}
-
-.vellum-library-volume-chevron {
-  width: 0.85rem;
-  flex-shrink: 0;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
-.vellum-library-volume-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.vellum-library-volume-count {
-  flex-shrink: 0;
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 400;
-}
-
-.vellum-library-chapters {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.vellum-library-item {
-  text-align: left;
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  padding: 0.35rem 0.45rem;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.vellum-library-item:hover,
-.vellum-library-item.is-active {
-  background: var(--bg-hover);
-}
-
-.vellum-library-chapter {
-  color: var(--text-secondary);
-  font-size: 12px;
-  padding-left: 1.35rem;
 }
 
 /* Sidebar dock + library bar (ported from Inimark; shared class names for visual parity) */
@@ -886,14 +808,6 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.vellum-library-status {
-  flex-shrink: 0;
-  min-height: 1.25rem;
-  padding: 0.25rem 1rem;
-  font-size: 11px;
-  color: var(--text-secondary);
 }
 
 .vellum-editor-host {
