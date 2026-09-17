@@ -1,11 +1,9 @@
 import "./styles/shell.css";
 import "./styles/settings.css";
 import "./styles/theme-settings.css";
-import { initPlatform } from "./platform/platform.ts";
-import { installChromeGuards } from "./platform/chrome-guards.ts";
-import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
+import { bootShellChrome, closeWindow, initPlatform, isTauri } from "@dionysen/shell";
 import { initImePositionGuard } from "./platform/ime-position.ts";
-import { initFullscreenChrome } from "./platform/window-chrome.ts";
+import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
 import { initThemeManager } from "./themes/manager.ts";
 import { initI18n } from "./i18n/index.ts";
 import { LIBRARIES_STORAGE_KEY } from "./libraries/store.ts";
@@ -18,8 +16,6 @@ import {
   SETTINGS_STORAGE_KEY,
   SETTINGS_SYNC_EVENT,
 } from "./settings/store.ts";
-import { isTauri } from "./platform/env.ts";
-import { closeWindow } from "./platform/window-chrome.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { isSettingsSection } from "./settings/search-index.ts";
@@ -31,9 +27,9 @@ import {
 initPlatform();
 const bootSettings = loadSettings();
 initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
-const teardownChromeGuards = installChromeGuards();
-const teardownFullscreen = initFullscreenChrome();
-const teardownScrollbars = initAutoHideScrollbars();
+const teardownShellChrome = bootShellChrome({
+  eventName: FULLSCREEN_CHANGE_EVENT,
+});
 const teardownImePosition = initImePositionGuard();
 const teardownShortcutGuard = installNativeShortcutGuard();
 const teardownShortcuts = mountShortcutHandler({
@@ -107,9 +103,7 @@ void initThemeManager().then(() => {
 
   window.addEventListener("beforeunload", () => {
     unlistenSettings?.();
-    teardownChromeGuards();
-    teardownFullscreen();
-    teardownScrollbars();
+    teardownShellChrome();
     teardownImePosition();
     teardownShortcutGuard();
     teardownShortcuts();

@@ -1,0 +1,142 @@
+/* Shell design tokens - chrome tokens mapped to theme variables. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Theme-driven shell tokens (see styles/themes.css for [data-theme] blocks) */
+  --shell-font-ui: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --shell-font-mono: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+
+  --shell-fg: var(--text-primary);
+  --shell-bg: var(--bg-secondary);
+  --shell-muted-fg: var(--text-secondary);
+  --shell-border: var(--border);
+  --shell-surface: var(--bg-surface);
+  --shell-surface-raised: var(--bg-tertiary);
+  --shell-content-bg: var(--bg-primary);
+  --shell-hover: var(--bg-hover);
+  --shell-active: color-mix(in srgb, var(--bg-hover) 75%, var(--text-primary) 25%);
+  --shell-accent: var(--accent);
+  --shell-accent-fg: #fff;
+  --shell-focus-ring: color-mix(in srgb, var(--accent) 45%, transparent);
+
+  --shell-radius-sm: 0.35rem;
+  --shell-radius-md: 0.5rem;
+  --shell-space-1: 0.25rem;
+  --shell-space-2: 0.5rem;
+  --shell-space-3: 0.75rem;
+  --shell-space-4: 1rem;
+
+  /* Unified widgets �?theme-editable via --control-* / --radius-control */
+  --shell-radius-control: var(--radius-control, 6px);
+  /* Floating menus / context menus �?match editor chrome */
+  --shell-radius-menu: 8px;
+  --shell-radius-menu-item: var(--shell-radius-control);
+  --shell-menu-padding: 4px;
+  --shell-control-height: var(--control-height, 32px);
+  --shell-control-padding-x: var(--control-padding-x, 8px);
+  --shell-control-font-size: var(--control-font-size, 13px);
+  --shell-menu-item-padding-y: var(--menu-item-padding-y, 4px);
+  --shell-menu-row-height: calc(var(--shell-menu-item-padding-y) * 2 + 1.25rem);
+  --shell-tree-item-padding-y: var(--tree-item-padding-y, 5px);
+  --shell-control-bg: var(--bg-input, var(--shell-content-bg));
+  --shell-control-transition: 150ms ease;
+  --shell-input-bg: var(--bg-input, var(--shell-content-bg));
+
+  --shell-sidebar-width: 240px;
+  --shell-right-sidebar-width: 240px;
+  --shell-settings-nav-width: 220px;
+  --shell-window-radius: 12px;
+  --shell-mac-traffic-lights-width: 0px;
+  --shell-caption-width: 2.75rem;
+  --shell-caption-hover: color-mix(in srgb, var(--shell-fg) 10%, transparent);
+  --shell-caption-close-hover: #e81123;
+  /* 36px �?aligns with macOS traffic-light inset (x=14, y=11) */
+  --shell-titlebar-height: 36px;
+  /* Compact chrome buttons in sidebar topbar / titlebar */
+  --shell-chrome-btn-size: 26px;
+  --shell-sidebar-dock-height: 3.25rem;
+
+  --shell-editor-font-size: var(--editor-font-size, 16px);
+  --shell-editor-max-width: 768px;
+
+  /* Menus �?solid by default; frosted when html[data-glass="true"].
+     Floating library chrome always uses liquid glass (see app.css). */
+  --shell-glass-bg: var(--bg-menu, var(--shell-surface-raised));
+  --shell-glass-border: var(--shell-border);
+  --shell-glass-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
+  --shell-glass-blur: 0px;
+  --shell-glass-saturate: 100%;
+
+  /* Dock chrome �?tuned from @dpawlikowski/liquid-glass (subtle overlay) */
+  --shell-lg-blur: 10px;
+  --shell-lg-saturate: 180%;
+  --shell-lg-brightness: 1.05;
+  --shell-lg-tint: 255 255 255;
+  --shell-lg-fill: 0.22;
+  --shell-lg-border: 0.42;
+  --shell-lg-sheen-hi: 0.3;
+  --shell-lg-sheen-mid: 0.06;
+  --shell-lg-sheen-lo: 0.14;
+
+  --shell-scrollbar-size: var(--scrollbar-size, 8px);
+  --shell-scrollbar-radius: var(--radius-scrollbar, 4px);
+  --shell-scrollbar-track: var(--scrollbar-track, transparent);
+  --shell-scrollbar-thumb: var(--scrollbar-thumb, color-mix(in srgb, var(--shell-fg) 28%, transparent));
+  --shell-scrollbar-thumb-hover: var(--scrollbar-thumb-hover, color-mix(in srgb, var(--shell-fg) 45%, transparent));
+
+  /* Graph view �?Obsidian-like neutrals (dark defaults) */
+  --shell-graph-node: #b4b4b4;
+  --shell-graph-node-active: #d0d0d0;
+  --shell-graph-label: #dcdcdc;
+  --shell-graph-link: #3c3c3c;
+  --shell-graph-highlight: color-mix(in srgb, var(--shell-accent) 62%, #6b7280 38%);
+}
+
+:root[data-appearance="light"] {
+  --shell-graph-node: #6e6e6e;
+  --shell-graph-node-active: #4a4a4a;
+  --shell-graph-label: #333333;
+  --shell-graph-link: #c4c4c4;
+  --shell-graph-highlight: color-mix(in srgb, var(--shell-accent) 55%, #64748b 45%);
+}
+
+html.platform-macos {
+  --shell-mac-traffic-lights-width: 72px;
+}
+
+/* Native fullscreen hides traffic lights �?align chrome to the left edge. */
+html.platform-macos.is-fullscreen {
+  --shell-mac-traffic-lights-width: 0px;
+}
+
+html.platform-windows {
+  --shell-caption-width: 46px;
+  /* Full min/max/close cluster �?used to reserve top-right chrome space */
+  --shell-caption-cluster-width: calc(3 * var(--shell-caption-width));
+}
+
+:root[data-appearance="dark"] {
+  --shell-accent-fg: #101214;
+}
+
+html[data-glass="true"] {
+  --shell-glass-bg: color-mix(in srgb, var(--bg-menu, var(--shell-surface-raised)) 42%, transparent);
+  --shell-glass-border: color-mix(in srgb, #fff 22%, transparent);
+  --shell-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 6%, transparent),
+    0 8px 28px color-mix(in srgb, #000 18%, transparent);
+  --shell-glass-blur: 18px;
+  --shell-glass-saturate: 180%;
+}
+
+html[data-glass="true"][data-appearance="dark"] {
+  --shell-glass-border: color-mix(in srgb, #fff 16%, transparent);
+  --shell-glass-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, #000 22%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 28%, transparent),
+    0 12px 36px color-mix(in srgb, #000 42%, transparent);
+}

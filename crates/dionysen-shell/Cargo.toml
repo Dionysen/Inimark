@@ -1,0 +1,11 @@
+[package]
+name = "dionysen-shell"
+version = "0.1.0"
+description = "Shared Tauri dual-window chrome policy for Dionysen apps"
+authors = ["Dionysen"]
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tauri = { version = "2" }
+tauri-plugin-window-state = "2"

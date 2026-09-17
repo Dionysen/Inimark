@@ -1,6 +1,67 @@
-export { createButton, type ButtonOptions, type ButtonVariant } from "./button.ts";
 export {
+  createButton,
+  type ButtonOptions,
+  type ButtonVariant,
   createIconButton,
+  closeIcon,
+  moreIcon,
+  treeFileIcon,
+  treeFolderIcon,
+  treeFolderOpenIcon,
+  type IconButtonOptions,
+  createPanelToolbar,
+  type PanelToolbarController,
+  type PanelToolbarItem,
+  createTextField,
+  type TextFieldController,
+  type TextFieldOptions,
+  createSearchField,
+  type SearchFieldController,
+  type SearchFieldOptions,
+  createSlider,
+  type SliderController,
+  type SliderOptions,
+  createSelect,
+  type SelectController,
+  type SelectOption,
+  type SelectOptions,
+  createMenu,
+  menuIcons,
+  type MenuController,
+  type MenuItemOptions,
+  type MenuSubmenuOptions,
+  bindTooltip,
+  initTooltipLayer,
+  unbindTooltip,
+  updateTooltip,
+  createToggle,
+  type ToggleController,
+  type ToggleOptions,
+  createTreeHost,
+  createTreeBranch,
+  createTreeChildren,
+  createTreeItem,
+  type TreeItemKind,
+  type TreeItemOptions,
+  createNavItem,
+  createNavList,
+  setNavItemLabel,
+  type NavItemOptions,
+  applyOverlayPosition,
+  onOutsideClick,
+  onScrollDismiss,
+  positionBelowOrAbove,
+  type OverlayPosition,
+} from "@dionysen/ui";
+
+export {
+  createFontPicker,
+  type FontPickerController,
+  type FontPickerMode,
+  type FontPickerOptions,
+} from "./font-picker.ts";
+
+export {
   libraryIcon,
   settingsIcon,
   sidebarToggleIcon,
@@ -17,16 +78,11 @@ export {
   graphLocalModeIcon,
   graphVaultModeIcon,
   graphOpenEditorIcon,
-  closeIcon,
-  moreIcon,
   rightSidebarToggleIcon,
   newFileIcon,
   newFolderIcon,
   sortIcon,
   locateFileIcon,
-  treeFileIcon,
-  treeFolderIcon,
-  treeFolderOpenIcon,
   collapseAllIcon,
   expandAllIcon,
   expandToLevelIcon,
@@ -47,53 +103,4 @@ export {
   graphFitViewIcon,
   graphOutlinkIcon,
   graphBacklinkIcon,
-  type IconButtonOptions,
-} from "./icon-button.ts";
-export {
-  createPanelToolbar,
-  type PanelToolbarController,
-  type PanelToolbarItem,
-} from "./panel-toolbar.ts";
-export { createTextField, type TextFieldController, type TextFieldOptions } from "./text-field.ts";
-export {
-  createSearchField,
-  type SearchFieldController,
-  type SearchFieldOptions,
-} from "./search-field.ts";
-export { createSlider, type SliderController, type SliderOptions } from "./slider.ts";
-export {
-  createSelect,
-  type SelectController,
-  type SelectOption,
-  type SelectOptions,
-} from "./select.ts";
-export {
-  createFontPicker,
-  type FontPickerController,
-  type FontPickerMode,
-  type FontPickerOptions,
-} from "./font-picker.ts";
-export { createMenu, menuIcons, type MenuController, type MenuItemOptions, type MenuSubmenuOptions } from "./menu.ts";
-export {
-  bindTooltip,
-  initTooltipLayer,
-  unbindTooltip,
-  updateTooltip,
-} from "./tooltip.ts";
-export { createToggle, type ToggleController, type ToggleOptions } from "./toggle.ts";
-export {
-  createTreeHost,
-  createTreeBranch,
-  createTreeChildren,
-  createTreeItem,
-  type TreeItemKind,
-  type TreeItemOptions,
-} from "./tree.ts";
-export { createNavItem, createNavList, setNavItemLabel, type NavItemOptions } from "./nav.ts";
-export {
-  applyOverlayPosition,
-  onOutsideClick,
-  onScrollDismiss,
-  positionBelowOrAbove,
-  type OverlayPosition,
-} from "./overlay.ts";
+} from "../product-icons.ts";

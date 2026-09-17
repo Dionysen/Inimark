@@ -745,6 +745,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dionysen-shell"
+version = "0.1.0"
+dependencies = [
+ "tauri",
+ "tauri-plugin-window-state",
+]
+
+[[package]]
 name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1840,6 +1848,7 @@ name = "inimark-desktop"
 version = "1.0.9"
 dependencies = [
  "block2",
+ "dionysen-shell",
  "dispatch2",
  "fontdb",
  "futures-util",
@@ -4976,6 +4985,19 @@ dependencies = [
  "js-sys",
  "serde_core",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "vellum-desktop"
+version = "0.1.0"
+dependencies = [
+ "dionysen-shell",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-process",
+ "tauri-plugin-window-state",
 ]
 
 [[package]]

@@ -15,26 +15,17 @@ import { mountDevDocsPublishPanel } from "./dev-docs-publish-panel.ts";
 import { promptConfirm } from "../ui/confirm-dialog.ts";
 import { pickWorkspace, removeLibraryAccess } from "../platform/workspace.ts";
 import aboutIconUrl from "../../app-icon.png";
-import {
-  attachColumnResize,
-  loadPersistedWidth,
-  persistWidth,
-} from "../ui/column-resize.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import {
   createButton,
   createFontPicker,
   createIconButton,
-  createNavItem,
-  createNavList,
-  createSearchField,
   createSelect,
   createSlider,
   createToggle,
   createTextField,
   libraryIcon,
   menuIcons,
-  setNavItemLabel,
   settingsAboutIcon,
   settingsDevIcon,
   githubIcon,
@@ -49,6 +40,13 @@ import {
   settingsShortcutsIcon,
   settingsThemeIcon,
 } from "../ui/widgets/index.ts";
+import {
+  createRow,
+  createSectionTitle,
+  mountSettingsView as mountSettingsShell,
+  type SettingsSectionDef,
+  type SettingsViewController as SettingsShellController,
+} from "@dionysen/settings-kit";
 import {
   type AppLocale,
   type AppSettings,
@@ -120,24 +118,6 @@ const SECTION_ICONS: Record<SettingsSection, () => string> = {
   dev: settingsDevIcon,
 };
 
-const BASE_SECTION_IDS: SettingsSection[] = [
-  "editor",
-  "appearance",
-  "theme",
-  "shortcuts",
-  "libraries",
-  "publish",
-  "image",
-  "graph",
-  "ai",
-  "about",
-];
-
-function visibleSectionIds(showDev: boolean): SettingsSection[] {
-  if (import.meta.env.DEV && showDev) return [...BASE_SECTION_IDS, "dev"];
-  return BASE_SECTION_IDS;
-}
-
 function sectionMeta(id: SettingsSection): {
   title: string;
   subtitle: string;
@@ -162,312 +142,21 @@ const EDITOR_FONT_PRESETS: FontPresetId[] = ["serif", "rounded", "mono"];
 const CODE_FONT_PRESETS: FontPresetId[] = ["code", "mono"];
 const UI_FONT_PRESETS: FontPresetId[] = ["rounded", "serif"];
 
-function createSectionTitle(title: string): HTMLElement {
-  const el = document.createElement("h3");
-  el.className = "inimark-settings-section-title";
-  el.textContent = title;
-  return el;
-}
-
-function createRow(
-  title: string,
-  description: string,
-  control: HTMLElement,
-  settingId?: string,
-): HTMLElement {
-  const row = document.createElement("div");
-  row.className = "inimark-settings-row";
-  if (settingId) row.dataset.settingId = settingId;
-  const meta = document.createElement("div");
-  meta.className = "inimark-settings-row-meta";
-  const h = document.createElement("div");
-  h.className = "inimark-settings-row-title";
-  h.textContent = title;
-  meta.append(h);
-  if (description) {
-    const p = document.createElement("p");
-    p.className = "inimark-settings-row-desc";
-    p.textContent = description;
-    meta.append(p);
-  }
-  const ctrl = document.createElement("div");
-  ctrl.className = "inimark-settings-row-control";
-  ctrl.append(control);
-  row.append(meta, ctrl);
-  return row;
-}
-
 export function mountSettingsView(
   host: HTMLElement,
   options?: SettingsViewOptions,
 ): SettingsViewController {
   let settings = loadSettings();
-  let activeSection: SettingsSection = "editor";
-  let searchQuery = "";
-  let pendingHighlightId: string | null = null;
   let onChangeHandler: (settings: AppSettings) => void =
     options?.onChange ?? (() => {});
-  let navWidth = loadPersistedWidth(
-    SETTINGS_NAV_WIDTH_KEY,
-    SETTINGS_NAV_WIDTH_DEFAULT,
-    SETTINGS_NAV_WIDTH_MIN,
-    SETTINGS_NAV_WIDTH_MAX,
-  );
   let aboutVersion = "…";
-
-  host.className = "inimark-settings-shell";
-  host.replaceChildren();
-
-  const layout = document.createElement("div");
-  layout.className = "inimark-settings-layout";
-
-  const nav = document.createElement("nav");
-  nav.className = "inimark-settings-nav";
-
-  const navTopbar = document.createElement("div");
-  navTopbar.className = "inimark-settings-nav-topbar";
-  navTopbar.setAttribute("data-tauri-drag-region", "");
-
-  const navBody = document.createElement("div");
-  navBody.className = "inimark-settings-nav-body inimark-scrollbar";
-
-  const search = createSearchField({
-    placeholder: t("settings.searchPlaceholder"),
-    onInput(value) {
-      searchQuery = value;
-      renderNav();
-      renderContent();
-    },
-  });
-
-  search.input.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter") return;
-    const first = searchSettings(searchQuery)[0];
-    if (!first) return;
-    event.preventDefault();
-    navigateToSetting(first.item);
-  });
-
-  const navList = createNavList();
-
-  const navButtons = new Map<SettingsSection, HTMLButtonElement>();
-
-  function rebuildNavButtons(): void {
-    navButtons.clear();
-    navList.replaceChildren();
-    for (const id of visibleSectionIds(settings.showDevSection)) {
-      const btn = createNavItem({
-        id,
-        label: sectionMeta(id).title,
-        icon: SECTION_ICONS[id](),
-        onClick() {
-          activeSection = id;
-          renderNav();
-          renderContent();
-        },
-      });
-      navButtons.set(id, btn);
-      navList.append(btn);
-    }
-  }
-
-  rebuildNavButtons();
-
-  navBody.append(search.el, navList);
-
-  const navFooter = document.createElement("div");
-  navFooter.className = "inimark-settings-nav-footer";
-
-  const searchHint = document.createElement("p");
-  searchHint.className = "inimark-settings-nav-hint";
-
-  const searchHintKbd = document.createElement("kbd");
-  const searchHintLabel = document.createElement("span");
-  searchHintLabel.className = "inimark-settings-nav-hint-label";
-
-  function renderSearchHint(): void {
-    searchHintKbd.textContent = formatShortcutDisplay(FOCUS_SEARCH_KEYS).replace(
-      /\+/g,
-      "-",
-    );
-    searchHintLabel.textContent = t("settings.focusSearchHint");
-  }
-
-  renderSearchHint();
-  searchHint.append(searchHintKbd, searchHintLabel);
-  navFooter.append(searchHint);
-  nav.append(navTopbar, navBody, navFooter);
-
-  function onFocusSearchKeyDown(event: KeyboardEvent): void {
-    if (!matchShortcut(event, FOCUS_SEARCH_KEYS)) return;
-    if (isShortcutRecordingActive()) return;
-    event.preventDefault();
-    event.stopPropagation();
-    search.focus();
-    search.input.select();
-  }
-
-  window.addEventListener("keydown", onFocusSearchKeyDown, true);
-
-  const mainWrap = document.createElement("div");
-  mainWrap.className = "inimark-settings-main-wrap";
-
-  const mainTopbar = document.createElement("header");
-  const titlebar = mountTitleBar(mainTopbar, {
-    title: "",
-    controlMode: "close-only",
-  });
-
-  const main = document.createElement("div");
-  main.className = "inimark-settings-main inimark-scrollbar";
-
-  const content = document.createElement("div");
-  content.className = "inimark-settings-content";
-
-  main.append(content);
-  mainWrap.append(mainTopbar, main);
-  layout.append(nav, mainWrap);
-  host.append(layout);
-
-  function applyNavWidth(): void {
-    layout.style.setProperty("--inimark-settings-nav-width", `${navWidth}px`);
-  }
-
-  applyNavWidth();
-
-  const resize = attachColumnResize(nav, {
-    side: "left",
-    minWidth: SETTINGS_NAV_WIDTH_MIN,
-    maxWidth: SETTINGS_NAV_WIDTH_MAX,
-    getWidth: () => navWidth,
-    onWidthChange(width) {
-      navWidth = width;
-      applyNavWidth();
-      persistWidth(SETTINGS_NAV_WIDTH_KEY, width);
-    },
-  });
-
-  function renderNav(): void {
-    let visible = 0;
-    for (const [id, btn] of navButtons) {
-      const match = sectionHasSearchMatch(id, searchQuery);
-      btn.hidden = !match;
-      btn.classList.toggle(
-        "is-active",
-        searchQuery.trim().length === 0 && id === activeSection,
-      );
-      setNavItemLabel(btn, sectionMeta(id).title);
-      if (match) visible += 1;
-    }
-    const querying = searchQuery.trim().length > 0;
-    navList.hidden = querying && visible === 0;
-  }
-
-  function settingLabel(item: SettingSearchItem): string {
-    return item.getTitle?.() ?? (item.titleKey ? t(item.titleKey) : "");
-  }
-
-  function settingDescription(item: SettingSearchItem): string {
-    return item.getDescription?.() ?? (item.descKey ? t(item.descKey) : "");
-  }
-
-  function highlightSettingRow(id: string): void {
-    requestAnimationFrame(() => {
-      if (id === "theme.codeTheme") {
-        content.querySelector<HTMLButtonElement>('[data-theme-kind-tab="code"]')?.click();
-      }
-
-      let row = content.querySelector<HTMLElement>(`[data-setting-id="${id}"]`);
-      if (!row && id === "theme.codeTheme") {
-        row = content.querySelector<HTMLElement>(".theme-kind-tabs");
-      }
-      if (!row) return;
-
-      row.scrollIntoView({ block: "center", behavior: "smooth" });
-      row.classList.add("is-search-highlight");
-      window.setTimeout(() => row.classList.remove("is-search-highlight"), 2200);
-    });
-  }
-
-  function navigateToSection(section: SettingsSection): void {
-    searchQuery = "";
-    search.setValue("");
-    activeSection = section === "dev" && !isDevSettingsVisible() ? "about" : section;
-    pendingHighlightId = null;
-    renderNav();
-    renderContent();
-  }
-
-  function navigateToSetting(item: SettingSearchItem): void {
-    searchQuery = "";
-    search.setValue("");
-    activeSection =
-      item.section === "dev" && !isDevSettingsVisible() ? "about" : item.section;
-    pendingHighlightId = item.id;
-    renderNav();
-    renderContent();
-  }
-
-  function renderSearchResults(body: HTMLElement): void {
-    const matches = searchSettings(searchQuery);
-    const results = document.createElement("div");
-    results.className = "inimark-settings-search-results";
-
-    if (matches.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "inimark-settings-search-empty";
-      empty.textContent = t("settings.noMatch");
-      results.append(empty);
-      body.append(results);
-      return;
-    }
-
-    for (const { item } of matches) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "inimark-settings-search-result";
-
-      const title = document.createElement("div");
-      title.className = "inimark-settings-search-result-title";
-      appendHighlightedSearchText(title, settingLabel(item), searchQuery);
-
-      const desc = document.createElement("div");
-      desc.className = "inimark-settings-search-result-desc";
-      const description = settingDescription(item);
-      if (description) {
-        appendHighlightedSearchText(desc, description, searchQuery);
-      }
-
-      const section = document.createElement("div");
-      section.className = "inimark-settings-search-result-section";
-      appendHighlightedSearchText(section, sectionMeta(item.section).title, searchQuery);
-
-      btn.append(title);
-      if (description) btn.append(desc);
-      btn.append(section);
-      btn.addEventListener("click", () => navigateToSetting(item));
-      results.append(btn);
-    }
-
-    body.append(results);
-  }
+  let shell: SettingsShellController;
 
   function update(partial: Partial<AppSettings>): void {
-    const prevShowDev = settings.showDevSection;
     settings = { ...settings, ...partial };
     saveSettings(settings);
     onChangeHandler(settings);
-    if (partial.showDevSection === false && activeSection === "dev") {
-      activeSection = "about";
-    }
-    if (
-      partial.showDevSection !== undefined &&
-      partial.showDevSection !== prevShowDev
-    ) {
-      rebuildNavButtons();
-    }
-    renderNav();
-    renderContent();
+    shell.refresh();
   }
 
   /** Persist + apply without remounting controls (needed for live slider drag). */
@@ -488,14 +177,6 @@ export function mountSettingsView(
       image: { ...settings.image, ...partial },
     });
   }
-
-  let shortcutsCleanup: (() => void) | null = null;
-  let themeCleanup: (() => void) | null = null;
-  let graphControlsCleanup: (() => void) | null = null;
-  let aiSettingsCleanup: (() => void) | null = null;
-  let publishCleanup: (() => void) | null = null;
-  let devDocsCleanup: (() => void) | null = null;
-  let libraryDropCleanup: (() => void) | null = null;
 
   function renderEditor(body: HTMLElement): void {
     body.append(createSectionTitle(t("settings.group.typography")));
@@ -1200,7 +881,8 @@ export function mountSettingsView(
     } catch {
       aboutVersion = "1.0.9";
     }
-    if (activeSection === "about") renderContent();
+    // Refresh so the about panel picks up the resolved version string.
+    shell.refresh();
   }
 
   function renderAbout(body: HTMLElement): void {
@@ -1327,57 +1009,39 @@ export function mountSettingsView(
     body.append(about);
   }
 
-  function renderContent(): void {
-    shortcutsCleanup?.();
-    shortcutsCleanup = null;
-    themeCleanup?.();
-    themeCleanup = null;
-    graphControlsCleanup?.();
-    graphControlsCleanup = null;
-    aiSettingsCleanup?.();
-    aiSettingsCleanup = null;
-    publishCleanup?.();
-    publishCleanup = null;
-    devDocsCleanup?.();
-    devDocsCleanup = null;
-    libraryDropCleanup?.();
-    libraryDropCleanup = null;
-    content.replaceChildren();
+  function sectionDef(id: SettingsSection, render: SettingsSectionDef["render"]): SettingsSectionDef {
+    return {
+      id,
+      title: () => sectionMeta(id).title,
+      subtitle: () => sectionMeta(id).subtitle,
+      icon: SECTION_ICONS[id],
+      visible: () => (id === "dev" ? isDevSettingsVisible() : true),
+      render,
+    };
+  }
 
-    const body = document.createElement("div");
-    body.className = "inimark-settings-body";
-
-    if (searchQuery.trim().length > 0) {
-      renderSearchResults(body);
-      content.append(body);
-      return;
-    }
-
-    if (activeSection === "editor") {
+  const sections: SettingsSectionDef[] = [
+    sectionDef("editor", (body) => {
       renderEditor(body);
-    }
-
-    if (activeSection === "appearance") {
+    }),
+    sectionDef("appearance", (body) => {
       renderAppearanceChrome(body);
-    }
-
-    if (activeSection === "theme") {
+    }),
+    sectionDef("theme", (body) => {
       const panelHost = document.createElement("div");
       panelHost.className = "inimark-settings-theme-host";
       body.append(panelHost);
-      themeCleanup = renderThemePanel(panelHost, {
+      return renderThemePanel(panelHost, {
         onAppSettingsChange: (partial) => update(partial),
       });
-    }
-
-    if (activeSection === "shortcuts") {
+    }),
+    sectionDef("shortcuts", (body) => {
       const panelHost = document.createElement("div");
       panelHost.className = "inimark-settings-shortcuts-host";
       body.append(panelHost);
-      shortcutsCleanup = renderShortcutsPanel(panelHost);
-    }
-
-    if (activeSection === "libraries") {
+      return renderShortcutsPanel(panelHost);
+    }),
+    sectionDef("libraries", (body, ctx) => {
       const addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "inimark-control inimark-settings-library-add";
@@ -1391,14 +1055,14 @@ export function mountSettingsView(
           const picked = await pickWorkspace();
           if (picked.status !== "picked") return;
           if (picked.libraryCreated) {
-            showLibraryAddedToast(mainWrap, picked.workspace.rootName);
+            showLibraryAddedToast(ctx.mainHost, picked.workspace.rootName);
           }
-          renderContent();
+          ctx.refreshContent();
         })();
       });
-      libraryDropCleanup = mountLibraryDropTarget(addBtn, {
-        toastHost: mainWrap,
-        onAdded: () => renderContent(),
+      const dropCleanup = mountLibraryDropTarget(addBtn, {
+        toastHost: ctx.mainHost,
+        onAdded: () => ctx.refreshContent(),
       });
       body.append(addBtn);
 
@@ -1442,7 +1106,7 @@ export function mountSettingsView(
                 const nextName = await promptRenameLibrary(current.rootName);
                 if (!nextName || nextName === current.rootName) return;
                 renameLibrary(current.id, nextName);
-                renderContent();
+                ctx.refreshContent();
               })();
             },
           });
@@ -1458,7 +1122,9 @@ export function mountSettingsView(
                 if (!current) return;
                 const confirmed = await promptConfirm({
                   title: t("settings.libraries.removeTitle"),
-                  message: t("settings.libraries.removeMessage", { name: current.rootName }),
+                  message: t("settings.libraries.removeMessage", {
+                    name: current.rootName,
+                  }),
                   confirmLabel: t("common.remove"),
                   cancelLabel: t("common.cancel"),
                   danger: true,
@@ -1466,7 +1132,7 @@ export function mountSettingsView(
                 if (!confirmed) return;
                 removeLibrary(current.id);
                 await removeLibraryAccess(current.id);
-                renderContent();
+                ctx.refreshContent();
               })();
             },
           });
@@ -1477,20 +1143,19 @@ export function mountSettingsView(
         }
         body.append(list);
       }
-    }
 
-    if (activeSection === "image") {
-      renderImage(body);
-    }
-
-    if (activeSection === "publish") {
+      return () => dropCleanup();
+    }),
+    sectionDef("publish", (body) => {
       const panelHost = document.createElement("div");
       body.append(panelHost);
       const panel = mountPublishPanel(panelHost);
-      publishCleanup = () => panel.destroy();
-    }
-
-    if (activeSection === "graph") {
+      return () => panel.destroy();
+    }),
+    sectionDef("image", (body) => {
+      renderImage(body);
+    }),
+    sectionDef("graph", (body) => {
       const controls = mountGraphControls({
         settings: settings.graph,
         onChange(partial) {
@@ -1501,79 +1166,81 @@ export function mountSettingsView(
         },
       });
       body.append(controls.el);
-      graphControlsCleanup = () => controls.destroy();
-    }
-
-    if (activeSection === "ai") {
+      return () => controls.destroy();
+    }),
+    sectionDef("ai", (body) => {
       const panelHost = document.createElement("div");
       body.append(panelHost);
-      aiSettingsCleanup = renderAiSettingsPanel(panelHost);
-    }
-
-    if (activeSection === "about") {
+      return renderAiSettingsPanel(panelHost);
+    }),
+    sectionDef("about", (body) => {
       renderAbout(body);
-    }
-
-    if (activeSection === "dev" && isDevSettingsVisible()) {
+    }),
+    sectionDef("dev", (body) => {
       const docsPanel = mountDevDocsPublishPanel();
       body.append(docsPanel.el);
-      devDocsCleanup = () => docsPanel.destroy();
-    }
+      return () => docsPanel.destroy();
+    }),
+  ];
 
-    content.append(body);
-
-    if (pendingHighlightId) {
-      const id = pendingHighlightId;
-      pendingHighlightId = null;
-      highlightSettingRow(id);
-    }
-  }
-
-  renderNav();
-  renderContent();
-
-  const unsubscribeLocale = onLocaleChange(() => {
-    search.input.placeholder = t("settings.searchPlaceholder");
-    search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
-    renderSearchHint();
-    renderNav();
-    renderContent();
+  shell = mountSettingsShell(host, {
+    sections,
+    defaultSectionId: "editor",
+    strings: {
+      searchPlaceholder: () => t("settings.searchPlaceholder"),
+      noMatch: () => t("settings.noMatch"),
+      focusSearchHint: () => t("settings.focusSearchHint"),
+    },
+    mountTitleBar: (titleHost) =>
+      mountTitleBar(titleHost, {
+        title: "",
+        controlMode: "close-only",
+      }),
+    search: {
+      search: searchSettings,
+      sectionHasMatch: (sectionId, query) =>
+        sectionHasSearchMatch(sectionId as SettingsSection, query),
+      appendHighlightedText: appendHighlightedSearchText,
+      resolveItemTitle: (item: SettingSearchItem) =>
+        item.getTitle?.() ?? (item.titleKey ? t(item.titleKey) : ""),
+      resolveItemDescription: (item: SettingSearchItem) =>
+        item.getDescription?.() ?? (item.descKey ? t(item.descKey) : ""),
+    },
+    onBeforeRefresh: () => {
+      settings = loadSettings();
+    },
+    resolveFallbackSection: (requestedId) =>
+      requestedId === "dev" && !isDevSettingsVisible() ? "about" : "editor",
+    onLocaleChange,
+    onHighlightSetting(content, settingId) {
+      if (settingId === "theme.codeTheme") {
+        content
+          .querySelector<HTMLButtonElement>('[data-theme-kind-tab="code"]')
+          ?.click();
+      }
+    },
+    focusSearchKeys: FOCUS_SEARCH_KEYS,
+    matchShortcut,
+    formatShortcutDisplay,
+    isShortcutRecordingActive,
+    navWidthKey: SETTINGS_NAV_WIDTH_KEY,
+    navWidthDefault: SETTINGS_NAV_WIDTH_DEFAULT,
+    navWidthMin: SETTINGS_NAV_WIDTH_MIN,
+    navWidthMax: SETTINGS_NAV_WIDTH_MAX,
   });
 
   return {
     onChange(handler) {
       onChangeHandler = handler;
     },
-    navigateToSection,
+    navigateToSection(section) {
+      shell.navigateToSection(section);
+    },
     refresh() {
-      const prevShowDev = settings.showDevSection;
-      settings = loadSettings();
-      if (activeSection === "dev" && !isDevSettingsVisible()) {
-        activeSection = "about";
-      }
-      if (settings.showDevSection !== prevShowDev) {
-        rebuildNavButtons();
-      }
-      search.input.placeholder = t("settings.searchPlaceholder");
-      search.input.setAttribute("aria-label", t("settings.searchPlaceholder"));
-      renderNav();
-      renderContent();
+      shell.refresh();
     },
     destroy() {
-      window.removeEventListener("keydown", onFocusSearchKeyDown, true);
-      unsubscribeLocale();
-      resize.destroy();
-      titlebar.destroy();
-      search.destroy();
-      shortcutsCleanup?.();
-      themeCleanup?.();
-      graphControlsCleanup?.();
-      aiSettingsCleanup?.();
-      publishCleanup?.();
-      devDocsCleanup?.();
-      libraryDropCleanup?.();
-      host.replaceChildren();
-      host.className = "";
+      shell.destroy();
     },
   };
 }

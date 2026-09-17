@@ -1,8 +1,6 @@
-import { initPlatform } from "./platform/platform.ts";
-import { installChromeGuards } from "./platform/chrome-guards.ts";
-import { initAutoHideScrollbars } from "./platform/scrollbars.ts";
+import { bootShellChrome, initPlatform } from "@dionysen/shell";
 import { initImePositionGuard } from "./platform/ime-position.ts";
-import { initFullscreenChrome } from "./platform/window-chrome.ts";
+import { FULLSCREEN_CHANGE_EVENT } from "./platform/window-chrome.ts";
 import { initThemeManager } from "./themes/manager.ts";
 import { initI18n } from "./i18n/index.ts";
 import { loadSettings } from "./settings/store.ts";
@@ -12,9 +10,9 @@ import { mountApp } from "./app.ts";
 initPlatform();
 const bootSettings = loadSettings();
 initI18n(bootSettings.locale === "system" ? null : bootSettings.locale);
-const teardownChromeGuards = installChromeGuards();
-const teardownFullscreen = initFullscreenChrome();
-const teardownScrollbars = initAutoHideScrollbars();
+const teardownShellChrome = bootShellChrome({
+  eventName: FULLSCREEN_CHANGE_EVENT,
+});
 const teardownImePosition = initImePositionGuard();
 const teardownTooltips = initTooltipLayer();
 
@@ -27,9 +25,7 @@ void initThemeManager().then(() => {
   const app = mountApp(root);
 
   window.addEventListener("beforeunload", () => {
-    teardownChromeGuards();
-    teardownFullscreen();
-    teardownScrollbars();
+    teardownShellChrome();
     teardownImePosition();
     teardownTooltips();
     app.destroy();

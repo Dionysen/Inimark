@@ -1,0 +1,133 @@
+/** Inimark product SVG icons — kept out of `@dionysen/ui`. */
+
+export function libraryIcon(): string {
+  /* Three books â€” document library */
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 4.5h3.25v15H5.25A1.25 1.25 0 0 1 4 18.25V4.5z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7.25 4.5H11v15H7.25"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11.75 5.75 20 4v14.5l-8.25 1.75V5.75z"/></svg>`;
+}
+export function settingsIcon(): string {
+  /* Gear with hub */
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/></svg>`;
+}
+export function sidebarToggleIcon(open: boolean): string {
+  if (open) {
+    return `<svg class="inimark-icon inimark-icon--sidebar-toggle" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="2.5" y="2.5" width="5" height="13" rx="1" fill="currentColor" opacity="0.25"/><line x1="7.5" y1="2.5" x2="7.5" y2="15.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
+  }
+  return `<svg class="inimark-icon inimark-icon--sidebar-toggle" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.4"/><line x1="7.5" y1="2.5" x2="7.5" y2="15.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
+}
+export function filesTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+}
+export function searchTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>`;
+}
+export function bookmarksTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+}
+export function outlineTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 6h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 12h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 18h13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 6h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 12h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 18h.01"/></svg>`;
+}
+export function graphTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="18" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="18" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="17" cy="17" r="2.25" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 7.5 16 8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7.5 8.2 9.2 15.8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M16.2 9.1 15.5 14.8"/></svg>`;
+}
+export function tagsTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.4 2.6A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
+}
+export function aiTabIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-20 12 12)" d="M12 2.9 13.55 9.75 19.1 12 13.55 14.25 12 21.1 10.45 14.25 4.9 12 10.45 9.75z"/></svg>`;
+}
+export function newChatIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 5v14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 12h14"/></svg>`;
+}
+export function undoWriteIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M9 14 4 9l5-5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 9h10.5a5.5 5.5 0 1 1 0 11H11"/></svg>`;
+}
+export function chatHistoryIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 7v5.5l3.5 2"/></svg>`;
+}
+export function graphLocalModeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/><circle cx="5" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="19" cy="8" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18" r="1.75" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9.4 10.2 6.6 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14.6 10.2 17.4 8.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M10 14.5 8 16.7"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M14 14.5 16 16.7"/></svg>`;
+}
+export function graphVaultModeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="17" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="17" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M8.7 8.2 10.5 10.5"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M15.3 7.8 13.5 10.4"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M8.5 15.4 10.4 13.3"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M15.5 15.4 13.6 13.3"/></svg>`;
+}
+export function graphOpenEditorIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 9h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m10 14 2-2 2 2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 12v5"/></svg>`;
+}
+export function rightSidebarToggleIcon(open: boolean): string {
+  if (open) {
+    return `<svg class="inimark-icon inimark-icon--sidebar-toggle" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="10.5" y="2.5" width="5" height="13" rx="1" fill="currentColor" opacity="0.25"/><line x1="10.5" y1="2.5" x2="10.5" y2="15.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
+  }
+  return `<svg class="inimark-icon inimark-icon--sidebar-toggle" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="2" stroke="currentColor" stroke-width="1.4"/><line x1="10.5" y1="2.5" x2="10.5" y2="15.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
+}
+export function newFileIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11.35 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v5.35"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M14 2v5a1 1 0 0 0 1 1h5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M14 19h6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M17 16v6"/></svg>`;
+}
+export function newFolderIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 10v6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M9 13h6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
+}
+export function sortIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m3 8 4-4 4 4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7 4v16"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M11 12h4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M11 16h7"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M11 20h10"/></svg>`;
+}
+export function locateFileIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 7V5a2 2 0 0 1 2-2h2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M17 3h2a2 2 0 0 1 2 2v2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7 21H5a2 2 0 0 1-2-2v-2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7 12h10"/></svg>`;
+}
+export function collapseAllIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m7 20 5-5 5 5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m7 4 5 5 5-5"/></svg>`;
+}
+export function expandAllIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m7 15 5 5 5-5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m7 9 5-5 5 5"/></svg>`;
+}
+export function expandToLevelIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M4 6h16"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 12h12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 18h8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m4 15 3 3 3-3"/></svg>`;
+}
+export function settingsEditorIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+}
+export function settingsAppearanceIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 9h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M9 9v11"/></svg>`;
+}
+export function settingsThemeIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 22a10 10 0 1 1 10-10c0 2.2-1.8 4-4 4h-1.5a1.5 1.5 0 0 0-1.4 2 2.5 2.5 0 0 1-2.4 3.3Z"/><circle cx="7.5" cy="11.5" r="1.1" fill="currentColor"/><circle cx="12" cy="8" r="1.1" fill="currentColor"/><circle cx="16.5" cy="11.5" r="1.1" fill="currentColor"/></svg>`;
+}
+export function settingsShortcutsIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 10h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M10 10h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M14 10h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 10h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 14h8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 14h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M18 14h.01"/></svg>`;
+}
+export function settingsImageIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.75"/><circle cx="9" cy="10" r="1.75" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m21 16-4.5-4.5L7 21"/></svg>`;
+}
+export function settingsPublishIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 12h18"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 3a14.5 14.5 0 0 1 0 18 14.5 14.5 0 0 1 0-18"/></svg>`;
+}
+export function settingsGraphIcon(): string {
+  return graphTabIcon();
+}
+export function settingsAiIcon(): string {
+  return aiTabIcon();
+}
+export function graphTimelapseIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M15 4V2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M15 16v-2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M8 9h2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M20 9h2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M17.8 11.8 19 13"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M15 9h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M17.8 6.2 19 5"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m3 21 9-9"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.2 6.2 11 5"/></svg>`;
+}
+export function graphFitViewIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 7V5a2 2 0 0 1 2-2h2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M17 3h2a2 2 0 0 1 2 2v2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M21 17v2a2 2 0 0 1-2 2h-2"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.75"/></svg>`;
+}
+export function graphOutlinkIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7"/></svg>`;
+}
+export function graphBacklinkIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M17 17H7V7"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m17 7-10 10"/></svg>`;
+}
+export function settingsAboutIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 11v6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 8h.01"/></svg>`;
+}
+export function settingsDevIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m8 9 4-4 4 4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 19h14"/></svg>`;
+}
+export function githubIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`;
+}
+export function issuesIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M9 9h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M15 9h.01"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8.5 14.5a3.5 3.5 0 0 0 7 0"/></svg>`;
+}
+export function emailIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m3 7 9 6 9-6"/></svg>`;
+}

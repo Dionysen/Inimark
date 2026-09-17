@@ -7,6 +7,11 @@ const require = createRequire(import.meta.url);
 const host = process.env.TAURI_DEV_HOST;
 const editorRoot = resolve(__dirname, "../../packages/editor");
 const siteRenderRoot = resolve(__dirname, "../../packages/site-render");
+const uiRoot = resolve(__dirname, "../../packages/ui");
+const i18nRoot = resolve(__dirname, "../../packages/i18n");
+const shortcutKitRoot = resolve(__dirname, "../../packages/shortcut-kit");
+const settingsKitRoot = resolve(__dirname, "../../packages/settings-kit");
+const shellRoot = resolve(__dirname, "../../packages/shell");
 const mermaidMinJs = require.resolve("mermaid/dist/mermaid.min.js");
 
 const editorAliases = [
@@ -24,6 +29,36 @@ const editorAliases = [
   },
   { find: "@inimark/editor", replacement: resolve(editorRoot, "src/lib.ts") },
   { find: "@inimark/site-render", replacement: resolve(siteRenderRoot, "src/index.ts") },
+  {
+    find: "@dionysen/ui/tokens.css",
+    replacement: resolve(uiRoot, "src/tokens.css"),
+  },
+  {
+    find: "@dionysen/ui/widgets.css",
+    replacement: resolve(uiRoot, "src/widgets/widgets.css"),
+  },
+  {
+    find: "@dionysen/ui/confirm-dialog.css",
+    replacement: resolve(uiRoot, "src/confirm-dialog.css"),
+  },
+  {
+    find: "@dionysen/ui/status-toast.css",
+    replacement: resolve(uiRoot, "src/status-toast.css"),
+  },
+  { find: "@dionysen/ui", replacement: resolve(uiRoot, "src/index.ts") },
+  { find: "@dionysen/i18n", replacement: resolve(i18nRoot, "src/index.ts") },
+  {
+    find: "@dionysen/shortcut-kit",
+    replacement: resolve(shortcutKitRoot, "src/index.ts"),
+  },
+  {
+    find: "@dionysen/settings-kit",
+    replacement: resolve(settingsKitRoot, "src/index.ts"),
+  },
+  {
+    find: "@dionysen/shell",
+    replacement: resolve(shellRoot, "src/index.ts"),
+  },
   // Mermaid package exports omit the UMD build; alias so `?raw` can embed it.
   { find: "mermaid/dist/mermaid.min.js", replacement: mermaidMinJs },
 ];

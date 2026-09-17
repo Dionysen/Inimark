@@ -1,0 +1,17 @@
+{
+  "name": "@dionysen/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Locale engine (catalogs stay in each app)",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3"
+  }
+}

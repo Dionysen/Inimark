@@ -1,4 +1,9 @@
 import {
+  createJsonSettingsStore,
+  type JsonSettingsStore,
+  type SettingsSyncPayload as KitSettingsSyncPayload,
+} from "@dionysen/settings-kit";
+import {
   FONT_PRESETS,
   type FontPresetId,
   isValidFontSetting,
@@ -170,48 +175,7 @@ export const SETTINGS_STORAGE_KEY = "inimark:settings";
 /** Cross-window live sync (Tauri). Browser / same-origin popups still use `storage`. */
 export const SETTINGS_SYNC_EVENT = "settings-changed";
 
-export interface SettingsSyncPayload {
-  settings: AppSettings;
-  /** Per-window id; listeners ignore echoes from the same webview. */
-  emitterId: string;
-}
-
-const SETTINGS_EMITTER_ID =
-  typeof globalThis.crypto?.randomUUID === "function"
-    ? globalThis.crypto.randomUUID()
-    : `settings-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-export function getSettingsEmitterId(): string {
-  return SETTINGS_EMITTER_ID;
-}
-
-export function parseSettingsSyncPayload(
-  payload: SettingsSyncPayload | AppSettings,
-): SettingsSyncPayload | null {
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "emitterId" in payload &&
-    "settings" in payload
-  ) {
-    const sync = payload as SettingsSyncPayload;
-    return {
-      emitterId: String(sync.emitterId),
-      settings: normalizeSettings(sync.settings),
-    };
-  }
-  if (payload && typeof payload === "object" && "fontSize" in payload) {
-    return {
-      emitterId: "",
-      settings: normalizeSettings(payload as Partial<AppSettings>),
-    };
-  }
-  return null;
-}
-
-export function isExternalSettingsSync(payload: SettingsSyncPayload): boolean {
-  return payload.emitterId !== getSettingsEmitterId();
-}
+export type SettingsSyncPayload = KitSettingsSyncPayload<AppSettings>;
 
 export const DEFAULT_MARKDOWN_FORMAT: MarkdownFormatSettings = {
   formatOnSave: false,
@@ -315,51 +279,36 @@ const DENSITY_VARS: Record<
   },
 };
 
+/** Created after `normalizeSettings` / `DEFAULT_SETTINGS` — see bottom of module. */
+let settingsStore: JsonSettingsStore<AppSettings>;
+
 export function loadSettings(): AppSettings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) return structuredClone(DEFAULT_SETTINGS);
-    const parsed = JSON.parse(raw) as Partial<AppSettings>;
-    return normalizeSettings(parsed);
-  } catch {
-    return structuredClone(DEFAULT_SETTINGS);
-  }
+  return settingsStore.load();
 }
 
 export function saveSettings(settings: AppSettings): void {
-  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  broadcastSettings(settings);
+  settingsStore.save(settings);
 }
 
-let settingsBroadcaster: ((payload: SettingsSyncPayload) => void) | null = null;
+export function getSettingsEmitterId(): string {
+  return settingsStore.getEmitterId();
+}
 
-function broadcastSettings(settings: AppSettings): void {
-  const payload: SettingsSyncPayload = {
-    settings,
-    emitterId: getSettingsEmitterId(),
-  };
-  if (settingsBroadcaster) {
-    settingsBroadcaster(payload);
-    return;
+export function parseSettingsSyncPayload(
+  payload: unknown,
+): SettingsSyncPayload | null {
+  if (!payload || typeof payload !== "object") return null;
+  if ("emitterId" in payload && "settings" in payload) {
+    return settingsStore.parseSyncPayload(payload);
   }
-  // Only wire Tauri IPC when running inside a webview with internals.
-  if (
-    typeof window === "undefined" ||
-    !("__TAURI_INTERNALS__" in window || "__TAURI__" in window)
-  ) {
-    settingsBroadcaster = () => {};
-    return;
+  if ("fontSize" in payload) {
+    return settingsStore.parseSyncPayload(payload);
   }
-  void import("@tauri-apps/api/event")
-    .then(({ emit }) => {
-      settingsBroadcaster = (next) => {
-        void emit(SETTINGS_SYNC_EVENT, next).catch(() => {});
-      };
-      settingsBroadcaster(payload);
-    })
-    .catch(() => {
-      settingsBroadcaster = () => {};
-    });
+  return null;
+}
+
+export function isExternalSettingsSync(payload: SettingsSyncPayload): boolean {
+  return settingsStore.isExternalSync(payload);
 }
 
 export function applySettings(settings: AppSettings): void {
@@ -721,3 +670,13 @@ function isImageStorageMode(value: unknown): value is ImageStorageMode {
 function isImageFilenameFormat(value: unknown): value is ImageFilenameFormat {
   return value === "original" || value === "timestamp" || value === "both";
 }
+
+settingsStore = createJsonSettingsStore<AppSettings>({
+  key: SETTINGS_STORAGE_KEY,
+  syncEvent: SETTINGS_SYNC_EVENT,
+  defaults: DEFAULT_SETTINGS,
+  normalize: (raw) =>
+    normalizeSettings(
+      raw && typeof raw === "object" ? (raw as Partial<AppSettings>) : {},
+    ),
+});

@@ -12,6 +12,11 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@dionysen/i18n": "workspace:*",
+    "@dionysen/settings-kit": "workspace:*",
+    "@dionysen/shell": "workspace:*",
+    "@dionysen/shortcut-kit": "workspace:*",
+    "@dionysen/ui": "workspace:*",
     "@inimark/editor": "workspace:*",
     "@inimark/site-render": "workspace:*",
     "@tauri-apps/api": "^2.5.0",

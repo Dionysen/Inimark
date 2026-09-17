@@ -1,19 +1,19 @@
-/* Unified control surface — all interactive widgets share these tokens & states. */
+/* Unified control surface �?all interactive widgets share these tokens & states. */
 
 .inimark-control {
   box-sizing: border-box;
   font-family: inherit;
-  font-size: var(--inimark-control-font-size);
+  font-size: var(--shell-control-font-size);
   line-height: 1.3;
-  color: var(--inimark-fg);
-  border-radius: var(--inimark-radius-control);
+  color: var(--shell-fg);
+  border-radius: var(--shell-radius-control);
   transition:
-    background var(--inimark-control-transition),
-    border-color var(--inimark-control-transition),
-    color var(--inimark-control-transition),
-    box-shadow var(--inimark-control-transition),
-    transform var(--inimark-control-transition),
-    opacity var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition),
+    transform var(--shell-control-transition),
+    opacity var(--shell-control-transition);
 }
 
 .inimark-control:disabled,
@@ -28,8 +28,8 @@
 }
 
 .inimark-control:focus-visible {
-  border-color: var(--inimark-accent);
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
 }
 
 /* ── Field surface (inputs, select trigger, search) ─────────────── */
@@ -38,24 +38,24 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: var(--inimark-control-height);
-  height: var(--inimark-control-height);
-  padding: 0 var(--inimark-control-padding-x);
-  border: 1px solid var(--inimark-border);
-  background: var(--inimark-control-bg);
-  color: var(--inimark-fg);
+  min-height: var(--shell-control-height);
+  height: var(--shell-control-height);
+  padding: 0 var(--shell-control-padding-x);
+  border: 1px solid var(--shell-border);
+  background: var(--shell-control-bg);
+  color: var(--shell-fg);
   cursor: text;
 }
 
 .inimark-field:hover:not(:disabled):not(.is-disabled):not(.is-open) {
-  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
-  background: color-mix(in srgb, var(--inimark-hover) 55%, var(--inimark-control-bg));
+  border-color: color-mix(in srgb, var(--shell-accent) 45%, var(--shell-border));
+  background: color-mix(in srgb, var(--shell-hover) 55%, var(--shell-control-bg));
 }
 
 .inimark-field:focus-within,
 .inimark-field.is-open {
-  border-color: var(--inimark-accent);
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
 }
 
 .inimark-field__input {
@@ -77,7 +77,7 @@
 }
 
 .inimark-field__input::placeholder {
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   opacity: 0.75;
 }
 
@@ -88,30 +88,30 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-height: var(--inimark-control-height);
-  height: var(--inimark-control-height);
-  padding: 0 var(--inimark-control-padding-x);
-  border: 1px solid var(--inimark-border);
-  border-radius: var(--inimark-radius-control);
-  background: var(--inimark-surface);
-  color: var(--inimark-fg);
+  min-height: var(--shell-control-height);
+  height: var(--shell-control-height);
+  padding: 0 var(--shell-control-padding-x);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius-control);
+  background: var(--shell-surface);
+  color: var(--shell-fg);
   font-family: inherit;
-  font-size: var(--inimark-control-font-size);
+  font-size: var(--shell-control-font-size);
   line-height: 1.3;
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
   transition:
-    background var(--inimark-control-transition),
-    border-color var(--inimark-control-transition),
-    color var(--inimark-control-transition),
-    box-shadow var(--inimark-control-transition),
-    transform var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition),
+    transform var(--shell-control-transition);
 }
 
 .inimark-btn:hover:not(:disabled) {
-  background: var(--inimark-hover);
-  border-color: color-mix(in srgb, var(--inimark-accent) 40%, var(--inimark-border));
+  background: var(--shell-hover);
+  border-color: color-mix(in srgb, var(--shell-accent) 40%, var(--shell-border));
 }
 
 .inimark-btn:active:not(:disabled) {
@@ -123,31 +123,31 @@
 }
 
 .inimark-btn:focus-visible {
-  border-color: var(--inimark-accent);
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
 }
 
 .inimark-btn--ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-btn--ghost:hover:not(:disabled) {
-  background: var(--inimark-hover);
-  color: var(--inimark-fg);
+  background: var(--shell-hover);
+  color: var(--shell-fg);
   border-color: transparent;
 }
 
 .inimark-btn--primary {
-  background: var(--inimark-accent);
-  border-color: var(--inimark-accent);
-  color: var(--inimark-accent-fg);
+  background: var(--shell-accent);
+  border-color: var(--shell-accent);
+  color: var(--shell-accent-fg);
 }
 
 .inimark-btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover, var(--inimark-accent));
-  border-color: var(--accent-hover, var(--inimark-accent));
+  background: var(--accent-hover, var(--shell-accent));
+  border-color: var(--accent-hover, var(--shell-accent));
 }
 
 .inimark-btn--danger {
@@ -164,7 +164,7 @@
 .inimark-btn--with-icon {
   display: inline-flex;
   align-items: center;
-  gap: var(--inimark-space-2);
+  gap: var(--shell-space-2);
 }
 
 .inimark-btn--with-icon .inimark-icon {
@@ -178,26 +178,26 @@
 .inimark-icon-btn {
   display: inline-grid;
   place-items: center;
-  width: var(--inimark-control-height);
-  height: var(--inimark-control-height);
-  min-width: var(--inimark-control-height);
+  width: var(--shell-control-height);
+  height: var(--shell-control-height);
+  min-width: var(--shell-control-height);
   padding: 0;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   cursor: pointer;
-  border-radius: var(--inimark-radius-control);
+  border-radius: var(--shell-radius-control);
 }
 
 .inimark-icon-btn:hover:not(:disabled) {
-  color: var(--inimark-fg);
-  background: var(--inimark-hover);
+  color: var(--shell-fg);
+  background: var(--shell-hover);
 }
 
 .inimark-icon-btn.is-active:not(:disabled) {
-  color: var(--inimark-fg);
-  border-color: color-mix(in srgb, var(--inimark-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--inimark-accent) 12%, transparent);
+  color: var(--shell-fg);
+  border-color: color-mix(in srgb, var(--shell-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 12%, transparent);
 }
 
 .inimark-icon-btn:active:not(:disabled) {
@@ -227,7 +227,7 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   opacity: 0.7;
   pointer-events: none;
 }
@@ -245,19 +245,19 @@
   width: 1.35rem;
   height: 1.35rem;
   border: 0;
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  border-radius: calc(var(--shell-radius-control) * 0.75);
   background: transparent;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   cursor: pointer;
   padding: 0;
   transition:
-    background var(--inimark-control-transition),
-    color var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    color var(--shell-control-transition);
 }
 
 .inimark-search__clear:hover {
-  color: var(--inimark-fg);
-  background: var(--inimark-hover);
+  color: var(--shell-fg);
+  background: var(--shell-hover);
 }
 
 .inimark-search__clear[hidden] {
@@ -269,7 +269,7 @@
 .inimark-slider {
   display: flex;
   align-items: center;
-  gap: var(--inimark-space-2);
+  gap: var(--shell-space-2);
   width: 100%;
   min-width: 0;
 }
@@ -302,10 +302,10 @@
   border-radius: 999px;
   background: linear-gradient(
     to right,
-    var(--inimark-accent) 0%,
-    var(--inimark-accent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 75%, transparent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 75%, transparent) 100%
+    var(--shell-accent) 0%,
+    var(--shell-accent) var(--shell-slider-fill, 0%),
+    color-mix(in srgb, var(--shell-border) 75%, transparent) var(--shell-slider-fill, 0%),
+    color-mix(in srgb, var(--shell-border) 75%, transparent) 100%
   );
 }
 
@@ -315,10 +315,10 @@
   border: 0;
   background: linear-gradient(
     to right,
-    var(--inimark-accent) 0%,
-    var(--inimark-accent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 75%, transparent) var(--inimark-slider-fill, 0%),
-    color-mix(in srgb, var(--inimark-border) 75%, transparent) 100%
+    var(--shell-accent) 0%,
+    var(--shell-accent) var(--shell-slider-fill, 0%),
+    color-mix(in srgb, var(--shell-border) 75%, transparent) var(--shell-slider-fill, 0%),
+    color-mix(in srgb, var(--shell-border) 75%, transparent) 100%
   );
 }
 
@@ -329,10 +329,10 @@
   height: 18px;
   margin-top: -6px; /* center on 6px track */
   border-radius: 50%;
-  background: var(--inimark-accent);
+  background: var(--shell-accent);
   border: 2px solid #fff;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--inimark-border) 55%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--shell-border) 55%, transparent),
     0 1px 3px color-mix(in srgb, #000 22%, transparent);
   cursor: grab;
   transition:
@@ -345,10 +345,10 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--inimark-accent);
+  background: var(--shell-accent);
   border: 2px solid #fff;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--inimark-border) 55%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--shell-border) 55%, transparent),
     0 1px 3px color-mix(in srgb, #000 22%, transparent);
   cursor: grab;
   transition:
@@ -377,23 +377,23 @@
 
 .inimark-slider__input:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 3px var(--inimark-focus-ring),
+    0 0 0 3px var(--shell-focus-ring),
     0 1px 3px color-mix(in srgb, #000 22%, transparent);
 }
 
 .inimark-slider__input:focus-visible::-moz-range-thumb {
   box-shadow:
-    0 0 0 3px var(--inimark-focus-ring),
+    0 0 0 3px var(--shell-focus-ring),
     0 1px 3px color-mix(in srgb, #000 22%, transparent);
 }
 
 .inimark-slider__value {
   min-width: 2.75rem;
   text-align: right;
-  font-family: var(--inimark-font-ui);
+  font-family: var(--shell-font-ui);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   flex-shrink: 0;
 }
 
@@ -425,7 +425,7 @@
 .inimark-select__chevron {
   flex-shrink: 0;
   opacity: 0.55;
-  transition: transform var(--inimark-control-transition);
+  transition: transform var(--shell-control-transition);
 }
 
 .inimark-select.is-open .inimark-select__chevron {
@@ -443,11 +443,11 @@
   min-width: 8rem;
   max-height: 280px;
   overflow: auto;
-  padding: var(--inimark-menu-padding);
-  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
-  border-radius: var(--inimark-radius-menu);
-  background: var(--inimark-glass-bg, var(--inimark-surface));
-  box-shadow: var(--inimark-glass-shadow, 0 8px 28px color-mix(in srgb, #000 20%, transparent));
+  padding: var(--shell-menu-padding);
+  border: 1px solid var(--shell-glass-border, var(--shell-border));
+  border-radius: var(--shell-radius-menu);
+  background: var(--shell-glass-bg, var(--shell-surface));
+  box-shadow: var(--shell-glass-shadow, 0 8px 28px color-mix(in srgb, #000 20%, transparent));
   opacity: 0;
   transform: translateY(-4px);
   pointer-events: none;
@@ -479,39 +479,39 @@ html[data-glass="true"] .inimark-select-panel {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: calc(var(--inimark-control-height) - 4px);
-  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  min-height: calc(var(--shell-control-height) - 4px);
+  padding: var(--shell-menu-item-padding-y) var(--shell-control-padding-x);
   border: 0;
-  border-radius: var(--inimark-radius-menu-item);
+  border-radius: var(--shell-radius-menu-item);
   background: transparent;
-  color: var(--inimark-fg);
+  color: var(--shell-fg);
   font: inherit;
-  font-size: var(--inimark-control-font-size);
+  font-size: var(--shell-control-font-size);
   text-align: left;
   cursor: pointer;
   transition:
-    background var(--inimark-control-transition),
-    color var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    color var(--shell-control-transition);
 }
 
 .inimark-select-option:hover,
 .inimark-select-option.is-active {
-  background: var(--inimark-hover);
+  background: var(--shell-hover);
 }
 
 .inimark-select-option.is-selected {
-  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
-  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--shell-accent) 16%, transparent);
+  color: var(--shell-fg);
 }
 
 .inimark-select-group {
   margin: 0.25rem 0 0.1rem;
-  padding: 0.2rem var(--inimark-control-padding-x);
+  padding: 0.2rem var(--shell-control-padding-x);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-select-panel--searchable {
@@ -528,10 +528,10 @@ html[data-glass="true"] .inimark-select-panel {
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 0.55rem var(--inimark-control-padding-x);
+  padding: 0.55rem var(--shell-control-padding-x);
   border: none;
-  border-bottom: 1px solid var(--inimark-border);
-  background: var(--inimark-bg, var(--bg-primary, #fff));
+  border-bottom: 1px solid var(--shell-border);
+  background: var(--shell-bg, var(--bg-primary, #fff));
   color: inherit;
   font: inherit;
   font-size: 0.85rem;
@@ -541,14 +541,14 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-select-search::placeholder {
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-select-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--inimark-menu-padding);
+  padding: var(--shell-menu-padding);
 }
 
 .inimark-select-panel:not(.inimark-select-panel--searchable) .inimark-select-list {
@@ -559,7 +559,7 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-select-empty {
   padding: 0.9rem 0.75rem;
   font-size: 0.8rem;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   text-align: center;
 }
 
@@ -576,10 +576,10 @@ html[data-glass="true"] .inimark-select-panel {
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 0.55rem var(--inimark-control-padding-x);
+  padding: 0.55rem var(--shell-control-padding-x);
   border: none;
-  border-bottom: 1px solid var(--inimark-border);
-  background: var(--inimark-bg, var(--bg-primary, #fff));
+  border-bottom: 1px solid var(--shell-border);
+  background: var(--shell-bg, var(--bg-primary, #fff));
   color: inherit;
   font: inherit;
   font-size: 0.85rem;
@@ -589,7 +589,7 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-font-picker-search::placeholder {
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-font-picker-list {
@@ -602,7 +602,7 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-font-picker-empty {
   padding: 0.9rem 0.75rem;
   font-size: 0.8rem;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   text-align: center;
 }
 
@@ -613,11 +613,11 @@ html[data-glass="true"] .inimark-select-panel {
   z-index: 30;
   min-width: 12rem;
   -webkit-app-region: no-drag;
-  padding: var(--inimark-menu-padding);
-  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
-  border-radius: var(--inimark-radius-menu);
-  background: var(--inimark-glass-bg, var(--inimark-surface));
-  box-shadow: var(--inimark-glass-shadow);
+  padding: var(--shell-menu-padding);
+  border: 1px solid var(--shell-glass-border, var(--shell-border));
+  border-radius: var(--shell-radius-menu);
+  background: var(--shell-glass-bg, var(--shell-surface));
+  box-shadow: var(--shell-glass-shadow);
   opacity: 0;
   transform: translateY(4px);
   pointer-events: none;
@@ -644,13 +644,13 @@ html[data-glass="true"] .inimark-select-panel {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-menu__path {
   margin: 0.25rem 0.45rem 0.45rem;
   font-size: 0.75rem;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -659,7 +659,7 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-menu__divider {
   height: 1px;
   margin: 4px 2px;
-  background: var(--inimark-border);
+  background: var(--shell-border);
 }
 
 .inimark-menu-item {
@@ -668,17 +668,17 @@ html[data-glass="true"] .inimark-select-panel {
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  min-height: var(--inimark-menu-row-height);
-  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
+  min-height: var(--shell-menu-row-height);
+  padding: var(--shell-menu-item-padding-y) var(--shell-control-padding-x);
   border: 0;
-  border-radius: var(--inimark-radius-menu-item);
+  border-radius: var(--shell-radius-menu-item);
   background: transparent;
-  color: var(--inimark-fg);
+  color: var(--shell-fg);
   font: inherit;
-  font-size: var(--inimark-control-font-size);
+  font-size: var(--shell-control-font-size);
   text-align: left;
   cursor: pointer;
-  transition: background var(--inimark-control-transition);
+  transition: background var(--shell-control-transition);
 }
 
 .inimark-menu-item--checkable {
@@ -687,7 +687,7 @@ html[data-glass="true"] .inimark-select-panel {
 
 .inimark-menu-item:hover,
 .inimark-menu-item.is-active {
-  background: var(--inimark-hover);
+  background: var(--shell-hover);
 }
 
 .inimark-menu-item-row {
@@ -711,19 +711,19 @@ html[data-glass="true"] .inimark-select-panel {
   margin: 1px 2px 1px 0;
   padding: 0;
   border: 0;
-  border-radius: var(--inimark-radius-control, 6px);
+  border-radius: var(--shell-radius-control, 6px);
   background: transparent;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   cursor: pointer;
 }
 
 .inimark-menu-item__action:hover {
-  background: var(--inimark-hover);
-  color: var(--inimark-fg);
+  background: var(--shell-hover);
+  color: var(--shell-fg);
 }
 
 .inimark-menu-item__action.is-pressed {
-  color: var(--inimark-accent);
+  color: var(--shell-accent);
 }
 
 .inimark-menu-item__action .inimark-icon {
@@ -739,7 +739,7 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-menu-item.is-selected {
-  background: color-mix(in srgb, var(--inimark-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 14%, transparent);
 }
 
 .inimark-menu-item.is-danger {
@@ -802,7 +802,7 @@ html[data-glass="true"] .inimark-select-panel {
   flex-shrink: 0;
   margin-left: auto;
   font-size: inherit;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -847,7 +847,7 @@ html[data-glass="true"] .inimark-select-panel {
   height: 0.875rem;
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--inimark-fg);
+  color: var(--shell-fg);
   opacity: 0;
 }
 
@@ -867,7 +867,7 @@ html[data-glass="true"] .inimark-select-panel {
   height: 0.875rem;
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 .inimark-menu-item__arrow .inimark-icon,
@@ -882,7 +882,7 @@ html[data-glass="true"] .inimark-select-panel {
 
 .inimark-menu-submenu-wrap.is-open > .inimark-menu-item--submenu,
 .inimark-menu-submenu-wrap:hover > .inimark-menu-item--submenu {
-  background: var(--inimark-hover);
+  background: var(--shell-hover);
 }
 
 .inimark-menu--submenu {
@@ -901,20 +901,20 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-menu__empty {
   margin: 0.5rem;
   font-size: 0.82rem;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
 }
 
 /* ── Tree ───────────────────────────────────────────────────────── */
 
 .inimark-tree {
   --tree-row-gap: 0;
-  --tree-indent-base: var(--inimark-space-2);
+  --tree-indent-base: var(--shell-space-2);
   flex: 1;
   overflow: auto;
   display: flex;
   flex-direction: column;
   gap: var(--tree-row-gap);
-  padding: var(--inimark-space-2);
+  padding: var(--shell-space-2);
 }
 
 /* ── Panel toolbar (per sidebar tab) ─────────────────────────────── */
@@ -926,8 +926,8 @@ html[data-glass="true"] .inimark-select-panel {
   flex-wrap: wrap;
   gap: 2px;
   flex-shrink: 0;
-  min-height: calc(var(--inimark-chrome-btn-size) + var(--inimark-space-2));
-  padding: var(--inimark-space-1) var(--inimark-space-2);
+  min-height: calc(var(--shell-chrome-btn-size) + var(--shell-space-2));
+  padding: var(--shell-space-1) var(--shell-space-2);
   -webkit-app-region: no-drag;
 }
 
@@ -936,10 +936,10 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-panel-toolbar .inimark-icon-btn {
-  width: var(--inimark-chrome-btn-size);
-  height: var(--inimark-chrome-btn-size);
-  min-width: var(--inimark-chrome-btn-size);
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  width: var(--shell-chrome-btn-size);
+  height: var(--shell-chrome-btn-size);
+  min-width: var(--shell-chrome-btn-size);
+  border-radius: calc(var(--shell-radius-control) * 0.75);
 }
 
 .inimark-panel-toolbar .inimark-icon {
@@ -972,10 +972,10 @@ html[data-glass="true"] .inimark-select-panel {
   width: 100%;
   margin: 0;
   padding: 0.05rem 0.3rem;
-  border: 1px solid var(--inimark-accent);
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
-  background: var(--inimark-input-bg, var(--inimark-content-bg));
-  color: var(--inimark-fg);
+  border: 1px solid var(--shell-accent);
+  border-radius: calc(var(--shell-radius-control) * 0.75);
+  background: var(--shell-input-bg, var(--shell-content-bg));
+  color: var(--shell-fg);
   font: inherit;
   font-size: inherit;
   line-height: 1.2;
@@ -989,7 +989,7 @@ html[data-glass="true"] .inimark-select-panel {
   min-width: 0;
 }
 
-/* Continuous guide on the children group — same pattern as Inimark .tree-children */
+/* Continuous guide on the children group �?same pattern as Inimark .tree-children */
 .inimark-tree-children {
   position: relative;
   display: flex;
@@ -1009,7 +1009,7 @@ html[data-glass="true"] .inimark-select-panel {
   );
   width: var(--tree-indent-hint-width, 1px);
   margin-left: calc(var(--tree-indent-hint-width, 1px) / -2);
-  background: var(--tree-indent-hint-color, var(--border, var(--inimark-border)));
+  background: var(--tree-indent-hint-color, var(--border, var(--shell-border)));
   opacity: var(--tree-indent-hint-visible, 1);
   pointer-events: none;
   z-index: 0;
@@ -1024,24 +1024,24 @@ html[data-glass="true"] .inimark-select-panel {
   width: 100%;
   border: 0;
   background: transparent;
-  color: var(--inimark-fg);
+  color: var(--shell-fg);
   font: inherit;
   font-size: 13px;
   text-align: left;
-  padding-top: var(--inimark-tree-item-padding-y);
-  padding-bottom: var(--inimark-tree-item-padding-y);
+  padding-top: var(--shell-tree-item-padding-y);
+  padding-bottom: var(--shell-tree-item-padding-y);
   padding-left: calc(
     var(--tree-indent-base) + var(--tree-depth, 0) * var(--tree-indent-hint-size, 14px)
   );
-  padding-right: var(--inimark-control-padding-x, var(--inimark-space-3));
-  border-radius: var(--inimark-radius-control);
+  padding-right: var(--shell-control-padding-x, var(--shell-space-3));
+  border-radius: var(--shell-radius-control);
   cursor: pointer;
   box-sizing: border-box;
   outline: none;
   transition:
-    background var(--inimark-control-transition),
-    color var(--inimark-control-transition),
-    box-shadow var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition);
 }
 
 .inimark-tree-item.is-draggable {
@@ -1050,25 +1050,25 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-tree-item:hover {
-  background: var(--inimark-hover);
+  background: var(--shell-hover);
 }
 
 .inimark-tree-item:focus-visible {
-  box-shadow: inset 0 0 0 1px var(--inimark-accent);
+  box-shadow: inset 0 0 0 1px var(--shell-accent);
 }
 
 .inimark-tree-item.is-active {
-  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
-  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--shell-accent) 16%, transparent);
+  color: var(--shell-fg);
 }
 
 .inimark-tree-item.is-selected {
-  background: color-mix(in srgb, var(--inimark-accent) 22%, transparent);
-  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--shell-accent) 22%, transparent);
+  color: var(--shell-fg);
 }
 
 .inimark-tree-item.is-selected.is-active {
-  background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 28%, transparent);
 }
 
 .inimark-tree-item.is-cut {
@@ -1084,11 +1084,11 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-tree-item.is-drop-target {
-  background: color-mix(in srgb, var(--inimark-accent) 32%, transparent) !important;
+  background: color-mix(in srgb, var(--shell-accent) 32%, transparent) !important;
   box-shadow:
-    inset 0 0 0 2px var(--inimark-accent),
-    0 0 0 1px color-mix(in srgb, var(--inimark-accent) 40%, transparent);
-  color: var(--inimark-fg);
+    inset 0 0 0 2px var(--shell-accent),
+    0 0 0 1px color-mix(in srgb, var(--shell-accent) 40%, transparent);
+  color: var(--shell-fg);
 }
 
 .inimark-tree-item.is-drop-target::after {
@@ -1099,12 +1099,12 @@ html[data-glass="true"] .inimark-select-panel {
   bottom: 15%;
   width: 3px;
   border-radius: 2px;
-  background: var(--inimark-accent);
+  background: var(--shell-accent);
 }
 
 .inimark-tree.is-drop-root {
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--inimark-accent) 70%, transparent);
-  border-radius: var(--inimark-radius-control);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--shell-accent) 70%, transparent);
+  border-radius: var(--shell-radius-control);
 }
 
 .inimark-tree-item.is-dragging {
@@ -1114,10 +1114,10 @@ html[data-glass="true"] .inimark-select-panel {
 .inimark-tree-drag-ghost {
   pointer-events: none;
   opacity: 0.92;
-  background: var(--inimark-surface-raised, var(--inimark-surface));
-  border: 1px solid var(--inimark-border);
-  border-radius: var(--inimark-radius-control);
-  box-shadow: var(--inimark-glass-shadow, 0 8px 24px rgba(0, 0, 0, 0.18));
+  background: var(--shell-surface-raised, var(--shell-surface));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius-control);
+  box-shadow: var(--shell-glass-shadow, 0 8px 24px rgba(0, 0, 0, 0.18));
   padding-right: 1.5rem;
 }
 
@@ -1130,8 +1130,8 @@ html[data-glass="true"] .inimark-select-panel {
   height: 1.1rem;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--inimark-accent);
-  color: var(--inimark-accent-fg, #fff);
+  background: var(--shell-accent);
+  color: var(--shell-accent-fg, #fff);
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.1rem;
@@ -1139,12 +1139,12 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-tree-item--dir {
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   font-weight: 600;
 }
 
 .inimark-tree-item--dir:hover {
-  color: var(--inimark-fg);
+  color: var(--shell-fg);
 }
 
 .inimark-tree-chevron {
@@ -1153,7 +1153,7 @@ html[data-glass="true"] .inimark-select-panel {
   width: 0.875rem;
   height: 0.875rem;
   flex-shrink: 0;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   opacity: 0.85;
   transition: transform 0.15s ease;
 }
@@ -1178,7 +1178,7 @@ html[data-glass="true"] .inimark-select-panel {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   opacity: 0.85;
 }
 
@@ -1212,17 +1212,17 @@ html[data-glass="true"] .inimark-select-panel {
   width: 100%;
   border: 0;
   background: transparent;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   font: inherit;
   font-size: 13px;
   text-align: left;
-  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
-  border-radius: var(--inimark-radius-control);
+  padding: var(--shell-menu-item-padding-y) var(--shell-control-padding-x);
+  border-radius: var(--shell-radius-control);
   cursor: pointer;
   transition:
-    background var(--inimark-control-transition),
-    color var(--inimark-control-transition),
-    box-shadow var(--inimark-control-transition);
+    background var(--shell-control-transition),
+    color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition);
 }
 
 .inimark-nav-item-icon {
@@ -1247,13 +1247,13 @@ html[data-glass="true"] .inimark-select-panel {
 }
 
 .inimark-nav-item:hover {
-  background: var(--inimark-hover);
-  color: var(--inimark-fg);
+  background: var(--shell-hover);
+  color: var(--shell-fg);
 }
 
 .inimark-nav-item.is-active {
-  background: color-mix(in srgb, var(--inimark-accent) 16%, transparent);
-  color: var(--inimark-fg);
+  background: color-mix(in srgb, var(--shell-accent) 16%, transparent);
+  color: var(--shell-fg);
 }
 
 /* ── Toggle ─────────────────────────────────────────────────────── */
@@ -1265,13 +1265,13 @@ html[data-glass="true"] .inimark-select-panel {
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--inimark-border) 85%, var(--inimark-fg) 15%);
+  background: color-mix(in srgb, var(--shell-border) 85%, var(--shell-fg) 15%);
   cursor: pointer;
-  transition: background var(--inimark-control-transition);
+  transition: background var(--shell-control-transition);
 }
 
 .inimark-toggle.is-on {
-  background: var(--inimark-accent);
+  background: var(--shell-accent);
 }
 
 .inimark-toggle:hover:not(:disabled) {
@@ -1280,7 +1280,7 @@ html[data-glass="true"] .inimark-select-panel {
 
 .inimark-toggle:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--inimark-focus-ring);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
 }
 
 .inimark-toggle__thumb {
@@ -1308,13 +1308,13 @@ html[data-glass="true"] .inimark-select-panel {
   align-items: center;
   gap: 0.5rem;
   max-width: 20rem;
-  padding: var(--inimark-menu-item-padding-y) var(--inimark-control-padding-x);
-  border: 1px solid var(--inimark-glass-border, var(--inimark-border));
-  border-radius: var(--inimark-radius-menu-item);
-  background: var(--inimark-glass-bg, var(--inimark-surface));
-  box-shadow: var(--inimark-glass-shadow);
-  color: var(--inimark-fg);
-  font-size: var(--inimark-control-font-size);
+  padding: var(--shell-menu-item-padding-y) var(--shell-control-padding-x);
+  border: 1px solid var(--shell-glass-border, var(--shell-border));
+  border-radius: var(--shell-radius-menu-item);
+  background: var(--shell-glass-bg, var(--shell-surface));
+  box-shadow: var(--shell-glass-shadow);
+  color: var(--shell-fg);
+  font-size: var(--shell-control-font-size);
   line-height: 1.4;
   pointer-events: none;
   opacity: 0;
@@ -1337,7 +1337,7 @@ html[data-glass="true"] .inimark-select-panel {
   flex-shrink: 0;
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--inimark-muted-fg);
+  color: var(--shell-muted-fg);
   white-space: nowrap;
 }
 

@@ -1,0 +1,21 @@
+[package]
+name = "vellum-desktop"
+version = "0.1.0"
+description = "Vellum — minimal Dionysen writing shell"
+authors = ["Dionysen"]
+edition = "2021"
+
+[lib]
+name = "vellum_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+dionysen-shell = { path = "../../../crates/dionysen-shell" }
+tauri = { version = "2", features = ["macos-private-api"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-window-state = "2"

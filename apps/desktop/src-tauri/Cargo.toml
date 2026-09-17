@@ -14,6 +14,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 inimark-ssg = { path = "../../../crates/inimark-ssg" }
+dionysen-shell = { path = "../../../crates/dionysen-shell" }
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }

@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-app"
+description = "Allow Vellum application IPC commands"
+commands.allow = [
+  "show_settings_window",
+  "toggle_settings_window",
+  "show_aux_window",
+  "toggle_aux_window",
+]

@@ -20,6 +20,21 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@dionysen/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
+      '@dionysen/settings-kit':
+        specifier: workspace:*
+        version: link:../../packages/settings-kit
+      '@dionysen/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
+      '@dionysen/shortcut-kit':
+        specifier: workspace:*
+        version: link:../../packages/shortcut-kit
+      '@dionysen/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@inimark/editor':
         specifier: workspace:*
         version: link:../../packages/editor
@@ -75,6 +90,37 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@26.4.1)(happy-dom@20.14.0)(jsdom@30.0.1)(tsx@4.23.13)
+
+  apps/vellum:
+    dependencies:
+      '@dionysen/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
+      '@dionysen/settings-kit':
+        specifier: workspace:*
+        version: link:../../packages/settings-kit
+      '@dionysen/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
+      '@dionysen/shortcut-kit':
+        specifier: workspace:*
+        version: link:../../packages/shortcut-kit
+      '@dionysen/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2.5.0
+        version: 2.11.4
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vite:
+        specifier: ^6.3.5
+        version: 6.4.3(@types/node@26.4.1)(tsx@4.23.13)
 
   packages/editor:
     dependencies:
@@ -173,6 +219,44 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@26.4.1)(happy-dom@20.14.0)(jsdom@30.0.1)(tsx@4.23.13)
 
+  packages/i18n:
+    devDependencies:
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
+  packages/settings-kit:
+    dependencies:
+      '@dionysen/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
+  packages/shell:
+    dependencies:
+      '@dionysen/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
+      '@tauri-apps/api':
+        specifier: ^2.5.0
+        version: 2.11.1
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
+  packages/shortcut-kit:
+    devDependencies:
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+
   packages/site-render:
     dependencies:
       '@inimark/editor':
@@ -188,6 +272,15 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@26.4.1)(happy-dom@20.14.0)(jsdom@30.0.1)(tsx@4.23.13)
+
+  packages/ui:
+    devDependencies:
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vite:
+        specifier: ^6.3.5
+        version: 6.4.3(@types/node@26.4.1)(tsx@4.23.13)
 
 packages:
 

@@ -1,0 +1,982 @@
+.inimark-settings-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  overflow: hidden;
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.inimark-settings-layout {
+  display: grid;
+  grid-template-columns: var(--inimark-settings-nav-width) 1fr;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ── Left nav (full height; divider runs top → bottom) ───────────── */
+
+.inimark-settings-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--inimark-border);
+  background: var(--bg-secondary, var(--inimark-bg));
+  overflow: visible;
+}
+
+.inimark-settings-nav.is-resizing {
+  user-select: none;
+}
+
+.inimark-settings-nav-topbar {
+  height: var(--inimark-titlebar-height);
+  flex-shrink: 0;
+  background: transparent;
+  -webkit-app-region: drag;
+}
+
+html.platform-macos .inimark-settings-nav-topbar {
+  padding-left: calc(var(--inimark-mac-traffic-lights-width) + var(--inimark-space-2));
+}
+
+/* Windows: no traffic lights on the left — drop the empty spacer above search. */
+html.platform-windows .inimark-settings-nav-topbar {
+  display: none;
+}
+
+.inimark-settings-nav-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-3);
+}
+
+.inimark-settings-nav-body>.inimark-search {
+  flex-shrink: 0;
+}
+
+.inimark-settings-nav-footer {
+  flex-shrink: 0;
+  padding: var(--inimark-space-2) var(--inimark-space-3) var(--inimark-space-3);
+  border-top: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-nav-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--inimark-muted-fg);
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.inimark-settings-nav-hint kbd {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 0.12rem 0.38rem;
+  border: 1px solid var(--inimark-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--inimark-fg) 6%, transparent);
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-mono);
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.inimark-settings-nav-hint-label {
+  min-width: 0;
+}
+
+.inimark-settings-nav-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0.75rem;
+  color: var(--inimark-muted-fg);
+  font-size: var(--inimark-control-font-size, 13px);
+  text-align: center;
+}
+
+.inimark-settings-nav-empty[hidden] {
+  display: none;
+}
+
+.inimark-settings-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1);
+  max-width: 42rem;
+}
+
+.inimark-settings-search-empty {
+  margin: 0;
+  padding: var(--inimark-space-6) 0;
+  color: var(--inimark-muted-fg);
+  text-align: center;
+}
+
+.inimark-settings-search-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  margin: 0;
+  padding: var(--inimark-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--inimark-radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-settings-search-result:hover,
+.inimark-settings-search-result:focus-visible {
+  border-color: var(--inimark-border);
+  background: var(--inimark-bg-hover, color-mix(in srgb, var(--inimark-fg) 4%, transparent));
+  outline: none;
+}
+
+.inimark-settings-search-result-title {
+  font-weight: 500;
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.inimark-settings-search-result-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-search-result-section {
+  margin-top: 0.15rem;
+  font-size: 11px;
+  color: var(--inimark-muted-fg);
+  opacity: 0.85;
+}
+
+.inimark-settings-search-mark {
+  padding: 0 0.12em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
+  color: inherit;
+  font: inherit;
+}
+
+.inimark-settings-row.is-search-highlight,
+.inimark-settings-shortcut-item.is-search-highlight,
+[data-setting-id].is-search-highlight {
+  animation: inimark-settings-search-highlight 2.2s ease-out;
+}
+
+@keyframes inimark-settings-search-highlight {
+
+  0%,
+  15% {
+    background: color-mix(in srgb, var(--inimark-accent) 18%, transparent);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+/* ── Right column ────────────────────────────────────────────────── */
+
+.inimark-settings-main-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--inimark-content-bg, var(--inimark-bg));
+}
+
+.inimark-settings-main-wrap>.inimark-titlebar {
+  background: var(--inimark-content-bg, var(--inimark-bg));
+  flex-shrink: 0;
+}
+
+.inimark-settings-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.inimark-settings-content {
+  padding: var(--inimark-space-4) 2.75rem;
+}
+
+.inimark-settings-shortcuts {
+  padding-top: var(--inimark-space-2);
+}
+
+.inimark-settings-shortcuts-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: var(--inimark-space-3);
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-shortcuts-group {
+  margin: var(--inimark-space-3) 0 var(--inimark-space-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-shortcut-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--inimark-space-3);
+  align-items: center;
+  padding: var(--inimark-space-2) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-shortcut-label {
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.inimark-settings-shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-settings-shortcut-display,
+.inimark-settings-shortcut-capture {
+  min-width: 8rem;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  font: inherit;
+  font-size: var(--inimark-control-font-size, 13px);
+  padding: 0.35rem 0.55rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.inimark-settings-shortcut-capture.is-recording {
+  border-color: var(--inimark-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--inimark-accent) 25%, transparent);
+}
+
+.inimark-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 11rem;
+  gap: var(--inimark-space-4);
+  align-items: center;
+  padding: var(--inimark-space-3) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-row-title {
+  font-family: var(--inimark-font-ui);
+  font-size: var(--inimark-control-font-size, 13px);
+  font-weight: 500;
+}
+
+.inimark-settings-row-desc {
+  margin: 0.25rem 0 0;
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.inimark-settings-row-control {
+  justify-self: start;
+  width: 100%;
+  min-width: 0;
+  max-width: 11rem;
+}
+
+.inimark-settings-row-control .inimark-select,
+.inimark-settings-row-control .inimark-slider {
+  width: 100%;
+  min-width: 0;
+}
+
+.inimark-about {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--inimark-space-4);
+  padding: var(--inimark-space-3) 0;
+}
+
+.inimark-about-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-2) 0 var(--inimark-space-1);
+}
+
+.inimark-about-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.inimark-about-name {
+  margin: var(--inimark-space-2) 0 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--inimark-fg);
+}
+
+.inimark-about-desc {
+  margin: 0;
+  max-width: 22rem;
+  color: var(--inimark-muted-fg);
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.55;
+}
+
+.inimark-about-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.inimark-about-list .inimark-settings-row:first-child {
+  border-top: 1px solid var(--inimark-border);
+}
+
+.inimark-about-list .inimark-settings-row {
+  /* Match other settings rows that host a control (title + control-height). */
+  box-sizing: border-box;
+  min-height: calc(var(--inimark-control-height) + var(--inimark-space-3) * 2);
+}
+
+.inimark-about-list .inimark-settings-row-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  justify-self: end;
+  min-height: var(--inimark-control-height);
+  text-align: right;
+}
+
+.inimark-about-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--inimark-control-height);
+  color: var(--inimark-muted-fg);
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.4;
+}
+
+.inimark-about-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: var(--inimark-control-height);
+  color: var(--inimark-accent);
+  font-size: var(--inimark-control-font-size, 13px);
+  text-decoration: none;
+  text-align: right;
+}
+
+.inimark-about-link:hover {
+  text-decoration: underline;
+}
+
+.inimark-about-update {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  max-width: 14rem;
+  min-height: var(--inimark-control-height);
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-action {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.inimark-about-update-note {
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.inimark-about-update-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--inimark-space-2);
+  width: 100%;
+  min-height: var(--inimark-control-height);
+  padding: 0 var(--inimark-space-3);
+  border: 1px solid color-mix(in srgb, #22c55e 35%, var(--inimark-border));
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, #22c55e 10%, transparent);
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-ui);
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition);
+}
+
+.inimark-about-update-pill:hover:not(:disabled) {
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+  border-color: color-mix(in srgb, #22c55e 50%, var(--inimark-border));
+}
+
+.inimark-about-update-pill:focus {
+  outline: none;
+}
+
+.inimark-about-update-pill:focus-visible {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #22c55e 30%, transparent);
+}
+
+.inimark-about-update-check-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.inimark-about-update--downloading {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-progress {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: var(--inimark-control-height);
+  overflow: hidden;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-hover));
+}
+
+.inimark-about-update-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--inimark-accent) 88%, #ffffff 12%),
+    var(--inimark-accent)
+  );
+  transition: width 0.18s ease;
+}
+
+.inimark-about-update-progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--inimark-space-2);
+  color: var(--inimark-fg);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.inimark-about-update-cancel {
+  flex-shrink: 0;
+  width: var(--inimark-control-height);
+  min-width: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  border: 1px solid var(--inimark-border);
+  border-radius: 999px;
+  background: var(--inimark-hover);
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-about-update-cancel:hover:not(:disabled) {
+  color: var(--inimark-fg);
+  border-color: color-mix(in srgb, var(--inimark-accent) 35%, var(--inimark-border));
+  background: color-mix(in srgb, var(--inimark-accent) 10%, var(--inimark-hover));
+}
+
+.inimark-about-update-cancel .inimark-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.inimark-about-update-error-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--inimark-space-2);
+  width: 100%;
+}
+
+.inimark-about-update-error {
+  margin: 0;
+  color: color-mix(in srgb, #f87171 85%, var(--inimark-muted-fg));
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.inimark-about-update-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-about-update-actions .inimark-btn[hidden] {
+  display: none !important;
+}
+
+.inimark-about-update-status {
+  margin: 0;
+  min-height: 1.25em;
+  text-align: center;
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.inimark-about-update-status:empty {
+  display: none;
+}
+
+.inimark-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--inimark-space-2);
+  padding-top: var(--inimark-space-1);
+}
+
+.inimark-about-links .inimark-btn {
+  min-width: 0;
+}
+
+.inimark-settings-library-add {
+  --_accent: var(--inimark-accent);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) * 2);
+  margin: 0 0 calc(var(--inimark-space-4) + var(--inimark-space-3));
+  padding: var(--inimark-space-3) var(--inimark-space-4);
+  border: 1px dashed color-mix(in srgb, var(--_accent) 55%, transparent);
+  border-radius: var(--inimark-radius-control);
+  background: color-mix(in srgb, var(--_accent) 14%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  color: var(--_accent);
+  font: inherit;
+  font-size: var(--inimark-control-font-size, 13px);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--inimark-control-transition),
+    border-color var(--inimark-control-transition),
+    box-shadow var(--inimark-control-transition),
+    transform var(--inimark-control-transition);
+}
+
+.inimark-settings-library-add::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--_accent) 10%, transparent),
+    transparent 55%,
+    color-mix(in srgb, var(--_accent) 6%, transparent)
+  );
+  pointer-events: none;
+}
+
+.inimark-settings-library-add:hover {
+  background: color-mix(in srgb, var(--_accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--_accent) 72%, transparent);
+}
+
+.inimark-settings-library-add.is-library-drop-target {
+  background: color-mix(in srgb, var(--_accent) 28%, transparent);
+  border-color: var(--_accent);
+  border-style: solid;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--_accent) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 24%, transparent);
+}
+
+.inimark-settings-library-add:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.inimark-settings-library-add:focus {
+  outline: none;
+}
+
+.inimark-settings-library-add:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--_accent) 35%, transparent);
+}
+
+.inimark-settings-library-add-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--inimark-space-2);
+}
+
+.inimark-settings-library-add-label .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.inimark-settings-libraries-empty {
+  margin: var(--inimark-space-2) 0 0;
+  color: var(--inimark-muted-fg);
+  font-size: var(--inimark-control-font-size, 13px);
+}
+
+.inimark-settings-libraries-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--inimark-space-2);
+}
+
+.inimark-settings-library-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--inimark-space-4);
+  align-items: center;
+  padding: var(--inimark-space-3) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-library-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.inimark-settings-library-actions {
+  display: flex;
+  align-items: center;
+  align-self: center;
+}
+
+.inimark-settings-library-name-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.inimark-settings-library-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: var(--inimark-control-font-size, 13px);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-settings-library-rename-btn {
+  flex-shrink: 0;
+  width: var(--inimark-control-height);
+  height: var(--inimark-control-height);
+  min-width: var(--inimark-control-height);
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-library-rename-btn:hover:not(:disabled) {
+  color: var(--inimark-fg);
+}
+
+.inimark-settings-library-path {
+  margin-top: 0.2rem;
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-settings-section-title {
+  margin: var(--inimark-space-4) 0 var(--inimark-space-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-section-title:first-child {
+  margin-top: 0;
+}
+
+.inimark-settings-collapse-group {
+  margin: 0 0 var(--inimark-space-3);
+}
+
+.inimark-settings-collapse-group:last-child {
+  margin-bottom: 0;
+}
+
+.inimark-settings-collapse-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: calc(var(--inimark-control-height) - 2px);
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--inimark-radius-control);
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inimark-settings-collapse-header:hover {
+  background: var(--inimark-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-settings-collapse-chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+}
+
+.inimark-settings-collapse-chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.inimark-settings-collapse-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+.inimark-settings-collapse-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-settings-collapse-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-2) 0 0;
+}
+
+.inimark-settings-collapse-body[hidden] {
+  display: none;
+}
+
+.inimark-settings-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--inimark-space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.inimark-settings-inline-controls .inimark-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.inimark-settings-auto-save-delay .inimark-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.inimark-settings-auto-save-delay .inimark-field__input {
+  width: 100%;
+}
+
+.inimark-settings-auto-save-delay .inimark-select {
+  flex: 0 0 4.25rem;
+  width: 4.25rem;
+}
+
+/* ── Sidebar tab layout (appearance) ─────────────────────────────── */
+
+.inimark-settings-sidebar-tabs {
+  padding: var(--inimark-space-3) 0;
+  border-bottom: 1px solid var(--inimark-border);
+}
+
+.inimark-settings-sidebar-tabs .inimark-settings-row-desc {
+  margin-bottom: var(--inimark-space-3);
+}
+
+.inimark-settings-publish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--inimark-space-2);
+  padding: var(--inimark-space-3) 0;
+}
+
+.inimark-settings-publish-status {
+  margin: 0;
+  padding: var(--inimark-space-2) 0 var(--inimark-space-4);
+  color: var(--inimark-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.inimark-settings-sidebar-tabs-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--inimark-space-3);
+}
+
+.inimark-settings-sidebar-tabs-zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-2);
+  min-width: 0;
+  padding: var(--inimark-space-2);
+  border: 1px dashed var(--inimark-border);
+  border-radius: var(--inimark-radius-sm, 6px);
+  background: color-mix(in srgb, var(--inimark-muted-fg) 4%, transparent);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.inimark-settings-sidebar-tabs-zone.is-drop-target {
+  border-color: var(--inimark-accent);
+  background: color-mix(in srgb, var(--inimark-accent) 8%, transparent);
+}
+
+.inimark-settings-sidebar-tabs-zone-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-settings-sidebar-tabs-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+}
+
+.inimark-settings-sidebar-tabs-empty {
+  color: var(--inimark-muted-fg);
+  font-size: 12px;
+  padding: 0.35rem 0.25rem;
+}
+
+.inimark-settings-sidebar-tabs-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm, 6px);
+  background: var(--inimark-bg);
+  color: var(--inimark-fg);
+  cursor: grab;
+}
+
+.inimark-settings-sidebar-tabs-chip:hover {
+  border-color: color-mix(in srgb, var(--inimark-accent) 45%, var(--inimark-border));
+}
+
+.inimark-settings-sidebar-tabs-chip:active,
+.inimark-settings-sidebar-tabs-chip.is-dragging {
+  cursor: grabbing;
+  opacity: 0.35;
+}
+
+.inimark-settings-sidebar-tabs-chip.is-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  opacity: 0.95;
+  pointer-events: none;
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 28%, transparent);
+  cursor: grabbing;
+}
+
+.inimark-settings-sidebar-tabs-chip .inimark-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.inimark-settings-sidebar-tabs-ghost {
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  background: var(--inimark-accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .inimark-settings-sidebar-tabs-zones {
+    grid-template-columns: 1fr;
+  }
+}

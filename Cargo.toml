@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
   "apps/desktop/src-tauri",
+  "apps/vellum/src-tauri",
+  "crates/dionysen-shell",
   "crates/inimark-ssg",
 ]
 
@@ -27,4 +29,4 @@ strip = true
 
 # Overlay traffic lights vertically centered; re-applied from drawRect on paint.
 [patch.crates-io]
-wry = { path = "apps/desktop/src-tauri/vendor/wry" }
+wry = { path = "vendor/wry" }

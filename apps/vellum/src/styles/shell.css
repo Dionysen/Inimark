@@ -1,0 +1,337 @@
+@import "@dionysen/ui/tokens.css";
+@import "./shell-token-alias.css";
+@import "@dionysen/ui/widgets.css";
+
+/* Minimal theme tokens for light / dark appearance stubs. */
+:root,
+:root[data-appearance="dark"] {
+  color-scheme: dark;
+  --bg-primary: #1b1d24;
+  --bg-secondary: #111217;
+  --bg-surface: #1b1d24;
+  --bg-menu: #101116;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-tertiary: #1b1d24;
+  --bg-input: #0c0c10;
+  --text-primary: #c1c3c2;
+  --text-secondary: #818286;
+  --accent: #74a7fe;
+  --border: rgba(145, 145, 145, 0.16);
+  --scrollbar-thumb: #aaaaaa;
+  --scrollbar-thumb-hover: #6b6b6b;
+  --scrollbar-track: transparent;
+  --radius-scrollbar: 2px;
+  --scrollbar-size: 6px;
+  --font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --editor-font-size: 16px;
+  --radius-control: 4px;
+  --control-height: 32px;
+  --control-padding-x: 10px;
+  --control-font-size: 13px;
+}
+
+:root[data-appearance="light"] {
+  color-scheme: light;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f5f7;
+  --bg-surface: #ffffff;
+  --bg-menu: #ffffff;
+  --bg-hover: rgba(0, 0, 0, 0.06);
+  --bg-tertiary: #eef0f3;
+  --bg-input: #ffffff;
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --accent: #0969da;
+  --border: rgba(31, 35, 40, 0.12);
+  --scrollbar-thumb: #9aa0a6;
+  --scrollbar-thumb-hover: #6e7781;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+#app {
+  height: 100%;
+  background: var(--inimark-bg);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+textarea,
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="image"]):not([type="hidden"]),
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+html.platform-linux #app {
+  border-radius: var(--inimark-window-radius);
+  overflow: clip;
+}
+
+html.platform-macos #app {
+  border-radius: var(--inimark-window-radius);
+  overflow: visible;
+  clip-path: inset(0 round var(--inimark-window-radius));
+}
+
+html.platform-windows,
+html.platform-windows body {
+  background: var(--inimark-bg);
+}
+
+.inimark-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 20;
+  background: transparent;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-resize-handle--left {
+  right: -4px;
+}
+
+.inimark-resize-handle--right {
+  left: -4px;
+}
+
+body.is-column-resizing,
+body.is-column-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+.inimark-titlebar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  height: var(--inimark-titlebar-height);
+  min-height: var(--inimark-titlebar-height);
+  box-sizing: border-box;
+  background: var(--inimark-content-bg);
+  user-select: none;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.inimark-titlebar-leading,
+.inimark-titlebar-center {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  -webkit-app-region: drag;
+}
+
+.inimark-titlebar-leading {
+  justify-self: start;
+  padding-left: var(--inimark-space-3);
+}
+
+.inimark-titlebar-center {
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 var(--inimark-space-2);
+}
+
+.inimark-titlebar-title {
+  display: block;
+  max-width: 100%;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--inimark-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-titlebar-trailing {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  justify-content: flex-end;
+  min-width: 0;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-titlebar-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.inimark-titlebar-btn {
+  display: grid;
+  place-items: center;
+  width: var(--inimark-caption-width);
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--inimark-muted-fg);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.inimark-titlebar-btn:hover {
+  background: var(--inimark-caption-hover);
+  color: var(--inimark-fg);
+}
+
+.inimark-titlebar-btn--close:hover {
+  background: var(--inimark-caption-close-hover);
+  color: #fff;
+}
+
+.inimark-titlebar-icon {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+html.platform-macos .inimark-titlebar-controls--native {
+  display: none;
+}
+
+html.platform-macos .inimark-titlebar-leading {
+  padding-left: calc(var(--inimark-space-3) + var(--inimark-mac-traffic-lights-width));
+}
+
+html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-only) {
+  grid-template-columns: 1fr auto auto;
+}
+
+.inimark-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.inimark-scrollbar::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.inimark-scrollbar-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.inimark-scrollbar-layer.is-suppressed {
+  visibility: hidden;
+}
+
+.inimark-scrollbar-rail {
+  position: fixed;
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--inimark-scrollbar-track);
+  transition: opacity 0.15s ease;
+}
+
+.inimark-scrollbar-rail.is-visible {
+  opacity: 1;
+  transition: none;
+}
+
+.inimark-scrollbar-rail.is-interactive {
+  pointer-events: auto;
+}
+
+.inimark-scrollbar-rail--y {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.inimark-scrollbar-rail--x {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.inimark-scrollbar-thumb {
+  flex: none;
+  border-radius: var(--inimark-scrollbar-radius);
+  background: var(--inimark-scrollbar-thumb);
+}
+
+.inimark-scrollbar-rail.is-scrolling .inimark-scrollbar-thumb,
+.inimark-scrollbar-rail.is-visible .inimark-scrollbar-thumb:hover,
+.inimark-scrollbar-rail.is-dragging .inimark-scrollbar-thumb {
+  background: var(--inimark-scrollbar-thumb-hover);
+}
+
+.vellum-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.vellum-main-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--inimark-content-bg);
+}
+
+.vellum-editor-host {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.vellum-plaintext-editor {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 1.25rem 1.75rem;
+  border: 0;
+  resize: none;
+  outline: none;
+  background: transparent;
+  color: var(--inimark-fg);
+  font-family: var(--inimark-font-ui);
+  font-size: var(--shell-editor-font-size, 16px);
+  line-height: 1.6;
+}
+
+.vellum-about-body,
+.vellum-about-version {
+  margin: 0 0 0.75rem;
+  color: var(--inimark-muted-fg);
+  line-height: 1.5;
+}

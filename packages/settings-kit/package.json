@@ -1,0 +1,29 @@
+{
+  "name": "@dionysen/settings-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generic settings store, shell view, and aux-window helpers",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dionysen/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tauri-apps/api": "^2.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@tauri-apps/api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tauri-apps/api": "^2.5.0",
+    "typescript": "~5.8.3"
+  }
+}
