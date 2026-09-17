@@ -321,6 +321,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   min-width: 0;
   display: flex;
   position: relative;
+  /* visible so the shared resize handle can overhang the border */
   overflow: visible;
   border-right: 1px solid var(--border);
   background: var(--bg-secondary, var(--inimark-bg));
@@ -331,6 +332,15 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   pointer-events: none;
   visibility: hidden;
   overflow: hidden;
+}
+
+.vellum-library-host.is-collapsed > .inimark-resize-handle,
+.inimark-sidebar.is-collapsed > .inimark-resize-handle {
+  display: none;
+}
+
+.vellum-library-host.is-resizing {
+  user-select: none;
 }
 
 .vellum-main {
@@ -365,17 +375,19 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Match Inimark sidebar panel inset used by createPanelToolbar */
+  --vellum-library-inset: var(--inimark-space-2);
 }
 
 .vellum-library-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0.5rem;
+  padding: 0 var(--vellum-library-inset);
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 1px;
 }
 
 .inimark-sidebar-topbar {
@@ -393,6 +405,15 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 .vellum-library-book-wrap {
   flex-shrink: 0;
   position: relative;
+  padding: var(--inimark-space-1) var(--vellum-library-inset) 0;
+}
+
+.vellum-library .inimark-panel-toolbar {
+  flex-shrink: 0;
+  justify-content: flex-start;
+  /* createPanelToolbar already pads with space-1 / space-2 — keep shared metrics */
+  padding-left: var(--vellum-library-inset);
+  padding-right: var(--vellum-library-inset);
 }
 
 .inimark-sidebar-collapse-btn {
@@ -449,13 +470,13 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 32px;
-  padding: 0.35rem 0.55rem;
+  min-height: var(--inimark-control-height, 32px);
+  padding: 0 var(--inimark-control-padding-x, 10px);
   border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: var(--bg-secondary);
+  border-radius: var(--inimark-radius-control, var(--radius-control));
+  background: var(--bg-input, var(--bg-secondary));
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--inimark-control-font-size, 13px);
   font-weight: 500;
   text-align: left;
   cursor: pointer;
@@ -524,12 +545,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover);
 }
 
-.vellum-library .inimark-panel-toolbar {
-  flex-shrink: 0;
-  justify-content: flex-start;
-  padding: 0.1rem 0.15rem;
-}
-
 .vellum-library-banner {
   font-size: 11px;
   line-height: 1.35;
@@ -549,7 +564,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-library-section-label {
   margin: 0.45rem 0 0.15rem;
-  padding: 0 0.45rem;
+  padding: 0 var(--inimark-control-padding-x, 0.45rem);
   font-size: 11px;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -557,7 +572,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-empty {
-  padding: 0.35rem 0.45rem;
+  padding: 0.35rem var(--inimark-control-padding-x, 0.45rem);
   font-size: 12px;
   color: var(--text-secondary);
 }

@@ -136,8 +136,8 @@ export function mountLibraryPanel(
   const treeEl = document.createElement("div");
   treeEl.className = "vellum-library-tree";
 
-  scroll.append(bookWrap, toolbar.el, banner, treeEl);
-  body.append(scroll);
+  scroll.append(banner, treeEl);
+  body.append(bookWrap, toolbar.el, scroll);
   el.append(topbar, body);
   host.append(el);
 

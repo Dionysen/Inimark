@@ -4,8 +4,14 @@ import {
   bootShellChrome,
   closeWindow,
   initPlatform,
+  requestOverlayScrollbarRefresh,
 } from "@dionysen/shell";
-import { initTooltipLayer } from "@dionysen/ui";
+import {
+  attachColumnResize,
+  initTooltipLayer,
+  loadPersistedWidth,
+  persistWidth,
+} from "@dionysen/ui";
 import { initI18n, t } from "./i18n/index.ts";
 import { applySettings, loadSettings } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
@@ -18,6 +24,10 @@ import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
 
 const SIDEBAR_OPEN_KEY = "vellum-sidebar-open";
+const SIDEBAR_WIDTH_KEY = "vellum-sidebar-width";
+const SIDEBAR_WIDTH_DEFAULT = 280;
+const SIDEBAR_WIDTH_MIN = 200;
+const SIDEBAR_WIDTH_MAX = 480;
 
 function loadSidebarOpen(): boolean {
   const raw = localStorage.getItem(SIDEBAR_OPEN_KEY);
@@ -54,9 +64,15 @@ const shell = root;
 shell.className = "vellum-shell";
 
 let sidebarOpen = loadSidebarOpen();
+let sidebarWidth = loadPersistedWidth(
+  SIDEBAR_WIDTH_KEY,
+  SIDEBAR_WIDTH_DEFAULT,
+  SIDEBAR_WIDTH_MIN,
+  SIDEBAR_WIDTH_MAX,
+);
 
 const libraryHost = document.createElement("aside");
-libraryHost.className = "vellum-library-host";
+libraryHost.className = "vellum-library-host inimark-sidebar";
 
 const mainColumn = document.createElement("div");
 mainColumn.className = "vellum-main";
@@ -80,12 +96,17 @@ const editor = mountPlaintextEditor(editorHost, {
   placeholder: t("editor.placeholder"),
 });
 
+function applySidebarWidth(): void {
+  shell.style.setProperty("--vellum-library-width", `${sidebarWidth}px`);
+}
+
 function applySidebarState(): void {
   shell.classList.toggle("is-sidebar-closed", !sidebarOpen);
   libraryHost.classList.toggle("is-collapsed", !sidebarOpen);
   titleBar.setSidebarOpen(sidebarOpen);
   library.setSidebarOpen(sidebarOpen);
   localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
+  requestOverlayScrollbarRefresh();
 }
 
 function toggleSidebar(): void {
@@ -118,7 +139,22 @@ const library = mountLibraryPanel(libraryHost, {
   onToggleSidebar: toggleSidebar,
 });
 librarySave = () => library.save();
+
+applySidebarWidth();
 applySidebarState();
+
+const columnResize = attachColumnResize(libraryHost, {
+  side: "left",
+  minWidth: SIDEBAR_WIDTH_MIN,
+  maxWidth: SIDEBAR_WIDTH_MAX,
+  getWidth: () => sidebarWidth,
+  onWidthChange(width) {
+    sidebarWidth = width;
+    applySidebarWidth();
+    persistWidth(SIDEBAR_WIDTH_KEY, width);
+    requestOverlayScrollbarRefresh();
+  },
+});
 
 editorColumn.append(statusEl, editorHost);
 titlebarZone.append(titleHost);
@@ -135,6 +171,7 @@ editor.focus();
 window.addEventListener("beforeunload", () => {
   teardownDeepLink?.();
   teardownSyncStatus();
+  columnResize.destroy();
   teardownClose();
   teardownShell();
   teardownTooltips();
