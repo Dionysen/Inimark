@@ -1,3 +1,4 @@
+import { createIconButton } from "@dionysen/ui";
 import type { AppearanceMode, ThemePair } from "./appearance.ts";
 import { BUILTIN_THEMES } from "./builtin.ts";
 import { createThemeColorField } from "./color-field.ts";
@@ -48,7 +49,17 @@ function builtinPreviewColors(id: string): string[] {
 }
 
 const SVG_CHECK =
-  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+const SVG_EDIT =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+const SVG_DELETE =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+const SVG_PLUS =
+  '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+const SVG_EXPORT =
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
+const SVG_IMPORT =
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
 type PackDialogState =
   | null
@@ -695,54 +706,6 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
     slotHint.style.cssText = "margin-top: 8px; margin-bottom: 12px";
     slotHint.textContent = themeT("settings.theme.slotHint", { mode: resolvedLabel });
 
-    const toolbar = document.createElement("div");
-    toolbar.className = "theme-panel-toolbar";
-    const importBtn = document.createElement("button");
-    importBtn.type = "button";
-    importBtn.className = "settings-button";
-    importBtn.textContent = importing
-      ? themeT("settings.theme.importing")
-      : themeT("settings.theme.importPack");
-    importBtn.disabled = importing || exporting || forking;
-    importBtn.addEventListener("click", () => {
-      void (async () => {
-        const picked = await pickAndReadThemePackFile();
-        if (!picked) return;
-        packDialog = {
-          mode: "import",
-          pack: picked.pack,
-          selectedApp: new Set(picked.pack.themes.app.map((_, i) => i)),
-        };
-        render();
-      })();
-    });
-    const exportBtn = document.createElement("button");
-    exportBtn.type = "button";
-    exportBtn.className = "settings-button";
-    exportBtn.textContent = themeT("settings.theme.exportPack");
-    exportBtn.disabled = customThemes.length === 0 || importing || exporting;
-    exportBtn.addEventListener("click", () => {
-      packDialog = {
-        mode: "export",
-        packName: "Theme Pack",
-        selectedApp: new Set(customThemes.map((m) => m.id)),
-      };
-      render();
-    });
-    const newLight = document.createElement("button");
-    newLight.type = "button";
-    newLight.className = "settings-button";
-    newLight.textContent = themeT("settings.theme.newLightTheme");
-    newLight.disabled = forking;
-    newLight.addEventListener("click", () => void handleCreateBlank("light"));
-    const newDark = document.createElement("button");
-    newDark.type = "button";
-    newDark.className = "settings-button";
-    newDark.textContent = themeT("settings.theme.newDarkTheme");
-    newDark.disabled = forking;
-    newDark.addEventListener("click", () => void handleCreateBlank("dark"));
-    toolbar.append(importBtn, exportBtn, newLight, newDark);
-
     const grid = document.createElement("div");
     grid.className = "settings-theme-grid";
 
@@ -750,97 +713,202 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
       const colors = builtinPreviewColors(value);
       const label = builtinThemeLabel(value);
       const preferred = theme === value;
+
       const card = document.createElement("div");
       card.className = `settings-theme-card${preferred ? " active" : ""}`;
       card.addEventListener("click", () =>
         themeManager.setPreferredAppTheme(resolvedMode, value),
       );
+
       const preview = document.createElement("div");
       preview.className = "settings-theme-preview";
       preview.dataset.theme = value;
       preview.append(createThemeMock(colors));
       if (preferred) appendCheckmark(preview);
-      const info = document.createElement("div");
-      info.className = "settings-theme-info";
-      const name = document.createElement("div");
-      name.className = "settings-theme-name";
-      name.textContent = label;
-      const slot = renderThemeSlotLabel(value, preferredAppTheme);
-      info.append(name);
-      if (slot) info.append(slot);
+
+      const actions = document.createElement("div");
+      actions.className = "custom-theme-actions";
       const forkBtn = document.createElement("button");
       forkBtn.type = "button";
-      forkBtn.className = "settings-theme-action";
-      forkBtn.textContent = themeT("settings.theme.customize");
+      forkBtn.className = "custom-theme-edit-btn";
+      forkBtn.title = themeT("settings.theme.forkAndEdit");
       forkBtn.disabled = forking;
+      forkBtn.innerHTML = SVG_EDIT;
       forkBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         void handleForkBuiltin(value, label);
       });
-      info.append(forkBtn);
-      card.append(preview, info);
+      actions.append(forkBtn);
+      preview.append(actions);
+
+      const meta = document.createElement("div");
+      meta.className = "settings-theme-meta";
+      const nameEl = document.createElement("span");
+      nameEl.className = "settings-theme-name";
+      nameEl.textContent = label;
+      meta.append(nameEl);
+      const slotLabel = renderThemeSlotLabel(value, preferredAppTheme);
+      if (slotLabel) meta.append(slotLabel);
+
+      card.append(preview, meta);
       grid.append(card);
     }
 
+    const divider = document.createElement("div");
+    divider.className = "settings-theme-divider";
+    divider.setAttribute("role", "separator");
+    divider.textContent = themeT("settings.theme.customThemes");
+    grid.append(divider);
+
     for (const manifest of customThemes) {
-      const fullId = `custom-${manifest.id}`;
-      const preferred = theme === fullId;
-      const colors = resolveThemePreviewColors(manifest);
+      const themeId = `custom-${manifest.id}`;
+      const preferred = theme === themeId;
+      const [c0, c1, c2, c3] = resolveThemePreviewColors(manifest);
+
       const card = document.createElement("div");
-      card.className = `settings-theme-card custom${preferred ? " active" : ""}`;
+      card.className = `settings-theme-card custom-theme-card${preferred ? " active" : ""}`;
       card.addEventListener("click", () =>
-        themeManager.setPreferredAppTheme(resolvedMode, fullId),
+        themeManager.setPreferredAppTheme(resolvedMode, themeId),
       );
+
       const preview = document.createElement("div");
       preview.className = "settings-theme-preview";
-      preview.append(createThemeMock(colors));
+      preview.append(createThemeMock([c0, c1, c2, c3]));
       if (preferred) appendCheckmark(preview);
-      const info = document.createElement("div");
-      info.className = "settings-theme-info";
-      const name = document.createElement("div");
-      name.className = "settings-theme-name";
-      name.textContent = manifest.name;
-      const slot = renderThemeSlotLabel(fullId, preferredAppTheme);
-      info.append(name);
-      if (slot) info.append(slot);
 
       const actions = document.createElement("div");
-      actions.className = "settings-theme-actions";
+      actions.className = "custom-theme-actions";
+
       const editBtn = document.createElement("button");
       editBtn.type = "button";
-      editBtn.className = "settings-theme-action";
-      editBtn.textContent = themeT("settings.theme.edit");
+      editBtn.className = "custom-theme-edit-btn";
+      editBtn.title = themeT("settings.theme.edit");
+      editBtn.innerHTML = SVG_EDIT;
       editBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         void handleStartEdit(manifest);
       });
-      const renameBtn = document.createElement("button");
-      renameBtn.type = "button";
-      renameBtn.className = "settings-theme-action";
-      renameBtn.textContent = themeT("settings.theme.rename");
-      renameBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        themeName = manifest.name;
-        nameDialog = { open: true, id: manifest.id, defaultName: manifest.name };
-        render();
-      });
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "settings-theme-action danger";
-      deleteBtn.textContent = themeT("settings.theme.delete");
-      deleteBtn.addEventListener("click", (e) => {
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "custom-theme-delete-btn";
+      delBtn.title = themeT("settings.theme.delete");
+      delBtn.innerHTML = SVG_DELETE;
+      delBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         deleteConfirm = { id: manifest.id, name: manifest.name };
         render();
       });
-      actions.append(editBtn, renameBtn, deleteBtn);
-      info.append(actions);
-      card.append(preview, info);
+
+      actions.append(editBtn, delBtn);
+      preview.append(actions);
+
+      const meta = document.createElement("div");
+      meta.className = "settings-theme-meta";
+      const nameRow = document.createElement("div");
+      nameRow.className = "settings-theme-name-row";
+      const nameEl = document.createElement("span");
+      nameEl.className = "settings-theme-name";
+      nameEl.textContent = manifest.name;
+      const renameBtn = createIconButton({
+        label: themeT("settings.theme.rename"),
+        title: themeT("settings.theme.rename"),
+        html: SVG_EDIT,
+        onClick(e) {
+          e.stopPropagation();
+          themeName = manifest.name;
+          nameDialog = { open: true, id: manifest.id, defaultName: manifest.name };
+          render();
+        },
+      });
+      renameBtn.classList.add("settings-theme-rename-btn");
+      nameRow.append(nameEl, renameBtn);
+      meta.append(nameRow);
+      const slotLabel = renderThemeSlotLabel(themeId, preferredAppTheme);
+      if (slotLabel) meta.append(slotLabel);
+
+      card.append(preview, meta);
       grid.append(card);
     }
 
-    root.append(modeBlock, slotHint, toolbar, grid);
+    const newCard = document.createElement("div");
+    newCard.className = "settings-theme-card settings-theme-import-card";
+    newCard.addEventListener("click", () => void handleCreateBlank(resolvedMode));
+    const newPreview = document.createElement("div");
+    newPreview.className = "settings-theme-preview settings-theme-import-preview";
+    newPreview.innerHTML = SVG_PLUS;
+    const newName = document.createElement("span");
+    newName.className = "settings-theme-name";
+    newName.textContent = themeT("settings.theme.newTheme");
+    newCard.append(newPreview, newName);
+    grid.append(newCard);
+
+    const packBar = document.createElement("div");
+    packBar.className = "theme-pack-bar theme-pack-bar-footer";
+
+    const packActions = document.createElement("div");
+    packActions.className = "theme-pack-actions";
+
+    const exportBtn = document.createElement("button");
+    exportBtn.type = "button";
+    exportBtn.className = "theme-pack-btn";
+    exportBtn.disabled = exporting;
+    exportBtn.innerHTML = `${SVG_EXPORT}<span>${exporting ? themeT("settings.theme.exporting") : themeT("settings.theme.exportThemePack")}</span>`;
+    exportBtn.addEventListener("click", () => {
+      if (customThemes.length === 0) {
+        alert(themeT("settings.theme.packNoCustomThemes"));
+        return;
+      }
+      packDialog = {
+        mode: "export",
+        packName: customThemes[0]?.name || "Theme Pack",
+        selectedApp: new Set(customThemes.map((m) => m.id)),
+      };
+      render();
+    });
+
+    const importBtn = document.createElement("button");
+    importBtn.type = "button";
+    importBtn.className = "theme-pack-btn";
+    importBtn.disabled = importing;
+    importBtn.innerHTML = `${SVG_IMPORT}<span>${importing ? themeT("settings.theme.importing") : themeT("settings.theme.importThemePack")}</span>`;
+    importBtn.addEventListener("click", () => void handleImportPack());
+
+    packActions.append(exportBtn, importBtn);
+
+    const packHint = document.createElement("p");
+    packHint.className = "settings-hint theme-pack-hint";
+    packHint.textContent = themeT("settings.theme.packHint");
+
+    packBar.append(packActions, packHint);
+
+    root.append(modeBlock, slotHint, grid, packBar);
     return root;
+  }
+
+  async function handleImportPack(): Promise<void> {
+    try {
+      const picked = await pickAndReadThemePackFile();
+      if (!picked) return;
+      const pack = picked.pack;
+      if (pack.themes.app.length === 0) {
+        alert(themeT("settings.theme.packNoThemesInFile"));
+        return;
+      }
+      packDialog = {
+        mode: "import",
+        pack,
+        selectedApp: new Set(pack.themes.app.map((_, index) => index)),
+      };
+      render();
+    } catch (err) {
+      console.error("Import pack failed", err);
+      alert(
+        themeT("settings.theme.importFailed", {
+          error: err instanceof Error ? err.message : themeT("settings.theme.unknownError"),
+        }),
+      );
+    }
   }
 
   function render(): void {

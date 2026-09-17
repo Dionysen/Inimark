@@ -175,7 +175,7 @@ export function renderAccountSection(body: HTMLElement): () => void {
     if (disposed) return;
     const gen = ++refreshGen;
     root.replaceChildren();
-    root.append(createSectionTitle(t("settings.nav.account")));
+    root.append(createSectionTitle(t("settings.nav.sync")));
 
     if (!isTauri()) {
       root.append(statusLine(t("settings.account.tauriOnly"), "info"));

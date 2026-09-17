@@ -226,6 +226,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -233,6 +234,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .settings-theme-rename-btn.inimark-icon-btn {
@@ -253,9 +255,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  min-width: 0;
+}
+
+.settings-theme-meta > .settings-theme-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings-theme-slot-label {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-size: 10px;
   font-weight: 600;
   padding: 1px 6px;
@@ -846,6 +859,14 @@ html.is-color-picking * {
   overflow: hidden;
 }
 
+.inimark-settings-content:has(.theme-editor) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .inimark-settings-body:has(.theme-editor) {
   flex: 1;
   min-height: 0;
@@ -855,7 +876,9 @@ html.is-color-picking * {
 }
 
 .inimark-settings-theme-host:has(.theme-editor),
-.inimark-settings-body:has(.theme-editor)>.inimark-settings-theme-host {
+.vellum-theme-panel-host:has(.theme-editor),
+.inimark-settings-body:has(.theme-editor)>.inimark-settings-theme-host,
+.inimark-settings-body:has(.theme-editor)>.vellum-theme-panel-host {
   flex: 1;
   min-height: 0;
   display: flex;

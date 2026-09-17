@@ -785,7 +785,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   color: var(--inimark-fg);
   font-family: var(--inimark-font-ui);
   font-size: var(--shell-editor-font-size, 16px);
-  line-height: 1.6;
+  line-height: var(--shell-editor-line-height, 1.6);
 }
 
 .vellum-about-body,

@@ -58,16 +58,23 @@ const en: Dictionary = {
     noMatch: "No matching settings",
     focusSearch: "Focus search",
     nav: {
-      account: "Account",
-      appearance: "Appearance",
+      general: "General",
+      sync: "Cloud sync",
       editor: "Editor",
+      theme: "Theme",
       about: "About",
     },
     subtitle: {
-      account: "GitHub / Gitee PWB sync",
-      appearance: "Theme and language",
-      editor: "Editor preferences",
+      general: "Language and app preferences",
+      sync: "GitHub / Gitee PWB sync",
+      editor: "Font size, line spacing, and writing experience",
+      theme: "Themes and appearance mode",
       about: "About Vellum",
+    },
+    general: {
+      locale: "Language",
+      localeDesc: "Interface language",
+      localeSystem: "System",
     },
     account: {
       loginTitle: "Cloud sync",
@@ -106,7 +113,7 @@ const en: Dictionary = {
       loadFailed: "Could not load account state: {{error}}",
       tauriOnly: "Cloud sync requires the desktop app.",
     },
-    appearance: {
+      appearance: {
       locale: "Language",
       localeDesc: "UI language",
       theme: "Theme",
@@ -171,7 +178,7 @@ const en: Dictionary = {
       packNoCustomThemes: "No custom themes to export.",
       packNoThemesInFile: "This theme pack contains no themes.",
       packHint:
-        "Export or import selected custom app and code themes as a .inimark-theme.json pack.",
+        "Export or import selected custom app themes as a .inimark-theme.json pack.",
       slotBoth: "Light & Dark",
       forkName: "{{name}} (fork)",
       importFailed: "Import failed: {{error}}",
@@ -340,7 +347,9 @@ const en: Dictionary = {
     },
     editor: {
       fontSize: "Font size",
-      fontSizeDesc: "Editor text size",
+      fontSizeDesc: "Writing surface text size",
+      lineHeight: "Line spacing",
+      lineHeightDesc: "Line height of the writing surface",
     },
     about: {
       title: "Vellum",
@@ -412,16 +421,23 @@ const zhCN: Dictionary = {
     noMatch: "没有匹配的设置",
     focusSearch: "聚焦搜索",
     nav: {
-      account: "账号",
-      appearance: "外观",
+      general: "通用",
+      sync: "云同步",
       editor: "编辑器",
+      theme: "主题",
       about: "关于",
     },
     subtitle: {
-      account: "GitHub / Gitee 同步 .pwb",
-      appearance: "主题与语言",
-      editor: "编辑器偏好",
+      general: "语言与通用偏好",
+      sync: "GitHub / Gitee 同步 .pwb",
+      editor: "字号、行距与编辑体验",
+      theme: "主题与外观模式",
       about: "关于 Vellum",
+    },
+    general: {
+      locale: "语言",
+      localeDesc: "界面语言",
+      localeSystem: "跟随系统",
     },
     account: {
       loginTitle: "云同步",
@@ -519,7 +535,7 @@ const zhCN: Dictionary = {
       packDeselectAll: "取消全选",
       packNoCustomThemes: "没有可导出的自定义主题。",
       packNoThemesInFile: "该主题包中没有主题。",
-      packHint: "将选中的自定义应用主题与代码主题导出为 .inimark-theme.json 主题包，或从主题包中选择性导入。",
+      packHint: "将选中的自定义应用主题导出为 .inimark-theme.json 主题包，或从主题包中选择性导入。",
       slotBoth: "浅色与深色",
       forkName: "{{name}}（副本）",
       importFailed: "导入失败：{{error}}",
@@ -688,7 +704,9 @@ const zhCN: Dictionary = {
     },
     editor: {
       fontSize: "字号",
-      fontSizeDesc: "编辑器文字大小",
+      fontSizeDesc: "写作区文字大小",
+      lineHeight: "行距",
+      lineHeightDesc: "写作区行高",
     },
     about: {
       title: "Vellum",

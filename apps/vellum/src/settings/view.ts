@@ -18,6 +18,9 @@ import {
   type AppSettings,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
+  LINE_HEIGHT_MAX,
+  LINE_HEIGHT_MIN,
+  LINE_HEIGHT_STEP,
   loadSettings,
   patchSettings,
 } from "./store.ts";
@@ -29,7 +32,8 @@ import { isShortcutRecordingActive } from "../shortcuts/guard.ts";
 
 export type { SettingsViewController };
 
-const SECTIONS = ["account", "appearance", "editor", "about"] as const;
+/** Settings nav: 通用 / 云同步 / 编辑器 / 主题 / 关于 */
+const SECTIONS = ["general", "sync", "editor", "theme", "about"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
 function isSectionId(value: string): value is SectionId {
@@ -39,32 +43,32 @@ function isSectionId(value: string): value is SectionId {
 function searchEntries(): SettingSearchItem[] {
   return [
     {
-      id: "account-login",
-      section: "account",
+      id: "general-locale",
+      section: "general",
+      getTitle: () => t("settings.general.locale"),
+      getDescription: () => t("settings.general.localeDesc"),
+    },
+    {
+      id: "sync-login",
+      section: "sync",
       getTitle: () => t("settings.account.loginTitle"),
       getDescription: () => t("settings.account.loginHint"),
     },
     {
-      id: "account-sync",
-      section: "account",
+      id: "sync-now",
+      section: "sync",
       getTitle: () => t("settings.account.syncNow"),
       getDescription: () => t("settings.account.syncHint"),
     },
     {
-      id: "account-restore",
-      section: "account",
+      id: "sync-restore",
+      section: "sync",
       getTitle: () => t("settings.account.restoreBackup"),
       getDescription: () => t("settings.account.restoreTitle"),
     },
     {
-      id: "appearance-locale",
-      section: "appearance",
-      getTitle: () => t("settings.appearance.locale"),
-      getDescription: () => t("settings.appearance.localeDesc"),
-    },
-    {
       id: "appearance-theme",
-      section: "appearance",
+      section: "theme",
       getTitle: () => t("settings.theme.appearanceMode"),
       getDescription: () => t("settings.theme.appearanceModeDesc"),
     },
@@ -73,6 +77,12 @@ function searchEntries(): SettingSearchItem[] {
       section: "editor",
       getTitle: () => t("settings.editor.fontSize"),
       getDescription: () => t("settings.editor.fontSizeDesc"),
+    },
+    {
+      id: "editor-line-height",
+      section: "editor",
+      getTitle: () => t("settings.editor.lineHeight"),
+      getDescription: () => t("settings.editor.lineHeightDesc"),
     },
   ];
 }
@@ -126,17 +136,17 @@ function appendHighlightedText(
   parent.append(document.createTextNode(text.slice(idx + q.length)));
 }
 
-function renderAppearance(
+function renderGeneral(
   body: HTMLElement,
   settings: AppSettings,
   onPatch: (partial: Partial<AppSettings>) => void,
-): () => void {
-  body.append(createSectionTitle(t("settings.nav.appearance")));
+): void {
+  body.append(createSectionTitle(t("settings.nav.general")));
 
   const locale = createSelect({
     value: settings.locale,
     options: [
-      { value: "system", label: "System" },
+      { value: "system", label: t("settings.general.localeSystem") },
       { value: "en", label: "English" },
       { value: "zh-CN", label: "简体中文" },
     ],
@@ -144,15 +154,17 @@ function renderAppearance(
   });
   body.append(
     createRow(
-      t("settings.appearance.locale"),
-      t("settings.appearance.localeDesc"),
+      t("settings.general.locale"),
+      t("settings.general.localeDesc"),
       locale.el,
-      "appearance-locale",
+      "general-locale",
     ),
   );
+}
 
+function renderTheme(body: HTMLElement): () => void {
   const themeHost = document.createElement("div");
-  themeHost.className = "vellum-theme-panel-host";
+  themeHost.className = "inimark-settings-theme-host vellum-theme-panel-host";
   themeHost.dataset.settingId = "appearance-theme";
   body.append(themeHost);
   return renderChromeThemePanel(themeHost);
@@ -164,6 +176,7 @@ function renderEditor(
   onPatch: (partial: Partial<AppSettings>) => void,
 ): void {
   body.append(createSectionTitle(t("settings.nav.editor")));
+
   const fontSize = createSlider({
     min: FONT_SIZE_MIN,
     max: FONT_SIZE_MAX,
@@ -177,6 +190,23 @@ function renderEditor(
       t("settings.editor.fontSizeDesc"),
       fontSize.el,
       "editor-font-size",
+    ),
+  );
+
+  const lineHeight = createSlider({
+    min: LINE_HEIGHT_MIN,
+    max: LINE_HEIGHT_MAX,
+    step: LINE_HEIGHT_STEP,
+    value: settings.lineHeight,
+    formatValue: (v) => v.toFixed(1),
+    onChange: (value) => onPatch({ lineHeight: value }),
+  });
+  body.append(
+    createRow(
+      t("settings.editor.lineHeight"),
+      t("settings.editor.lineHeightDesc"),
+      lineHeight.el,
+      "editor-line-height",
     ),
   );
 }
@@ -194,7 +224,7 @@ function renderAbout(body: HTMLElement): void {
 
 export function mountSettingsView(host: HTMLElement): SettingsViewController {
   let settings = loadSettings();
-  let teardownAccount: (() => void) | null = null;
+  let teardownSync: (() => void) | null = null;
   let teardownTheme: (() => void) | null = null;
 
   const sections: SettingsSectionDef[] = SECTIONS.map((id) => ({
@@ -203,20 +233,22 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     subtitle: () => t(`settings.subtitle.${id}`),
     render(body) {
       body.replaceChildren();
-      teardownAccount?.();
-      teardownAccount = null;
+      teardownSync?.();
+      teardownSync = null;
       teardownTheme?.();
       teardownTheme = null;
-      if (id === "account") {
-        teardownAccount = renderAccountSection(body);
-      } else if (id === "appearance") {
-        teardownTheme = renderAppearance(body, settings, (partial) => {
+      if (id === "general") {
+        renderGeneral(body, settings, (partial) => {
           settings = patchSettings(partial);
         });
+      } else if (id === "sync") {
+        teardownSync = renderAccountSection(body);
       } else if (id === "editor") {
         renderEditor(body, settings, (partial) => {
           settings = patchSettings(partial);
         });
+      } else if (id === "theme") {
+        teardownTheme = renderTheme(body);
       } else {
         renderAbout(body);
       }
@@ -227,7 +259,7 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
 
   const controller = mountSettingsShell(host, {
     sections,
-    defaultSectionId: "account",
+    defaultSectionId: "general",
     strings: {
       searchPlaceholder: () => t("settings.search"),
       noMatch: () => t("settings.noMatch"),
@@ -251,15 +283,19 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     matchShortcut,
     formatShortcutDisplay,
     isShortcutRecordingActive,
-    resolveFallbackSection: (requested) =>
-      isSectionId(requested) ? requested : "account",
+    resolveFallbackSection: (requested) => {
+      // Legacy deep-links from older builds
+      if (requested === "account") return "sync";
+      if (requested === "appearance") return "theme";
+      return isSectionId(requested) ? requested : "general";
+    },
     navWidthKey: "vellum-settings-nav-width",
   });
 
   const originalDestroy = controller.destroy.bind(controller);
   controller.destroy = () => {
-    teardownAccount?.();
-    teardownAccount = null;
+    teardownSync?.();
+    teardownSync = null;
     teardownTheme?.();
     teardownTheme = null;
     originalDestroy();
