@@ -63,9 +63,38 @@ impl OauthRegion {
 struct TokenResponse {
     access_token: String,
     token_type: String,
+    /// Aliyun may return `expires_in` as a number or a string (`"3599"`).
+    #[serde(default, deserialize_with = "deserialize_expires_in")]
     expires_in: Option<i64>,
     refresh_token: Option<String>,
     id_token: Option<String>,
+}
+
+fn deserialize_expires_in<'de, D>(deserializer: D) -> std::result::Result<Option<i64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = Option::<Value>::deserialize(deserializer)?;
+    match value {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::Number(n)) => n
+            .as_i64()
+            .or_else(|| n.as_u64().and_then(|u| i64::try_from(u).ok()))
+            .ok_or_else(|| serde::de::Error::custom("expires_in number out of range"))
+            .map(Some),
+        Some(Value::String(s)) => {
+            let s = s.trim();
+            if s.is_empty() {
+                return Ok(None);
+            }
+            s.parse::<i64>()
+                .map(Some)
+                .map_err(|_| serde::de::Error::custom(format!("invalid expires_in: {s}")))
+        }
+        Some(other) => Err(serde::de::Error::custom(format!(
+            "expires_in must be number or string, got {other}"
+        ))),
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -411,5 +440,28 @@ mod tests {
         let claims = decode_jwt_claims(&token).unwrap();
         assert_eq!(claims["sub"], "abc");
         assert_eq!(claims["uid"], "1");
+    }
+
+    #[test]
+    fn token_response_accepts_string_expires_in() {
+        let json = r#"{
+            "access_token":"at",
+            "token_type":"Bearer",
+            "expires_in":"3599",
+            "refresh_token":"rt"
+        }"#;
+        let token: TokenResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(token.expires_in, Some(3599));
+    }
+
+    #[test]
+    fn token_response_accepts_numeric_expires_in() {
+        let json = r#"{
+            "access_token":"at",
+            "token_type":"Bearer",
+            "expires_in":3600
+        }"#;
+        let token: TokenResponse = serde_json::from_str(json).unwrap();
+        assert_eq!(token.expires_in, Some(3600));
     }
 }

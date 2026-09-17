@@ -283,6 +283,16 @@ export function renderAccountSection(body: HTMLElement): () => void {
     document.removeEventListener(CLOUD_SYNC_CHANGED_EVENT, onChanged),
   );
 
+  const onError = (event: Event) => {
+    const detail = (event as CustomEvent<string>).detail;
+    if (disposed || !detail) return;
+    root.append(statusLine(detail, "error"));
+  };
+  document.addEventListener("vellum:cloud-sync-error", onError);
+  cleanups.push(() =>
+    document.removeEventListener("vellum:cloud-sync-error", onError),
+  );
+
   return () => {
     disposed = true;
     for (const fn of cleanups) fn();

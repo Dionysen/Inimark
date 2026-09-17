@@ -26,8 +26,13 @@ import {
 
 const DEFAULT_SCOPE = "openid aliuid profile";
 
-/** Event name emitted by the in-app OAuth webview when callback is hit. */
+/** Default in-app webview redirect (register in Aliyun console). */
+export const LOCAL_OAUTH_REDIRECT_URI =
+  "http://127.0.0.1:39246/oauth/callback";
+
 export const OAUTH_CALLBACK_EVENT = "cloud-sync-oauth-callback";
+export const OAUTH_SESSION_EVENT = "cloud-sync-session-changed";
+export const OAUTH_ERROR_EVENT = "cloud-sync-oauth-error";
 
 export interface LoginOptions {
   region?: OauthRegion;
@@ -39,9 +44,8 @@ export interface LoginOptions {
 }
 
 /**
- * Start Aliyun OAuth. By default opens an in-app login window.
- * Call {@link completeLoginFromCallback} when the callback URL arrives
- * (webview event or deep link).
+ * Start Aliyun OAuth. By default opens an in-app login window using the localhost
+ * redirect bridge (see {@link LOCAL_OAUTH_REDIRECT_URI}).
  */
 export async function login(
   config: CloudSyncAppConfig,
@@ -52,10 +56,13 @@ export async function login(
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await codeChallengeS256(codeVerifier);
   const state = generateState();
+  const redirectUri = options.useSystemBrowser
+    ? config.redirectUri
+    : (config.inAppRedirectUri ?? LOCAL_OAUTH_REDIRECT_URI);
   const { authorizeUrl, browserUrl } = await csBeginOauth({
     appId: config.appId,
     clientId,
-    redirectUri: config.redirectUri,
+    redirectUri,
     region,
     codeVerifier,
     codeChallenge,

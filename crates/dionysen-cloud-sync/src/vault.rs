@@ -172,6 +172,14 @@ impl Vault {
         self.with_mut(|p| Ok(p.pending.take()))
     }
 
+    /// Put pending auth back after a failed token exchange so the user can retry.
+    pub fn restore_pending(&self, pending: PendingAuth) -> Result<()> {
+        self.with_mut(|p| {
+            p.pending = Some(pending);
+            Ok(())
+        })
+    }
+
     pub fn set_oauth(&self, app_id: &str, oauth: OauthRecord) -> Result<()> {
         self.with_mut(|p| {
             let profile = p.profiles.entry(app_id.to_string()).or_default();

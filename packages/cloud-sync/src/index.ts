@@ -29,7 +29,10 @@ export {
   login,
   logout,
   parseOauthCallbackUrl,
+  LOCAL_OAUTH_REDIRECT_URI,
   OAUTH_CALLBACK_EVENT,
+  OAUTH_ERROR_EVENT,
+  OAUTH_SESSION_EVENT,
 } from "./aliyun/auth.ts";
 export {
   configureOss,

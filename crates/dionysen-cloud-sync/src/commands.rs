@@ -7,6 +7,9 @@ use base64::Engine;
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
 
+/// Deduplicate navigation + page-load both hitting the same callback URL.
+static LAST_OAUTH_CALLBACK: Mutex<Option<String>> = Mutex::new(None);
+
 use crate::error::Error;
 use crate::oauth::{
     build_authorize_url, exchange_code, refresh_access_token, resolve_browser_login_url,
@@ -21,8 +24,12 @@ type CmdResult<T> = std::result::Result<T, String>;
 
 /// Window label for the in-app Aliyun login webview.
 pub const OAUTH_WINDOW_LABEL: &str = "oauth-login";
-/// Frontend listens for this when the webview hits `vellum://oauth/callback?...`.
+/// Fired with callback URL string (legacy / deep-link path).
 pub const OAUTH_CALLBACK_EVENT: &str = "cloud-sync-oauth-callback";
+/// Fired with [`AppProfileSummary`] after tokens are stored.
+pub const OAUTH_SESSION_EVENT: &str = "cloud-sync-session-changed";
+/// Fired with error string when in-app callback handling fails.
+pub const OAUTH_ERROR_EVENT: &str = "cloud-sync-oauth-error";
 
 pub struct CloudSyncState {
     vault: Mutex<Vault>,
@@ -113,27 +120,104 @@ pub fn cs_complete_oauth(
     state: State<'_, CloudSyncState>,
     input: CompleteOauthInput,
 ) -> CmdResult<AppProfileSummary> {
-    let v = vault(&state)?;
-    let pending = v
-        .take_pending()?
-        .ok_or_else(|| crate::error::Error::msg("no pending oauth"))?;
-    if pending.state != input.state {
-        return Err(crate::error::Error::Oauth("state mismatch".into()).into());
+    complete_oauth_exchange(&state, &input.code, &input.state)
+}
+
+fn complete_oauth_exchange(
+    state: &CloudSyncState,
+    code: &str,
+    oauth_state: &str,
+) -> CmdResult<AppProfileSummary> {
+    // Take pending under lock before HTTP so concurrent callbacks cannot double-exchange.
+    let pending = {
+        let v = vault(state)?;
+        v.take_pending()?
+            .ok_or_else(|| "no pending oauth".to_string())?
+    };
+    if pending.state != oauth_state {
+        let _ = vault(state)?.restore_pending(pending);
+        return Err("state mismatch".into());
     }
     if now_secs() - pending.created_at > 600 {
-        return Err(crate::error::Error::Oauth("pending oauth expired".into()).into());
+        return Err("pending oauth expired".into());
     }
-    let region = parse_region(&pending.region)?;
-    let record = exchange_code(
+    let region = parse_region(&pending.region).map_err(|e| e.to_string())?;
+    let app_id = pending.app_id.clone();
+    let record = match exchange_code(
         region,
         &pending.client_id,
         &pending.redirect_uri,
-        &input.code,
+        code,
         &pending.code_verifier,
-    )?;
-    let app_id = pending.app_id.clone();
-    v.set_oauth(&app_id, record)?;
-    Ok(v.profile_summary(&app_id)?)
+    ) {
+        Ok(record) => record,
+        Err(err) => {
+            let _ = vault(state)?.restore_pending(pending);
+            return Err(err.to_string());
+        }
+    };
+    let v = vault(state)?;
+    v.set_oauth(&app_id, record).map_err(|e| e.to_string())?;
+    v.profile_summary(&app_id).map_err(|e| e.to_string())
+}
+
+fn parse_callback_code_state(callback_url: &str) -> Option<(String, String)> {
+    let parsed = url::Url::parse(callback_url).ok().or_else(|| {
+        // Custom schemes sometimes need a fallback parse.
+        let q = callback_url.find('?')?;
+        let mut base = url::Url::parse("vellum://oauth/callback").ok()?;
+        base.set_query(Some(&callback_url[q + 1..]));
+        Some(base)
+    })?;
+    let mut code = None;
+    let mut state = None;
+    for (k, v) in parsed.query_pairs() {
+        if k == "code" {
+            code = Some(v.into_owned());
+        } else if k == "state" {
+            state = Some(v.into_owned());
+        }
+    }
+    Some((code?, state?))
+}
+
+fn handle_oauth_callback_url(app: &AppHandle, callback_url: &str) {
+    {
+        let mut last = LAST_OAUTH_CALLBACK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        if last.as_deref() == Some(callback_url) {
+            return;
+        }
+        *last = Some(callback_url.to_string());
+    }
+    let Some((code, oauth_state)) = parse_callback_code_state(callback_url) else {
+        let _ = app.emit(
+            OAUTH_ERROR_EVENT,
+            format!("invalid oauth callback: {callback_url}"),
+        );
+        return;
+    };
+    let result = {
+        let state = app.state::<CloudSyncState>();
+        complete_oauth_exchange(&state, &code, &oauth_state)
+    };
+    match result {
+        Ok(profile) => {
+            // Session event alone — do not re-emit callback URL (frontend would
+            // call complete again and fail with "no pending oauth").
+            let _ = app.emit(OAUTH_SESSION_EVENT, profile);
+        }
+        Err(err) => {
+            // Ignore duplicate completion after a successful first exchange.
+            if err != "no pending oauth" {
+                let _ = app.emit(OAUTH_ERROR_EVENT, err);
+            }
+        }
+    }
+    if let Some(win) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
+        let _ = win.destroy();
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -348,7 +432,7 @@ pub fn cs_open_url(url: String) -> CmdResult<()> {
 }
 
 /// Open Aliyun login inside an app webview (avoids Arc/Chrome blank SPA shells).
-/// Intercepts custom-scheme callback and emits [`OAUTH_CALLBACK_EVENT`].
+/// Completes token exchange in-process when the localhost / custom-scheme callback is hit.
 #[tauri::command]
 pub fn cs_open_oauth_login(app: AppHandle, url: String) -> CmdResult<()> {
     let trimmed = url.trim().to_string();
@@ -359,11 +443,30 @@ pub fn cs_open_oauth_login(app: AppHandle, url: String) -> CmdResult<()> {
         .parse()
         .map_err(|e: url::ParseError| e.to_string())?;
 
+    // Reuse the existing window when possible — destroy+recreate races as
+    // "webview with label 'oauth-login' already exists".
     if let Some(existing) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
-        let _ = existing.destroy();
+        {
+            let mut last = LAST_OAUTH_CALLBACK
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            *last = None;
+        }
+        existing.navigate(external).map_err(|e| e.to_string())?;
+        let _ = existing.show();
+        let _ = existing.set_focus();
+        return Ok(());
+    }
+
+    {
+        let mut last = LAST_OAUTH_CALLBACK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        *last = None;
     }
 
     let app_nav = app.clone();
+    let app_load = app.clone();
     WebviewWindowBuilder::new(&app, OAUTH_WINDOW_LABEL, WebviewUrl::External(external))
         .title("阿里云登录")
         .inner_size(520.0, 780.0)
@@ -373,12 +476,14 @@ pub fn cs_open_oauth_login(app: AppHandle, url: String) -> CmdResult<()> {
             if !is_oauth_callback_url(nav_url) {
                 return true;
             }
-            let callback = nav_url.as_str().to_string();
-            let _ = app_nav.emit(OAUTH_CALLBACK_EVENT, callback);
-            if let Some(win) = app_nav.get_webview_window(OAUTH_WINDOW_LABEL) {
-                let _ = win.close();
-            }
+            handle_oauth_callback_url(&app_nav, nav_url.as_str());
             false
+        })
+        .on_page_load(move |_window, payload| {
+            let url = payload.url();
+            if is_oauth_callback_url(url) {
+                handle_oauth_callback_url(&app_load, url.as_str());
+            }
         })
         .build()
         .map_err(|e| e.to_string())?;
@@ -389,11 +494,18 @@ fn is_oauth_callback_url(url: &url::Url) -> bool {
     let has_code = url.query_pairs().any(|(k, _)| k == "code");
     let has_state = url.query_pairs().any(|(k, _)| k == "state");
     if !has_code || !has_state {
-        return false;
+        let s = url.as_str();
+        return s.contains("code=") && s.contains("state=") && !s.starts_with("https://account.");
     }
-    // Custom app scheme (vellum://...) or explicit oauth/callback path.
     let scheme = url.scheme();
+    // Custom app scheme (vellum://...) 
     if scheme != "http" && scheme != "https" {
+        return true;
+    }
+    // Localhost bridge used by the in-app webview (must be registered in Aliyun).
+    if matches!(url.host_str(), Some("127.0.0.1") | Some("localhost"))
+        && url.path().contains("oauth/callback")
+    {
         return true;
     }
     url.path().contains("oauth/callback")

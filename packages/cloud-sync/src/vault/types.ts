@@ -66,7 +66,13 @@ export interface CloudSyncAppConfig {
   /** Vault profile key, e.g. `"vellum"`. */
   appId: string;
   clientId: string;
+  /** Deep-link callback (e.g. `vellum://oauth/callback`). */
   redirectUri: string;
+  /**
+   * In-app webview callback. Must be registered in Aliyun OAuth app redirect URIs.
+   * Default recommendation: `http://127.0.0.1:39246/oauth/callback`
+   */
+  inAppRedirectUri?: string;
   region?: OauthRegion;
   /** Intl client id when dual-region is enabled later. */
   intlClientId?: string;

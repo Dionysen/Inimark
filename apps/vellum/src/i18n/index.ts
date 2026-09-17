@@ -57,7 +57,7 @@ const en: Dictionary = {
       loginHint:
         "Opens an in-app Aliyun main-account login window. Login identifies you; OSS still needs your own AccessKey.",
       blankPageHint:
-        "Login opens inside Vellum (avoids blank pages in Arc/Chrome). If needed, also allow *.alicdn.com in any external browser you use.",
+        "In-app login needs this redirect URI in Aliyun OAuth app settings (exact match): http://127.0.0.1:39246/oauth/callback — keep vellum://oauth/callback as well.",
       adopt: "Use {{app}} session ({{name}})",
       ossTitle: "Object Storage (OSS)",
       ossHint:
@@ -151,7 +151,7 @@ const zhCN: Dictionary = {
       loginHint:
         "将在应用内打开阿里云主账号登录窗口。登录只用于识别身份；读写云盘仍需填写你自己的 AccessKey。",
       blankPageHint:
-        "登录会在 Vellum 内嵌窗口打开（避免 Arc/Chrome 空白页）。若仍异常，请确认能访问 *.alicdn.com。",
+        "应用内登录需在阿里云 OAuth 应用回调地址中额外添加（须完全一致）：http://127.0.0.1:39246/oauth/callback ；同时保留 vellum://oauth/callback。",
       adopt: "使用 {{app}} 的登录（{{name}}）",
       ossTitle: "对象存储（OSS）",
       ossHint:
