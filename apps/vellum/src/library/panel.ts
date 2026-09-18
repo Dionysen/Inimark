@@ -48,6 +48,16 @@ export interface LibraryPanel {
   el: HTMLElement;
   /** Persist the open article’s editor content. No-op when nothing is open or writes are blocked. */
   save(): Promise<void>;
+  /** Create a chapter in the focused volume, or the volume used by New. */
+  newChapter(): Promise<void>;
+  /** Rename the focused volume, or the open / focused chapter. Works from the editor (F2). */
+  renameSelection(): void;
+  /** Delete the focused volume or chapter. Only while the library tree is focused. */
+  deleteSelection(): Promise<void>;
+  /** Copy the focused or open chapter so Paste can create another. */
+  copySelection(): Promise<void>;
+  /** Create a chapter from the last copy, in the focused volume. */
+  pasteClipboard(): Promise<void>;
   setSidebarOpen(open: boolean): void;
   destroy(): void;
 }
@@ -171,6 +181,8 @@ export function mountLibraryPanel(
   let selectedVolumeId: string | null = null;
   /** Collapsed volume keys (absent = expanded). */
   const collapsedVolumes = new Set<string>();
+  /** In-memory chapter clipboard for library copy / paste. */
+  let chapterClip: { title: string; content: string } | null = null;
 
   const chapterMenu = createMenu();
   chapterMenu.el.classList.add("inimark-context-menu");
@@ -865,6 +877,119 @@ export function mountLibraryPanel(
     }
   };
 
+  /** Row inside the library tree that currently has focus, if any. */
+  const focusedTreeRow = (): HTMLElement | null => {
+    const active = document.activeElement;
+    if (!(active instanceof Element)) return null;
+    const row = active.closest<HTMLElement>(".vellum-tree-chapter, .vellum-tree-volume");
+    if (!row || !treeHost.contains(row)) return null;
+    return row;
+  };
+
+  const chapterById = (id: string | null | undefined): ArticleMeta | null =>
+    id ? chapters.find((item) => item.id === id) ?? null : null;
+
+  /** Focused chapter row, otherwise the chapter open in the editor. */
+  const targetChapter = (): ArticleMeta | null => {
+    const row = focusedTreeRow();
+    if (row?.dataset.chapterId) return chapterById(row.dataset.chapterId);
+    return chapterById(openArticleId);
+  };
+
+  /** Volume a new or pasted chapter should land in. */
+  const contextVolumeId = (): string | null => {
+    const row = focusedTreeRow();
+    const fromRow = row?.dataset.volumeId ?? row?.dataset.volumeKey;
+    if (fromRow && fromRow !== UNCATEGORIZED) return fromRow;
+    const chapter = targetChapter();
+    if (chapter) return chapter.categoryId;
+    return selectedVolumeId;
+  };
+
+  const newChapter = () => createChapter(contextVolumeId());
+
+  const renameSelection = () => {
+    if (!canWrite()) return;
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLInputElement &&
+      active.classList.contains("vellum-chapter-rename")
+    ) {
+      return;
+    }
+    const row = focusedTreeRow();
+    if (
+      row?.classList.contains("vellum-tree-volume") &&
+      row.dataset.volumeId &&
+      row.dataset.volumeId !== UNCATEGORIZED
+    ) {
+      const volume = volumes.find((item) => item.id === row.dataset.volumeId);
+      const titleEl = row.querySelector<HTMLElement>(".inimark-tree-label");
+      if (volume && titleEl) beginVolumeRename(volume.id, volume.name, titleEl);
+      return;
+    }
+    const chapter = targetChapter();
+    if (!chapter) return;
+    const titleEl = treeHost.querySelector<HTMLElement>(
+      `[data-chapter-id="${CSS.escape(chapter.id)}"] .vellum-chapter-title`,
+    );
+    if (titleEl) beginChapterRename(chapter, titleEl);
+  };
+
+  const deleteSelection = async () => {
+    if (!canWrite()) return;
+    const row = focusedTreeRow();
+    if (
+      row?.classList.contains("vellum-tree-volume") &&
+      row.dataset.volumeId &&
+      row.dataset.volumeId !== UNCATEGORIZED
+    ) {
+      const volume = volumes.find((item) => item.id === row.dataset.volumeId);
+      if (volume) await deleteVolume(volume.id, volume.name);
+      return;
+    }
+    const chapter = targetChapter();
+    if (chapter) await deleteChapter(chapter);
+  };
+
+  const copySelection = async () => {
+    const chapter = targetChapter();
+    if (!chapter) {
+      options.onStatus(options.t("library.nothingToCopy"));
+      return;
+    }
+    const content =
+      openArticleId === chapter.id
+        ? options.getEditorContent()
+        : (await pwGetArticle(chapter.id)).content;
+    chapterClip = { title: chapter.title, content };
+    options.onStatus(options.t("library.copied", { title: chapter.title || options.t("app.untitled") }));
+  };
+
+  const pasteClipboard = async () => {
+    if (!chapterClip || !selectedBookId || !canWrite()) {
+      if (!chapterClip) options.onStatus(options.t("library.nothingToPaste"));
+      return;
+    }
+    const volumeId = contextVolumeId();
+    try {
+      const art = await pwCreateArticle({
+        title: chapterClip.title || options.t("app.untitled"),
+        content: chapterClip.content,
+        folderId: selectedBookId,
+        categoryId: volumeId,
+      });
+      chapters = await pwListArticles(selectedBookId, null, false);
+      selectedVolumeId = volumeId;
+      if (volumeId) collapsedVolumes.delete(volumeId);
+      else collapsedVolumes.delete(UNCATEGORIZED);
+      await openChapter(art.id);
+      options.onStatus(options.t("library.pasted"));
+    } catch (e) {
+      options.onStatus(formatStoreError(e));
+    }
+  };
+
   const createChapter = async (volumeId: string | null = selectedVolumeId) => {
     if (!selectedBookId || !opened?.schema.writesAllowed) return;
     try {
@@ -915,6 +1040,11 @@ export function mountLibraryPanel(
   return {
     el,
     save,
+    newChapter,
+    renameSelection,
+    deleteSelection,
+    copySelection,
+    pasteClipboard,
     setSidebarOpen(open) {
       collapseBtn.innerHTML = sidebarToggleIcon(open);
       const label = open

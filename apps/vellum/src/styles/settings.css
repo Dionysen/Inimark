@@ -226,6 +226,13 @@ html.platform-windows .inimark-settings-nav-topbar {
   padding-top: var(--inimark-space-2);
 }
 
+.inimark-settings-shortcuts-intro {
+  margin: 0 0 var(--inimark-space-3);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--inimark-muted-fg, var(--text-secondary));
+}
+
 .inimark-settings-shortcuts-toolbar {
   display: flex;
   justify-content: flex-end;

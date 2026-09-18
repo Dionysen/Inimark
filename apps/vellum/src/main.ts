@@ -62,11 +62,25 @@ const teardownShell = bootShellChrome({
 const teardownClose = bindCloseRequested();
 const teardownTooltips = initTooltipLayer();
 const teardownShortcutGuard = installNativeShortcutGuard();
-let librarySave: (() => Promise<void>) | null = null;
+let libraryApi: {
+  save(): Promise<void>;
+  newChapter(): Promise<void>;
+  renameSelection(): void;
+  deleteSelection(): Promise<void>;
+  copySelection(): Promise<void>;
+  pasteClipboard(): Promise<void>;
+} | null = null;
+let toggleSidebarRef: (() => void) | null = null;
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void closeWindow(),
-  save: () => void librarySave?.(),
+  save: () => void libraryApi?.save(),
+  "new-chapter": () => void libraryApi?.newChapter(),
+  "toggle-sidebar": () => toggleSidebarRef?.(),
+  "tree-rename": () => libraryApi?.renameSelection(),
+  "tree-delete": () => void libraryApi?.deleteSelection(),
+  "tree-copy": () => void libraryApi?.copySelection(),
+  "tree-paste": () => void libraryApi?.pasteClipboard(),
 });
 let teardownDeepLink: (() => void) | undefined;
 void installGitOauthDeepLinkHandler().then((fn) => {
@@ -140,7 +154,7 @@ function scheduleAutosave(): void {
   clearAutosave();
   autosaveTimer = setTimeout(() => {
     autosaveTimer = null;
-    void librarySave?.();
+    void libraryApi?.save();
   }, 800);
 }
 
@@ -195,7 +209,8 @@ const library = mountLibraryPanel(libraryHost, {
   onOpenSettings: () => void openSettingsWindow(),
   onToggleSidebar: toggleSidebar,
 });
-librarySave = () => library.save();
+libraryApi = library;
+toggleSidebarRef = toggleSidebar;
 
 applySidebarWidth();
 applySidebarState();

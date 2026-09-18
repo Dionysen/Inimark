@@ -19,6 +19,7 @@ import {
   settingsAboutIcon,
   settingsEditorIcon,
   settingsGeneralIcon,
+  settingsShortcutsIcon,
   settingsSyncIcon,
   settingsThemeIcon,
 } from "../ui/product-icons.ts";
@@ -37,17 +38,22 @@ import {
   matchShortcut,
 } from "../shortcuts/store.ts";
 import { isShortcutRecordingActive } from "../shortcuts/guard.ts";
+import {
+  renderShortcutsPanel,
+  shortcutSearchEntries,
+} from "./shortcuts-panel.ts";
 
 export type { SettingsViewController };
 
-/** Settings nav: 通用 / 云同步 / 编辑器 / 主题 / 关于 */
-const SECTIONS = ["general", "sync", "editor", "theme", "about"] as const;
+/** Settings nav: 通用 / 云同步 / 编辑器 / 快捷键 / 主题 / 关于 */
+const SECTIONS = ["general", "sync", "editor", "shortcuts", "theme", "about"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
 const SECTION_ICONS: Record<SectionId, () => string> = {
   general: settingsGeneralIcon,
   sync: settingsSyncIcon,
   editor: settingsEditorIcon,
+  shortcuts: settingsShortcutsIcon,
   theme: settingsThemeIcon,
   about: settingsAboutIcon,
 };
@@ -123,6 +129,10 @@ function searchEntries(): SettingSearchItem[] {
       getTitle: () => t("settings.editor.firstLineIndent"),
       getDescription: () => t("settings.editor.firstLineIndentDesc"),
     },
+    ...shortcutSearchEntries().map((entry) => ({
+      ...entry,
+      section: "shortcuts",
+    })),
   ];
 }
 
@@ -258,6 +268,7 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
   let settings = loadSettings();
   let teardownSync: (() => void) | null = null;
   let teardownTheme: (() => void) | null = null;
+  let teardownShortcuts: (() => void) | null = null;
   let editorControls: EditorTypographyControls | null = null;
 
   const onCeilingStorage = (event: StorageEvent): void => {
@@ -278,6 +289,8 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
       teardownSync = null;
       teardownTheme?.();
       teardownTheme = null;
+      teardownShortcuts?.();
+      teardownShortcuts = null;
       editorControls?.destroy();
       editorControls = null;
       if (id === "general") {
@@ -290,6 +303,8 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
         editorControls = renderEditor(body, settings, (partial) => {
           settings = patchSettings(partial);
         });
+      } else if (id === "shortcuts") {
+        teardownShortcuts = renderShortcutsPanel(body);
       } else if (id === "theme") {
         teardownTheme = renderTheme(body);
       } else {
@@ -342,6 +357,8 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     teardownSync = null;
     teardownTheme?.();
     teardownTheme = null;
+    teardownShortcuts?.();
+    teardownShortcuts = null;
     editorControls?.destroy();
     editorControls = null;
     originalDestroy();
