@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate multi-platform icons from apps/vellum/app-icon.png into
+ * Generate multi-platform icons from apps/vellum/app-icon.svg into
  * apps/vellum/src-tauri/icons/ (same pipeline as replace-icon.mjs).
  */
 import { execSync } from "node:child_process";
@@ -15,7 +15,7 @@ const sharp = require("sharp");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const sourcePath = path.join(root, "apps/vellum/app-icon.png");
+const sourcePath = path.join(root, "apps/vellum/app-icon.svg");
 const iconsDir = path.join(root, "apps/vellum/src-tauri/icons");
 
 const DOCK_OPTICAL_SCALE = 0.82;
@@ -42,6 +42,23 @@ async function applyAppleCorners(input, size = CANVAS_SIZE) {
     .composite([{ input: cornerMaskSvg(size), blend: "dest-in" }])
     .png()
     .toBuffer();
+}
+
+/**
+ * Render the SVG at the icon canvas size.
+ * Sharp's default 72dpi keeps the file's own pixel size, then a later resize
+ * would only upscale that raster.
+ */
+async function rasterizeSvg(svgPath) {
+  const probe = await sharp(svgPath).metadata();
+  const sourceWidth = probe.width ?? CANVAS_SIZE;
+  const density = Math.max(72, Math.ceil((72 * CANVAS_SIZE) / sourceWidth));
+  const outPath = path.join(tmpdir(), `vellum-icon-svg-${Date.now()}.png`);
+  await sharp(svgPath, { density })
+    .resize(CANVAS_SIZE, CANVAS_SIZE, { fit: "fill" })
+    .png()
+    .toFile(outPath);
+  return outPath;
 }
 
 async function createDesktopSource(src) {
@@ -96,8 +113,9 @@ if (!fs.existsSync(sourcePath)) {
   process.exit(1);
 }
 
-const desktopSource = await createDesktopSource(sourcePath);
-const macSource = await createMacSource(sourcePath);
+const raster = await rasterizeSvg(sourcePath);
+const desktopSource = await createDesktopSource(raster);
+const macSource = await createMacSource(raster);
 const desktopOut = path.join(tmpdir(), `vellum-icons-desktop-${Date.now()}`);
 const macOut = path.join(tmpdir(), `vellum-icons-mac-${Date.now()}`);
 
@@ -116,6 +134,7 @@ try {
   console.error("Failed to generate icons:", error.message);
   process.exit(1);
 } finally {
+  fs.rmSync(raster, { force: true });
   fs.rmSync(desktopSource, { force: true });
   fs.rmSync(macSource, { force: true });
   fs.rmSync(desktopOut, { recursive: true, force: true });
