@@ -137,12 +137,26 @@ fn save_manifest(
     )
 }
 
-/// Export local library to a new `.pwb` and append-push to the bound repo.
-pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushResult> {
-    let oauth = vault
-        .get_oauth(app_id)?
-        .ok_or_else(|| Error::msg("not logged in"))?;
-    let repo = ensure_repo_for_app(vault, app_id)?;
+/// Local `.pwb` plus the stats needed to upload it.
+///
+/// Built while the library lock is held. The upload does not need the library,
+/// so the editor can keep writing during the network request.
+pub struct PreparedPush {
+    bytes: Vec<u8>,
+    remote_path: String,
+    device_id: String,
+    article_count: u32,
+    word_count: i64,
+    room_mtime: i64,
+    room_hash: String,
+}
+
+/// Read the open library into a `.pwb`. Does not talk to the remote.
+pub fn prepare_push(vault: &Vault, app_id: &str, lib: &Library) -> Result<PreparedPush> {
+    if vault.get_oauth(app_id)?.is_none() {
+        return Err(Error::msg("not logged in"));
+    }
+    ensure_repo_for_app(vault, app_id)?;
 
     let cache = sync_cache_dir(app_id)?;
     std::fs::create_dir_all(&cache)?;
@@ -160,14 +174,37 @@ pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushRes
     let room = lib.room_db_path();
     export_pwb(&room, &local_export, "Room.db")?;
     let bytes = std::fs::read(&local_export)?;
-    let size = bytes.len() as u64;
     let (article_count, word_count) = library_stats(lib)?;
+    Ok(PreparedPush {
+        bytes,
+        remote_path,
+        device_id: did,
+        article_count,
+        word_count,
+        room_mtime: file_mtime_secs(&room)?,
+        room_hash: file_sha256(&room)?,
+    })
+}
+
+/// Upload a snapshot prepared by [`prepare_push`]. Safe to call without the library lock.
+pub fn upload_prepared_push(
+    vault: &Vault,
+    app_id: &str,
+    prepared: PreparedPush,
+) -> Result<PushResult> {
+    let oauth = vault
+        .get_oauth(app_id)?
+        .ok_or_else(|| Error::msg("not logged in"))?;
+    let repo = ensure_repo_for_app(vault, app_id)?;
+    let remote_path = prepared.remote_path;
+    let did = prepared.device_id;
+    let size = prepared.bytes.len() as u64;
 
     upload_backup(
         &oauth,
         &repo,
         &remote_path,
-        &bytes,
+        &prepared.bytes,
         &format!("Vellum PWB backup {remote_path}"),
     )?;
 
@@ -177,8 +214,8 @@ pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushRes
         device_id: device,
         created_at: format_created_at(&ts),
         size,
-        article_count,
-        word_count,
+        article_count: prepared.article_count,
+        word_count: prepared.word_count,
     };
 
     let mut manifest = load_manifest(&oauth, &repo);
@@ -200,12 +237,10 @@ pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushRes
         after = list_backup_files(&oauth, &repo)?;
     }
 
-    let room_mtime = file_mtime_secs(&room)?;
-    let room_hash = file_sha256(&room)?;
     vault.update_sync_meta(app_id, |m| {
         m.device_id = Some(did);
-        m.last_export_hash = Some(room_hash);
-        m.last_room_mtime = Some(room_mtime);
+        m.last_export_hash = Some(prepared.room_hash);
+        m.last_room_mtime = Some(prepared.room_mtime);
         m.last_push_at = Some(now_secs());
         m.last_sync_at = Some(now_secs());
     })?;
@@ -215,6 +250,12 @@ pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushRes
         remote_backup_count: after.len(),
         pruned,
     })
+}
+
+/// Export local library to a new `.pwb` and append-push to the bound repo.
+pub fn push_backup(vault: &Vault, app_id: &str, lib: &Library) -> Result<PushResult> {
+    let prepared = prepare_push(vault, app_id, lib)?;
+    upload_prepared_push(vault, app_id, prepared)
 }
 
 /// List remote backups with metadata (manifest + filename fallback).

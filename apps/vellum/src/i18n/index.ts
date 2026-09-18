@@ -141,7 +141,7 @@ const en: Dictionary = {
       busyPushing: "Pushing backup…",
       busyPulling: "Pulling backup…",
       syncHint:
-        "Edits are written to the library immediately. Every 5 minutes Vellum keeps a local .pwb in the library’s App/Backups folder. Quitting closes the window first; the upload continues in the background and a system notification appears when it succeeds. If it fails you can retry or stop. Sync now uploads without quitting. Restore lists cloud backups. Open a Pure Writer library first.",
+        "Edits are written to the library immediately. Every 5 minutes Vellum keeps a local .pwb in the library’s App/Backups folder. Quitting closes the window first; the upload continues in the background and a system notification appears when it succeeds. If it fails you can retry or stop. Sync now, and the button at the lower left of the editor, upload in the background — you can keep writing and using settings. Restore lists cloud backups. Open a Pure Writer library first.",
       pushOk: "Pushed {{path}} · remote backups: {{remote}}",
       restoreTitle: "Cloud backups",
       restoreLoading: "Loading backups…",
@@ -481,10 +481,9 @@ const en: Dictionary = {
     exit: "Quit anyway",
   },
   syncStatus: {
-    idle: "Not synced",
-    syncing: "Syncing…",
-    ok: "Synced",
-    error: "Sync error: {{error}}",
+    pending: "Pending sync",
+    syncing: "Syncing",
+    synced: "Synced",
   },
 };
 
@@ -625,7 +624,7 @@ const zhCN: Dictionary = {
       busyPushing: "正在推送备份…",
       busyPulling: "正在拉取备份…",
       syncHint:
-        "编辑会立刻写入文档库。每 5 分钟在文档库的 App/Backups 里留一份本地 .pwb。退出时主程序会先关闭，云备份在后台继续，成功后会有系统通知；失败可以选择重试或放弃。「立即同步」是手动再传一次。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
+        "编辑会立刻写入文档库。每 5 分钟在文档库的 App/Backups 里留一份本地 .pwb。退出时主程序会先关闭，云备份在后台继续，成功后会有系统通知；失败可以选择重试或放弃。「立即同步」和编辑器左下角的按钮都会在后台上传，写作和设置都不用停下来等。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
       pushOk: "已推送 {{path}} · 远端备份 {{remote}} 份",
       restoreTitle: "云端备份",
       restoreLoading: "正在加载备份列表…",
@@ -954,10 +953,9 @@ const zhCN: Dictionary = {
     exit: "直接退出",
   },
   syncStatus: {
-    idle: "未同步",
-    syncing: "正在同步…",
-    ok: "已同步",
-    error: "同步出错：{{error}}",
+    pending: "待同步",
+    syncing: "正在同步",
+    synced: "同步完成",
   },
 };
 

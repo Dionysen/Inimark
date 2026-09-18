@@ -350,32 +350,162 @@ pub async fn pw_detach_cloud_backup(
     .await
 }
 
-/// Sync open library with GitHub/Gitee PWB backups (uses existing library lock).
+/// One in-app cloud push at a time. A click while one is running asks for one more pass.
+struct PushGate {
+    running: bool,
+    follow_up: bool,
+}
+
+static PUSH_GATE: Mutex<PushGate> = Mutex::new(PushGate {
+    running: false,
+    follow_up: false,
+});
+
+/// Returns false when a push is already running. That click is remembered as one follow-up.
+fn begin_push(gate: &mut PushGate) -> bool {
+    if gate.running {
+        gate.follow_up = true;
+        return false;
+    }
+    gate.running = true;
+    gate.follow_up = false;
+    true
+}
+
+/// After one pass: true means run again with the latest library. False releases the gate.
+fn finish_push_pass(gate: &mut PushGate) -> bool {
+    if gate.follow_up {
+        gate.follow_up = false;
+        true
+    } else {
+        gate.running = false;
+        false
+    }
+}
+
+/// Sync open library with GitHub/Gitee PWB backups.
 ///
-/// The webview stays free to paint the spinner. Git HTTP uses a blocking client
-/// whose runtime panics if dropped on a Tokio worker, so the work runs on a blocking thread.
+/// The snapshot is taken under the library lock, then the lock is released before
+/// the upload, so editing stays possible. A second click does not start a parallel
+/// upload; it asks this push to run once more when the current pass finishes.
 #[tauri::command]
 pub async fn pw_git_push_now(
     app: tauri::AppHandle,
     app_id: String,
 ) -> Result<dionysen_git_sync::PushResult, CommandError> {
     spawn_git(move || {
-        let pw = app.state::<PwState>();
-        let git = app.state::<dionysen_git_sync::GitSyncState>();
-        let guard = pw.lib.lock().map_err(|e| CommandError {
-            code: "lock".into(),
-            message: e.to_string(),
-        })?;
-        let lib = guard.as_ref().ok_or(CommandError {
-            code: "not_open".into(),
-            message: "library is not open — open a Pure Writer folder first".into(),
-        })?;
-        dionysen_git_sync::push_with_library(&app, &git, &app_id, lib).map_err(|e| CommandError {
-            code: "git_sync".into(),
-            message: e,
-        })
+        {
+            let mut gate = PUSH_GATE.lock().map_err(|e| CommandError {
+                code: "lock".into(),
+                message: e.to_string(),
+            })?;
+            if !begin_push(&mut gate) {
+                return Err(CommandError {
+                    code: "sync_busy".into(),
+                    message: "sync already running".into(),
+                });
+            }
+        }
+        let result = run_manual_push(&app, &app_id);
+        if let Ok(mut gate) = PUSH_GATE.lock() {
+            if gate.running {
+                gate.running = false;
+                gate.follow_up = false;
+            }
+        }
+        result
     })
     .await
+}
+
+fn run_manual_push(
+    app: &tauri::AppHandle,
+    app_id: &str,
+) -> Result<dionysen_git_sync::PushResult, CommandError> {
+    loop {
+        dionysen_git_sync::emit_status(app, "syncing", Some("pushing backup…".into()), None);
+        let prepared = match snapshot_open_library(app, app_id) {
+            Ok(prepared) => prepared,
+            Err(err) => {
+                if push_again() {
+                    continue;
+                }
+                dionysen_git_sync::emit_status(app, "error", None, Some(err.message.clone()));
+                return Err(err);
+            }
+        };
+        let git = app.state::<dionysen_git_sync::GitSyncState>();
+        let vault = match git.vault() {
+            Ok(vault) => vault,
+            Err(message) => {
+                if push_again() {
+                    continue;
+                }
+                dionysen_git_sync::emit_status(app, "error", None, Some(message.clone()));
+                return Err(CommandError {
+                    code: "git_sync".into(),
+                    message,
+                });
+            }
+        };
+        match dionysen_git_sync::upload_prepared_push(&vault, app_id, prepared) {
+            Ok(result) => {
+                if push_again() {
+                    continue;
+                }
+                dionysen_git_sync::emit_status(
+                    app,
+                    "ok",
+                    Some(format!("pushed {}", result.path)),
+                    None,
+                );
+                return Ok(result);
+            }
+            Err(err) => {
+                if push_again() {
+                    continue;
+                }
+                let message = err.to_string();
+                dionysen_git_sync::emit_status(app, "error", None, Some(message.clone()));
+                return Err(CommandError {
+                    code: "git_sync".into(),
+                    message,
+                });
+            }
+        }
+    }
+}
+
+fn push_again() -> bool {
+    PUSH_GATE
+        .lock()
+        .map(|mut gate| finish_push_pass(&mut gate))
+        .unwrap_or(false)
+}
+
+/// Copy the open library to a `.pwb` and drop the library lock before returning.
+fn snapshot_open_library(
+    app: &tauri::AppHandle,
+    app_id: &str,
+) -> Result<dionysen_git_sync::PreparedPush, CommandError> {
+    let pw = app.state::<PwState>();
+    let git = app.state::<dionysen_git_sync::GitSyncState>();
+    let guard = pw.lib.lock().map_err(|e| CommandError {
+        code: "lock".into(),
+        message: e.to_string(),
+    })?;
+    let lib = guard.as_ref().ok_or(CommandError {
+        code: "not_open".into(),
+        message: "library is not open — open a Pure Writer folder first".into(),
+    })?;
+    let vault = git.vault().map_err(|e| CommandError {
+        code: "git_sync".into(),
+        message: e,
+    })?;
+    dionysen_git_sync::prepare_push(&vault, app_id, lib).map_err(|e| CommandError {
+        code: "git_sync".into(),
+        message: e.to_string(),
+    })
 }
 
 /// Pulls a backup on a blocking thread. See [`pw_git_push_now`].
@@ -488,4 +618,37 @@ fn restore_backup(
         Err(e) => dionysen_git_sync::emit_status(app, "error", None, Some(e.message.clone())),
     }
     result
+}
+
+#[cfg(test)]
+mod push_gate_tests {
+    use super::{begin_push, finish_push_pass, PushGate};
+
+    #[test]
+    fn second_click_while_running_is_one_follow_up() {
+        let mut gate = PushGate {
+            running: false,
+            follow_up: false,
+        };
+        assert!(begin_push(&mut gate));
+        assert!(!begin_push(&mut gate));
+        assert!(gate.follow_up);
+        assert!(finish_push_pass(&mut gate));
+        assert!(!gate.follow_up);
+        assert!(gate.running);
+        assert!(!finish_push_pass(&mut gate));
+        assert!(!gate.running);
+    }
+
+    #[test]
+    fn a_click_after_the_gate_is_free_starts_a_new_push() {
+        let mut gate = PushGate {
+            running: true,
+            follow_up: false,
+        };
+        assert!(!finish_push_pass(&mut gate));
+        assert!(begin_push(&mut gate));
+        assert!(gate.running);
+        assert!(!gate.follow_up);
+    }
 }

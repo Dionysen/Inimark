@@ -1016,6 +1016,22 @@ html.platform-windows .inimark-settings-nav-topbar {
   border-color: var(--inimark-accent, #4a90d9);
 }
 
+.vellum-settings-btn.is-syncing {
+  min-width: 5.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vellum-settings-btn-spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--inimark-fg, #888) 18%, transparent);
+  border-top-color: var(--inimark-accent, #4a90d9);
+  animation: vellum-busy-spin 0.75s linear infinite;
+}
+
 .vellum-settings-input {
   width: min(100%, 360px);
   box-sizing: border-box;

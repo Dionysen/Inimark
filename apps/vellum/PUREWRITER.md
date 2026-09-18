@@ -33,7 +33,7 @@ Every five minutes, while a library is open, Vellum writes a local `.pwb` into t
 
 Vellum can sign in with **GitHub** or **Gitee**. After login it creates (or reuses) a private repo and keeps Pure Writer `.pwb` backups there.
 
-While you write, the open chapter is saved into `Room.db` immediately. Quitting closes Vellum first. A background process then uploads the cloud backup. When that upload succeeds, a system notification appears. If it fails, you can retry or stop. **Sync now** in Settings uploads without quitting. **Restore backup** lists the cloud snapshots so you can merge or overwrite.
+While you write, the open chapter is saved into `Room.db` immediately. Quitting closes Vellum first. A background process then uploads the cloud backup. When that upload succeeds, a system notification appears. If it fails, you can retry or stop. **Sync now** and the button at the lower left of the editor upload in the background: the button spins, and you can keep writing. **Restore backup** lists the cloud snapshots so you can merge or overwrite.
 
 1. Pull remote `backups/*.pwb` when you restore
 2. Merge into the open library (field-level last-write-wins on Room.db timestamps), or replace the local library

@@ -1093,29 +1093,43 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 
 .vellum-git-sync-status {
   pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
   font-size: 11px;
   line-height: 1.35;
   padding: 4px 8px;
   border-radius: 6px;
   background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
   border: 1px solid var(--border);
-  color: var(--text-secondary);
+  color: var(--inimark-fg);
+  cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.vellum-git-sync-status[data-state="syncing"] {
-  color: var(--accent);
+.vellum-git-sync-status:hover {
+  border-color: var(--accent);
 }
 
-.vellum-git-sync-status[data-state="ok"] {
-  color: #1a7f37;
+.vellum-git-sync-status-icon {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
 }
 
-.vellum-git-sync-status[data-state="error"] {
-  color: #cf222e;
-  white-space: normal;
-  max-height: 4.5em;
-  overflow: auto;
+.vellum-git-sync-status-icon .inimark-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.vellum-sync-spin {
+  transform-origin: center;
+  animation: vellum-sync-spin 0.75s linear infinite;
+}
+
+@keyframes vellum-sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

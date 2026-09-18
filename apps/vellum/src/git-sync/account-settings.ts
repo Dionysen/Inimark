@@ -7,8 +7,10 @@ import {
   logout,
   pushBackup,
   restoreBackup,
+  STATUS_EVENT,
   type BackupMeta,
   type SessionSummary,
+  type SyncStatusPayload,
 } from "@dionysen/git-sync";
 import { createSectionTitle } from "@dionysen/settings-kit";
 import { isTauri } from "@dionysen/shell";
@@ -19,6 +21,7 @@ import {
   GIT_SYNC_CHANGED_EVENT,
   VELLUM_GIT_SYNC,
 } from "./config.ts";
+import { isSyncBusy, requestManualCloudSync } from "./manual-sync.ts";
 
 function button(label: string, onClick: () => void, disabled = false): HTMLButtonElement {
   const btn = document.createElement("button");
@@ -28,6 +31,28 @@ function button(label: string, onClick: () => void, disabled = false): HTMLButto
   btn.disabled = disabled;
   btn.addEventListener("click", onClick);
   return btn;
+}
+
+/** Replace the sync button label with a spinner. Other settings stay usable. */
+function showSyncSpinner(btn: HTMLButtonElement, busy: boolean): void {
+  if (busy) {
+    if (!btn.dataset.label) btn.dataset.label = btn.textContent ?? "";
+    if (btn.querySelector(".vellum-settings-btn-spin")) return;
+    btn.classList.add("is-syncing");
+    btn.setAttribute("aria-busy", "true");
+    btn.setAttribute("aria-label", t("syncStatus.syncing"));
+    btn.replaceChildren();
+    const spin = document.createElement("span");
+    spin.className = "vellum-settings-btn-spin";
+    spin.setAttribute("aria-hidden", "true");
+    btn.append(spin);
+    return;
+  }
+  if (!btn.classList.contains("is-syncing")) return;
+  btn.classList.remove("is-syncing");
+  btn.removeAttribute("aria-busy");
+  btn.removeAttribute("aria-label");
+  btn.textContent = btn.dataset.label || t("settings.account.syncNow");
 }
 
 function statusLine(text: string, kind: "info" | "error" | "ok" = "info"): HTMLElement {
@@ -172,7 +197,19 @@ export function renderAccountSection(body: HTMLElement): () => void {
 
   let disposed = false;
   let refreshGen = 0;
+  let cloudSyncing = false;
   const cleanups: Array<() => void> = [];
+
+  if (isTauri()) {
+    void import("@tauri-apps/api/event").then(async ({ listen }) => {
+      const unlisten = await listen<SyncStatusPayload>(STATUS_EVENT, (event) => {
+        cloudSyncing = event.payload.state === "syncing";
+        const btn = root.querySelector<HTMLButtonElement>("[data-role='sync-now']");
+        if (btn) showSyncSpinner(btn, cloudSyncing);
+      });
+      cleanups.push(unlisten);
+    });
+  }
 
   async function refresh(): Promise<void> {
     if (disposed) return;
@@ -300,29 +337,37 @@ export function renderAccountSection(body: HTMLElement): () => void {
     actions.className = "vellum-cloud-actions";
     const feedback = document.createElement("div");
 
-    actions.append(
-      button(t("settings.account.syncNow"), () => {
-        void (async () => {
-          try {
-            const result = await withBusy(t("settings.account.busyPushing"), () =>
-              pushBackup(VELLUM_GIT_SYNC.appId),
-            );
-            emitGitSyncChanged();
-            feedback.replaceChildren(
-              statusLine(
-                t("settings.account.pushOk", {
-                  path: result.path,
-                  remote: String(result.remoteBackupCount),
-                }),
-                "ok",
-              ),
-            );
-            await refresh();
-          } catch (err) {
-            feedback.replaceChildren(statusLine(String(err), "error"));
+    const syncBtn = button(t("settings.account.syncNow"), () => {
+      showSyncSpinner(syncBtn, true);
+      void (async () => {
+        try {
+          const result = await requestManualCloudSync();
+          emitGitSyncChanged();
+          feedback.replaceChildren(
+            statusLine(
+              t("settings.account.pushOk", {
+                path: result.path,
+                remote: String(result.remoteBackupCount),
+              }),
+              "ok",
+            ),
+          );
+          await refresh();
+        } catch (err) {
+          if (isSyncBusy(err)) {
+            if (!cloudSyncing) showSyncSpinner(syncBtn, false);
+            return;
           }
-        })();
-      }),
+          showSyncSpinner(syncBtn, false);
+          feedback.replaceChildren(statusLine(String(err), "error"));
+        }
+      })();
+    });
+    syncBtn.dataset.role = "sync-now";
+    if (cloudSyncing) showSyncSpinner(syncBtn, true);
+
+    actions.append(
+      syncBtn,
       button(t("settings.account.restoreBackup"), () => {
         openRestoreDialog();
       }),

@@ -10,7 +10,7 @@ Separate from `@dionysen/cloud-sync` (Aliyun). Vault path: `com.dionysen.git-syn
 2. Choose a **private repo name** and click **Create repo & push** (first init)
 3. Edits are saved into the open library immediately. Every 5 minutes the app writes a local `.pwb` under `App/Backups`.
 4. Quitting closes the app first. A background process uploads the cloud backup, then posts a system notification. If the upload fails, retry or stop.
-5. **Sync now** uploads the same snapshot without quitting. **Restore backup** picks a remote snapshot, then **Merge** or **Overwrite**.
+5. **Sync now**, or the button at the lower left of the editor, uploads in the background. The button turns into a spinner; writing and the rest of Settings stay available. **Restore backup** picks a remote snapshot, then **Merge** or **Overwrite**.
 
 ## Setup OAuth apps (app developer only)
 

@@ -34,7 +34,14 @@ import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { installGitOauthDeepLinkHandler } from "./git-sync/oauth-deeplink.ts";
 import { mountGitSyncStatusBar } from "./git-sync/status-bar.ts";
 import { createQuitFlow, promptCloudBackupFailure } from "./git-sync/quit-backup.ts";
-import { getSession } from "@dionysen/git-sync";
+import {
+  CLOUD_SYNC_REQUEST,
+  CLOUD_SYNC_RESULT,
+  isSyncBusy,
+  syncErrorText,
+  type CloudSyncRequest,
+} from "./git-sync/manual-sync.ts";
+import { getSession, pushBackup } from "@dionysen/git-sync";
 import { VELLUM_GIT_SYNC } from "./git-sync/config.ts";
 import { createImmediateSaver } from "./library/immediate-save.ts";
 import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup.ts";
@@ -154,10 +161,17 @@ let openArticleId: string | null = null;
 let openChain = Promise.resolve();
 const saver = createImmediateSaver(() => libraryApi?.save({ quiet: true }) ?? Promise.resolve());
 let stopLocalBackup: (() => void) | null = null;
+let syncStatus: ReturnType<typeof mountGitSyncStatusBar> | null = null;
+let teardownSyncStatus = (): void => {
+  syncStatus?.destroy();
+};
 
 const editor = mountPlaintextEditor(editorHost, {
   placeholder: t("editor.placeholder"),
-  onChange: () => saver.kick(),
+  onChange: () => {
+    saver.kick();
+    syncStatus?.markEdited();
+  },
 });
 
 /** Click the gutter beside the writing column to focus the editor. */
@@ -269,7 +283,51 @@ shell.append(libraryHost, mainColumn);
 const syncStatusHost = document.createElement("div");
 syncStatusHost.className = "vellum-git-sync-status-host";
 shell.append(syncStatusHost);
-const teardownSyncStatus = mountGitSyncStatusBar(syncStatusHost);
+const runEditorSync = (): void => {
+  void (async () => {
+    try {
+      await saver.flush();
+      await pushBackup(VELLUM_GIT_SYNC.appId);
+    } catch (err) {
+      if (!isSyncBusy(err)) return;
+    }
+  })();
+};
+syncStatus = mountGitSyncStatusBar(syncStatusHost, { onSync: runEditorSync });
+if (isTauri()) {
+  void import("@tauri-apps/api/event").then(async ({ listen, emit }) => {
+    const unlistenRequest = await listen<CloudSyncRequest>(CLOUD_SYNC_REQUEST, (event) => {
+      void (async () => {
+        const id = event.payload?.id;
+        if (!id) return;
+        try {
+          await saver.flush();
+          const result = await pushBackup(VELLUM_GIT_SYNC.appId);
+          await emit(CLOUD_SYNC_RESULT, {
+            id,
+            ok: true,
+            path: result.path,
+            remoteBackupCount: result.remoteBackupCount,
+          });
+        } catch (err) {
+          await emit(CLOUD_SYNC_RESULT, {
+            id,
+            ok: false,
+            busy: isSyncBusy(err),
+            error: syncErrorText(err),
+          });
+        }
+      })();
+    });
+    teardownSyncStatus = () => {
+      unlistenRequest();
+      syncStatus?.destroy();
+    };
+  });
+  void getSession(VELLUM_GIT_SYNC.appId).then((session) => {
+    if (session.lastSyncAt) syncStatus?.noteSynced();
+  });
+}
 
 function publishWidthCeiling(): void {
   publishEditorWidthCeiling(editorHost.clientWidth || editorColumn.clientWidth);
