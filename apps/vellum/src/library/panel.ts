@@ -25,6 +25,7 @@ import {
   createTreeChildren,
   createTreeHost,
   createTreeItem,
+  updateTooltip,
 } from "@dionysen/ui";
 import {
   clearLastLibrary,
@@ -34,7 +35,7 @@ import {
   upsertLibrary,
   type LibraryRecord,
 } from "../libraries/store.ts";
-import { newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
+import { collapseAllIcon, expandAllIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { fillChapterTreeLabel } from "./chapter-row.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
@@ -130,8 +131,18 @@ export function mountLibraryPanel(
         void createChapter();
       },
     },
+    {
+      label: options.t("library.collapseAll"),
+      title: options.t("library.collapseAll"),
+      icon: collapseAllIcon,
+      disabled: true,
+      onClick() {
+        toggleAllVolumes();
+      },
+    },
   ]);
   const newBtn = toolbar.buttons[0]!;
+  const foldBtn = toolbar.buttons[1]!;
 
   const banner = document.createElement("div");
   banner.className = "vellum-library-banner";
@@ -406,7 +417,31 @@ export function mountLibraryPanel(
     return entries;
   };
 
+  /** Collapse every volume when any is open; otherwise expand them all. */
+  const toggleAllVolumes = () => {
+    const entries = volumeEntries();
+    if (!opened || !selectedBookId || entries.length === 0) return;
+    const anyExpanded = entries.some((entry) => !collapsedVolumes.has(entry.key));
+    if (anyExpanded) {
+      for (const entry of entries) collapsedVolumes.add(entry.key);
+    } else {
+      collapsedVolumes.clear();
+    }
+    renderTree();
+  };
+
+  const syncFoldButton = () => {
+    const entries = opened && selectedBookId ? volumeEntries() : [];
+    const anyExpanded = entries.some((entry) => !collapsedVolumes.has(entry.key));
+    const label = options.t(anyExpanded ? "library.collapseAll" : "library.expandAll");
+    foldBtn.disabled = entries.length === 0;
+    foldBtn.setAttribute("aria-label", label);
+    updateTooltip(foldBtn, label);
+    foldBtn.innerHTML = anyExpanded ? collapseAllIcon() : expandAllIcon();
+  };
+
   const renderTree = () => {
+    syncFoldButton();
     treeHost.replaceChildren();
 
     if (!opened || !selectedBookId) {
