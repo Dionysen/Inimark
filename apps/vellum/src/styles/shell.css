@@ -346,9 +346,14 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding-right: var(--vellum-library-inset);
 }
 
+.vellum-library .vellum-library-locate {
+  margin-left: auto;
+}
+
 .vellum-library-tree.inimark-tree {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
   /* Two-level volume/chapter list — no nested tree indent guides. */
   --tree-indent-hint-visible: 0;

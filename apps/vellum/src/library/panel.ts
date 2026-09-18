@@ -41,9 +41,10 @@ import {
   upsertLibrary,
   type LibraryRecord,
 } from "../libraries/store.ts";
-import { bookIcon, collapseAllIcon, expandAllIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
+import { bookIcon, collapseAllIcon, expandAllIcon, locateChapterIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { fillChapterTreeLabel } from "./chapter-row.ts";
 import { bookTagText, promptBookEdit } from "./book-edit.ts";
+import { scrollTopToCenter } from "./reveal.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 import { bindRenameField } from "./rename-field.ts";
 import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
@@ -160,9 +161,20 @@ export function mountLibraryPanel(
         toggleAllVolumes();
       },
     },
+    {
+      label: options.t("library.locateChapter"),
+      title: options.t("library.locateChapter"),
+      icon: locateChapterIcon,
+      disabled: true,
+      onClick() {
+        void revealOpenChapter();
+      },
+    },
   ]);
   const newBtn = toolbar.buttons[0]!;
   const foldBtn = toolbar.buttons[1]!;
+  const locateBtn = toolbar.buttons[2]!;
+  locateBtn.classList.add("vellum-library-locate");
 
   const banner = document.createElement("div");
   banner.className = "vellum-library-banner";
@@ -767,6 +779,7 @@ export function mountLibraryPanel(
     foldBtn.setAttribute("aria-label", label);
     updateTooltip(foldBtn, label);
     foldBtn.innerHTML = anyExpanded ? collapseAllIcon() : expandAllIcon();
+    locateBtn.disabled = !(options.getOpenArticleId() ?? openArticleId);
   };
 
   const renderTree = () => {
@@ -980,12 +993,12 @@ export function mountLibraryPanel(
     newBtn.disabled = true;
   };
 
-  const selectBook = async (bookId: string) => {
+  const selectBook = async (bookId: string, keepArticle = false) => {
     if (bookId !== TRASH_FOLDER) returnBookId = bookId;
     selectedBookId = bookId;
     localStorage.setItem(BOOK_KEY, bookId);
     selectedVolumeId = null;
-    openArticleId = null;
+    if (!keepArticle) openArticleId = null;
     updateBookButton();
     renderBookMenu();
     volumes = await pwListCategories(bookId, false);
@@ -1001,6 +1014,43 @@ export function mountLibraryPanel(
     if (art.folderId !== TRASH_FOLDER) selectedVolumeId = art.categoryId;
     renderTree();
     options.onArticleOpen(art.title, art.content, art.id);
+  };
+
+  /** Expand the open chapter’s volume and scroll that row into view. */
+  const revealOpenChapter = async () => {
+    const id = options.getOpenArticleId() ?? openArticleId;
+    if (!id || !opened) return;
+    try {
+      if (!chapters.some((item) => item.id === id)) {
+        const art = await pwGetArticle(id);
+        openArticleId = id;
+        if (art.folderId !== selectedBookId) await selectBook(art.folderId, true);
+      }
+      const chapter = chapters.find((item) => item.id === id);
+      if (!chapter) return;
+      const volumeKey =
+        viewingTrash() ||
+        !chapter.categoryId ||
+        !volumes.some((volume) => volume.id === chapter.categoryId)
+          ? UNCATEGORIZED
+          : chapter.categoryId;
+      collapsedVolumes.delete(volumeKey);
+      renderTree();
+      queueMicrotask(() => {
+        const row = treeHost.querySelector<HTMLElement>(
+          `[data-chapter-id="${CSS.escape(id)}"]`,
+        );
+        if (!row) return;
+        const frame = el.getBoundingClientRect();
+        const box = row.getBoundingClientRect();
+        treeHost.scrollTo({
+          top: scrollTopToCenter(treeHost.scrollTop, frame.top, frame.height, box.top, box.height),
+          behavior: "smooth",
+        });
+      });
+    } catch (error) {
+      reportError(error);
+    }
   };
 
   const pickInitialBook = (list: Folder[]): string | null => {

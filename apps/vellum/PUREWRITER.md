@@ -22,7 +22,7 @@ Books without volumes still work: chapters with no category appear under **Uncat
    - Click the **settings** gear to open Settings.
 3. Use the **book name** button at the top of the sidebar to switch books. Each book can carry an optional tag, shown in quieter text on the right of its row. The pencil on that row edits the name and the tag. **New** creates a chapter in the selected volume (or Uncategorized).
 4. Collapse the sidebar with the toggle in the sidebar top bar (aligned with the titlebar, near the divider). When collapsed, expand it again from the titlebar leading edge (same pattern as Inimark).
-5. Expand a volume and click a chapter to edit it. Edits autosave after 0.8s of idle typing; **Ctrl+S** still saves immediately.
+5. Expand a volume and click a chapter to edit it. The locate button on the right of the library toolbar scrolls that chapter to the vertical center of the sidebar, opening its volume if it was collapsed. Edits autosave after 0.8s of idle typing; **Ctrl+S** still saves immediately.
 6. **Trash** is a book in the book switcher, listed under the others. Deleting a chapter asks first, then moves it into that book. Open Trash to read a chapter or restore it to the book you were just in. Deleting a chapter while Trash is open — or right-clicking Trash and choosing Empty Trash — asks again, in red, because that removal cannot be undone.
 
 Saved libraries (path + name) and the last selected book are remembered locally for the next launch.
