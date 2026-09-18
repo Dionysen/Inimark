@@ -14,6 +14,7 @@ export {
   bindCloseRequested,
   isWindowMaximized,
   onWindowMaximizedChange,
+  onWindowMoved,
   onWindowFullscreenChange,
   FULLSCREEN_CHANGE_EVENT,
   initFullscreenChrome,

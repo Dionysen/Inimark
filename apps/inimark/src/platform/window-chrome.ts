@@ -4,6 +4,7 @@ export {
   closeWindow,
   isWindowMaximized,
   onWindowMaximizedChange,
+  onWindowMoved,
   onWindowFullscreenChange,
   supportsWindowChrome,
   usesNativeWindowControls,

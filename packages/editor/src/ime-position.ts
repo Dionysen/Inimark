@@ -1,8 +1,12 @@
 /**
  * Keep the OS IME candidate window aligned with the caret in embedded
- * WebViews (WebView2 / WKWebView). Scrolling or layout shifts while a
- * composition is active can leave the candidate popup at (0, 0) until the
- * window loses and regains focus — refresh caret geometry on those moves.
+ * WebViews (WebView2 / WKWebView).
+ *
+ * WebView2 caches absolute screen coordinates for TSF. Scrolling while a
+ * composition is active, or moving/resizing the host window via a custom
+ * titlebar (without a real click into the page), leaves the candidate popup
+ * at a stale corner until the window loses and regains focus — refresh or
+ * re-anchor caret geometry on those moves.
  */
 
 export type ImePositionGuardOptions = {
@@ -12,6 +16,13 @@ export type ImePositionGuardOptions = {
   scrollRoot?: HTMLElement | (() => HTMLElement);
   /** Active editable surface, when the guard should target a specific editor. */
   getActiveEditable?: () => HTMLElement | null;
+  /**
+   * Subscribe to host geometry changes that do not surface as a DOM `resize`
+   * (e.g. Tauri `onMoved` after dragging a custom titlebar). Return unsubscribe.
+   */
+  subscribeHostGeometryChange?: (onChange: () => void) => () => void;
+  /** Debounce for host geometry re-anchor (ms). Default 120. */
+  hostGeometryDebounceMs?: number;
 };
 
 let composingDepth = 0;
@@ -45,6 +56,60 @@ export function refreshImeCaretPosition(editable: HTMLElement): void {
   }
 }
 
+/**
+ * Force WebView2 / TSF to drop a stale IME screen-coordinate cache after the
+ * host window moved or resized. Mirrors Alt+Tab: blur then refocus the
+ * focused editable so the next composition reads fresh caret bounds.
+ * No-op while composing (would cancel the session) — callers should refresh
+ * instead.
+ */
+export function reanchorImeHostGeometry(editable: HTMLElement): void {
+  if (!editable.isConnected) return;
+  if (composingDepth > 0) {
+    refreshImeCaretPosition(editable);
+    return;
+  }
+  if (document.activeElement !== editable) return;
+
+  const isTextField =
+    editable instanceof HTMLInputElement || editable instanceof HTMLTextAreaElement;
+
+  let selectionStart = 0;
+  let selectionEnd = 0;
+  let range: Range | null = null;
+  if (isTextField) {
+    selectionStart = editable.selectionStart ?? 0;
+    selectionEnd = editable.selectionEnd ?? 0;
+  } else {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editable.contains(sel.anchorNode)) {
+      range = sel.getRangeAt(0).cloneRange();
+    }
+  }
+
+  editable.blur();
+  requestAnimationFrame(() => {
+    if (!editable.isConnected) return;
+    editable.focus({ preventScroll: true });
+    if (isTextField) {
+      try {
+        editable.setSelectionRange(selectionStart, selectionEnd);
+      } catch {
+        // Some input types reject setSelectionRange.
+      }
+    } else if (range) {
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      try {
+        sel?.addRange(range);
+      } catch {
+        // Range may be invalid after DOM mutations during the blur frame.
+      }
+    }
+    refreshImeCaretPosition(editable);
+  });
+}
+
 function resolveScrollRoot(
   root: HTMLElement,
   scrollRoot?: HTMLElement | (() => HTMLElement),
@@ -68,6 +133,8 @@ function resolveEditable(
 export function attachImePositionGuard(options: ImePositionGuardOptions): () => void {
   const { root, getActiveEditable } = options;
   let refreshRaf = 0;
+  let geometryTimer: ReturnType<typeof setTimeout> | null = null;
+  const geometryDebounceMs = options.hostGeometryDebounceMs ?? 120;
 
   const scheduleRefresh = () => {
     if (!isImeComposing()) return;
@@ -76,6 +143,25 @@ export function attachImePositionGuard(options: ImePositionGuardOptions): () => 
       const editable = resolveEditable(root, getActiveEditable);
       if (editable) refreshImeCaretPosition(editable);
     });
+  };
+
+  /** After host move/resize settles: refresh mid-composition, else re-anchor. */
+  const flushHostGeometry = () => {
+    const editable = resolveEditable(root, getActiveEditable);
+    if (!editable) return;
+    if (isImeComposing()) {
+      refreshImeCaretPosition(editable);
+      return;
+    }
+    reanchorImeHostGeometry(editable);
+  };
+
+  const scheduleHostGeometrySync = () => {
+    if (geometryTimer != null) clearTimeout(geometryTimer);
+    geometryTimer = setTimeout(() => {
+      geometryTimer = null;
+      flushHostGeometry();
+    }, geometryDebounceMs);
   };
 
   const onCompositionStart = () => {
@@ -98,22 +184,29 @@ export function attachImePositionGuard(options: ImePositionGuardOptions): () => 
   const scrollRoot = resolveScrollRoot(root, options.scrollRoot);
   scrollRoot.addEventListener("scroll", onScroll, scrollOptions);
   window.addEventListener("scroll", onScroll, scrollOptions);
-  window.addEventListener("resize", scheduleRefresh, { passive: true });
+  // DOM resize covers size changes; host move needs subscribeHostGeometryChange.
+  window.addEventListener("resize", scheduleHostGeometrySync, { passive: true });
   window.addEventListener("focus", scheduleRefresh);
   const onVisibilityChange = () => {
     if (document.visibilityState === "visible") scheduleRefresh();
   };
   document.addEventListener("visibilitychange", onVisibilityChange);
 
+  const unsubscribeHostGeometry = options.subscribeHostGeometryChange?.(
+    scheduleHostGeometrySync,
+  );
+
   return () => {
     cancelAnimationFrame(refreshRaf);
+    if (geometryTimer != null) clearTimeout(geometryTimer);
     root.removeEventListener("compositionstart", onCompositionStart, true);
     root.removeEventListener("compositionupdate", onCompositionUpdate, true);
     root.removeEventListener("compositionend", onCompositionEnd, true);
     scrollRoot.removeEventListener("scroll", onScroll, scrollOptions);
     window.removeEventListener("scroll", onScroll, scrollOptions);
-    window.removeEventListener("resize", scheduleRefresh);
+    window.removeEventListener("resize", scheduleHostGeometrySync);
     window.removeEventListener("focus", scheduleRefresh);
     document.removeEventListener("visibilitychange", onVisibilityChange);
+    unsubscribeHostGeometry?.();
   };
 }

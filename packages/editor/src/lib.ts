@@ -81,6 +81,7 @@ export type { MermaidRenderState } from "./renderers/mermaid.ts";
 export {
   attachImePositionGuard,
   isImeComposing,
+  reanchorImeHostGeometry,
   refreshImeCaretPosition,
 } from "./ime-position.ts";
 export type { ImePositionGuardOptions } from "./ime-position.ts";

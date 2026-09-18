@@ -88,6 +88,35 @@ export async function onWindowMaximizedChange(
   return unlisten;
 }
 
+/**
+ * Listen for native window moves (e.g. custom titlebar drag).
+ * DOM `resize` does not fire for translation-only moves.
+ */
+export function onWindowMoved(handler: () => void): () => void {
+  if (!isTauri()) return () => {};
+
+  let unlisten: (() => void) | null = null;
+  let cancelled = false;
+
+  void import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
+    if (cancelled) return;
+    const stop = await getCurrentWindow().onMoved(() => {
+      handler();
+    });
+    if (cancelled) {
+      stop();
+      return;
+    }
+    unlisten = stop;
+  });
+
+  return () => {
+    cancelled = true;
+    unlisten?.();
+    unlisten = null;
+  };
+}
+
 export async function onWindowFullscreenChange(
   handler: (fullscreen: boolean) => void,
 ): Promise<() => void> {
