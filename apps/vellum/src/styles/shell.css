@@ -356,6 +356,8 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   --library-chapter-bg: var(--bg-secondary);
   --library-chapter-preview: var(--text-tertiary, var(--text-secondary));
   --library-chapter-meta: var(--text-tertiary, var(--text-secondary));
+  /* Space between volume blocks (not between chapters within a volume). */
+  gap: 0.4rem;
 }
 
 .vellum-library-tree .inimark-tree-children::before {
@@ -366,6 +368,8 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--library-volume-bg, var(--bg-primary));
   color: var(--text-primary);
   font-weight: 600;
+  border: var(--border-width, 1px) solid var(--border);
+  box-sizing: border-box;
 }
 
 .vellum-library-tree .vellum-tree-volume:hover {
