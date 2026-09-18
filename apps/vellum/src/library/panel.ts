@@ -319,11 +319,22 @@ export function mountLibraryPanel(
     renderTree();
   };
 
+  /** Context-menu rows close the menu before running the action. */
+  const addContextItem = (item: Parameters<typeof chapterMenu.addItem>[0]) => {
+    chapterMenu.addItem({
+      ...item,
+      onClick() {
+        chapterMenu.setOpen(false);
+        item.onClick?.();
+      },
+    });
+  };
+
   const openChapterMenu = (event: MouseEvent, chapter: ArticleMeta) => {
     if (!canWrite()) return;
     chapterMenu.clear();
     chapterMenu.setPath("");
-    chapterMenu.addItem({
+    addContextItem({
       label: options.t("library.rename"),
       onClick() {
         const titleEl = treeHost.querySelector<HTMLElement>(
@@ -332,7 +343,7 @@ export function mountLibraryPanel(
         if (titleEl) beginChapterRename(chapter, titleEl);
       },
     });
-    chapterMenu.addItem({
+    addContextItem({
       label: options.t("library.deleteChapter"),
       danger: true,
       onClick() {
@@ -368,14 +379,14 @@ export function mountLibraryPanel(
     if (!canWrite()) return;
     chapterMenu.clear();
     chapterMenu.setPath("");
-    chapterMenu.addItem({
+    addContextItem({
       label: options.t("library.addChapter"),
       onClick() {
         selectedVolumeId = volumeId;
         void createChapter(volumeId);
       },
     });
-    chapterMenu.addItem({
+    addContextItem({
       label: options.t("library.rename"),
       onClick() {
         const titleEl = treeHost.querySelector<HTMLElement>(
@@ -384,7 +395,7 @@ export function mountLibraryPanel(
         if (titleEl) beginVolumeRename(volumeId, name, titleEl);
       },
     });
-    chapterMenu.addItem({
+    addContextItem({
       label: options.t("library.deleteVolume"),
       danger: true,
       onClick() {

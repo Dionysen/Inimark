@@ -388,6 +388,11 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover, var(--shell-hover));
 }
 
+.vellum-library-tree .vellum-tree-chapter.is-active,
+.vellum-library-tree .vellum-tree-chapter.is-active:hover {
+  background: color-mix(in srgb, var(--accent) 18%, var(--library-chapter-bg));
+}
+
 .vellum-library-tree .inimark-tree-item {
   cursor: default;
 }
