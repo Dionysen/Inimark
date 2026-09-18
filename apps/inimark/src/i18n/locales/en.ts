@@ -692,8 +692,9 @@ export const en: Dictionary = {
         dangerDesc: "Destructive actions and error emphasis.",
         treeIndentHintColor: "Tree indent hint",
         treeIndentHintColorDesc: "Guide color for nested file-tree levels.",
-        libraryVolumeBg: "Library volume background",
-        libraryVolumeBgDesc: "Background of volume rows in the library sidebar.",
+        libraryVolumeBg: "Volume & book switcher background",
+        libraryVolumeBgDesc:
+          "Shared fill for volume rows and the book dropdown. Defaults to the editor background.",
         libraryChapterBg: "Library chapter background",
         libraryChapterBgDesc: "Background of chapter rows in the library sidebar.",
         libraryChapterPreview: "Chapter preview text",

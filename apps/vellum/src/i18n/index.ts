@@ -215,7 +215,7 @@ const en: Dictionary = {
       token: {
         bgSecondary: "Secondary background",
         bgSecondaryDesc:
-          "Sidebar, panels, menus, and chapter rows. Volume rows use the editor background.",
+          "Sidebar, panels, menus, and chapter rows.",
         bgSurface: "Primary background",
         bgSurfaceDesc: "Main interface fill — usually matches the editor background.",
         bgMenu: "Menu background",
@@ -238,8 +238,9 @@ const en: Dictionary = {
         dangerDesc: "Destructive actions and error emphasis.",
         treeIndentHintColor: "Tree indent hint",
         treeIndentHintColorDesc: "Guide color for nested file-tree levels.",
-        libraryVolumeBg: "Library volume background",
-        libraryVolumeBgDesc: "Background of volume rows (follows the editor background by default).",
+        libraryVolumeBg: "Volume & book switcher background",
+        libraryVolumeBgDesc:
+          "Shared fill for volume rows and the book dropdown. Defaults to the editor background.",
         libraryChapterBg: "Library chapter background",
         libraryChapterBgDesc: "Background of chapter rows in the library sidebar.",
         libraryChapterPreview: "Chapter preview text",
@@ -594,7 +595,7 @@ const zhCN: Dictionary = {
       },
       token: {
         bgSecondary: "次级背景",
-        bgSecondaryDesc: "侧边栏、面板、菜单与章行背景；卷行使用编辑器背景。",
+        bgSecondaryDesc: "侧边栏、面板、菜单与章行背景。",
         bgSurface: "主背景",
         bgSurfaceDesc: "主界面底色，一般与编辑器背景一致，可单独调整。",
         bgMenu: "菜单背景",
@@ -617,8 +618,8 @@ const zhCN: Dictionary = {
         dangerDesc: "删除等破坏性操作与错误强调。",
         treeIndentHintColor: "树缩进指示",
         treeIndentHintColorDesc: "文件树嵌套层级引导线颜色。",
-        libraryVolumeBg: "文库卷背景",
-        libraryVolumeBgDesc: "侧栏卷行的背景色（默认跟随编辑器背景）。",
+        libraryVolumeBg: "卷与书下拉框背景",
+        libraryVolumeBgDesc: "卷行与书切换下拉框共用此背景色，默认与编辑器背景一致。",
         libraryChapterBg: "文库章背景",
         libraryChapterBgDesc: "侧栏章节行的背景色。",
         libraryChapterPreview: "章节预览文字",

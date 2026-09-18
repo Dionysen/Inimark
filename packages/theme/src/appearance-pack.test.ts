@@ -130,6 +130,7 @@ describe("editor schema profile", () => {
       "--bg-secondary",
       "--bg-tertiary",
       "--bg-input",
+      "--library-volume-bg",
       "--border",
       "--border-width",
       "--accent",
@@ -152,7 +153,7 @@ describe("editor schema profile", () => {
     expect(all).not.toContain("--accent-hover");
     expect(all).not.toContain("--bg-menu");
     expect(all).not.toContain("--tree-indent-hint-visible");
-    expect(all).not.toContain("--library-volume-bg");
+    expect(all).not.toContain("--library-book-btn-bg");
   });
 
   it("full profile keeps split fills and tree tokens", () => {
@@ -168,18 +169,18 @@ describe("editor schema profile", () => {
 });
 
 describe("syncLinkedChromeBackgrounds", () => {
-  it("copies secondary into menu and chapter, volume from editor primary", () => {
+  it("copies secondary into menu and chapter", () => {
     const synced = syncLinkedChromeBackgrounds([
       { name: "--bg-primary", value: "#1b1d24", type: "color" },
       { name: "--bg-secondary", value: "#808080", type: "color" },
       { name: "--bg-menu", value: "#111111", type: "color" },
       { name: "--library-chapter-bg", value: "#222222", type: "color" },
-      { name: "--library-volume-bg", value: "#333333", type: "color" },
+      { name: "--library-volume-bg", value: "#abcdef", type: "color" },
       { name: "--accent", value: "#74a7fe", type: "color" },
     ]);
     expect(synced.find((v) => v.name === "--bg-menu")?.value).toBe("#808080");
     expect(synced.find((v) => v.name === "--library-chapter-bg")?.value).toBe("#808080");
-    expect(synced.find((v) => v.name === "--library-volume-bg")?.value).toBe("#1b1d24");
+    expect(synced.find((v) => v.name === "--library-volume-bg")?.value).toBe("#abcdef");
     expect(synced.find((v) => v.name === "--accent")?.value).toBe("#74a7fe");
   });
 });

@@ -98,7 +98,16 @@ export function mountLibraryPanel(
   bookBtn.type = "button";
   bookBtn.className = "vellum-library-book-btn";
   bookBtn.disabled = true;
-  bookBtn.textContent = options.t("library.noBook");
+
+  const bookName = document.createElement("span");
+  bookName.className = "vellum-library-book-name";
+  bookName.textContent = options.t("library.noBook");
+
+  const bookMeta = document.createElement("span");
+  bookMeta.className = "vellum-library-book-meta";
+  bookMeta.hidden = true;
+
+  bookBtn.append(bookName, bookMeta);
 
   const bookMenu = document.createElement("div");
   bookMenu.className = "vellum-library-book-menu";
@@ -123,15 +132,11 @@ export function mountLibraryPanel(
   banner.className = "vellum-library-banner";
   banner.hidden = true;
 
-  const summary = document.createElement("div");
-  summary.className = "vellum-library-section-label";
-  summary.hidden = true;
-
   const treeHost = createTreeHost(options.t("library.treeAria"));
   treeHost.classList.add("vellum-library-tree");
   markNoDrag(treeHost);
 
-  body.append(bookWrap, toolbar.el, banner, summary, treeHost);
+  body.append(bookWrap, toolbar.el, banner, treeHost);
   el.append(topbar, body);
   host.append(el);
 
@@ -171,13 +176,29 @@ export function mountLibraryPanel(
     const book = currentBook();
     if (!opened) {
       bookBtn.disabled = true;
-      bookBtn.textContent = options.t("library.noBook");
+      bookName.textContent = options.t("library.noBook");
       bookBtn.title = "";
+      bookMeta.hidden = true;
+      bookMeta.textContent = "";
       return;
     }
     bookBtn.disabled = books.length === 0;
-    bookBtn.textContent = book?.name ?? options.t("library.noBook");
+    bookName.textContent = book?.name ?? options.t("library.noBook");
     bookBtn.title = book ? `${book.name} (${book.id})` : "";
+  };
+
+  /** Volume/chapter counts shown inside the book switcher (right-aligned). */
+  const updateBookMeta = () => {
+    if (!opened || !selectedBookId) {
+      bookMeta.hidden = true;
+      bookMeta.textContent = "";
+      return;
+    }
+    bookMeta.hidden = false;
+    bookMeta.textContent = options.t("library.volumeChapterSummary", {
+      volumes: volumes.length,
+      chapters: chapters.length,
+    });
   };
 
   const renderBookMenu = () => {
@@ -224,7 +245,7 @@ export function mountLibraryPanel(
     treeHost.replaceChildren();
 
     if (!opened || !selectedBookId) {
-      summary.hidden = true;
+      updateBookMeta();
       const empty = document.createElement("div");
       empty.className = "vellum-library-empty";
       empty.textContent = options.t("library.openHint");
@@ -233,11 +254,7 @@ export function mountLibraryPanel(
     }
 
     const entries = volumeEntries();
-    summary.hidden = false;
-    summary.textContent = options.t("library.volumeChapterSummary", {
-      volumes: volumes.length,
-      chapters: chapters.length,
-    });
+    updateBookMeta();
 
     if (entries.length === 0) {
       const empty = document.createElement("div");

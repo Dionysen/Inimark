@@ -346,24 +346,14 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding-right: var(--vellum-library-inset);
 }
 
-.vellum-library-section-label {
-  flex-shrink: 0;
-  margin: 0.35rem 0 0;
-  padding: 0 var(--vellum-library-inset);
-  font-size: 11px;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-}
-
 .vellum-library-tree.inimark-tree {
   flex: 1;
   min-height: 0;
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
   /* Two-level volume/chapter list — no nested tree indent guides. */
   --tree-indent-hint-visible: 0;
-  /* Chapter = secondary fill; volume = editor background. */
+  /* Chapter = secondary fill; volume + book switcher share --library-volume-bg. */
   --library-chapter-bg: var(--bg-secondary);
-  --library-volume-bg: var(--bg-primary);
   --library-chapter-preview: var(--text-tertiary, var(--text-secondary));
   --library-chapter-meta: var(--text-tertiary, var(--text-secondary));
 }
@@ -373,7 +363,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-tree .vellum-tree-volume {
-  background: var(--library-volume-bg);
+  background: var(--library-volume-bg, var(--bg-primary));
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -517,22 +507,36 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 .vellum-library-book-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   min-height: var(--inimark-control-height, 32px);
   padding: 0 var(--inimark-control-padding-x, 10px);
-  border: 1px solid var(--border);
+  border: var(--border-width, 1px) solid var(--border);
   border-radius: var(--inimark-radius-control, var(--radius-control));
-  background: var(--bg-input, var(--bg-secondary));
+  background: var(--library-volume-bg, var(--bg-primary));
   color: var(--text-primary);
   font-size: var(--inimark-control-font-size, 13px);
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  gap: 0.5rem;
+  gap: 0.45rem;
   overflow: hidden;
-  white-space: nowrap;
+}
+
+.vellum-library-book-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vellum-library-book-meta {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .vellum-library-book-btn::after {

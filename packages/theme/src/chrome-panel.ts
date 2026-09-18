@@ -319,11 +319,7 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
 
     function handleVariableChange(name: string, newValue: string): void {
       let next = editVariables.map((v) => (v.name === name ? { ...v, value: newValue } : v));
-      if (
-        name === "--accent" ||
-        name === "--bg-secondary" ||
-        name === "--bg-primary"
-      ) {
+      if (name === "--accent" || name === "--bg-secondary") {
         next = syncDerivedThemeVariables(next);
       }
       editVariables = next;

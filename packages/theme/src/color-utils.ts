@@ -198,24 +198,19 @@ export function syncAccentDerived(
 }
 
 /**
- * Chrome-profile: secondary drives menus + chapter rows;
- * volume rows use the editor background (`--bg-primary`).
+ * Chrome-profile: secondary drives menus + chapter rows.
+ * Volume / book-switcher share `--library-volume-bg` (editable; defaults to editor bg via CSS).
  */
 export function syncLinkedChromeBackgrounds(
   variables: { name: string; value: string; type: string }[],
 ): typeof variables {
   const secondary = variables.find((v) => v.name === "--bg-secondary");
-  const primary = variables.find((v) => v.name === "--bg-primary");
-  if (!secondary && !primary) return variables;
+  if (!secondary) return variables;
 
-  const linked: Record<string, string> = {};
-  if (secondary) {
-    linked["--bg-menu"] = secondary.value;
-    linked["--library-chapter-bg"] = secondary.value;
-  }
-  if (primary) {
-    linked["--library-volume-bg"] = primary.value;
-  }
+  const linked: Record<string, string> = {
+    "--bg-menu": secondary.value,
+    "--library-chapter-bg": secondary.value,
+  };
 
   const seen = new Set<string>();
   const next = variables.map((v) => {

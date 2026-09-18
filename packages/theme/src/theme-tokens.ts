@@ -102,6 +102,7 @@ export const CHROME_INTERFACE_FIELD_ORDER = [
   "--bg-secondary",
   "--bg-tertiary",
   "--bg-input",
+  "--library-volume-bg",
   "--border",
   "--border-width",
   "--accent",
@@ -150,6 +151,7 @@ export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
   { name: "--bg-secondary", section: "chrome", labelKey: "bgSecondary" },
   { name: "--bg-tertiary", section: "chrome", labelKey: "bgTertiary" },
   { name: "--bg-input", section: "chrome", labelKey: "bgInput" },
+  { name: "--library-volume-bg", section: "chrome", labelKey: "libraryVolumeBg" },
   { name: "--border", section: "chrome", labelKey: "border" },
   { name: "--accent", section: "chrome", labelKey: "accent" },
   { name: "--danger", section: "chrome", labelKey: "danger" },
@@ -164,7 +166,6 @@ export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
     labelKey: "treeIndentHintColor",
     profiles: ["full"],
   },
-  { name: "--library-volume-bg", section: "chrome", labelKey: "libraryVolumeBg", profiles: ["full"] },
   { name: "--library-chapter-bg", section: "chrome", labelKey: "libraryChapterBg", profiles: ["full"] },
   {
     name: "--library-chapter-preview",
@@ -361,7 +362,7 @@ const LIGHT_DEFAULTS: Record<string, string> = {
   "--tag-bg": "rgba(37, 99, 235, 0.15)",
   "--tag-text": "#2563eb",
   "--tag-border": "rgba(37, 99, 235, 0.2)",
-  "--library-volume-bg": "rgba(37, 99, 235, 0.08)",
+  "--library-volume-bg": "#ffffff",
   "--library-chapter-bg": "rgba(255, 255, 255, 0.65)",
   "--library-chapter-preview": "#94a3b8",
   "--library-chapter-meta": "#a8b4c4",
@@ -402,7 +403,7 @@ const DARK_DEFAULTS: Record<string, string> = {
   "--tag-text": "#6390d4",
   "--tag-border": "rgba(16, 111, 255, 0.345)",
   "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
-  "--library-volume-bg": "rgba(116, 167, 254, 0.10)",
+  "--library-volume-bg": "#1b1d24",
   "--library-chapter-bg": "rgba(255, 255, 255, 0.025)",
   "--library-chapter-preview": "#5c5e63",
   "--library-chapter-meta": "#4a4c52",
@@ -447,7 +448,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#94a3b8",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#d1d9e6",
-    "--library-volume-bg": "rgba(37, 99, 235, 0.08)",
+    "--library-volume-bg": "#ffffff",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.65)",
     "--library-chapter-preview": "#94a3b8",
     "--library-chapter-meta": "#a8b4c4",
@@ -487,7 +488,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#94a3b8",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#e2e8f0",
-    "--library-volume-bg": "rgba(71, 85, 105, 0.09)",
+    "--library-volume-bg": "#f8fafc",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.6)",
     "--library-chapter-preview": "#94a3b8",
     "--library-chapter-meta": "#a8b4c4",
@@ -527,7 +528,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#a1a1aa",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#e4e4e7",
-    "--library-volume-bg": "rgba(24, 24, 27, 0.06)",
+    "--library-volume-bg": "#fafafa",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.7)",
     "--library-chapter-preview": "#a1a1aa",
     "--library-chapter-meta": "#b4b4bc",
@@ -567,7 +568,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#9a948c",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#ddd6cc",
-    "--library-volume-bg": "rgba(196, 122, 42, 0.10)",
+    "--library-volume-bg": "#faf8f5",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.45)",
     "--library-chapter-preview": "#8a847c",
     "--library-chapter-meta": "#9e9890",
@@ -607,7 +608,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#6b6b6b",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#a5cfc0",
-    "--library-volume-bg": "rgba(78, 178, 137, 0.14)",
+    "--library-volume-bg": "#ffffff",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.45)",
     "--library-chapter-preview": "#8a8a8a",
     "--library-chapter-meta": "#9e9e9e",
@@ -647,7 +648,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#9b95b0",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "#ddd6ee",
-    "--library-volume-bg": "rgba(124, 58, 237, 0.09)",
+    "--library-volume-bg": "#faf5ff",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.55)",
     "--library-chapter-preview": "#8b85a0",
     "--library-chapter-meta": "#9e98b0",
@@ -687,7 +688,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#8a8ab0",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(0, 0, 242, 0.12)",
-    "--library-volume-bg": "rgba(0, 0, 242, 0.07)",
+    "--library-volume-bg": "#f0f1ff",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.5)",
     "--library-chapter-preview": "#7a7aa0",
     "--library-chapter-meta": "#9090b0",
@@ -727,7 +728,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#6b6b6b",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
-    "--library-volume-bg": "rgba(116, 167, 254, 0.10)",
+    "--library-volume-bg": "#1b1d24",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.025)",
     "--library-chapter-preview": "#5c5e63",
     "--library-chapter-meta": "#4a4c52",
@@ -767,7 +768,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "rgba(107, 107, 107, 0.294)",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(145, 145, 145, 0.159)",
-    "--library-volume-bg": "rgba(116, 167, 254, 0.09)",
+    "--library-volume-bg": "#1f1f1f",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.03)",
     "--library-chapter-preview": "#8e8e92",
     "--library-chapter-meta": "#6e6e74",
@@ -809,7 +810,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "rgba(161, 161, 170, 0.55)",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(161, 161, 170, 0.14)",
-    "--library-volume-bg": "rgba(255, 255, 255, 0.05)",
+    "--library-volume-bg": "#141414",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.02)",
     "--library-chapter-preview": "#71717a",
     "--library-chapter-meta": "#52525b",
@@ -849,7 +850,7 @@ export const BUILTIN_THEME_COLORS: Record<BuiltinThemeName, Record<string, strin
     "--scrollbar-thumb-hover": "#6272a4",
     "--scrollbar-track": "transparent",
     "--tree-indent-hint-color": "rgba(68, 71, 90, 0.85)",
-    "--library-volume-bg": "rgba(189, 147, 249, 0.12)",
+    "--library-volume-bg": "#282a36",
     "--library-chapter-bg": "rgba(255, 255, 255, 0.03)",
     "--library-chapter-preview": "#6272a4",
     "--library-chapter-meta": "#4d5a80",
@@ -962,10 +963,16 @@ function resolveColorTokenValue(
     return colors["--border"];
   }
   if (token.name === "--library-volume-bg") {
-    return colors[token.name] ?? defaults[token.name] ?? "transparent";
+    return (
+      colors[token.name] ??
+      colors["--bg-primary"] ??
+      defaults[token.name] ??
+      LIGHT_DEFAULTS["--bg-primary"] ??
+      "#ffffff"
+    );
   }
   if (token.name === "--library-chapter-bg") {
-    return colors[token.name] ?? defaults[token.name] ?? "transparent";
+    return colors[token.name] ?? colors["--bg-secondary"] ?? defaults[token.name] ?? "transparent";
   }
   if (token.name === "--library-chapter-preview" || token.name === "--library-chapter-meta") {
     return (
@@ -1106,7 +1113,19 @@ export function buildThemeEditorSections(variables: ThemeVariable[]): ThemeEdito
         type: "color",
       };
     }
-    if (token.name === "--library-volume-bg" || token.name === "--library-chapter-bg") {
+    if (token.name === "--library-volume-bg") {
+      const primary = byName.get("--bg-primary");
+      return {
+        name: token.name,
+        value:
+          LIGHT_DEFAULTS[token.name] ??
+          primary?.value ??
+          LIGHT_DEFAULTS["--bg-primary"] ??
+          "#ffffff",
+        type: "color",
+      };
+    }
+    if (token.name === "--library-chapter-bg") {
       return {
         name: token.name,
         value: LIGHT_DEFAULTS[token.name] ?? "transparent",
