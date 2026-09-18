@@ -78,6 +78,11 @@ export function pwUpdateCategory(id: string, patch: UpdateCategory): Promise<Cat
   return invoke("pw_update_category", { id, patch });
 }
 
+/** Soft-delete a volume. Its chapters become uncategorized. */
+export function pwDeleteCategory(id: string): Promise<void> {
+  return invoke("pw_delete_category", { id });
+}
+
 /** Persist sibling article order. `ids` is the full new sequence. */
 export function pwReorderArticles(ids: string[]): Promise<void> {
   return invoke("pw_reorder_articles", { ids });

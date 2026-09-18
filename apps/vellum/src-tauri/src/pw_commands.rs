@@ -202,6 +202,11 @@ pub fn pw_update_category(
 }
 
 #[tauri::command]
+pub fn pw_delete_category(state: State<'_, PwState>, id: String) -> Result<(), CommandError> {
+    with_lib_mut(&state, |lib| lib.soft_delete_category(&id))
+}
+
+#[tauri::command]
 pub fn pw_reorder_articles(
     state: State<'_, PwState>,
     ids: Vec<String>,

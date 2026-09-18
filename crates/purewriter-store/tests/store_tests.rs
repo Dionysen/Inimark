@@ -109,6 +109,40 @@ fn article_crud_updates_timestamps() {
 }
 
 #[test]
+fn delete_category_moves_chapters_to_uncategorized() {
+    let fx = FixtureLib::create(false);
+    let mut lib = Library::open(fx.path()).unwrap();
+    let cat = lib
+        .create_category(CreateCategory {
+            folder_id: "Default".into(),
+            name: "卷一".into(),
+            ..Default::default()
+        })
+        .unwrap();
+    let art = lib
+        .create_article(CreateArticle {
+            title: "章".into(),
+            content: "正文".into(),
+            folder_id: "Default".into(),
+            category_id: Some(cat.id.clone()),
+            extension: Some("txt".into()),
+        })
+        .unwrap();
+
+    lib.soft_delete_category(&cat.id).unwrap();
+
+    let categories = lib.list_categories(Some("Default"), false).unwrap();
+    assert!(categories.iter().all(|item| item.id != cat.id));
+    let listed = lib
+        .list_articles(Some("Default"), None, false)
+        .unwrap()
+        .into_iter()
+        .find(|item| item.id == art.id)
+        .unwrap();
+    assert!(listed.category_id.is_none());
+}
+
+#[test]
 fn lock_rejects_second_open() {
     let fx = FixtureLib::create(false);
     let _lib = Library::open(fx.path()).unwrap();

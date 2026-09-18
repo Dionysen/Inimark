@@ -11,6 +11,8 @@ import {
   pwReorderCategories,
   pwTrashArticle,
   pwUpdateArticle,
+  pwUpdateCategory,
+  pwDeleteCategory,
   type ArticleMeta,
   type Category,
   type Folder,
@@ -188,6 +190,7 @@ export function mountLibraryPanel(
     reorderGhost = null;
     hideReorderLine();
     treeHost.classList.remove("is-reordering", "is-volume-drag");
+    document.body.classList.remove("is-library-dragging");
   };
 
   /** Rows of one reorder list, in visual order. */
@@ -244,11 +247,15 @@ export function mountLibraryPanel(
     reorderGhost.style.top = `${y + 8}px`;
   };
 
-  const beginChapterRename = (chapter: ArticleMeta, titleEl: HTMLElement) => {
+  const beginInlineRename = (
+    titleEl: HTMLElement,
+    current: string,
+    commitName: (next: string) => Promise<void>,
+  ) => {
     const input = document.createElement("input");
     input.type = "text";
     input.className = "vellum-chapter-rename";
-    input.value = chapter.title;
+    input.value = current;
     titleEl.replaceWith(input);
     input.focus();
     input.select();
@@ -257,19 +264,12 @@ export function mountLibraryPanel(
       if (done) return;
       done = true;
       const next = input.value.trim();
-      if (!commit || !next || next === chapter.title) {
+      if (!commit || !next || next === current) {
         renderTree();
         return;
       }
-      void pwUpdateArticle(chapter.id, { title: next })
-        .then(() => {
-          const found = chapters.find((item) => item.id === chapter.id);
-          if (found) found.title = next;
-          if (openArticleId === chapter.id) {
-            options.onArticleOpen(next, options.getEditorContent(), chapter.id);
-          }
-          renderTree();
-        })
+      void commitName(next)
+        .then(() => renderTree())
         .catch((e) => {
           options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
           renderTree();
@@ -285,6 +285,25 @@ export function mountLibraryPanel(
       }
     });
     input.addEventListener("blur", () => finish(true));
+  };
+
+  const beginChapterRename = (chapter: ArticleMeta, titleEl: HTMLElement) => {
+    beginInlineRename(titleEl, chapter.title, async (next) => {
+      await pwUpdateArticle(chapter.id, { title: next });
+      const found = chapters.find((item) => item.id === chapter.id);
+      if (found) found.title = next;
+      if (openArticleId === chapter.id) {
+        options.onArticleOpen(next, options.getEditorContent(), chapter.id);
+      }
+    });
+  };
+
+  const beginVolumeRename = (volumeId: string, name: string, titleEl: HTMLElement) => {
+    beginInlineRename(titleEl, name, async (next) => {
+      await pwUpdateCategory(volumeId, { name: next });
+      const found = volumes.find((item) => item.id === volumeId);
+      if (found) found.name = next;
+    });
   };
 
   const deleteChapter = async (chapter: ArticleMeta) => {
@@ -322,10 +341,59 @@ export function mountLibraryPanel(
         });
       },
     });
+    openRowMenu(event);
+  };
+
+  const deleteVolume = async (volumeId: string, name: string) => {
+    if (!window.confirm(options.t("library.confirmDeleteVolume", { title: name }))) return;
+    await pwDeleteCategory(volumeId);
+    volumes = volumes.filter((item) => item.id !== volumeId);
+    for (const chapter of chapters) {
+      if (chapter.categoryId === volumeId) chapter.categoryId = null;
+    }
+    collapsedVolumes.delete(volumeId);
+    if (selectedVolumeId === volumeId) selectedVolumeId = null;
+    updateBookMeta();
+    renderTree();
+  };
+
+  const openRowMenu = (event: MouseEvent) => {
     chapterMenu.el.style.position = "fixed";
     chapterMenu.el.style.left = `${event.clientX}px`;
     chapterMenu.el.style.top = `${event.clientY}px`;
     chapterMenu.setOpen(true);
+  };
+
+  const openVolumeMenu = (event: MouseEvent, volumeId: string, name: string) => {
+    if (!canWrite()) return;
+    chapterMenu.clear();
+    chapterMenu.setPath("");
+    chapterMenu.addItem({
+      label: options.t("library.addChapter"),
+      onClick() {
+        selectedVolumeId = volumeId;
+        void createChapter(volumeId);
+      },
+    });
+    chapterMenu.addItem({
+      label: options.t("library.rename"),
+      onClick() {
+        const titleEl = treeHost.querySelector<HTMLElement>(
+          `[data-volume-id="${volumeId}"] .inimark-tree-label`,
+        );
+        if (titleEl) beginVolumeRename(volumeId, name, titleEl);
+      },
+    });
+    chapterMenu.addItem({
+      label: options.t("library.deleteVolume"),
+      danger: true,
+      onClick() {
+        void deleteVolume(volumeId, name).catch((e) => {
+          options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
+        });
+      },
+    });
+    openRowMenu(event);
   };
 
   const closeBookMenu = () => {
@@ -489,10 +557,16 @@ export function mountLibraryPanel(
       row.dataset.volumeId = vol.key;
       if (canWrite() && vol.key !== UNCATEGORIZED) {
         row.classList.add("is-reorderable");
+        row.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openVolumeMenu(event, vol.key, vol.name);
+        });
         bindPointerReorder({
           row,
           onStart() {
             treeHost.classList.add("is-reordering", "is-volume-drag");
+            document.body.classList.add("is-library-dragging");
           },
           onMove(event) {
             showReorderGhost(vol.name, event.clientX, event.clientY);
@@ -566,6 +640,7 @@ export function mountLibraryPanel(
                 row: chapterRow,
                 onStart() {
                   treeHost.classList.add("is-reordering");
+                  document.body.classList.add("is-library-dragging");
                 },
                 onMove(event) {
                   showReorderGhost(title, event.clientX, event.clientY);
@@ -768,17 +843,18 @@ export function mountLibraryPanel(
     }
   };
 
-  const createChapter = async () => {
+  const createChapter = async (volumeId: string | null = selectedVolumeId) => {
     if (!selectedBookId || !opened?.schema.writesAllowed) return;
     try {
       const art = await pwCreateArticle({
         title: options.t("app.untitled"),
         content: "",
         folderId: selectedBookId,
-        categoryId: selectedVolumeId,
+        categoryId: volumeId,
       });
       chapters = await pwListArticles(selectedBookId, null, false);
-      if (selectedVolumeId) collapsedVolumes.delete(selectedVolumeId);
+      selectedVolumeId = volumeId;
+      if (volumeId) collapsedVolumes.delete(volumeId);
       else collapsedVolumes.delete(UNCATEGORIZED);
       await openChapter(art.id);
     } catch (e) {

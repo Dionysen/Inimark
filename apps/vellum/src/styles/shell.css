@@ -388,8 +388,17 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover, var(--shell-hover));
 }
 
+.vellum-library-tree .inimark-tree-item {
+  cursor: default;
+}
+
 .vellum-library-tree.is-reordering {
   user-select: none;
+}
+
+body.is-library-dragging,
+body.is-library-dragging * {
+  cursor: grabbing !important;
 }
 
 /* Volume drag collapses every volume. display:flex on the chapter group beats the hidden attribute. */
@@ -399,14 +408,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-library-tree.is-volume-drag .vellum-tree-volume .inimark-tree-chevron {
   transform: none;
-}
-
-.vellum-library-tree .is-reorderable {
-  cursor: grab;
-}
-
-.vellum-library-tree.is-reordering .is-reorderable {
-  cursor: grabbing;
 }
 
 .vellum-reorder-line {

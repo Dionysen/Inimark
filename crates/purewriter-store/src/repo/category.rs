@@ -174,9 +174,17 @@ impl Library {
         self.get_category(id)
     }
 
+    /// Soft-delete a volume. Chapters still in this book lose `categoryId` and
+    /// show under Uncategorized; trash copies keep their category link.
     pub fn soft_delete_category(&mut self, id: &str) -> Result<()> {
         self.ensure_writable()?;
         let now = now_ms();
+        self.conn().execute(
+            "UPDATE Article SET
+              categoryId = NULL, categoryIdUpdateTime = ?2, structureUpdateTime = ?2, updateTime = ?2
+             WHERE categoryId = ?1 AND deleted = 0 AND folderId != 'PW_Trash'",
+            params![id, now],
+        )?;
         let n = self.conn().execute(
             "UPDATE Category SET deleted = 1, deletedTime = ?2, updateTime = ?2, structureUpdateTime = ?2 WHERE id = ?1",
             params![id, now],

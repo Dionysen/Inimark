@@ -26,6 +26,7 @@ const en: Dictionary = {
     openSettings: "Open settings",
     newArticle: "New",
     newChapter: "New",
+    addChapter: "New chapter",
     save: "Save",
     needPath: "Choose a Pure Writer library folder",
     opening: "Opening…",
@@ -50,6 +51,8 @@ const en: Dictionary = {
     rename: "Rename",
     deleteChapter: "Delete chapter",
     confirmDeleteChapter: "Delete “{{title}}”? It will be moved to Trash.",
+    deleteVolume: "Delete volume",
+    confirmDeleteVolume: "Delete “{{title}}”? Chapters in it move to Uncategorized.",
     schemaMismatch:
       "Schema mismatch ({{found}}). Edit App/.vellum-purewriter.json to allow writes.",
   },
@@ -418,6 +421,7 @@ const zhCN: Dictionary = {
     openSettings: "打开设置",
     newArticle: "新建",
     newChapter: "新建",
+    addChapter: "新增章节",
     save: "保存",
     needPath: "请选择纯纯写作文库文件夹",
     opening: "正在打开…",
@@ -442,6 +446,8 @@ const zhCN: Dictionary = {
     rename: "重命名",
     deleteChapter: "删除章节",
     confirmDeleteChapter: "删除「{{title}}」？章节会移入回收站。",
+    deleteVolume: "删除卷",
+    confirmDeleteVolume: "删除「{{title}}」？其中的章节会移到未分卷。",
     schemaMismatch:
       "Schema 不匹配（{{found}}）。请编辑 App/.vellum-purewriter.json 以允许写入。",
   },
