@@ -12,8 +12,7 @@ use commands::publish_commands::{
 use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
 use commands::update_commands::check_app_update;
 use dionysen_shell::{
-    handle_run_event, handle_window_event, list_system_fonts, setup_dual_windows, WindowPolicy,
-    WINDOW_STATE_FLAGS,
+    handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -35,7 +34,7 @@ pub fn run() {
         .manage(AiStreamState::default())
         .manage(window_policy)
         .invoke_handler(tauri::generate_handler![
-            list_system_fonts,
+            dionysen_shell::list_system_fonts,
             reveal_in_file_manager,
             open_with_default_app,
             open_url,

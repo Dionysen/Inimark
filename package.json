@@ -23,6 +23,7 @@
     "release-notes": "node scripts/extract-release-notes.mjs",
     "test:release-notes": "node --test scripts/lib/release-notes.test.mjs",
     "replace-icon": "node scripts/replace-icon.mjs",
+    "replace-vellum-icon": "node scripts/replace-vellum-icon.mjs",
     "docs:build": "tsx scripts/publish-docs.ts",
     "docs:deploy": "tsx scripts/publish-docs.ts --deploy --skip-build"
   },
