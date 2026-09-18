@@ -12,6 +12,7 @@ import type {
   Setting,
   UpdateArticle,
   UpdateCategory,
+  UpdateFolder,
 } from "./types.ts";
 
 /** Open a Pure Writer library root (directory containing App/Room.db). */
@@ -56,6 +57,10 @@ export function pwGetArticle(id: string): Promise<Article> {
 
 export function pwCreateFolder(input: CreateFolder): Promise<Folder> {
   return invoke("pw_create_folder", { input });
+}
+
+export function pwUpdateFolder(id: string, patch: UpdateFolder): Promise<Folder> {
+  return invoke("pw_update_folder", { id, patch });
 }
 
 export function pwCreateCategory(input: CreateCategory): Promise<Category> {

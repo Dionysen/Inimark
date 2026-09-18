@@ -174,7 +174,8 @@ pub struct CreateFolder {
 pub struct UpdateFolder {
     pub name: Option<String>,
     pub description: Option<String>,
-    pub tags: Option<String>,
+    /// `None` leaves tags unchanged. `Some(None)` clears them. `Some(Some)` sets them.
+    pub tags: Option<Option<String>>,
     pub rank: Option<i64>,
     pub selected_article_id: Option<String>,
 }

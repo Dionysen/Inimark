@@ -99,6 +99,15 @@ export interface CreateFolder {
   tags?: string | null;
 }
 
+export interface UpdateFolder {
+  name?: string;
+  description?: string | null;
+  /** `null` clears the tag. Omit the field to leave it unchanged. */
+  tags?: string | null;
+  rank?: number;
+  selectedArticleId?: string;
+}
+
 export interface CreateCategory {
   folderId: string;
   name: string;

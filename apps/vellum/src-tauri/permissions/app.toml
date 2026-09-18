@@ -15,6 +15,7 @@ commands.allow = [
   "pw_list_articles",
   "pw_get_article",
   "pw_create_folder",
+  "pw_update_folder",
   "pw_create_category",
   "pw_create_article",
   "pw_update_article",

@@ -46,6 +46,7 @@ pub fn run() {
             pw_commands::pw_list_articles,
             pw_commands::pw_get_article,
             pw_commands::pw_create_folder,
+            pw_commands::pw_update_folder,
             pw_commands::pw_create_category,
             pw_commands::pw_create_article,
             pw_commands::pw_update_article,

@@ -2,7 +2,7 @@ mod common;
 
 use purewriter_store::{
     export_pwb, merge_db_into_library, unpack_pwb, CreateArticle, CreateCategory, CreateFolder,
-    Error, Library, UpdateArticle,
+    Error, Library, UpdateArticle, UpdateFolder,
 };
 
 use common::FixtureLib;
@@ -363,4 +363,57 @@ fn merge_respects_newer_tombstone() {
     let merged = dest.get_article(&article_id).unwrap();
     assert_eq!(merged.deleted, 1);
     assert_eq!(merged.deleted_time, 900);
+}
+
+#[test]
+fn update_folder_sets_and_clears_tags() {
+    let fx = FixtureLib::create(false);
+    let mut lib = Library::open(fx.path()).unwrap();
+    let updated = lib
+        .update_folder(
+            "Default",
+            UpdateFolder {
+                name: Some("新书名".into()),
+                tags: Some(Some("长篇".into())),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(updated.name, "新书名");
+    assert_eq!(updated.tags.as_deref(), Some("长篇"));
+
+    let cleared = lib
+        .update_folder(
+            "Default",
+            UpdateFolder {
+                tags: Some(None),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(cleared.name, "新书名");
+    assert!(cleared.tags.is_none());
+
+    let blank = lib
+        .update_folder(
+            "Default",
+            UpdateFolder {
+                tags: Some(Some("   ".into())),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert!(blank.tags.is_none());
+
+    let err = lib
+        .update_folder(
+            "Default",
+            UpdateFolder {
+                name: Some("  ".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap_err();
+    assert!(matches!(err, Error::Other(_)));
+    assert_eq!(lib.get_folder("Default").unwrap().name, "新书名");
 }

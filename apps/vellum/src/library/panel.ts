@@ -13,6 +13,7 @@ import {
   pwTrashArticle,
   pwUpdateArticle,
   pwUpdateCategory,
+  pwUpdateFolder,
   pwDeleteCategory,
   type ArticleMeta,
   type Category,
@@ -42,6 +43,7 @@ import {
 } from "../libraries/store.ts";
 import { bookIcon, collapseAllIcon, expandAllIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { fillChapterTreeLabel } from "./chapter-row.ts";
+import { bookTagText, promptBookEdit } from "./book-edit.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 import { bindRenameField } from "./rename-field.ts";
 import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
@@ -580,8 +582,16 @@ export function mountLibraryPanel(
   const currentBook = (): Folder | null =>
     books.find((b) => b.id === selectedBookId) ?? null;
 
-  const bookLabel = (book: Folder) =>
-    book.id === TRASH_FOLDER ? options.t("library.trash") : book.name;
+  const bookLabel = (book: Folder) => {
+    const name = book.name.trim();
+    if (
+      book.id === TRASH_FOLDER &&
+      (name === "" || name === "Trash" || name === "PW_Trash" || name === "废纸篓" || name === "回收站")
+    ) {
+      return options.t("library.trash");
+    }
+    return name || book.name;
+  };
 
   const updateBookButton = () => {
     const book = currentBook();
@@ -615,21 +625,72 @@ export function mountLibraryPanel(
         });
   };
 
+  const editBook = async (book: Folder) => {
+    if (!canWrite()) return;
+    const draft = await promptBookEdit({
+      title: options.t("library.editBookTitle"),
+      nameLabel: options.t("library.bookName"),
+      tagsLabel: options.t("library.bookTags"),
+      tagsPlaceholder: options.t("library.bookTagsHint"),
+      name: bookLabel(book),
+      tags: bookTagText(book.tags),
+      saveLabel: options.t("common.save"),
+      cancelLabel: options.t("common.cancel"),
+      nameRequired: options.t("library.bookNameRequired"),
+    });
+    if (!draft) return;
+    const updated = await pwUpdateFolder(book.id, {
+      name: draft.name,
+      tags: draft.tags || null,
+    });
+    const index = books.findIndex((item) => item.id === book.id);
+    if (index >= 0) books[index] = updated;
+    updateBookButton();
+    renderBookMenu();
+  };
+
   const bookMenuItem = (book: Folder) => {
-    const item = document.createElement("button");
-    item.type = "button";
+    const item = document.createElement("div");
     item.className = "vellum-library-book-menu-item";
     if (book.id === selectedBookId) item.classList.add("is-active");
-    item.innerHTML = bookIcon();
+
+    const main = document.createElement("button");
+    main.type = "button";
+    main.className = "vellum-library-book-menu-main";
+    main.innerHTML = bookIcon();
     const name = document.createElement("span");
+    name.className = "vellum-library-book-menu-name";
     name.textContent = bookLabel(book);
-    item.append(name);
-    item.title = book.id === TRASH_FOLDER ? bookLabel(book) : book.id;
-    item.addEventListener("click", (ev) => {
+    main.append(name);
+    const tag = bookTagText(book.tags);
+    if (tag) {
+      const tagEl = document.createElement("span");
+      tagEl.className = "vellum-library-book-menu-tag";
+      tagEl.textContent = tag;
+      main.append(tagEl);
+    }
+    main.title = book.id === TRASH_FOLDER ? bookLabel(book) : book.id;
+    main.addEventListener("click", (ev) => {
       ev.stopPropagation();
       closeBookMenu();
       void selectBook(book.id);
     });
+    item.append(main);
+
+    if (canWrite()) {
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "vellum-library-book-menu-edit";
+      edit.innerHTML = menuIcons.rename;
+      edit.title = options.t("library.editBook");
+      edit.setAttribute("aria-label", options.t("library.editBook"));
+      edit.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        void editBook(book).catch(reportError);
+      });
+      item.append(edit);
+    }
     return item;
   };
 

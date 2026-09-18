@@ -667,14 +667,26 @@ body.is-library-dragging * {
 .vellum-library-book-menu-item {
   display: flex;
   align-items: center;
+  gap: 0.1rem;
+  min-width: 0;
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+}
+
+.vellum-library-book-menu-main {
+  display: flex;
+  align-items: center;
   gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
   text-align: left;
   border: 0;
   background: transparent;
-  color: var(--text-primary);
-  padding: 0.4rem 0.5rem;
+  color: inherit;
+  padding: 0.4rem 0.35rem 0.4rem 0.5rem;
   border-radius: var(--radius-control);
   cursor: pointer;
+  font: inherit;
   font-size: 13px;
 }
 
@@ -684,16 +696,85 @@ body.is-library-dragging * {
   flex-shrink: 0;
 }
 
-.vellum-library-book-menu-item span {
+.vellum-library-book-menu-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.vellum-library-book-menu-tag {
+  margin-left: auto;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--text-tertiary, var(--text-secondary));
+  font-size: 12px;
+}
+
+.vellum-library-book-menu-edit {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-right: 0.15rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.vellum-library-book-menu-edit .inimark-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .vellum-library-book-menu-item:hover,
 .vellum-library-book-menu-item.is-active {
   background: var(--bg-hover);
+}
+
+.vellum-library-book-menu-edit:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover, var(--shell-hover));
+}
+
+.vellum-book-edit-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.vellum-book-edit-label input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+}
+
+.vellum-book-edit-error {
+  margin: 0.45rem 0 0;
+  color: var(--danger, #c4554d);
+  font-size: 0.8rem;
+}
+
+.vellum-book-edit .inimark-confirm-dialog-actions {
+  margin-top: 1.25rem;
 }
 
 .vellum-library-book-menu-item.is-trash {

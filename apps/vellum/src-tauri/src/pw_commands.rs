@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use purewriter_store::{
     CreateArticle, CreateCategory, CreateFolder, Library, SchemaStatus, UpdateArticle,
-    UpdateCategory,
+    UpdateCategory, UpdateFolder,
 };
 use serde::Serialize;
 use tauri::State;
@@ -157,6 +157,15 @@ pub fn pw_create_folder(
     input: CreateFolder,
 ) -> Result<purewriter_store::Folder, CommandError> {
     with_lib_mut(&state, |lib| lib.create_folder(input))
+}
+
+#[tauri::command]
+pub fn pw_update_folder(
+    state: State<'_, PwState>,
+    id: String,
+    patch: UpdateFolder,
+) -> Result<purewriter_store::Folder, CommandError> {
+    with_lib_mut(&state, |lib| lib.update_folder(&id, patch))
 }
 
 #[tauri::command]

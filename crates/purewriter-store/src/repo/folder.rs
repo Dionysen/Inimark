@@ -101,6 +101,10 @@ impl Library {
         let mut folder = self.get_folder(id)?;
         let now = now_ms();
         if let Some(name) = patch.name {
+            let name = name.trim().to_string();
+            if name.is_empty() {
+                return Err(Error::Other("book name cannot be empty".into()));
+            }
             folder.name = name;
             folder.update_time = now;
         }
@@ -109,7 +113,10 @@ impl Library {
             folder.update_time = now;
         }
         if let Some(tags) = patch.tags {
-            folder.tags = Some(tags);
+            folder.tags = tags.and_then(|value| {
+                let trimmed = value.trim().to_string();
+                if trimmed.is_empty() { None } else { Some(trimmed) }
+            });
             folder.tags_update_time = now;
             folder.update_time = now;
         }
