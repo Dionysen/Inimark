@@ -19,7 +19,7 @@ export const VELLUM_GIT_SYNC: GitSyncAppConfig = {
     clientSecret: "66aa08c0df07ceec7b01e118e52f5b30da2455a1a97e718a4e21d80d4722f504",
     redirectUri: "vellum://git-oauth/callback",
     inAppRedirectUri: LOCAL_GIT_OAUTH_REDIRECT_URI,
-    scope: "user_info projects projects_member",
+    scope: "user_info projects",
   },
 };
 
