@@ -31,6 +31,7 @@ import {
   type LibraryRecord,
 } from "../libraries/store.ts";
 import { newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
+import { fillChapterTreeLabel } from "./chapter-row.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 
 export interface LibraryPanel {
@@ -269,6 +270,7 @@ export function mountLibraryPanel(
           renderTree();
         },
       });
+      row.classList.add("vellum-tree-volume");
 
       const count = document.createElement("span");
       count.className = "vellum-tree-count";
@@ -278,6 +280,7 @@ export function mountLibraryPanel(
 
       if (expanded) {
         const children = createTreeChildren(0);
+        children.classList.add("vellum-tree-chapters");
         if (volChapters.length === 0) {
           const empty = document.createElement("div");
           empty.className = "vellum-library-empty vellum-library-empty--nested";
@@ -286,11 +289,12 @@ export function mountLibraryPanel(
         } else {
           for (const chapter of volChapters) {
             const chapterBranch = createTreeBranch();
+            const title = chapter.title || options.t("app.untitled");
             const chapterRow = createTreeItem({
               kind: "file",
-              label: chapter.title || options.t("app.untitled"),
+              label: title,
               path: `chapter:${chapter.id}`,
-              depth: 1,
+              depth: 0,
               active: chapter.id === openArticleId,
               showIcons: false,
               onClick() {
@@ -299,6 +303,19 @@ export function mountLibraryPanel(
                 void openChapter(chapter.id);
               },
             });
+            chapterRow.classList.add("vellum-tree-chapter");
+            const label = chapterRow.querySelector(".inimark-tree-label");
+            if (label instanceof HTMLElement) {
+              fillChapterTreeLabel(label, {
+                title,
+                summary: chapter.summary,
+                createTime: chapter.createTime,
+                updateTime: chapter.updateTime,
+                wordCountLabel: options.t("library.wordCount", {
+                  count: chapter.count ?? 0,
+                }),
+              });
+            }
             chapterBranch.append(chapterRow);
             children.append(chapterBranch);
           }

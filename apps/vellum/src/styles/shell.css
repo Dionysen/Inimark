@@ -359,6 +359,78 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   flex: 1;
   min-height: 0;
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
+  /* Two-level volume/chapter list — no nested tree indent guides. */
+  --tree-indent-hint-visible: 0;
+}
+
+.vellum-library-tree .inimark-tree-children::before {
+  content: none;
+}
+
+.vellum-library-tree .vellum-tree-volume {
+  background: var(--library-volume-bg, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.vellum-library-tree .vellum-tree-volume:hover {
+  background: var(--bg-hover, var(--shell-hover));
+}
+
+.vellum-library-tree .vellum-tree-volume.is-selected {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.vellum-library-tree .vellum-tree-chapter {
+  align-items: flex-start;
+  background: var(--library-chapter-bg, transparent);
+  color: var(--text-primary);
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.vellum-library-tree .vellum-tree-chapter:hover {
+  background: var(--bg-hover, var(--shell-hover));
+}
+
+.vellum-library-tree .vellum-tree-chapter.is-active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.vellum-chapter-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.35;
+}
+
+.vellum-chapter-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.vellum-chapter-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--library-chapter-preview, var(--text-tertiary, var(--text-secondary)));
+}
+
+.vellum-chapter-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--library-chapter-meta, var(--text-tertiary, var(--text-secondary)));
 }
 
 .vellum-tree-count {
@@ -377,9 +449,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-empty--nested {
-  padding-left: calc(
-    var(--tree-indent-base, 0.5rem) + var(--tree-indent-hint-size, 14px) + 0.75rem
-  );
+  padding-left: calc(var(--tree-indent-base, 0.5rem) + 0.875rem + 0.2rem);
 }
 
 .inimark-sidebar-topbar {
