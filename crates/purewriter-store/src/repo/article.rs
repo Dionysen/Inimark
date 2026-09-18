@@ -275,6 +275,24 @@ impl Library {
         Ok(())
     }
 
+    /// Permanently delete an article that is already in the trash.
+    ///
+    /// Refuses articles still in a book. Soft-deletes first when `deleted` is
+    /// still 0 (the state `trash_article` leaves), then removes the row.
+    pub fn purge_trashed_article(&mut self, id: &str) -> Result<()> {
+        self.ensure_writable()?;
+        let art = self.get_article(id)?;
+        if art.folder_id != FOLDER_TRASH {
+            return Err(Error::Other(
+                "only articles in the trash can be permanently deleted".into(),
+            ));
+        }
+        if art.deleted == 0 {
+            self.soft_delete_article(id)?;
+        }
+        self.purge_article(id)
+    }
+
     /// Snapshot current article into History table before a major edit (optional helper).
     pub fn snapshot_article_history(&mut self, id: &str) -> Result<i64> {
         self.ensure_writable()?;

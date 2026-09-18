@@ -50,6 +50,7 @@ pub fn run() {
             pw_commands::pw_create_article,
             pw_commands::pw_update_article,
             pw_commands::pw_trash_article,
+            pw_commands::pw_purge_article,
             pw_commands::pw_update_category,
             pw_commands::pw_delete_category,
             pw_commands::pw_reorder_articles,

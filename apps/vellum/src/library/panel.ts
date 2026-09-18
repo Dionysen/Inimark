@@ -9,6 +9,7 @@ import {
   pwOpen,
   pwReorderArticles,
   pwReorderCategories,
+  pwPurgeArticle,
   pwTrashArticle,
   pwUpdateArticle,
   pwUpdateCategory,
@@ -28,6 +29,7 @@ import {
   createTreeHost,
   createTreeItem,
   menuIcons,
+  promptConfirm,
   updateTooltip,
 } from "@dionysen/ui";
 import {
@@ -76,6 +78,8 @@ export interface LibraryPanelOptions {
 const BOOK_KEY = "vellum-purewriter-book-id";
 /** Sentinel for articles with no Category (uncategorized volume). */
 const UNCATEGORIZED = "__uncategorized__";
+/** Pure Writer’s trash folder. Articles here are hidden from every book. */
+const TRASH_FOLDER = "PW_Trash";
 
 function markNoDrag(el: HTMLElement): void {
   el.setAttribute("data-tauri-drag-region", "false");
@@ -179,6 +183,8 @@ export function mountLibraryPanel(
   let openArticleId: string | null = null;
   /** Volume under which New creates a chapter; null = uncategorized. */
   let selectedVolumeId: string | null = null;
+  /** Last real book, so Restore can leave the trash book. */
+  let returnBookId: string | null = null;
   /** Collapsed volume keys (absent = expanded). */
   const collapsedVolumes = new Set<string>();
   /** In-memory chapter clipboard for library copy / paste. */
@@ -321,15 +327,108 @@ export function mountLibraryPanel(
     });
   };
 
+  const reportError = (error: unknown) => {
+    options.onStatus(error instanceof Error ? error.message : formatStoreError(error));
+  };
+
+  const viewingTrash = () => selectedBookId === TRASH_FOLDER;
+
   const deleteChapter = async (chapter: ArticleMeta) => {
     const title = chapter.title || options.t("app.untitled");
-    if (!window.confirm(options.t("library.confirmDeleteChapter", { title }))) return;
+    const ok = await promptConfirm({
+      title: options.t("library.moveToTrashTitle"),
+      message: options.t("library.confirmDeleteChapter", { title }),
+      confirmLabel: options.t("library.moveToTrash"),
+      cancelLabel: options.t("common.cancel"),
+    });
+    if (!ok) return;
     await pwTrashArticle(chapter.id);
     chapters = chapters.filter((item) => item.id !== chapter.id);
     if (openArticleId === chapter.id) {
       openArticleId = null;
       options.onArticleOpen("", "", null);
     }
+    updateBookMeta();
+    renderTree();
+  };
+
+  const purgeChapter = async (chapter: ArticleMeta) => {
+    const title = chapter.title || options.t("app.untitled");
+    const ok = await promptConfirm({
+      title: options.t("library.purgeTitle"),
+      message: options.t("library.confirmPurge", { title }),
+      confirmLabel: options.t("library.purge"),
+      cancelLabel: options.t("common.cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    await pwPurgeArticle(chapter.id);
+    chapters = chapters.filter((item) => item.id !== chapter.id);
+    if (openArticleId === chapter.id) {
+      openArticleId = null;
+      options.onArticleOpen("", "", null);
+    }
+    updateBookMeta();
+    renderTree();
+  };
+
+  const emptyTrash = async () => {
+    const items = await pwListArticles(TRASH_FOLDER, null, false);
+    if (items.length === 0) {
+      options.onStatus(options.t("library.trashEmpty"));
+      return;
+    }
+    const ok = await promptConfirm({
+      title: options.t("library.emptyTrashTitle"),
+      message: options.t("library.confirmEmptyTrash", { count: items.length }),
+      confirmLabel: options.t("library.emptyTrash"),
+      cancelLabel: options.t("common.cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    const ids = items.map((item) => item.id);
+    try {
+      for (const id of ids) await pwPurgeArticle(id);
+    } finally {
+      if (viewingTrash()) {
+        chapters = await pwListArticles(TRASH_FOLDER, null, false);
+        if (openArticleId && !chapters.some((item) => item.id === openArticleId)) {
+          openArticleId = null;
+          options.onArticleOpen("", "", null);
+        }
+        updateBookMeta();
+        renderTree();
+      }
+    }
+  };
+
+  /** Put a trashed article back into the book that was open before Trash. */
+  const restoreChapter = async (chapter: ArticleMeta) => {
+    const targetId =
+      returnBookId ??
+      books.find((book) => book.id !== TRASH_FOLDER && book.deleted === 0)?.id ??
+      null;
+    if (!targetId) {
+      options.onStatus(options.t("library.restoreNeedsBook"));
+      return;
+    }
+    const targetVolumes = await pwListCategories(targetId, false);
+    const categoryStillHere =
+      chapter.categoryId != null && targetVolumes.some((item) => item.id === chapter.categoryId);
+    await pwUpdateArticle(chapter.id, {
+      folderId: targetId,
+      categoryId: categoryStillHere ? chapter.categoryId : null,
+    });
+    chapters = chapters.filter((item) => item.id !== chapter.id);
+    if (openArticleId === chapter.id) {
+      openArticleId = null;
+      options.onArticleOpen("", "", null);
+    }
+    options.onStatus(
+      options.t("library.restored", {
+        title: chapter.title || options.t("app.untitled"),
+      }),
+    );
     updateBookMeta();
     renderTree();
   };
@@ -360,13 +459,47 @@ export function mountLibraryPanel(
       },
     });
     addContextItem({
-      label: options.t("library.deleteChapter"),
+      label: options.t("library.moveToTrash"),
+      icon: menuIcons.trash,
+      onClick() {
+        void deleteChapter(chapter).catch(reportError);
+      },
+    });
+    openRowMenu(event);
+  };
+
+  const openTrashChapterMenu = (event: MouseEvent, chapter: ArticleMeta) => {
+    if (!canWrite()) return;
+    chapterMenu.clear();
+    chapterMenu.setPath("");
+    addContextItem({
+      label: options.t("library.restore"),
+      icon: menuIcons.back,
+      onClick() {
+        void restoreChapter(chapter).catch(reportError);
+      },
+    });
+    addContextItem({
+      label: options.t("library.purge"),
       icon: menuIcons.trash,
       danger: true,
       onClick() {
-        void deleteChapter(chapter).catch((e) => {
-          options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
-        });
+        void purgeChapter(chapter).catch(reportError);
+      },
+    });
+    openRowMenu(event);
+  };
+
+  const openTrashMenu = (event: MouseEvent) => {
+    if (!canWrite()) return;
+    chapterMenu.clear();
+    chapterMenu.setPath("");
+    addContextItem({
+      label: options.t("library.emptyTrash"),
+      icon: menuIcons.trash,
+      danger: true,
+      onClick() {
+        void emptyTrash().catch(reportError);
       },
     });
     openRowMenu(event);
@@ -447,6 +580,9 @@ export function mountLibraryPanel(
   const currentBook = (): Folder | null =>
     books.find((b) => b.id === selectedBookId) ?? null;
 
+  const bookLabel = (book: Folder) =>
+    book.id === TRASH_FOLDER ? options.t("library.trash") : book.name;
+
   const updateBookButton = () => {
     const book = currentBook();
     if (!opened) {
@@ -458,8 +594,9 @@ export function mountLibraryPanel(
       return;
     }
     bookBtn.disabled = books.length === 0;
-    bookName.textContent = book?.name ?? options.t("library.noBook");
-    bookBtn.title = book ? `${book.name} (${book.id})` : "";
+    const label = book ? bookLabel(book) : options.t("library.noBook");
+    bookName.textContent = label;
+    bookBtn.title = book && book.id !== TRASH_FOLDER ? `${label} (${book.id})` : label;
   };
 
   /** Volume/chapter counts shown inside the book switcher (right-aligned). */
@@ -470,34 +607,58 @@ export function mountLibraryPanel(
       return;
     }
     bookMeta.hidden = false;
-    bookMeta.textContent = options.t("library.volumeChapterSummary", {
-      volumes: volumes.length,
-      chapters: chapters.length,
+    bookMeta.textContent = viewingTrash()
+      ? options.t("library.chapterSummary", { count: chapters.length })
+      : options.t("library.volumeChapterSummary", {
+          volumes: volumes.length,
+          chapters: chapters.length,
+        });
+  };
+
+  const bookMenuItem = (book: Folder) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "vellum-library-book-menu-item";
+    if (book.id === selectedBookId) item.classList.add("is-active");
+    item.innerHTML = bookIcon();
+    const name = document.createElement("span");
+    name.textContent = bookLabel(book);
+    item.append(name);
+    item.title = book.id === TRASH_FOLDER ? bookLabel(book) : book.id;
+    item.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      closeBookMenu();
+      void selectBook(book.id);
     });
+    return item;
   };
 
   const renderBookMenu = () => {
     bookMenu.replaceChildren();
+    const scroll = document.createElement("div");
+    scroll.className = "vellum-library-book-menu-scroll";
     for (const book of books) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "vellum-library-book-menu-item";
-      if (book.id === selectedBookId) item.classList.add("is-active");
-      item.innerHTML = bookIcon();
-      const name = document.createElement("span");
-      name.textContent = book.name;
-      item.append(name);
-      item.title = book.id;
-      item.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        closeBookMenu();
-        void selectBook(book.id);
+      if (book.id === TRASH_FOLDER) continue;
+      scroll.append(bookMenuItem(book));
+    }
+    bookMenu.append(scroll);
+    const trashBook = books.find((book) => book.id === TRASH_FOLDER);
+    if (trashBook) {
+      const item = bookMenuItem(trashBook);
+      item.classList.add("is-trash");
+      item.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openTrashMenu(event);
       });
       bookMenu.append(item);
     }
   };
 
   const chaptersForVolume = (volumeKey: string): ArticleMeta[] => {
+    if (viewingTrash()) {
+      return volumeKey === UNCATEGORIZED ? chapters : [];
+    }
     if (volumeKey === UNCATEGORIZED) {
       return chapters.filter((c) => !c.categoryId);
     }
@@ -505,6 +666,11 @@ export function mountLibraryPanel(
   };
 
   const volumeEntries = (): { key: string; name: string }[] => {
+    if (viewingTrash()) {
+      return chapters.length === 0
+        ? []
+        : [{ key: UNCATEGORIZED, name: options.t("library.uncategorized") }];
+    }
     const entries: { key: string; name: string }[] = volumes.map((v) => ({
       key: v.id,
       name: v.name,
@@ -546,7 +712,16 @@ export function mountLibraryPanel(
     syncFoldButton();
     treeHost.replaceChildren();
 
-    if (!opened || !selectedBookId) {
+    if (!opened) {
+      updateBookMeta();
+      const empty = document.createElement("div");
+      empty.className = "vellum-library-empty";
+      empty.textContent = options.t("library.openHint");
+      treeHost.append(empty);
+      return;
+    }
+
+    if (!selectedBookId) {
       updateBookMeta();
       const empty = document.createElement("div");
       empty.className = "vellum-library-empty";
@@ -668,7 +843,7 @@ export function mountLibraryPanel(
               chapterRow.addEventListener("contextmenu", (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                openChapterMenu(event, chapter);
+                viewingTrash() ? openTrashChapterMenu(event, chapter) : openChapterMenu(event, chapter);
               });
               bindPointerReorder({
                 row: chapterRow,
@@ -734,6 +909,7 @@ export function mountLibraryPanel(
     volumes = [];
     chapters = [];
     selectedBookId = null;
+    returnBookId = null;
     selectedVolumeId = null;
     openArticleId = null;
     renderBanner(null);
@@ -744,6 +920,7 @@ export function mountLibraryPanel(
   };
 
   const selectBook = async (bookId: string) => {
+    if (bookId !== TRASH_FOLDER) returnBookId = bookId;
     selectedBookId = bookId;
     localStorage.setItem(BOOK_KEY, bookId);
     selectedVolumeId = null;
@@ -754,13 +931,13 @@ export function mountLibraryPanel(
     chapters = await pwListArticles(bookId, null, false);
     collapsedVolumes.clear();
     renderTree();
-    newBtn.disabled = !opened?.schema.writesAllowed;
+    newBtn.disabled = !opened?.schema.writesAllowed || bookId === TRASH_FOLDER;
   };
 
   const openChapter = async (id: string) => {
     const art = await pwGetArticle(id);
     openArticleId = art.id;
-    selectedVolumeId = art.categoryId;
+    if (art.folderId !== TRASH_FOLDER) selectedVolumeId = art.categoryId;
     renderTree();
     options.onArticleOpen(art.title, art.content, art.id);
   };
@@ -772,7 +949,7 @@ export function mountLibraryPanel(
     }
     const preferred = list.find((f) => f.id === "Default" && f.deleted === 0);
     if (preferred) return preferred.id;
-    const nonTrash = list.find((f) => f.id !== "PW_Trash" && f.deleted === 0);
+    const nonTrash = list.find((f) => f.id !== TRASH_FOLDER && f.deleted === 0);
     return nonTrash?.id ?? list[0]?.id ?? null;
   };
 
@@ -949,7 +1126,9 @@ export function mountLibraryPanel(
       return;
     }
     const chapter = targetChapter();
-    if (chapter) await deleteChapter(chapter);
+    if (!chapter) return;
+    if (viewingTrash()) await purgeChapter(chapter);
+    else await deleteChapter(chapter);
   };
 
   const copySelection = async () => {
@@ -967,7 +1146,7 @@ export function mountLibraryPanel(
   };
 
   const pasteClipboard = async () => {
-    if (!chapterClip || !selectedBookId || !canWrite()) {
+    if (!chapterClip || !selectedBookId || viewingTrash() || !canWrite()) {
       if (!chapterClip) options.onStatus(options.t("library.nothingToPaste"));
       return;
     }
@@ -991,7 +1170,7 @@ export function mountLibraryPanel(
   };
 
   const createChapter = async (volumeId: string | null = selectedVolumeId) => {
-    if (!selectedBookId || !opened?.schema.writesAllowed) return;
+    if (!selectedBookId || viewingTrash() || !opened?.schema.writesAllowed) return;
     try {
       const art = await pwCreateArticle({
         title: options.t("app.untitled"),

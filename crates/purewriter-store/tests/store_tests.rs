@@ -106,6 +106,26 @@ fn article_crud_updates_timestamps() {
 
     let trashed = lib.trash_article(&art.id).unwrap();
     assert_eq!(trashed.folder_id, "PW_Trash");
+    assert_eq!(trashed.deleted, 0);
+
+    let kept = lib
+        .create_article(CreateArticle {
+            title: "留着".into(),
+            content: "正文".into(),
+            folder_id: "Default".into(),
+            category_id: None,
+            extension: Some("txt".into()),
+        })
+        .unwrap();
+    let refused = lib.purge_trashed_article(&kept.id).unwrap_err();
+    assert!(matches!(refused, Error::Other(_)));
+    assert!(lib.get_article(&kept.id).is_ok());
+
+    lib.purge_trashed_article(&art.id).unwrap();
+    assert!(matches!(
+        lib.get_article(&art.id).unwrap_err(),
+        Error::NotFound(_)
+    ));
 }
 
 #[test]

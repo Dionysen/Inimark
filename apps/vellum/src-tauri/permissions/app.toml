@@ -19,6 +19,7 @@ commands.allow = [
   "pw_create_article",
   "pw_update_article",
   "pw_trash_article",
+  "pw_purge_article",
   "pw_list_settings",
   "pw_set_setting",
   "pw_pwb_export",

@@ -643,16 +643,21 @@ body.is-library-dragging * {
   left: 0;
   right: 0;
   z-index: 30;
-  max-height: 240px;
-  overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 1px;
   padding: 0.25rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   background: var(--bg-menu, var(--bg-secondary));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.vellum-library-book-menu-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 240px;
+  overflow: auto;
 }
 
 .vellum-library-book-menu[hidden] {
@@ -689,6 +694,12 @@ body.is-library-dragging * {
 .vellum-library-book-menu-item:hover,
 .vellum-library-book-menu-item.is-active {
   background: var(--bg-hover);
+}
+
+.vellum-library-book-menu-item.is-trash {
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-control) var(--radius-control);
 }
 
 .vellum-library-banner {

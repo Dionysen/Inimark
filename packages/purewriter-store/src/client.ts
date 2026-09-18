@@ -74,6 +74,11 @@ export function pwTrashArticle(id: string): Promise<Article> {
   return invoke("pw_trash_article", { id });
 }
 
+/** Permanently delete an article that is already in the trash. */
+export function pwPurgeArticle(id: string): Promise<void> {
+  return invoke("pw_purge_article", { id });
+}
+
 export function pwUpdateCategory(id: string, patch: UpdateCategory): Promise<Category> {
   return invoke("pw_update_category", { id, patch });
 }

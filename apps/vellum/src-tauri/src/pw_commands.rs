@@ -193,6 +193,11 @@ pub fn pw_trash_article(
 }
 
 #[tauri::command]
+pub fn pw_purge_article(state: State<'_, PwState>, id: String) -> Result<(), CommandError> {
+    with_lib_mut(&state, |lib| lib.purge_trashed_article(&id))
+}
+
+#[tauri::command]
 pub fn pw_update_category(
     state: State<'_, PwState>,
     id: String,
