@@ -771,20 +771,20 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   min-height: 0;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  align-items: flex-start;
+  overflow: auto;
 }
 
 .vellum-plaintext-editor {
-  flex: 1;
   box-sizing: border-box;
   width: 100%;
   max-width: var(--shell-editor-max-width, 720px);
-  height: 100%;
+  min-height: 100%;
   margin: 0 auto;
   padding: 1.25rem 1.75rem;
   border: 0;
   outline: none;
-  overflow: auto;
+  overflow: visible;
   background: transparent;
   color: var(--inimark-fg);
   font-family: var(--shell-editor-font, var(--inimark-font-ui));

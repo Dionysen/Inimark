@@ -145,7 +145,7 @@ export function mountPlaintextEditor(
   options: MountPlaintextOptions = {},
 ): PlaintextEditor {
   const el = document.createElement("div");
-  el.className = "vellum-plaintext-editor inimark-scrollbar";
+  el.className = "vellum-plaintext-editor";
   el.contentEditable = "true";
   el.spellcheck = true;
   el.role = "textbox";

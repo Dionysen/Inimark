@@ -124,7 +124,7 @@ const editorColumn = document.createElement("div");
 editorColumn.className = "vellum-editor-column";
 
 const editorHost = document.createElement("div");
-editorHost.className = "vellum-editor-host";
+editorHost.className = "vellum-editor-host inimark-scrollbar";
 
 let openArticleId: string | null = null;
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -147,6 +147,11 @@ function scheduleAutosave(): void {
 const editor = mountPlaintextEditor(editorHost, {
   placeholder: t("editor.placeholder"),
   onChange: () => scheduleAutosave(),
+});
+
+/** Click the gutter beside the writing column to focus the editor. */
+editorHost.addEventListener("pointerdown", (event) => {
+  if (event.target === editorHost) editor.focus();
 });
 
 function applySidebarWidth(): void {
