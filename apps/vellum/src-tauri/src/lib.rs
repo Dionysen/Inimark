@@ -37,6 +37,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             dionysen_shell::show_settings_window,
             dionysen_shell::toggle_settings_window,
+            dionysen_shell::list_system_fonts,
             pw_commands::pw_open,
             pw_commands::pw_close,
             pw_commands::pw_schema_status,

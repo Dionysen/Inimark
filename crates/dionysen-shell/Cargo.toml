@@ -9,3 +9,5 @@ license.workspace = true
 [dependencies]
 tauri = { version = "2" }
 tauri-plugin-window-state = "2"
+fontdb = "0.23"
+serde = { version = "1", features = ["derive"] }

@@ -1096,6 +1096,8 @@ dependencies = [
 name = "dionysen-shell"
 version = "0.1.0"
 dependencies = [
+ "fontdb",
+ "serde",
  "tauri",
  "tauri-plugin-window-state",
 ]
@@ -2355,7 +2357,6 @@ dependencies = [
  "block2",
  "dionysen-shell",
  "dispatch2",
- "fontdb",
  "futures-util",
  "inimark-ssg",
  "objc2",

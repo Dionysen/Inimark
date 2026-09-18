@@ -1,39 +1,76 @@
-import { createJsonSettingsStore } from "@dionysen/settings-kit";
+import {
+  createJsonSettingsStore,
+  applyEditorTypographyCss,
+  normalizeEditorTypography,
+  EDITOR_WIDTH_DEFAULT,
+  EDITOR_WIDTH_MIN,
+  FONT_SIZE_DEFAULT,
+  FIRST_LINE_INDENT_DEFAULT,
+  LINE_HEIGHT_DEFAULT,
+  LINE_HEIGHT_MAX,
+  LINE_HEIGHT_MIN,
+  LINE_HEIGHT_STEP,
+  PARAGRAPH_SPACING_DEFAULT,
+  type EditorTypographySettings,
+} from "@dionysen/settings-kit";
 import { setLocale, detectSystemLocale, type LocaleId } from "../i18n/index.ts";
 
 export type AppLocale = LocaleId | "system";
 
-export interface AppSettings {
+export type { EditorTypographySettings };
+
+export interface AppSettings extends EditorTypographySettings {
   locale: AppLocale;
-  fontSize: number;
-  /** Unitless line-height for the writing surface. */
-  lineHeight: number;
 }
 
 export const SETTINGS_STORAGE_KEY = "vellum-settings";
 export const SETTINGS_SYNC_EVENT = "vellum:settings-sync";
 
+/** Main window publishes the writing-column client width for the settings slider max. */
+export const EDITOR_WIDTH_CEILING_KEY = "vellum-editor-width-ceiling";
+
+/** Vellum keeps a slightly tighter body size range than Inimark. */
 export const FONT_SIZE_MIN = 12;
 export const FONT_SIZE_MAX = 28;
-export const FONT_SIZE_DEFAULT = 16;
-
-export const LINE_HEIGHT_MIN = 1.2;
-export const LINE_HEIGHT_MAX = 2.2;
-export const LINE_HEIGHT_DEFAULT = 1.6;
-export const LINE_HEIGHT_STEP = 0.1;
+export {
+  EDITOR_WIDTH_DEFAULT,
+  EDITOR_WIDTH_MIN,
+  FONT_SIZE_DEFAULT,
+  FIRST_LINE_INDENT_DEFAULT,
+  LINE_HEIGHT_DEFAULT,
+  LINE_HEIGHT_MAX,
+  LINE_HEIGHT_MIN,
+  LINE_HEIGHT_STEP,
+  PARAGRAPH_SPACING_DEFAULT,
+};
 
 export const DEFAULT_SETTINGS: AppSettings = {
   locale: "system",
+  editorFont: "system",
   fontSize: FONT_SIZE_DEFAULT,
   lineHeight: LINE_HEIGHT_DEFAULT,
+  paragraphSpacing: PARAGRAPH_SPACING_DEFAULT,
+  editorWidth: EDITOR_WIDTH_DEFAULT,
+  firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
 };
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
+/** Read the last published editor-column width ceiling (fallback: viewport). */
+export function readEditorWidthCeiling(): number {
+  const raw = localStorage.getItem(EDITOR_WIDTH_CEILING_KEY);
+  const parsed = raw == null ? NaN : Number(raw);
+  if (Number.isFinite(parsed) && parsed >= EDITOR_WIDTH_MIN) {
+    return Math.floor(parsed);
+  }
+  if (typeof window !== "undefined" && window.innerWidth > 0) {
+    return Math.max(EDITOR_WIDTH_MIN, Math.floor(window.innerWidth));
+  }
+  return Math.max(EDITOR_WIDTH_MIN, EDITOR_WIDTH_DEFAULT);
 }
 
-function roundLineHeight(n: number): number {
-  return Math.round(n * 10) / 10;
+/** Publish available writing-column width so the settings slider max stays in sync. */
+export function publishEditorWidthCeiling(widthPx: number): void {
+  const next = Math.max(EDITOR_WIDTH_MIN, Math.floor(widthPx));
+  localStorage.setItem(EDITOR_WIDTH_CEILING_KEY, String(next));
 }
 
 export function normalizeSettings(raw: unknown): AppSettings {
@@ -43,21 +80,13 @@ export function normalizeSettings(raw: unknown): AppSettings {
     src.locale === "en" || src.locale === "zh-CN" || src.locale === "system"
       ? src.locale
       : DEFAULT_SETTINGS.locale;
-  const fontSize = clamp(
-    typeof src.fontSize === "number" ? src.fontSize : DEFAULT_SETTINGS.fontSize,
-    FONT_SIZE_MIN,
-    FONT_SIZE_MAX,
-  );
-  const lineHeight = roundLineHeight(
-    clamp(
-      typeof src.lineHeight === "number"
-        ? src.lineHeight
-        : DEFAULT_SETTINGS.lineHeight,
-      LINE_HEIGHT_MIN,
-      LINE_HEIGHT_MAX,
-    ),
-  );
-  return { locale, fontSize, lineHeight };
+  const typography = normalizeEditorTypography(src, {
+    defaults: DEFAULT_SETTINGS,
+    editorWidthMax: readEditorWidthCeiling(),
+    fontSizeMin: FONT_SIZE_MIN,
+    fontSizeMax: FONT_SIZE_MAX,
+  });
+  return { locale, ...typography };
 }
 
 const store = createJsonSettingsStore<AppSettings>({
@@ -75,14 +104,7 @@ export const subscribeSettings = store.subscribe;
 
 /** Apply chrome side effects for the current settings object. */
 export function applySettings(settings: AppSettings): void {
-  document.documentElement.style.setProperty(
-    "--shell-editor-font-size",
-    `${settings.fontSize}px`,
-  );
-  document.documentElement.style.setProperty(
-    "--shell-editor-line-height",
-    String(settings.lineHeight),
-  );
+  applyEditorTypographyCss(document.documentElement, settings, "shell");
   setLocale(settings.locale === "system" ? detectSystemLocale() : settings.locale);
 }
 

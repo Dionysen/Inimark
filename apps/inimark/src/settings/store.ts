@@ -1,4 +1,5 @@
 import {
+  applyEditorTypographyCss,
   createJsonSettingsStore,
   type JsonSettingsStore,
   type SettingsSyncPayload as KitSettingsSyncPayload,
@@ -313,18 +314,21 @@ export function isExternalSettingsSync(payload: SettingsSyncPayload): boolean {
 
 export function applySettings(settings: AppSettings): void {
   const root = document.documentElement;
-  root.style.setProperty("--inimark-editor-font-size", `${settings.fontSize}px`);
-  root.style.setProperty("--editor-font-size", `${settings.fontSize}px`);
-  root.style.setProperty("--font-mono-size", `${settings.codeFontSize}px`);
-  root.style.setProperty(
-    "--inimark-editor-max-width",
-    `${settings.editorWidth}px`,
+  applyEditorTypographyCss(
+    root,
+    {
+      editorFont: settings.editorFont,
+      fontSize: settings.fontSize,
+      lineHeight: settings.lineHeight,
+      paragraphSpacing: settings.paragraphSpacing,
+      editorWidth: settings.editorWidth,
+      firstLineIndent: 0,
+    },
+    "editor",
   );
-  root.style.setProperty("--editor-font", resolveFontValue(settings.editorFont, "system"));
+  root.style.setProperty("--font-mono-size", `${settings.codeFontSize}px`);
   root.style.setProperty("--font-mono", resolveFontValue(settings.codeFont, "code"));
   root.style.setProperty("--font-ui", resolveFontValue(settings.uiFont, "system"));
-  root.style.setProperty("--editor-line-height", String(settings.lineHeight));
-  root.style.setProperty("--editor-paragraph-spacing", `${settings.paragraphSpacing}em`);
   root.style.setProperty("--code-line-height", String(settings.codeLineHeight));
 
   const density = DENSITY_VARS[settings.menuDensity];

@@ -67,7 +67,7 @@ const en: Dictionary = {
     subtitle: {
       general: "Language and app preferences",
       sync: "GitHub / Gitee PWB sync",
-      editor: "Font size, line spacing, and writing experience",
+      editor: "Font, size, spacing, width, and first-line indent",
       theme: "Themes and appearance mode",
       about: "About Vellum",
     },
@@ -346,10 +346,20 @@ const en: Dictionary = {
 
     },
     editor: {
+      editorFont: "Font",
+      editorFontDesc: "Typeface for the writing surface",
       fontSize: "Font size",
       fontSizeDesc: "Writing surface text size",
       lineHeight: "Line spacing",
       lineHeightDesc: "Line height of the writing surface",
+      paragraphSpacing: "Paragraph spacing",
+      paragraphSpacingDesc: "Vertical gap after each paragraph (em)",
+      editorWidth: "Editor width",
+      editorWidthDesc: "Maximum width of the writing column",
+      firstLineIndent: "First-line indent",
+      firstLineIndentDesc:
+        "Ideographic spaces (　) inserted when starting a new paragraph",
+      firstLineIndentValue: "{{n}} characters",
     },
     about: {
       title: "Vellum",
@@ -430,7 +440,7 @@ const zhCN: Dictionary = {
     subtitle: {
       general: "语言与通用偏好",
       sync: "GitHub / Gitee 同步 .pwb",
-      editor: "字号、行距与编辑体验",
+      editor: "字体、字号、间距、宽度与首行缩进",
       theme: "主题与外观模式",
       about: "关于 Vellum",
     },
@@ -703,10 +713,19 @@ const zhCN: Dictionary = {
 
     },
     editor: {
+      editorFont: "字体",
+      editorFontDesc: "从系统字体中选择写作区字体",
       fontSize: "字号",
       fontSizeDesc: "写作区文字大小",
       lineHeight: "行距",
       lineHeightDesc: "写作区行高",
+      paragraphSpacing: "段间距",
+      paragraphSpacingDesc: "段落之间的垂直间距（em）",
+      editorWidth: "编辑器宽度",
+      editorWidthDesc: "正文栏的最大宽度（上限为当前窗口可用宽度）",
+      firstLineIndent: "首行缩进",
+      firstLineIndentDesc: "新建段落时自动插入的全角空格（　）字数",
+      firstLineIndentValue: "{{n}} 字",
     },
     about: {
       title: "Vellum",

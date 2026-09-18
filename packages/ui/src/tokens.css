@@ -58,7 +58,9 @@
   --shell-sidebar-dock-height: 3.25rem;
 
   --shell-editor-font-size: var(--editor-font-size, 16px);
-  --shell-editor-max-width: 768px;
+  --shell-editor-line-height: var(--editor-line-height, 1.6);
+  --shell-editor-paragraph-spacing: var(--editor-paragraph-spacing, 1.05em);
+  --shell-editor-max-width: 720px;
 
   /* Menus �?solid by default; frosted when html[data-glass="true"].
      Floating library chrome always uses liquid glass (see app.css). */

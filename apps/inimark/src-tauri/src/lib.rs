@@ -5,7 +5,6 @@ use tauri::Manager;
 use commands::ai_commands::{ai_chat_cancel, ai_chat_stream, AiStreamState};
 use commands::color_commands::pick_screen_color;
 use commands::docs_deploy_commands::resolve_inimark_docs_vault;
-use commands::font_commands::list_system_fonts;
 use commands::proxy_commands::get_system_proxy_url;
 use commands::publish_commands::{
     publish_start_preview, publish_stop_preview, publish_write_site, SitePreviewState,
@@ -13,7 +12,8 @@ use commands::publish_commands::{
 use commands::shell_commands::{open_url, open_with_default_app, reveal_in_file_manager};
 use commands::update_commands::check_app_update;
 use dionysen_shell::{
-    handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
+    handle_run_event, handle_window_event, list_system_fonts, setup_dual_windows, WindowPolicy,
+    WINDOW_STATE_FLAGS,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

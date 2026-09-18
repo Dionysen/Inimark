@@ -1,4 +1,5 @@
-use fontdb::Database;
+//! System font enumeration for settings font pickers.
+
 use serde::Serialize;
 use std::collections::HashSet;
 
@@ -14,7 +15,7 @@ pub struct SystemFontInfo {
 /// List installed system fonts (deduped by family, sorted).
 #[tauri::command]
 pub fn list_system_fonts() -> Vec<SystemFontInfo> {
-    let mut db = Database::new();
+    let mut db = fontdb::Database::new();
     db.load_system_fonts();
 
     let mut seen: HashSet<String> = HashSet::new();

@@ -770,23 +770,48 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   min-width: 0;
   min-height: 0;
   display: flex;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .vellum-plaintext-editor {
   flex: 1;
+  box-sizing: border-box;
   width: 100%;
+  max-width: var(--shell-editor-max-width, 720px);
   height: 100%;
-  margin: 0;
+  margin: 0 auto;
   padding: 1.25rem 1.75rem;
   border: 0;
-  resize: none;
   outline: none;
+  overflow: auto;
   background: transparent;
   color: var(--inimark-fg);
-  font-family: var(--inimark-font-ui);
+  font-family: var(--shell-editor-font, var(--inimark-font-ui));
   font-size: var(--shell-editor-font-size, 16px);
   line-height: var(--shell-editor-line-height, 1.6);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
+
+.vellum-plaintext-editor:empty::before,
+.vellum-plaintext-editor[data-placeholder]:not(:focus):has(> p:only-child:empty)::before,
+.vellum-plaintext-editor[data-placeholder]:not(:focus):has(> p:only-child > br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--inimark-muted-fg);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.vellum-plaintext-editor > p {
+  margin: 0 0 var(--shell-editor-paragraph-spacing, 1.05em);
+}
+
+.vellum-plaintext-editor > p:last-child {
+  margin-bottom: 0;
+}
+
 
 .vellum-about-body,
 .vellum-about-version {

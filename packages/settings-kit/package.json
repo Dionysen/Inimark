@@ -6,10 +6,12 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./editor-typography": "./src/editor-typography.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "dependencies": {
     "@dionysen/ui": "workspace:*"
@@ -24,6 +26,8 @@
   },
   "devDependencies": {
     "@tauri-apps/api": "^2.5.0",
+    "happy-dom": "^20.9.0",
+    "tsx": "^4.20.5",
     "typescript": "~5.8.3"
   }
 }

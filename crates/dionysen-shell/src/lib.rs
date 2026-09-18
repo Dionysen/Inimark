@@ -1,10 +1,12 @@
 //! Shared dual-window chrome for Dionysen Tauri apps (main + aux/settings).
 
 mod commands;
+mod fonts;
 
 pub use commands::{
     show_aux_window, show_settings_window, toggle_aux_window, toggle_settings_window,
 };
+pub use fonts::{list_system_fonts, SystemFontInfo};
 
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime, Window, WindowEvent, WebviewWindow};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};

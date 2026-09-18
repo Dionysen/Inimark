@@ -48,3 +48,12 @@ export {
   bootShellChrome,
   type BootShellChromeOptions,
 } from "./boot.ts";
+
+export { listSystemFonts, type SystemFontInfo } from "./system-fonts.ts";
+
+export {
+  createFontPicker,
+  type FontPickerController,
+  type FontPickerMode,
+  type FontPickerOptions,
+} from "./font-picker.ts";

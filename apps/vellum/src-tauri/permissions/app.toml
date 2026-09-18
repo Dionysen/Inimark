@@ -6,6 +6,7 @@ commands.allow = [
   "toggle_settings_window",
   "show_aux_window",
   "toggle_aux_window",
+  "list_system_fonts",
   "pw_open",
   "pw_close",
   "pw_schema_status",

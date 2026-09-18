@@ -4,6 +4,7 @@ import {
   bootShellChrome,
   closeWindow,
   initPlatform,
+  isTauri,
   requestOverlayScrollbarRefresh,
 } from "@dionysen/shell";
 import {
@@ -18,7 +19,15 @@ import {
   configureVellumTheme,
   migrateLegacyAppearanceFromSettings,
 } from "./themes/configure.ts";
-import { applySettings, loadSettings } from "./settings/store.ts";
+import {
+  applySettings,
+  isExternalSettingsSync,
+  loadSettings,
+  parseSettingsSyncPayload,
+  publishEditorWidthCeiling,
+  SETTINGS_STORAGE_KEY,
+  SETTINGS_SYNC_EVENT,
+} from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
@@ -63,6 +72,24 @@ let teardownDeepLink: (() => void) | undefined;
 void installGitOauthDeepLinkHandler().then((fn) => {
   teardownDeepLink = fn;
 });
+
+const onSettingsStorage = (event: StorageEvent): void => {
+  if (event.key === SETTINGS_STORAGE_KEY) {
+    applySettings(loadSettings());
+  }
+};
+window.addEventListener("storage", onSettingsStorage);
+
+let unlistenSettings: (() => void) | undefined;
+if (isTauri()) {
+  void import("@tauri-apps/api/event").then(async ({ listen }) => {
+    unlistenSettings = await listen(SETTINGS_SYNC_EVENT, (event) => {
+      const payload = parseSettingsSyncPayload(event.payload);
+      if (!payload || !isExternalSettingsSync(payload)) return;
+      applySettings(payload.settings);
+    });
+  });
+}
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("Missing #app mount point");
@@ -191,10 +218,20 @@ syncStatusHost.className = "vellum-git-sync-status-host";
 shell.append(syncStatusHost);
 const teardownSyncStatus = mountGitSyncStatusBar(syncStatusHost);
 
+function publishWidthCeiling(): void {
+  publishEditorWidthCeiling(editorHost.clientWidth || editorColumn.clientWidth);
+}
+publishWidthCeiling();
+const widthObserver = new ResizeObserver(() => publishWidthCeiling());
+widthObserver.observe(editorHost);
+
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
   clearAutosave();
+  widthObserver.disconnect();
+  unlistenSettings?.();
+  window.removeEventListener("storage", onSettingsStorage);
   teardownDeepLink?.();
   teardownSyncStatus();
   columnResize.destroy();

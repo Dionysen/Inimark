@@ -49,11 +49,19 @@ export default defineConfig({
         find: "@dionysen/ui/widgets.css",
         replacement: resolve(uiRoot, "src/widgets/widgets.css"),
       },
+      {
+        find: "@dionysen/ui/font-catalog",
+        replacement: resolve(uiRoot, "src/font-catalog.ts"),
+      },
       { find: "@dionysen/ui", replacement: resolve(uiRoot, "src/index.ts") },
       { find: "@dionysen/i18n", replacement: resolve(i18nRoot, "src/index.ts") },
       {
         find: "@dionysen/shortcut-kit",
         replacement: resolve(shortcutKitRoot, "src/index.ts"),
+      },
+      {
+        find: "@dionysen/settings-kit/editor-typography",
+        replacement: resolve(settingsKitRoot, "src/editor-typography.ts"),
       },
       {
         find: "@dionysen/settings-kit",
