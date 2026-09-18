@@ -452,6 +452,17 @@ body.is-library-dragging * {
   font: inherit;
   font-size: 13px;
   outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Lift label clipping while the title is a text field, or WKWebView will not move the caret. */
+.inimark-tree-label.is-renaming {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .vellum-chapter-body {
@@ -649,6 +660,9 @@ body.is-library-dragging * {
 }
 
 .vellum-library-book-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   text-align: left;
   border: 0;
   background: transparent;
@@ -657,6 +671,19 @@ body.is-library-dragging * {
   border-radius: var(--radius-control);
   cursor: pointer;
   font-size: 13px;
+}
+
+.vellum-library-book-menu-item .inimark-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.vellum-library-book-menu-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vellum-library-book-menu-item:hover,

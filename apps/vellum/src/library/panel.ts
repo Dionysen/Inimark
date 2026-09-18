@@ -27,6 +27,7 @@ import {
   createTreeChildren,
   createTreeHost,
   createTreeItem,
+  menuIcons,
   updateTooltip,
 } from "@dionysen/ui";
 import {
@@ -37,9 +38,10 @@ import {
   upsertLibrary,
   type LibraryRecord,
 } from "../libraries/store.ts";
-import { collapseAllIcon, expandAllIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
+import { bookIcon, collapseAllIcon, expandAllIcon, newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { fillChapterTreeLabel } from "./chapter-row.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
+import { bindRenameField } from "./rename-field.ts";
 import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
 
 export interface LibraryPanel {
@@ -257,6 +259,7 @@ export function mountLibraryPanel(
     input.className = "vellum-chapter-rename";
     input.value = current;
     titleEl.replaceWith(input);
+    bindRenameField(input);
     input.focus();
     input.select();
     let done = false;
@@ -336,6 +339,7 @@ export function mountLibraryPanel(
     chapterMenu.setPath("");
     addContextItem({
       label: options.t("library.rename"),
+      icon: menuIcons.rename,
       onClick() {
         const titleEl = treeHost.querySelector<HTMLElement>(
           `[data-chapter-id="${chapter.id}"] .vellum-chapter-title`,
@@ -345,6 +349,7 @@ export function mountLibraryPanel(
     });
     addContextItem({
       label: options.t("library.deleteChapter"),
+      icon: menuIcons.trash,
       danger: true,
       onClick() {
         void deleteChapter(chapter).catch((e) => {
@@ -381,6 +386,7 @@ export function mountLibraryPanel(
     chapterMenu.setPath("");
     addContextItem({
       label: options.t("library.addChapter"),
+      icon: newFileIcon(),
       onClick() {
         selectedVolumeId = volumeId;
         void createChapter(volumeId);
@@ -388,6 +394,7 @@ export function mountLibraryPanel(
     });
     addContextItem({
       label: options.t("library.rename"),
+      icon: menuIcons.rename,
       onClick() {
         const titleEl = treeHost.querySelector<HTMLElement>(
           `[data-volume-id="${volumeId}"] .inimark-tree-label`,
@@ -397,6 +404,7 @@ export function mountLibraryPanel(
     });
     addContextItem({
       label: options.t("library.deleteVolume"),
+      icon: menuIcons.trash,
       danger: true,
       onClick() {
         void deleteVolume(volumeId, name).catch((e) => {
@@ -463,7 +471,10 @@ export function mountLibraryPanel(
       item.type = "button";
       item.className = "vellum-library-book-menu-item";
       if (book.id === selectedBookId) item.classList.add("is-active");
-      item.textContent = book.name;
+      item.innerHTML = bookIcon();
+      const name = document.createElement("span");
+      name.textContent = book.name;
+      item.append(name);
       item.title = book.id;
       item.addEventListener("click", (ev) => {
         ev.stopPropagation();
