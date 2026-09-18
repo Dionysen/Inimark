@@ -72,9 +72,10 @@ export function stripFrontmatter(markdown) {
 export function findVersionSection(markdown, version) {
   const body = stripFrontmatter(markdown);
   const escaped = version.replace(/\./g, "\\.");
-  // ## 1.0.4 | ## v1.0.4 | ## [1.0.4]  + optional " — date" / " - date"
+  // Date suffix stays on the heading line. A following list must not be eaten:
+  // `\s` includes newlines, so the next bullet's "-" looked like " - date".
   const headingRe = new RegExp(
-    `^##\\s+(?:\\[)?v?${escaped}(?:\\])?(?:\\s*[—–-]\\s*.*)?\\s*$`,
+    `^##\\s+(?:\\[)?v?${escaped}(?:\\])?(?:[ \\t]*[—–-][^\\n]*)?\\s*$`,
     "im",
   );
   const match = headingRe.exec(body);

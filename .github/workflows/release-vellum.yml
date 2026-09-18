@@ -1,30 +1,30 @@
-name: Release
+name: Release Vellum
 
-# Builds Inimark for macOS / Windows / Linux, signs updater artifacts,
+# Builds Vellum for macOS / Windows / Linux, signs updater artifacts,
 # and uploads installers + latest.json to a draft GitHub Release.
 #
-# Required repository secrets:
-#   TAURI_SIGNING_PRIVATE_KEY          — contents of .tauri-keys/inimark.key
-#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD — optional (empty if key has no password)
+# Tags look like vellum-v0.1.0 so they do not match Inimark's v1.2.3 releases.
+# The draft is never marked Latest. Publishing the draft runs
+# release-vellum-channel.yml, which copies latest.json onto the standing
+# vellum-latest release (also not Latest). In-app updates read:
+#   https://github.com/Dionysen/Inimark/releases/download/vellum-latest/latest.json
+#
+# Required repository secrets (same key pair as Inimark):
+#   TAURI_SIGNING_PRIVATE_KEY
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 #
 # Trigger:
-#   - Push a version tag: git tag v0.1.0 && git push origin v0.1.0
-#     Tags must look like v1.2.3. vellum-v* is a different app and must not match.
-#   - Or Actions → Release → Run workflow
+#   git tag vellum-v0.1.0 && git push origin vellum-v0.1.0
+#   or Actions → Release Vellum → Run workflow
 #
-# Release notes:
-#   Reads docs/en/04-Appendix/Version History.md for the matching version's
-#   "What's new" block. If missing, uses the same default download template as before.
-#   Keep docs/zh/04-附录/版本历史.md in sync for users.
-#
-# After the draft looks good, publish the Release so in-app updater can see it
-# via releases/latest/download/latest.json.
+# Notes come from apps/vellum/docs/版本历史.md. Publish the draft before
+# expecting in-app downloads to succeed.
 
 on:
   workflow_dispatch:
   push:
     tags:
-      - "v[0-9]*"
+      - "vellum-v*"
 
 jobs:
   publish-tauri:
@@ -81,23 +81,22 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: ./apps/inimark/src-tauri -> target
+          workspaces: ./apps/vellum/src-tauri -> target
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Resolve release notes from docs
+      - name: Resolve release notes
         id: notes
         shell: bash
         run: |
           set -euo pipefail
-          # Tag pushes use the tag name; workflow_dispatch uses package.json version.
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION_REF="${GITHUB_REF_NAME}"
+            VERSION_REF="${GITHUB_REF_NAME#vellum-v}"
           else
-            VERSION_REF="$(node -p "require('./package.json').version")"
+            VERSION_REF="$(node -p "JSON.parse(require('fs').readFileSync('apps/vellum/src-tauri/tauri.conf.json','utf8')).version")"
           fi
-          BODY="$(node scripts/extract-release-notes.mjs "${VERSION_REF}" --fallback)"
+          BODY="$(node scripts/extract-release-notes.mjs "${VERSION_REF}" --fallback --file "apps/vellum/docs/版本历史.md")"
           {
             echo "body<<EOF"
             printf '%s\n' "${BODY}"
@@ -111,10 +110,28 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          projectPath: apps/inimark/src-tauri
-          tagName: v__VERSION__
-          releaseName: Inimark v__VERSION__
+          projectPath: apps/vellum/src-tauri
+          tagName: vellum-v__VERSION__
+          releaseName: Vellum v__VERSION__
           releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  # Runs after every platform upload. A draft must not become GitHub Latest,
+  # or Inimark's updater (releases/latest) would fetch Vellum's latest.json.
+  unmark-latest:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Keep this draft off Latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "JSON.parse(require('fs').readFileSync('apps/vellum/src-tauri/tauri.conf.json','utf8')).version")"
+          gh release edit "vellum-v${VERSION}" --latest=false --repo "${GITHUB_REPOSITORY}"

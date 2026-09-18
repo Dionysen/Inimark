@@ -5,7 +5,9 @@ use dionysen_shell::{
     handle_run_event, handle_window_event, setup_dual_windows, WindowPolicy, WINDOW_STATE_FLAGS,
 };
 
+mod proxy;
 mod pw_commands;
+mod update_commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,6 +22,7 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_deep_link::init())
@@ -38,6 +41,7 @@ pub fn run() {
             dionysen_shell::show_settings_window,
             dionysen_shell::toggle_settings_window,
             dionysen_shell::list_system_fonts,
+            update_commands::check_app_update,
             pw_commands::pw_open,
             pw_commands::pw_close,
             pw_commands::pw_schema_status,

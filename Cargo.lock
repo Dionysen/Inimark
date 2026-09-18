@@ -5886,7 +5886,11 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
  "tauri-plugin-window-state",
+ "time",
+ "url",
+ "winreg",
 ]
 
 [[package]]

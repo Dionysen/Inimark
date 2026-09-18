@@ -66,6 +66,9 @@ test("findVersionSection matches dated, bare, and bracket headings", () => {
   assert.match(findVersionSection(SAMPLE, "1.0.3") ?? "", /Site graph/);
   assert.match(findVersionSection(SAMPLE, "1.0.0") ?? "", /First public release/);
   assert.equal(findVersionSection(SAMPLE, "9.9.9"), null);
+  const listed = findVersionSection("## 0.1.0\n\n- first\n- second\n", "0.1.0");
+  assert.match(listed ?? "", /first/);
+  assert.match(listed ?? "", /second/);
 });
 
 test("pickWhatsNew prefers the subsection and stops before the next ###", () => {

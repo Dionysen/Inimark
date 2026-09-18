@@ -9,13 +9,16 @@ import {
   type SettingsSectionDef,
   type SettingsViewController,
 } from "@dionysen/settings-kit";
-import { createSelect } from "@dionysen/ui";
-import { closeWindow, listSystemFonts } from "@dionysen/shell";
+import { createSelect, createToggle, createButton } from "@dionysen/ui";
+import { closeWindow, isTauri, listSystemFonts } from "@dionysen/shell";
 import { renderChromeThemePanel } from "@dionysen/theme";
 import { renderAccountSection } from "../git-sync/account-settings.ts";
 import { onLocaleChange, t, type LocaleId } from "../i18n/index.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import {
+  emailIcon,
+  githubIcon,
+  issuesIcon,
   settingsAboutIcon,
   settingsEditorIcon,
   settingsGeneralIcon,
@@ -42,6 +45,8 @@ import {
   renderShortcutsPanel,
   shortcutSearchEntries,
 } from "./shortcuts-panel.ts";
+import { mountAboutUpdateControl } from "./about-update-control.ts";
+import aboutIconUrl from "../../app-icon.svg";
 
 export type { SettingsViewController };
 
@@ -133,6 +138,29 @@ function searchEntries(): SettingSearchItem[] {
       ...entry,
       section: "shortcuts",
     })),
+    {
+      id: "about.version",
+      section: "about",
+      getTitle: () => t("settings.about.versionInfo"),
+    },
+    {
+      id: "about.useSystemProxy",
+      section: "about",
+      getTitle: () => t("settings.about.useSystemProxy"),
+      getDescription: () => t("settings.about.useSystemProxyDesc"),
+    },
+    {
+      id: "about.updates",
+      section: "about",
+      getTitle: () => t("settings.about.softwareUpdate"),
+      getDescription: () => t("settings.about.checkUpdates"),
+    },
+    {
+      id: "about.license",
+      section: "about",
+      getTitle: () => t("settings.about.openSourceLicense"),
+      getDescription: () => t("settings.about.licenseName"),
+    },
   ];
 }
 
@@ -253,15 +281,137 @@ function renderEditor(
   });
 }
 
-function renderAbout(body: HTMLElement): void {
-  body.append(createSectionTitle(t("settings.about.title")));
-  const p = document.createElement("p");
-  p.className = "vellum-about-body";
-  p.textContent = t("settings.about.body");
-  const ver = document.createElement("p");
-  ver.className = "vellum-about-version";
-  ver.textContent = t("settings.about.version", { version: "0.1.0" });
-  body.append(p, ver);
+const ABOUT_REPO_URL = "https://github.com/Dionysen/Inimark";
+const ABOUT_ISSUES_URL = `${ABOUT_REPO_URL}/issues`;
+const ABOUT_LICENSE_URL = "https://opensource.org/licenses/MIT";
+const ABOUT_EMAIL = "solongnight@outlook.com";
+const ABOUT_VERSION_FALLBACK = "0.1.0";
+
+function openExternalUrl(url: string): void {
+  void (async () => {
+    if (isTauri()) {
+      const { invoke } = await import("@tauri-apps/api/core");
+      await invoke("gs_open_url", { url });
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  })();
+}
+
+function renderAbout(
+  body: HTMLElement,
+  settings: AppSettings,
+  update: (partial: Partial<AppSettings>) => void,
+): void {
+  const about = document.createElement("div");
+  about.className = "inimark-about";
+
+  const hero = document.createElement("div");
+  hero.className = "inimark-about-hero";
+
+  const icon = document.createElement("img");
+  icon.className = "inimark-about-icon";
+  icon.src = aboutIconUrl;
+  icon.alt = "Vellum";
+  icon.width = 88;
+  icon.height = 88;
+  icon.draggable = false;
+
+  const name = document.createElement("h2");
+  name.className = "inimark-about-name";
+  name.textContent = "Vellum";
+
+  const desc = document.createElement("p");
+  desc.className = "inimark-about-desc";
+  desc.textContent = t("settings.about.desc");
+
+  hero.append(icon, name, desc);
+
+  const versionValue = document.createElement("div");
+  versionValue.className = "inimark-about-value";
+  versionValue.textContent = ABOUT_VERSION_FALLBACK;
+  void (async () => {
+    if (!isTauri()) return;
+    try {
+      const { getVersion } = await import("@tauri-apps/api/app");
+      const version = await getVersion();
+      if (version && versionValue.isConnected) versionValue.textContent = version;
+    } catch {
+      /* keep the packaged fallback */
+    }
+  })();
+
+  const proxyToggle = createToggle({
+    checked: settings.useSystemProxyForUpdates,
+    title: t("settings.about.useSystemProxy"),
+    onChange(checked) {
+      update({ useSystemProxyForUpdates: checked });
+    },
+  });
+
+  const licenseLink = document.createElement("a");
+  licenseLink.className = "inimark-about-link";
+  licenseLink.href = ABOUT_LICENSE_URL;
+  licenseLink.textContent = t("settings.about.licenseName");
+  licenseLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openExternalUrl(ABOUT_LICENSE_URL);
+  });
+
+  const list = document.createElement("div");
+  list.className = "inimark-about-list";
+  list.append(
+    createRow(t("settings.about.versionInfo"), "", versionValue, "about.version"),
+    createRow(
+      t("settings.about.useSystemProxy"),
+      t("settings.about.useSystemProxyDesc"),
+      proxyToggle.el,
+      "about.useSystemProxy",
+    ),
+    createRow(
+      t("settings.about.softwareUpdate"),
+      "",
+      mountAboutUpdateControl().el,
+      "about.updates",
+    ),
+    createRow(
+      t("settings.about.openSourceLicense"),
+      "",
+      licenseLink,
+      "about.license",
+    ),
+  );
+
+  const links = document.createElement("div");
+  links.className = "inimark-about-links";
+  const github = createButton({
+    label: t("settings.about.github"),
+    icon: githubIcon(),
+    variant: "default",
+    onClick: () => {
+      openExternalUrl(ABOUT_REPO_URL);
+    },
+  });
+  const issues = createButton({
+    label: t("settings.about.issues"),
+    icon: issuesIcon(),
+    variant: "default",
+    onClick: () => {
+      openExternalUrl(ABOUT_ISSUES_URL);
+    },
+  });
+  const email = createButton({
+    label: t("settings.about.email"),
+    icon: emailIcon(),
+    variant: "default",
+    onClick: () => {
+      openExternalUrl(`mailto:${ABOUT_EMAIL}`);
+    },
+  });
+  links.append(github, issues, email);
+
+  about.append(hero, list, links);
+  body.append(about);
 }
 
 export function mountSettingsView(host: HTMLElement): SettingsViewController {
@@ -308,11 +458,12 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
       } else if (id === "theme") {
         teardownTheme = renderTheme(body);
       } else {
-        renderAbout(body);
+        renderAbout(body, settings, (partial) => {
+          settings = patchSettings(partial);
+        });
       }
     },
-    searchEntries: id === "about" ? undefined : () =>
-      searchEntries().filter((e) => e.section === id),
+    searchEntries: () => searchEntries().filter((e) => e.section === id),
   }));
 
   const controller = mountSettingsShell(host, {

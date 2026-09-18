@@ -1078,13 +1078,6 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 }
 
 
-.vellum-about-body,
-.vellum-about-version {
-  margin: 0 0 0.75rem;
-  color: var(--inimark-muted-fg);
-  line-height: 1.5;
-}
-
 .vellum-git-sync-status-host {
   position: absolute;
   left: calc(var(--vellum-library-width, 280px) + 12px);

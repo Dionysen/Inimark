@@ -5,11 +5,13 @@
  * Usage:
  *   node scripts/extract-release-notes.mjs v1.0.4
  *   node scripts/extract-release-notes.mjs 1.0.4 --fallback
+ *   node scripts/extract-release-notes.mjs 0.1.0 --fallback --file apps/vellum/docs/版本历史.md
  *
  * Without --fallback: prints nothing and exits 0 if the version is missing
  * (caller can apply its own default). With --fallback: always prints a body.
  *
  * Reads: docs/en/04-Appendix/Version History.md
+ *        or the markdown file passed with --file
  */
 
 import {
@@ -19,8 +21,24 @@ import {
 } from "./lib/release-notes.mjs";
 
 const args = process.argv.slice(2);
-const fallback = args.includes("--fallback");
-const raw = args.find((a) => a !== "--fallback");
+let fallback = false;
+/** @type {string | undefined} */
+let historyPath;
+const positional = [];
+for (let i = 0; i < args.length; i += 1) {
+  const arg = args[i];
+  if (arg === "--fallback") {
+    fallback = true;
+    continue;
+  }
+  if (arg === "--file") {
+    historyPath = args[i + 1];
+    i += 1;
+    continue;
+  }
+  positional.push(arg);
+}
+const raw = positional[0];
 
 if (!raw) {
   console.error("Usage: node scripts/extract-release-notes.mjs <version> [--fallback]");
@@ -37,7 +55,10 @@ if (!normalizeVersion(raw)) {
   process.exit(1);
 }
 
-const body = resolveReleaseNotes(raw, { fallback });
+const body = resolveReleaseNotes(raw, {
+  fallback,
+  ...(historyPath ? { historyPath } : {}),
+});
 if (body) {
   process.stdout.write(body.endsWith("\n") ? body : `${body}\n`);
 }

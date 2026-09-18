@@ -21,6 +21,8 @@ export type { EditorTypographySettings };
 
 export interface AppSettings extends EditorTypographySettings {
   locale: AppLocale;
+  /** When true, the updater check and download follow the system proxy. */
+  useSystemProxyForUpdates: boolean;
 }
 
 export const SETTINGS_STORAGE_KEY = "vellum-settings";
@@ -52,6 +54,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paragraphSpacing: PARAGRAPH_SPACING_DEFAULT,
   editorWidth: EDITOR_WIDTH_DEFAULT,
   firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
+  useSystemProxyForUpdates: true,
 };
 
 /** Read the last published editor-column width ceiling (fallback: viewport). */
@@ -86,7 +89,14 @@ export function normalizeSettings(raw: unknown): AppSettings {
     fontSizeMin: FONT_SIZE_MIN,
     fontSizeMax: FONT_SIZE_MAX,
   });
-  return { locale, ...typography };
+  return {
+    locale,
+    ...typography,
+    useSystemProxyForUpdates:
+      src.useSystemProxyForUpdates === undefined
+        ? DEFAULT_SETTINGS.useSystemProxyForUpdates
+        : Boolean(src.useSystemProxyForUpdates),
+  };
 }
 
 const store = createJsonSettingsStore<AppSettings>({

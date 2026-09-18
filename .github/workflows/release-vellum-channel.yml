@@ -1,0 +1,38 @@
+name: Publish Vellum update channel
+
+# When a vellum-v* draft is published, copy its latest.json onto the standing
+# vellum-latest release. The in-app updater always reads that URL, never
+# releases/latest (that channel belongs to Inimark).
+#
+# Neither release is marked Latest.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  channel:
+    if: startsWith(github.event.release.tag_name, 'vellum-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish latest.json without becoming Latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          gh release edit "$TAG" --latest=false --repo "${GITHUB_REPOSITORY}"
+          gh release download "$TAG" --pattern latest.json --output latest.json --repo "${GITHUB_REPOSITORY}"
+          if gh release view vellum-latest --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload vellum-latest latest.json --clobber --repo "${GITHUB_REPOSITORY}"
+          else
+            gh release create vellum-latest \
+              --repo "${GITHUB_REPOSITORY}" \
+              --latest=false \
+              --title "Vellum update channel" \
+              --notes "Standing channel for the Vellum in-app updater. Do not mark this release as Latest." \
+              latest.json
+          fi
+          gh release edit vellum-latest --latest=false --repo "${GITHUB_REPOSITORY}"
