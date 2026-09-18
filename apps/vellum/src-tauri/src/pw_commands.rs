@@ -8,7 +8,7 @@ use purewriter_store::{
     UpdateCategory, UpdateFolder,
 };
 use serde::Serialize;
-use tauri::State;
+use tauri::{Manager, State};
 
 pub struct PwState {
     pub lib: Mutex<Option<Library>>,
@@ -277,38 +277,72 @@ pub fn pw_pwb_import(state: State<'_, PwState>, path: String) -> Result<String, 
 }
 
 /// Sync open library with GitHub/Gitee PWB backups (uses existing library lock).
+///
+/// The webview stays free to paint the spinner. Git HTTP uses a blocking client
+/// whose runtime panics if dropped on a Tokio worker, so the work runs on a blocking thread.
 #[tauri::command]
-pub fn pw_git_push_now(
+pub async fn pw_git_push_now(
     app: tauri::AppHandle,
-    pw: State<'_, PwState>,
-    git: State<'_, dionysen_git_sync::GitSyncState>,
     app_id: String,
 ) -> Result<dionysen_git_sync::PushResult, CommandError> {
-    let guard = pw.lib.lock().map_err(|e| CommandError {
-        code: "lock".into(),
-        message: e.to_string(),
-    })?;
-    let lib = guard.as_ref().ok_or(CommandError {
-        code: "not_open".into(),
-        message: "library is not open — open a Pure Writer folder first".into(),
-    })?;
-    dionysen_git_sync::push_with_library(&app, &git, &app_id, lib).map_err(|e| CommandError {
-        code: "git_sync".into(),
-        message: e,
+    spawn_git(move || {
+        let pw = app.state::<PwState>();
+        let git = app.state::<dionysen_git_sync::GitSyncState>();
+        let guard = pw.lib.lock().map_err(|e| CommandError {
+            code: "lock".into(),
+            message: e.to_string(),
+        })?;
+        let lib = guard.as_ref().ok_or(CommandError {
+            code: "not_open".into(),
+            message: "library is not open — open a Pure Writer folder first".into(),
+        })?;
+        dionysen_git_sync::push_with_library(&app, &git, &app_id, lib).map_err(|e| CommandError {
+            code: "git_sync".into(),
+            message: e,
+        })
     })
+    .await
 }
 
+/// Pulls a backup on a blocking thread. See [`pw_git_push_now`].
 #[tauri::command]
-pub fn pw_git_restore(
+pub async fn pw_git_restore(
     app: tauri::AppHandle,
-    pw: State<'_, PwState>,
-    git: State<'_, dionysen_git_sync::GitSyncState>,
     app_id: String,
     remote_path: String,
     mode: String,
 ) -> Result<dionysen_git_sync::RestoreResult, CommandError> {
+    spawn_git(move || {
+        let pw = app.state::<PwState>();
+        let git = app.state::<dionysen_git_sync::GitSyncState>();
+        restore_backup(&app, &pw, &git, &app_id, &remote_path, &mode)
+    })
+    .await
+}
+
+async fn spawn_git<T: Send + 'static>(
+    work: impl FnOnce() -> Result<T, CommandError> + Send + 'static,
+) -> Result<T, CommandError> {
+    tauri::async_runtime::spawn_blocking(work)
+        .await
+        .unwrap_or_else(|err| {
+            Err(CommandError {
+                code: "git_sync".into(),
+                message: err.to_string(),
+            })
+        })
+}
+
+fn restore_backup(
+    app: &tauri::AppHandle,
+    pw: &PwState,
+    git: &dionysen_git_sync::GitSyncState,
+    app_id: &str,
+    remote_path: &str,
+    mode: &str,
+) -> Result<dionysen_git_sync::RestoreResult, CommandError> {
     dionysen_git_sync::emit_status(
-        &app,
+        app,
         "syncing",
         Some(format!("restoring {remote_path}…")),
         None,
@@ -324,7 +358,7 @@ pub fn pw_git_restore(
                     .map(|d| d.as_millis())
                     .unwrap_or(0)
             ));
-            dionysen_git_sync::download_backup_for_overwrite(&git, &app_id, &remote_path, &cache)
+            dionysen_git_sync::download_backup_for_overwrite(git, app_id, remote_path, &cache)
                 .map_err(|e| CommandError {
                     code: "git_sync".into(),
                     message: e,
@@ -367,7 +401,7 @@ pub fn pw_git_restore(
             code: "not_open".into(),
             message: "library is not open — open a Pure Writer folder first".into(),
         })?;
-        dionysen_git_sync::merge_restore_with_library(&git, &app_id, lib, &remote_path).map_err(
+        dionysen_git_sync::merge_restore_with_library(git, app_id, lib, remote_path).map_err(
             |e| CommandError {
                 code: "git_sync".into(),
                 message: e,
@@ -376,13 +410,8 @@ pub fn pw_git_restore(
     };
 
     match &result {
-        Ok(_) => dionysen_git_sync::emit_status(
-            &app,
-            "ok",
-            Some("restore finished".into()),
-            None,
-        ),
-        Err(e) => dionysen_git_sync::emit_status(&app, "error", None, Some(e.message.clone())),
+        Ok(_) => dionysen_git_sync::emit_status(app, "ok", Some("restore finished".into()), None),
+        Err(e) => dionysen_git_sync::emit_status(app, "error", None, Some(e.message.clone())),
     }
     result
 }

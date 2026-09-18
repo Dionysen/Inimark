@@ -314,14 +314,20 @@ pub struct InitRepoInput {
     pub repo_name: String,
 }
 
+/// Creates the remote repository on a blocking thread.
+///
+/// The webview stays free to paint the spinner. The HTTP client owns a runtime
+/// that panics if dropped on a Tokio worker.
 #[tauri::command]
-pub fn gs_init_repo(
-    state: State<'_, GitSyncState>,
-    input: InitRepoInput,
-) -> CmdResult<SessionSummary> {
-    let v = state.vault()?;
-    init_repo_for_app(&v, &input.app_id, &input.repo_name).map_err(|e| e.to_string())?;
-    v.session_summary(&input.app_id).map_err(|e| e.to_string())
+pub async fn gs_init_repo(app: AppHandle, input: InitRepoInput) -> CmdResult<SessionSummary> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<GitSyncState>();
+        let v = state.vault()?;
+        init_repo_for_app(&v, &input.app_id, &input.repo_name).map_err(|e| e.to_string())?;
+        v.session_summary(&input.app_id).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

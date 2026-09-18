@@ -1109,3 +1109,50 @@ html.platform-windows .inimark-settings-nav-topbar {
   gap: 6px;
   flex-shrink: 0;
 }
+
+.vellum-busy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.vellum-busy-panel {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 32px;
+  background: var(--inimark-bg, #fff);
+  color: var(--inimark-fg, inherit);
+  border-radius: 12px;
+  border: 1px solid var(--inimark-border, #ddd);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.vellum-busy-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--inimark-fg, #888) 18%, transparent);
+  border-top-color: var(--inimark-accent, #4a90d9);
+  animation: vellum-busy-spin 0.75s linear infinite;
+}
+
+.vellum-busy-message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@keyframes vellum-busy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -137,7 +137,9 @@ const en: Dictionary = {
       neverSynced: "never",
       syncNow: "Sync now",
       restoreBackup: "Restore backup",
-      syncing: "Syncing…",
+      busyCreating: "Creating repository…",
+      busyPushing: "Pushing backup…",
+      busyPulling: "Pulling backup…",
       syncHint:
         "Sync now exports the open library as a .pwb and uploads it. Restore lists cloud backups. Open a Pure Writer library first.",
       pushOk: "Pushed {{path}} · remote backups: {{remote}}",
@@ -610,7 +612,9 @@ const zhCN: Dictionary = {
       neverSynced: "从未",
       syncNow: "立即同步",
       restoreBackup: "恢复备份",
-      syncing: "正在同步…",
+      busyCreating: "正在创建仓库…",
+      busyPushing: "正在推送备份…",
+      busyPulling: "正在拉取备份…",
       syncHint:
         "「立即同步」会把当前打开的文档库导出为 .pwb 并上传。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
       pushOk: "已推送 {{path}} · 远端备份 {{remote}} 份",

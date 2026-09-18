@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm --filter @dionysen/purewriter-store test && node --import tsx --test src/editor/*.test.ts src/library/*.test.ts src/shortcuts/*.test.ts src/updater.test.ts",
+    "test": "pnpm --filter @dionysen/purewriter-store test && node --import tsx --test src/editor/*.test.ts src/library/*.test.ts src/shortcuts/*.test.ts src/git-sync/*.test.ts src/updater.test.ts",
     "preview": "vite preview",
     "tauri": "tauri"
   },

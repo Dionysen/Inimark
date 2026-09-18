@@ -13,6 +13,7 @@ import {
 import { createSectionTitle } from "@dionysen/settings-kit";
 import { isTauri } from "@dionysen/shell";
 import { t } from "../i18n/index.ts";
+import { withBusy } from "./busy-modal.ts";
 import {
   emitGitSyncChanged,
   GIT_SYNC_CHANGED_EVENT,
@@ -141,7 +142,9 @@ function backupRow(item: BackupMeta, onDone: () => void): HTMLElement {
           : true;
       if (!ok) return;
       try {
-        await restoreBackup(VELLUM_GIT_SYNC.appId, item.path, mode);
+        await withBusy(t("settings.account.busyPulling"), () =>
+          restoreBackup(VELLUM_GIT_SYNC.appId, item.path, mode),
+        );
         emitGitSyncChanged();
         onDone();
         window.alert(t("settings.account.restoreDone"));
@@ -257,9 +260,11 @@ export function renderAccountSection(body: HTMLElement): () => void {
         button(t("settings.account.repoInit"), () => {
           void (async () => {
             try {
-              await initRepo(VELLUM_GIT_SYNC.appId, repoInput.value.trim());
-              // First push after init
-              await pushBackup(VELLUM_GIT_SYNC.appId);
+              await withBusy(t("settings.account.busyCreating"), async (modal) => {
+                await initRepo(VELLUM_GIT_SYNC.appId, repoInput.value.trim());
+                modal.setMessage(t("settings.account.busyPushing"));
+                await pushBackup(VELLUM_GIT_SYNC.appId);
+              });
               emitGitSyncChanged();
               await refresh();
             } catch (err) {
@@ -298,11 +303,10 @@ export function renderAccountSection(body: HTMLElement): () => void {
     actions.append(
       button(t("settings.account.syncNow"), () => {
         void (async () => {
-          feedback.replaceChildren(
-            statusLine(t("settings.account.syncing"), "info"),
-          );
           try {
-            const result = await pushBackup(VELLUM_GIT_SYNC.appId);
+            const result = await withBusy(t("settings.account.busyPushing"), () =>
+              pushBackup(VELLUM_GIT_SYNC.appId),
+            );
             emitGitSyncChanged();
             feedback.replaceChildren(
               statusLine(
