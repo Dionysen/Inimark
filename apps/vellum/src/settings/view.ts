@@ -16,6 +16,13 @@ import { renderAccountSection } from "../git-sync/account-settings.ts";
 import { onLocaleChange, t, type LocaleId } from "../i18n/index.ts";
 import { mountTitleBar } from "../ui/titlebar.ts";
 import {
+  settingsAboutIcon,
+  settingsEditorIcon,
+  settingsGeneralIcon,
+  settingsSyncIcon,
+  settingsThemeIcon,
+} from "../ui/product-icons.ts";
+import {
   type AppLocale,
   type AppSettings,
   EDITOR_WIDTH_CEILING_KEY,
@@ -37,6 +44,13 @@ export type { SettingsViewController };
 const SECTIONS = ["general", "sync", "editor", "theme", "about"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
+const SECTION_ICONS: Record<SectionId, () => string> = {
+  general: settingsGeneralIcon,
+  sync: settingsSyncIcon,
+  editor: settingsEditorIcon,
+  theme: settingsThemeIcon,
+  about: settingsAboutIcon,
+};
 function isSectionId(value: string): value is SectionId {
   return (SECTIONS as readonly string[]).includes(value);
 }
@@ -257,6 +271,7 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     id,
     title: () => t(`settings.nav.${id}`),
     subtitle: () => t(`settings.subtitle.${id}`),
+    icon: SECTION_ICONS[id],
     render(body) {
       body.replaceChildren();
       teardownSync?.();
@@ -295,7 +310,7 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
     },
     mountTitleBar: (titleHost) =>
       mountTitleBar(titleHost, {
-        title: t("common.settings"),
+        title: "",
         controlMode: "close-only",
         onClose: () => void closeWindow(),
       }),

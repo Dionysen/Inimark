@@ -178,7 +178,7 @@ const en: Dictionary = {
       packNoCustomThemes: "No custom themes to export.",
       packNoThemesInFile: "This theme pack contains no themes.",
       packHint:
-        "Export or import selected custom app themes as a .inimark-theme.json pack.",
+        "Export or import selected custom app themes as a .vellum-theme.json pack.",
       slotBoth: "Light & Dark",
       forkName: "{{name}} (fork)",
       importFailed: "Import failed: {{error}}",
@@ -545,7 +545,7 @@ const zhCN: Dictionary = {
       packDeselectAll: "取消全选",
       packNoCustomThemes: "没有可导出的自定义主题。",
       packNoThemesInFile: "该主题包中没有主题。",
-      packHint: "将选中的自定义应用主题导出为 .inimark-theme.json 主题包，或从主题包中选择性导入。",
+      packHint: "将选中的自定义应用主题导出为 .vellum-theme.json 主题包，或从主题包中选择性导入。",
       slotBoth: "浅色与深色",
       forkName: "{{name}}（副本）",
       importFailed: "导入失败：{{error}}",

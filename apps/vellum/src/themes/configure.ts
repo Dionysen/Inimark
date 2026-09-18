@@ -16,9 +16,9 @@ export function configureVellumTheme(): void {
       themeCss: "vellum:theme-css-updated",
     },
     pack: {
-      format: "inimark-theme-pack",
-      fileExtension: "inimark-theme.json",
-      dialogTitle: "Theme Pack",
+      format: "vellum-theme-pack",
+      fileExtension: "vellum-theme.json",
+      dialogTitle: "Vellum Theme Pack",
     },
     features: { systemAppearance: true },
     editorProfile: "chrome",
