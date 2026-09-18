@@ -33,6 +33,11 @@ import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
 import { mountShortcutHandler } from "./shortcuts/handler.ts";
 import { installGitOauthDeepLinkHandler } from "./git-sync/oauth-deeplink.ts";
 import { mountGitSyncStatusBar } from "./git-sync/status-bar.ts";
+import { createQuitFlow, promptCloudBackupFailure } from "./git-sync/quit-backup.ts";
+import { getSession } from "@dionysen/git-sync";
+import { VELLUM_GIT_SYNC } from "./git-sync/config.ts";
+import { createImmediateSaver } from "./library/immediate-save.ts";
+import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
@@ -59,11 +64,13 @@ applySettings(bootSettings);
 const teardownShell = bootShellChrome({
   editableSelector: ".vellum-plaintext-editor, textarea, [contenteditable='true']",
 });
-const teardownClose = bindCloseRequested();
+const teardownClose = bindCloseRequested(() => {
+  void requestQuit();
+});
 const teardownTooltips = initTooltipLayer();
 const teardownShortcutGuard = installNativeShortcutGuard();
 let libraryApi: {
-  save(): Promise<void>;
+  save(options?: { quiet?: boolean }): Promise<void>;
   newChapter(): Promise<void>;
   renameSelection(): void;
   deleteSelection(): Promise<void>;
@@ -71,10 +78,13 @@ let libraryApi: {
   pasteClipboard(): Promise<void>;
 } | null = null;
 let toggleSidebarRef: (() => void) | null = null;
+let requestQuit = (): Promise<void> => closeWindow();
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
-  close: () => void closeWindow(),
-  save: () => void libraryApi?.save(),
+  close: () => void requestQuit(),
+  save: () => {
+    void saver.flush().then(() => libraryApi?.save());
+  },
   "new-chapter": () => void libraryApi?.newChapter(),
   "toggle-sidebar": () => toggleSidebarRef?.(),
   "tree-rename": () => libraryApi?.renameSelection(),
@@ -141,26 +151,13 @@ const editorHost = document.createElement("div");
 editorHost.className = "vellum-editor-host inimark-scrollbar";
 
 let openArticleId: string | null = null;
-let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function clearAutosave(): void {
-  if (autosaveTimer !== null) {
-    clearTimeout(autosaveTimer);
-    autosaveTimer = null;
-  }
-}
-
-function scheduleAutosave(): void {
-  clearAutosave();
-  autosaveTimer = setTimeout(() => {
-    autosaveTimer = null;
-    void libraryApi?.save();
-  }, 800);
-}
+let openChain = Promise.resolve();
+const saver = createImmediateSaver(() => libraryApi?.save({ quiet: true }) ?? Promise.resolve());
+let stopLocalBackup: (() => void) | null = null;
 
 const editor = mountPlaintextEditor(editorHost, {
   placeholder: t("editor.placeholder"),
-  onChange: () => scheduleAutosave(),
+  onChange: () => saver.kick(),
 });
 
 /** Click the gutter beside the writing column to focus the editor. */
@@ -188,6 +185,7 @@ function toggleSidebar(): void {
 
 const titleBar = mountTitleBar(titleHost, {
   title: t("app.name"),
+  onClose: () => void requestQuit(),
   sidebarToggle: {
     open: sidebarOpen,
     onToggle: toggleSidebar,
@@ -199,11 +197,13 @@ const library = mountLibraryPanel(libraryHost, {
   getEditorContent: () => editor.getValue(),
   getOpenArticleId: () => openArticleId,
   onArticleOpen: (title, content, id) => {
-    clearAutosave();
-    openArticleId = id;
-    editor.setValue(content);
-    titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
-    if (id) editor.focus();
+    openChain = openChain.then(async () => {
+      await saver.flush();
+      openArticleId = id;
+      editor.setValue(content);
+      titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
+      if (id) editor.focus();
+    });
   },
   onStatus: () => {},
   onOpenSettings: () => void openSettingsWindow(),
@@ -211,6 +211,39 @@ const library = mountLibraryPanel(libraryHost, {
 });
 libraryApi = library;
 toggleSidebarRef = toggleSidebar;
+requestQuit = createQuitFlow({
+  flushEdits: () => saver.flush(),
+  cloudReady: async () => {
+    const session = await getSession(VELLUM_GIT_SYNC.appId);
+    return session.loggedIn && Boolean(session.repoFullName);
+  },
+  startBackground: async () => {
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("pw_detach_cloud_backup", {
+      input: {
+        appId: VELLUM_GIT_SYNC.appId,
+        successTitle: t("quit.cloudDoneTitle"),
+        successBody: t("quit.cloudDone"),
+        failTitle: t("quit.cloudFailedTitle"),
+        failMessage: t("quit.cloudFailedMessage"),
+        retryLabel: t("quit.retry"),
+        exitLabel: t("quit.exit"),
+      },
+    });
+  },
+  askRetry: (error) =>
+    promptCloudBackupFailure({
+      title: t("quit.cloudFailedTitle"),
+      message: t("quit.cloudFailedMessage", { error }),
+      retryLabel: t("quit.retry"),
+      exitLabel: t("quit.exit"),
+    }),
+  destroy: () => closeWindow(),
+});
+stopLocalBackup = startPeriodicBackup(async () => {
+  await saver.flush();
+  await writeLocalPwbBackup();
+});
 
 applySidebarWidth();
 applySidebarState();
@@ -248,7 +281,7 @@ widthObserver.observe(editorHost);
 editor.focus();
 
 window.addEventListener("beforeunload", () => {
-  clearAutosave();
+  stopLocalBackup?.();
   widthObserver.disconnect();
   unlistenSettings?.();
   window.removeEventListener("storage", onSettingsStorage);

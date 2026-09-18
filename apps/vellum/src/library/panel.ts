@@ -52,7 +52,7 @@ import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } fr
 export interface LibraryPanel {
   el: HTMLElement;
   /** Persist the open article’s editor content. No-op when nothing is open or writes are blocked. */
-  save(): Promise<void>;
+  save(options?: { quiet?: boolean }): Promise<void>;
   /** Create a chapter in the focused volume, or the volume used by New. */
   newChapter(): Promise<void>;
   /** Rename the focused volume, or the open / focused chapter. Works from the editor (F2). */
@@ -1154,12 +1154,12 @@ export function mountLibraryPanel(
     options.onStatus(options.t("library.closed"));
   };
 
-  const save = async () => {
+  const save = async (opts?: { quiet?: boolean }) => {
     const id = options.getOpenArticleId();
     if (!id || !opened?.schema.writesAllowed) return;
     try {
       await pwUpdateArticle(id, { content: options.getEditorContent() });
-      options.onStatus(options.t("library.saved"));
+      if (!opts?.quiet) options.onStatus(options.t("library.saved"));
     } catch (e) {
       options.onStatus(formatStoreError(e));
     }

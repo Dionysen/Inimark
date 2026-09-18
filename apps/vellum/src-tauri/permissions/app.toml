@@ -26,6 +26,8 @@ commands.allow = [
   "pw_set_setting",
   "pw_pwb_export",
   "pw_pwb_import",
+  "pw_local_pwb_backup",
+  "pw_detach_cloud_backup",
   "pw_git_push_now",
   "pw_git_restore",
   "gs_begin_oauth",

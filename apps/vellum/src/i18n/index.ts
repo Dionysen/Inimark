@@ -141,7 +141,7 @@ const en: Dictionary = {
       busyPushing: "Pushing backup…",
       busyPulling: "Pulling backup…",
       syncHint:
-        "Sync now exports the open library as a .pwb and uploads it. Restore lists cloud backups. Open a Pure Writer library first.",
+        "Edits are written to the library immediately. Every 5 minutes Vellum keeps a local .pwb in the library’s App/Backups folder. Quitting closes the window first; the upload continues in the background and a system notification appears when it succeeds. If it fails you can retry or stop. Sync now uploads without quitting. Restore lists cloud backups. Open a Pure Writer library first.",
       pushOk: "Pushed {{path}} · remote backups: {{remote}}",
       restoreTitle: "Cloud backups",
       restoreLoading: "Loading backups…",
@@ -471,6 +471,15 @@ const en: Dictionary = {
       email: "solongnight@outlook.com",
     },
   },
+  quit: {
+    cloudDoneTitle: "Cloud backup finished",
+    cloudDone: "Your library was uploaded.",
+    cloudFailedTitle: "Cloud backup failed",
+    cloudFailedMessage:
+      "Your writing is saved on this computer, but the cloud backup did not finish. {{error}}",
+    retry: "Retry",
+    exit: "Quit anyway",
+  },
   syncStatus: {
     idle: "Not synced",
     syncing: "Syncing…",
@@ -616,7 +625,7 @@ const zhCN: Dictionary = {
       busyPushing: "正在推送备份…",
       busyPulling: "正在拉取备份…",
       syncHint:
-        "「立即同步」会把当前打开的文档库导出为 .pwb 并上传。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
+        "编辑会立刻写入文档库。每 5 分钟在文档库的 App/Backups 里留一份本地 .pwb。退出时主程序会先关闭，云备份在后台继续，成功后会有系统通知；失败可以选择重试或放弃。「立即同步」是手动再传一次。「恢复备份」可从云端列表选择覆盖或合并。请先打开纯纯写作库。",
       pushOk: "已推送 {{path}} · 远端备份 {{remote}} 份",
       restoreTitle: "云端备份",
       restoreLoading: "正在加载备份列表…",
@@ -935,6 +944,14 @@ const zhCN: Dictionary = {
       issues: "问题反馈",
       email: "solongnight@outlook.com",
     },
+  },
+  quit: {
+    cloudDoneTitle: "云备份已完成",
+    cloudDone: "文档库已上传。",
+    cloudFailedTitle: "云备份失败",
+    cloudFailedMessage: "文稿已经保存在这台电脑上，但云备份没有完成。{{error}}",
+    retry: "重试",
+    exit: "直接退出",
   },
   syncStatus: {
     idle: "未同步",

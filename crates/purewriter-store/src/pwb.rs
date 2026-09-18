@@ -11,6 +11,10 @@ use crate::time::now_ms;
 
 const EMPTY_MD5: &str = "d41d8cd98f00b204e9800998ecf8427e";
 
+/// Timed local snapshots kept under `App/Backups`. Five minutes × 48 is about four hours.
+pub const LOCAL_PWB_KEEP: usize = 48;
+const LOCAL_PWB_PREFIX: &str = "vellum-";
+
 /// Result of unpacking a `.pwb` archive.
 #[derive(Debug, Clone)]
 pub struct UnpackedPwb {
@@ -126,6 +130,18 @@ impl Library {
         export_pwb(&self.room_db_path(), pwb_path, &name)
     }
 
+    /// Write `App/Backups/vellum-<ms>.pwb` and drop older timed snapshots past [`LOCAL_PWB_KEEP`].
+    /// Leaves Pure Writer's own `Room-before-import-*.db` files alone.
+    pub fn write_local_pwb_backup(&self) -> Result<PathBuf> {
+        self.ensure_writable()?;
+        let dir = self.app_dir().join("Backups");
+        std::fs::create_dir_all(&dir)?;
+        let path = dir.join(format!("{LOCAL_PWB_PREFIX}{}.pwb", now_ms()));
+        self.export_library_pwb(&path)?;
+        prune_local_pwb(&dir, LOCAL_PWB_KEEP)?;
+        Ok(path)
+    }
+
     /// Import a `.pwb`: backup current Room.db, then replace it.
     /// Drops this library (connection + lock) before replacing files.
     pub fn import_pwb_replace(self, pwb_path: &Path) -> Result<PathBuf> {
@@ -161,4 +177,50 @@ fn md5_file(path: &Path) -> Result<String> {
         hasher.update(&buf[..n]);
     }
     Ok(hex::encode(hasher.finalize()))
+}
+
+/// Drop the oldest `vellum-*.pwb` files until `keep` remain. Other files in the folder stay.
+fn prune_local_pwb(dir: &Path, keep: usize) -> Result<()> {
+    let mut files = Vec::new();
+    for entry in std::fs::read_dir(dir)? {
+        let path = entry?.path();
+        if local_pwb_stamp(&path).is_some() {
+            files.push(path);
+        }
+    }
+    files.sort_by_key(|path| local_pwb_stamp(path).unwrap_or(0));
+    let extra = files.len().saturating_sub(keep);
+    for path in files.into_iter().take(extra) {
+        std::fs::remove_file(path)?;
+    }
+    Ok(())
+}
+
+fn local_pwb_stamp(path: &Path) -> Option<u128> {
+    let name = path.file_name()?.to_str()?;
+    let stem = name.strip_suffix(".pwb")?;
+    stem.strip_prefix(LOCAL_PWB_PREFIX)?.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn prune_keeps_newest_vellum_snapshots_only() {
+        let dir = std::env::temp_dir().join(format!("vellum-prune-{}", now_ms()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("vellum-99.pwb"), b"old").unwrap();
+        std::fs::write(dir.join("vellum-100.pwb"), b"mid").unwrap();
+        std::fs::write(dir.join("vellum-101.pwb"), b"new").unwrap();
+        std::fs::write(dir.join("Room-before-import-9.db"), b"keep").unwrap();
+
+        prune_local_pwb(&dir, 2).unwrap();
+
+        assert!(!dir.join("vellum-99.pwb").exists());
+        assert!(dir.join("vellum-100.pwb").exists());
+        assert!(dir.join("vellum-101.pwb").exists());
+        assert!(dir.join("Room-before-import-9.db").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

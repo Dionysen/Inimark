@@ -8,6 +8,9 @@ use dionysen_shell::{
 mod proxy;
 mod pw_commands;
 mod update_commands;
+mod cloud_backup;
+
+pub use cloud_backup::run_cloud_backup_worker;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -64,6 +67,8 @@ pub fn run() {
             pw_commands::pw_set_setting,
             pw_commands::pw_pwb_export,
             pw_commands::pw_pwb_import,
+            pw_commands::pw_local_pwb_backup,
+            pw_commands::pw_detach_cloud_backup,
             pw_commands::pw_git_push_now,
             pw_commands::pw_git_restore,
             dionysen_git_sync::commands::gs_begin_oauth,

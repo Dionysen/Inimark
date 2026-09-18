@@ -19,6 +19,6 @@ pub use error::{Error, Result};
 pub use oauth_local::LOCAL_GIT_OAUTH_REDIRECT_URI;
 pub use provider::DEFAULT_REPO_NAME;
 pub use sync::{
-    BackupMeta, PushResult, RestoreResult, SyncStatusPayload, STATUS_EVENT,
+    push_backup, BackupMeta, PushResult, RestoreResult, SyncStatusPayload, STATUS_EVENT,
 };
-pub use vault::{GitProvider, SessionSummary};
+pub use vault::{GitProvider, SessionSummary, Vault};

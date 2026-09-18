@@ -8,8 +8,9 @@ Separate from `@dionysen/cloud-sync` (Aliyun). Vault path: `com.dionysen.git-syn
 
 1. Sign in with GitHub or Gitee
 2. Choose a **private repo name** and click **Create repo & push** (first init)
-3. **Sync now** — export open library as `.pwb` and append-upload (status shown bottom-left)
-4. **Restore backup** — pick a remote snapshot, then **Merge** or **Overwrite**
+3. Edits are saved into the open library immediately. Every 5 minutes the app writes a local `.pwb` under `App/Backups`.
+4. Quitting closes the app first. A background process uploads the cloud backup, then posts a system notification. If the upload fails, retry or stop.
+5. **Sync now** uploads the same snapshot without quitting. **Restore backup** picks a remote snapshot, then **Merge** or **Overwrite**.
 
 ## Setup OAuth apps (app developer only)
 
@@ -22,6 +23,6 @@ Separate from `@dionysen/cloud-sync` (Aliyun). Vault path: `com.dionysen.git-syn
 
 ### Gitee
 
-Same callbacks; also set `clientSecret`. Scope: `user_info projects projects_member`.
+Same callbacks; also set `clientSecret`. Scope: `user_info projects`.
 
 Empty `clientId` disables that provider’s login button.

@@ -276,6 +276,80 @@ pub fn pw_pwb_import(state: State<'_, PwState>, path: String) -> Result<String, 
     Ok(backup.display().to_string())
 }
 
+/// Timed local `.pwb` under `App/Backups`. No-op when no writable library is open.
+#[tauri::command]
+pub async fn pw_local_pwb_backup(app: tauri::AppHandle) -> Result<(), CommandError> {
+    spawn_git(move || {
+        let pw = app.state::<PwState>();
+        let guard = pw.lib.lock().map_err(|e| CommandError {
+            code: "lock".into(),
+            message: e.to_string(),
+        })?;
+        let Some(lib) = guard.as_ref() else {
+            return Ok(());
+        };
+        if !lib.writes_allowed() {
+            return Ok(());
+        }
+        lib.write_local_pwb_backup().map(|_| ()).map_err(map_err)
+    })
+    .await
+}
+
+/// Close the open library, then start a detached process that uploads the backup.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DetachCloudBackupInput {
+    pub app_id: String,
+    pub success_title: String,
+    pub success_body: String,
+    pub fail_title: String,
+    pub fail_message: String,
+    pub retry_label: String,
+    pub exit_label: String,
+}
+
+#[tauri::command]
+pub async fn pw_detach_cloud_backup(
+    app: tauri::AppHandle,
+    input: DetachCloudBackupInput,
+) -> Result<(), CommandError> {
+    spawn_git(move || {
+        let pw = app.state::<PwState>();
+        let mut guard = pw.lib.lock().map_err(|e| CommandError {
+            code: "lock".into(),
+            message: e.to_string(),
+        })?;
+        let root = guard.take().map(|lib| {
+            let root = lib.root().to_path_buf();
+            let writable = lib.writes_allowed();
+            drop(lib);
+            writable.then_some(root)
+        });
+        drop(guard);
+        let root = match root {
+            Some(Some(root)) => Some(root),
+            Some(None) => return Ok(()),
+            None => None,
+        };
+        let job = crate::cloud_backup::CloudBackupJob {
+            app_id: input.app_id,
+            library_root: String::new(),
+            success_title: input.success_title,
+            success_body: input.success_body,
+            fail_title: input.fail_title,
+            fail_message: input.fail_message,
+            retry_label: input.retry_label,
+            exit_label: input.exit_label,
+        };
+        crate::cloud_backup::detach_cloud_backup(root, job).map_err(|e| CommandError {
+            code: "git_sync".into(),
+            message: e,
+        })
+    })
+    .await
+}
+
 /// Sync open library with GitHub/Gitee PWB backups (uses existing library lock).
 ///
 /// The webview stays free to paint the spinner. Git HTTP uses a blocking client

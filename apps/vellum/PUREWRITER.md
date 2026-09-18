@@ -22,18 +22,22 @@ Books without volumes still work: chapters with no category appear under **Uncat
    - Click the **settings** gear to open Settings.
 3. Use the **book name** button at the top of the sidebar to switch books. Each book can carry an optional tag, shown in quieter text on the right of its row. The pencil on that row edits the name and the tag. **New** creates a chapter in the selected volume (or Uncategorized).
 4. Collapse the sidebar with the toggle in the sidebar top bar (aligned with the titlebar, near the divider). When collapsed, expand it again from the titlebar leading edge (same pattern as Inimark).
-5. Expand a volume and click a chapter to edit it. The locate button on the right of the library toolbar scrolls that chapter to the vertical center of the sidebar, opening its volume if it was collapsed. Edits autosave after 0.8s of idle typing; **Ctrl+S** still saves immediately.
+5. Expand a volume and click a chapter to edit it. The locate button on the right of the library toolbar scrolls that chapter to the vertical center of the sidebar, opening its volume if it was collapsed. Edits are written to the library as you type. **Ctrl+S** still saves the open chapter.
 6. **Trash** is a book in the book switcher, listed under the others. Deleting a chapter asks first, then moves it into that book. Open Trash to read a chapter or restore it to the book you were just in. Deleting a chapter while Trash is open — or right-clicking Trash and choosing Empty Trash — asks again, in red, because that removal cannot be undone.
 
 Saved libraries (path + name) and the last selected book are remembered locally for the next launch.
 
+Every five minutes, while a library is open, Vellum writes a local `.pwb` into that library’s `App/Backups` folder (`vellum-<time>.pwb`). Older timed snapshots are removed so about four hours of them remain. Those files are separate from Pure Writer’s own `Room-before-import` copies.
+
 ## Cloud sync (GitHub / Gitee)
 
-Vellum can sign in with **GitHub** or **Gitee**. After login it creates (or reuses) a private repo and syncs Pure Writer `.pwb` backups:
+Vellum can sign in with **GitHub** or **Gitee**. After login it creates (or reuses) a private repo and keeps Pure Writer `.pwb` backups there.
 
-1. Pull remote `backups/*.pwb`
-2. Merge into the open library (field-level last-write-wins on Room.db timestamps)
-3. Append a new `.pwb` snapshot when local data changed
+While you write, the open chapter is saved into `Room.db` immediately. Quitting closes Vellum first. A background process then uploads the cloud backup. When that upload succeeds, a system notification appears. If it fails, you can retry or stop. **Sync now** in Settings uploads without quitting. **Restore backup** lists the cloud snapshots so you can merge or overwrite.
+
+1. Pull remote `backups/*.pwb` when you restore
+2. Merge into the open library (field-level last-write-wins on Room.db timestamps), or replace the local library
+3. Append a new `.pwb` snapshot on each successful cloud backup
 4. Keep at most 50 remote backups
 
 Configure OAuth `clientId` (and Gitee `clientSecret`) in `apps/vellum/src/git-sync/config.ts`. See `packages/git-sync/README.md`.
