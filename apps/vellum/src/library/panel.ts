@@ -7,6 +7,9 @@ import {
   pwListCategories,
   pwListFolders,
   pwOpen,
+  pwReorderArticles,
+  pwReorderCategories,
+  pwTrashArticle,
   pwUpdateArticle,
   type ArticleMeta,
   type Category,
@@ -16,6 +19,7 @@ import {
 } from "@dionysen/purewriter-store";
 import {
   createIconButton,
+  createMenu,
   createPanelToolbar,
   createTreeBranch,
   createTreeChildren,
@@ -33,6 +37,7 @@ import {
 import { newFileIcon, sidebarToggleIcon } from "../ui/product-icons.ts";
 import { fillChapterTreeLabel } from "./chapter-row.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
+import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
 
 export interface LibraryPanel {
   el: HTMLElement;
@@ -151,6 +156,166 @@ export function mountLibraryPanel(
   let selectedVolumeId: string | null = null;
   /** Collapsed volume keys (absent = expanded). */
   const collapsedVolumes = new Set<string>();
+
+  const chapterMenu = createMenu();
+  chapterMenu.el.classList.add("inimark-context-menu");
+  chapterMenu.setPath("");
+  document.body.append(chapterMenu.el);
+
+  const canWrite = () => Boolean(opened?.schema.writesAllowed);
+
+  let reorderGhost: HTMLElement | null = null;
+  let reorderLine: HTMLElement | null = null;
+
+  const hideReorderLine = () => {
+    reorderLine?.remove();
+    reorderLine = null;
+  };
+
+  const hideReorderGhost = () => {
+    reorderGhost?.remove();
+    reorderGhost = null;
+    hideReorderLine();
+    treeHost.classList.remove("is-reordering", "is-volume-drag");
+  };
+
+  /** Rows of one reorder list, in visual order. */
+  const rowSpans = (rows: HTMLElement[]) =>
+    rows.map((row) => {
+      const box = row.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, left: box.left, width: box.width };
+    });
+
+  /**
+   * Draw the insertion line on the seam under the pointer.
+   * Returns the `moveIndex` destination, or null when the pointer is on a row body
+   * or on the dragged row's own seams.
+   */
+  const placeSeam = (rows: HTMLElement[], pointerY: number, from: number): number | null => {
+    const spans = rowSpans(rows);
+    const slot = seamSlot(spans, pointerY);
+    const to = slot == null ? null : insertionIndex(from, slot, rows.length);
+    const lineY = slot == null ? null : seamLineY(spans, slot);
+    if (slot == null || to == null || lineY == null || spans.length === 0) {
+      hideReorderLine();
+      return null;
+    }
+    if (!reorderLine) {
+      reorderLine = document.createElement("div");
+      reorderLine.className = "vellum-reorder-line";
+      document.body.append(reorderLine);
+    }
+    const anchor = spans[Math.min(slot, spans.length - 1)]!;
+    reorderLine.style.left = `${anchor.left}px`;
+    reorderLine.style.width = `${anchor.width}px`;
+    reorderLine.style.top = `${lineY - 1}px`;
+    return to;
+  };
+
+  const volumeRows = () =>
+    [...treeHost.querySelectorAll<HTMLElement>(".vellum-tree-volume")].filter(
+      (row) => row.dataset.volumeId && row.dataset.volumeId !== UNCATEGORIZED,
+    );
+
+  const chapterRows = (volumeKey: string) =>
+    [...treeHost.querySelectorAll<HTMLElement>(".vellum-tree-chapter")].filter(
+      (row) => row.dataset.volumeKey === volumeKey,
+    );
+
+  const showReorderGhost = (label: string, x: number, y: number) => {
+    if (!reorderGhost) {
+      reorderGhost = document.createElement("div");
+      reorderGhost.className = "vellum-reorder-ghost";
+      document.body.append(reorderGhost);
+    }
+    reorderGhost.textContent = label;
+    reorderGhost.style.left = `${x + 12}px`;
+    reorderGhost.style.top = `${y + 8}px`;
+  };
+
+  const beginChapterRename = (chapter: ArticleMeta, titleEl: HTMLElement) => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "vellum-chapter-rename";
+    input.value = chapter.title;
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = (commit: boolean) => {
+      if (done) return;
+      done = true;
+      const next = input.value.trim();
+      if (!commit || !next || next === chapter.title) {
+        renderTree();
+        return;
+      }
+      void pwUpdateArticle(chapter.id, { title: next })
+        .then(() => {
+          const found = chapters.find((item) => item.id === chapter.id);
+          if (found) found.title = next;
+          if (openArticleId === chapter.id) {
+            options.onArticleOpen(next, options.getEditorContent(), chapter.id);
+          }
+          renderTree();
+        })
+        .catch((e) => {
+          options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
+          renderTree();
+        });
+    };
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        finish(true);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        finish(false);
+      }
+    });
+    input.addEventListener("blur", () => finish(true));
+  };
+
+  const deleteChapter = async (chapter: ArticleMeta) => {
+    const title = chapter.title || options.t("app.untitled");
+    if (!window.confirm(options.t("library.confirmDeleteChapter", { title }))) return;
+    await pwTrashArticle(chapter.id);
+    chapters = chapters.filter((item) => item.id !== chapter.id);
+    if (openArticleId === chapter.id) {
+      openArticleId = null;
+      options.onArticleOpen("", "", null);
+    }
+    updateBookMeta();
+    renderTree();
+  };
+
+  const openChapterMenu = (event: MouseEvent, chapter: ArticleMeta) => {
+    if (!canWrite()) return;
+    chapterMenu.clear();
+    chapterMenu.setPath("");
+    chapterMenu.addItem({
+      label: options.t("library.rename"),
+      onClick() {
+        const titleEl = treeHost.querySelector<HTMLElement>(
+          `[data-chapter-id="${chapter.id}"] .vellum-chapter-title`,
+        );
+        if (titleEl) beginChapterRename(chapter, titleEl);
+      },
+    });
+    chapterMenu.addItem({
+      label: options.t("library.deleteChapter"),
+      danger: true,
+      onClick() {
+        void deleteChapter(chapter).catch((e) => {
+          options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
+        });
+      },
+    });
+    chapterMenu.el.style.position = "fixed";
+    chapterMenu.el.style.left = `${event.clientX}px`;
+    chapterMenu.el.style.top = `${event.clientY}px`;
+    chapterMenu.setOpen(true);
+  };
 
   const closeBookMenu = () => {
     bookMenu.hidden = true;
@@ -286,6 +451,40 @@ export function mountLibraryPanel(
         },
       });
       row.classList.add("vellum-tree-volume");
+      row.dataset.volumeId = vol.key;
+      if (canWrite() && vol.key !== UNCATEGORIZED) {
+        row.classList.add("is-reorderable");
+        bindPointerReorder({
+          row,
+          onStart() {
+            treeHost.classList.add("is-reordering", "is-volume-drag");
+          },
+          onMove(event) {
+            showReorderGhost(vol.name, event.clientX, event.clientY);
+            const rows = volumeRows();
+            placeSeam(
+              rows,
+              event.clientY,
+              rows.findIndex((item) => item.dataset.volumeId === vol.key),
+            );
+          },
+          onEnd(event, moved) {
+            const rows = volumeRows();
+            const from = rows.findIndex((item) => item.dataset.volumeId === vol.key);
+            const to = moved ? placeSeam(rows, event.clientY, from) : null;
+            hideReorderGhost();
+            if (to == null) return;
+            const ids = rows.map((item) => item.dataset.volumeId!);
+            const next = moveIndex(ids, from, to);
+            const byId = new Map(volumes.map((item) => [item.id, item]));
+            volumes = next.map((id) => byId.get(id)!);
+            renderTree();
+            void pwReorderCategories(next).catch((e) => {
+              options.onStatus(e instanceof Error ? e.message : formatStoreError(e));
+            });
+          },
+        });
+      }
 
       const count = document.createElement("span");
       count.className = "vellum-tree-count";
@@ -319,6 +518,49 @@ export function mountLibraryPanel(
               },
             });
             chapterRow.classList.add("vellum-tree-chapter");
+            chapterRow.dataset.chapterId = chapter.id;
+            chapterRow.dataset.volumeKey = vol.key;
+            if (canWrite()) {
+              chapterRow.classList.add("is-reorderable");
+              chapterRow.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                openChapterMenu(event, chapter);
+              });
+              bindPointerReorder({
+                row: chapterRow,
+                onStart() {
+                  treeHost.classList.add("is-reordering");
+                },
+                onMove(event) {
+                  showReorderGhost(title, event.clientX, event.clientY);
+                  const rows = chapterRows(vol.key);
+                  placeSeam(
+                    rows,
+                    event.clientY,
+                    rows.findIndex((item) => item.dataset.chapterId === chapter.id),
+                  );
+                },
+                onEnd(event, moved) {
+                  const rows = chapterRows(vol.key);
+                  const from = rows.findIndex((item) => item.dataset.chapterId === chapter.id);
+                  const to = moved ? placeSeam(rows, event.clientY, from) : null;
+                  hideReorderGhost();
+                  if (to == null) return;
+                  const ids = rows.map((item) => item.dataset.chapterId!);
+                  const next = moveIndex(ids, from, to);
+                  const byId = new Map(chapters.map((item) => [item.id, item]));
+                  const rest = chapters.filter((item) => !ids.includes(item.id));
+                  chapters = [...rest, ...next.map((id) => byId.get(id)!)];
+                  renderTree();
+                  void pwReorderArticles(next).catch((e) => {
+                    options.onStatus(
+                      e instanceof Error ? e.message : formatStoreError(e),
+                    );
+                  });
+                },
+              });
+            }
             const label = chapterRow.querySelector(".inimark-tree-label");
             if (label instanceof HTMLElement) {
               fillChapterTreeLabel(label, {
@@ -550,6 +792,8 @@ export function mountLibraryPanel(
     },
     destroy: () => {
       document.removeEventListener("click", closeBookMenu);
+      chapterMenu.destroy();
+      hideReorderGhost();
       toolbar.destroy();
       dock.destroy();
       el.remove();

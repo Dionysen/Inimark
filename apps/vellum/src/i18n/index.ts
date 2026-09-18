@@ -45,6 +45,9 @@ const en: Dictionary = {
     noChapters: "No chapters in this book",
     noChaptersInVolume: "No chapters in this volume",
     wordCount: "{{count}} words",
+    rename: "Rename",
+    deleteChapter: "Delete chapter",
+    confirmDeleteChapter: "Delete “{{title}}”? It will be moved to Trash.",
     schemaMismatch:
       "Schema mismatch ({{found}}). Edit App/.vellum-purewriter.json to allow writes.",
   },
@@ -432,6 +435,9 @@ const zhCN: Dictionary = {
     noChapters: "此书没有章节",
     noChaptersInVolume: "此卷没有章节",
     wordCount: "{{count}}字",
+    rename: "重命名",
+    deleteChapter: "删除章节",
+    confirmDeleteChapter: "删除「{{title}}」？章节会移入回收站。",
     schemaMismatch:
       "Schema 不匹配（{{found}}）。请编辑 App/.vellum-purewriter.json 以允许写入。",
   },

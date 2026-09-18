@@ -4,7 +4,7 @@ use crate::error::{Error, Result};
 use crate::ids::new_id;
 use crate::library::Library;
 use crate::models::{Category, CreateCategory, UpdateCategory};
-use crate::order_key::next_order_key;
+use crate::order_key::{next_order_key, order_key_from_index};
 use crate::time::now_ms;
 
 fn map_category(row: &Row<'_>) -> rusqlite::Result<Category> {
@@ -183,6 +183,25 @@ impl Library {
         )?;
         if n == 0 {
             return Err(Error::NotFound(format!("category:{id}")));
+        }
+        Ok(())
+    }
+
+    /// Rewrite volume order within a book. `ids` is the full new sequence.
+    pub fn reorder_categories(&mut self, ids: &[String]) -> Result<()> {
+        self.ensure_writable()?;
+        let now = now_ms();
+        for (i, id) in ids.iter().enumerate() {
+            let rank = (i as i64) + 1;
+            let key = order_key_from_index((i as u64) + 1);
+            let n = self.conn().execute(
+                "UPDATE Category SET rank = ?2, rankUpdateTime = ?3, orderKey = ?4, structureUpdateTime = ?3
+                 WHERE id = ?1 AND deleted = 0",
+                params![id, rank, now, key],
+            )?;
+            if n == 0 {
+                return Err(Error::NotFound(format!("category:{id}")));
+            }
         }
         Ok(())
     }

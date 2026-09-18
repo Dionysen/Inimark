@@ -122,6 +122,14 @@ export interface UpdateArticle {
   rank?: number;
 }
 
+export interface UpdateCategory {
+  name?: string;
+  description?: string | null;
+  folderId?: string;
+  rank?: number;
+  collapsed?: number;
+}
+
 export interface OpenLibraryResult {
   root: string;
   schema: SchemaStatus;

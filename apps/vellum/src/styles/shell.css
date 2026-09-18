@@ -388,8 +388,64 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover, var(--shell-hover));
 }
 
-.vellum-library-tree .vellum-tree-chapter.is-active {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+.vellum-library-tree.is-reordering {
+  user-select: none;
+}
+
+/* Volume drag collapses every volume. display:flex on the chapter group beats the hidden attribute. */
+.vellum-library-tree.is-volume-drag .vellum-tree-chapters {
+  display: none !important;
+}
+
+.vellum-library-tree.is-volume-drag .vellum-tree-volume .inimark-tree-chevron {
+  transform: none;
+}
+
+.vellum-library-tree .is-reorderable {
+  cursor: grab;
+}
+
+.vellum-library-tree.is-reordering .is-reorderable {
+  cursor: grabbing;
+}
+
+.vellum-reorder-line {
+  position: fixed;
+  z-index: 70;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.vellum-reorder-ghost {
+  position: fixed;
+  z-index: 80;
+  max-width: 16rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-control, 4px);
+  background: var(--library-volume-bg, var(--bg-primary));
+  color: var(--text-primary);
+  border: var(--border-width, 1px) solid var(--border);
+  font-size: 12px;
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vellum-chapter-rename {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
 }
 
 .vellum-chapter-body {

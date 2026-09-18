@@ -11,6 +11,7 @@ import type {
   SchemaStatus,
   Setting,
   UpdateArticle,
+  UpdateCategory,
 } from "./types.ts";
 
 /** Open a Pure Writer library root (directory containing App/Room.db). */
@@ -71,6 +72,20 @@ export function pwUpdateArticle(id: string, patch: UpdateArticle): Promise<Artic
 
 export function pwTrashArticle(id: string): Promise<Article> {
   return invoke("pw_trash_article", { id });
+}
+
+export function pwUpdateCategory(id: string, patch: UpdateCategory): Promise<Category> {
+  return invoke("pw_update_category", { id, patch });
+}
+
+/** Persist sibling article order. `ids` is the full new sequence. */
+export function pwReorderArticles(ids: string[]): Promise<void> {
+  return invoke("pw_reorder_articles", { ids });
+}
+
+/** Persist volume order. `ids` is the full new sequence of category ids. */
+export function pwReorderCategories(ids: string[]): Promise<void> {
+  return invoke("pw_reorder_categories", { ids });
 }
 
 export function pwListSettings(): Promise<Setting[]> {

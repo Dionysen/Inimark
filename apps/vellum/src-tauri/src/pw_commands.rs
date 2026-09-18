@@ -5,6 +5,7 @@ use std::sync::Mutex;
 
 use purewriter_store::{
     CreateArticle, CreateCategory, CreateFolder, Library, SchemaStatus, UpdateArticle,
+    UpdateCategory,
 };
 use serde::Serialize;
 use tauri::State;
@@ -189,6 +190,31 @@ pub fn pw_trash_article(
     id: String,
 ) -> Result<purewriter_store::Article, CommandError> {
     with_lib_mut(&state, |lib| lib.trash_article(&id))
+}
+
+#[tauri::command]
+pub fn pw_update_category(
+    state: State<'_, PwState>,
+    id: String,
+    patch: UpdateCategory,
+) -> Result<purewriter_store::Category, CommandError> {
+    with_lib_mut(&state, |lib| lib.update_category(&id, patch))
+}
+
+#[tauri::command]
+pub fn pw_reorder_articles(
+    state: State<'_, PwState>,
+    ids: Vec<String>,
+) -> Result<(), CommandError> {
+    with_lib_mut(&state, |lib| lib.reorder_articles(&ids))
+}
+
+#[tauri::command]
+pub fn pw_reorder_categories(
+    state: State<'_, PwState>,
+    ids: Vec<String>,
+) -> Result<(), CommandError> {
+    with_lib_mut(&state, |lib| lib.reorder_categories(&ids))
 }
 
 #[tauri::command]
