@@ -11,6 +11,7 @@
   --shell-bg: var(--bg-secondary);
   --shell-muted-fg: var(--text-secondary);
   --shell-border: var(--border);
+  --shell-border-width: var(--border-width, 1px);
   --shell-surface: var(--bg-surface);
   --shell-surface-raised: var(--bg-tertiary);
   --shell-content-bg: var(--bg-primary);

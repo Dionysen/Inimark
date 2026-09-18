@@ -250,9 +250,6 @@ export function mountLibraryPanel(
     for (const vol of entries) {
       const volChapters = chaptersForVolume(vol.key);
       const expanded = !collapsedVolumes.has(vol.key);
-      const selected =
-        (vol.key === UNCATEGORIZED && selectedVolumeId === null) ||
-        vol.key === selectedVolumeId;
 
       const branch = createTreeBranch();
       const row = createTreeItem({
@@ -261,7 +258,8 @@ export function mountLibraryPanel(
         path: `volume:${vol.key}`,
         depth: 0,
         expanded,
-        selected,
+        // Volume rows never use selection highlight — only chapters do.
+        selected: false,
         showIcons: false,
         onClick() {
           selectedVolumeId = vol.key === UNCATEGORIZED ? null : vol.key;

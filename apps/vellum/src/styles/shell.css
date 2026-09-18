@@ -278,7 +278,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   position: relative;
   /* visible so the shared resize handle can overhang the border */
   overflow: visible;
-  border-right: 1px solid var(--border);
+  border-right: var(--border-width, 1px) solid var(--border);
   background: var(--bg-secondary, var(--inimark-bg));
 }
 
@@ -361,6 +361,11 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding-bottom: calc(var(--inimark-sidebar-dock-height) + var(--inimark-space-3));
   /* Two-level volume/chapter list — no nested tree indent guides. */
   --tree-indent-hint-visible: 0;
+  /* Chapter = secondary fill; volume = editor background. */
+  --library-chapter-bg: var(--bg-secondary);
+  --library-volume-bg: var(--bg-primary);
+  --library-chapter-preview: var(--text-tertiary, var(--text-secondary));
+  --library-chapter-meta: var(--text-tertiary, var(--text-secondary));
 }
 
 .vellum-library-tree .inimark-tree-children::before {
@@ -368,7 +373,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-tree .vellum-tree-volume {
-  background: var(--library-volume-bg, transparent);
+  background: var(--library-volume-bg);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -377,13 +382,9 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   background: var(--bg-hover, var(--shell-hover));
 }
 
-.vellum-library-tree .vellum-tree-volume.is-selected {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
 .vellum-library-tree .vellum-tree-chapter {
   align-items: flex-start;
-  background: var(--library-chapter-bg, transparent);
+  background: var(--library-chapter-bg);
   color: var(--text-primary);
   padding-top: 0.45rem;
   padding-bottom: 0.45rem;
@@ -569,7 +570,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   padding: 0.25rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  background: var(--bg-menu);
+  background: var(--bg-menu, var(--bg-secondary));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
@@ -617,7 +618,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .inimark-sidebar-dock .inimark-menu {
   isolation: isolate;
-  background: var(--bg-menu, var(--inimark-surface-raised));
+  background: var(--bg-menu, var(--bg-secondary, var(--inimark-surface-raised)));
   border: 1px solid var(--inimark-border);
   box-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);
 }

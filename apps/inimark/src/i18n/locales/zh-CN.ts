@@ -645,6 +645,7 @@ export const zhCN: Dictionary = {
       sections: {
         groupChrome: "界面与表面",
         groupBody: "编辑器正文",
+        groupControls: "控件",
         groupCodeBlock: "代码块",
         groupCodeInline: "行内代码",
         groupBlockquote: "引用块",
@@ -669,6 +670,8 @@ export const zhCN: Dictionary = {
         bgInputDesc: "文本框、下拉等表单控件背景。",
         border: "边框",
         borderDesc: "面板分隔线与描边颜色。",
+        borderWidth: "边框大小",
+        borderWidthDesc: "界面描边宽度（0–5px）。",
         accent: "强调色",
         accentDesc: "主按钮、焦点环与高亮的品牌色。",
         accentHover: "强调色悬停",

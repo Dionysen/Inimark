@@ -657,6 +657,7 @@ export const en: Dictionary = {
       sections: {
         groupChrome: "Chrome & surfaces",
         groupBody: "Editor body",
+        groupControls: "Controls",
         groupCodeBlock: "Code blocks",
         groupCodeInline: "Inline code",
         groupBlockquote: "Blockquote",
@@ -681,6 +682,8 @@ export const en: Dictionary = {
         bgInputDesc: "Text fields, selects, and other form controls.",
         border: "Border",
         borderDesc: "Dividers and outlines around chrome and panels.",
+        borderWidth: "Border width",
+        borderWidthDesc: "Stroke width for chrome borders (0–5px).",
         accent: "Accent",
         accentDesc: "Primary brand color for buttons, focus, and highlights.",
         accentHover: "Accent hover",

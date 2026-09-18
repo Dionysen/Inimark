@@ -167,6 +167,69 @@ export function syncAccentRgb(
   );
 }
 
+/** Darken accent ~12% for hover; used when the editor hides `--accent-hover`. */
+export function accentHoverFromAccent(accent: string): string {
+  const c = parseColor(accent);
+  const f = 0.88;
+  return formatColor({ r: c.r * f, g: c.g * f, b: c.b * f, a: c.a });
+}
+
+export function syncAccentHover(
+  variables: { name: string; value: string; type: string }[],
+): typeof variables {
+  const accent = variables.find((v) => v.name === "--accent");
+  if (!accent) return variables;
+  const hover = accentHoverFromAccent(accent.value);
+  let found = false;
+  const next = variables.map((v) => {
+    if (v.name !== "--accent-hover") return v;
+    found = true;
+    return { ...v, value: hover };
+  });
+  if (found) return next;
+  return [...next, { name: "--accent-hover", value: hover, type: "color" }];
+}
+
+/** Sync `--accent-rgb` and `--accent-hover` from `--accent`. */
+export function syncAccentDerived(
+  variables: { name: string; value: string; type: string }[],
+): typeof variables {
+  return syncAccentHover(syncAccentRgb(variables));
+}
+
+/**
+ * Chrome-profile: secondary drives menus + chapter rows;
+ * volume rows use the editor background (`--bg-primary`).
+ */
+export function syncLinkedChromeBackgrounds(
+  variables: { name: string; value: string; type: string }[],
+): typeof variables {
+  const secondary = variables.find((v) => v.name === "--bg-secondary");
+  const primary = variables.find((v) => v.name === "--bg-primary");
+  if (!secondary && !primary) return variables;
+
+  const linked: Record<string, string> = {};
+  if (secondary) {
+    linked["--bg-menu"] = secondary.value;
+    linked["--library-chapter-bg"] = secondary.value;
+  }
+  if (primary) {
+    linked["--library-volume-bg"] = primary.value;
+  }
+
+  const seen = new Set<string>();
+  const next = variables.map((v) => {
+    const value = linked[v.name];
+    if (value === undefined) return v;
+    seen.add(v.name);
+    return { ...v, value };
+  });
+  for (const [name, value] of Object.entries(linked)) {
+    if (!seen.has(name)) next.push({ name, value, type: "color" });
+  }
+  return next;
+}
+
 export function supportsEyeDropper(): boolean {
   return typeof window !== "undefined" && "EyeDropper" in window;
 }

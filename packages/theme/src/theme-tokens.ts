@@ -6,8 +6,9 @@ import { tryGetThemeConfig } from "./config.ts";
 
 /** 主题编辑器分组：按编辑器/界面元素分类 */
 export type ThemeEditorSectionId =
-  | "chrome"
   | "body"
+  | "chrome"
+  | "controls"
   | "codeBlock"
   | "codeInline"
   | "blockquote"
@@ -26,6 +27,8 @@ export interface ThemeColorToken {
   labelKey: string;
   /** Hidden from color editor UI (auto-derived) */
   hidden?: boolean;
+  /** If set, only shown when the product editorProfile is one of these. */
+  profiles?: ThemeEditorProfile[];
 }
 
 export interface ThemeSizeToken {
@@ -43,12 +46,16 @@ export interface ThemeSizeToken {
    * min/max/step 仍按百分比刻度填写（如 0–100）。
    */
   asPercent?: boolean;
+  /** If set, only shown when the product editorProfile is one of these. */
+  profiles?: ThemeEditorProfile[];
 }
 
 export interface ThemeToggleToken {
   name: string;
   section: ThemeEditorSectionId;
   labelKey: string;
+  /** If set, only shown when the product editorProfile is one of these. */
+  profiles?: ThemeEditorProfile[];
 }
 
 export interface ThemeEditorSectionDef {
@@ -59,8 +66,9 @@ export interface ThemeEditorSectionDef {
 
 /** Sections shown in the chrome profile (Vellum / shell-only editors). */
 export const CHROME_EDITOR_SECTIONS: ThemeEditorSectionId[] = [
-  "chrome",
   "body",
+  "chrome",
+  "controls",
   "scrollbar",
 ];
 
@@ -78,10 +86,45 @@ export function filterEditorSectionsByProfile(
   return sections.filter((s) => isChromeEditorSection(s.id));
 }
 
+/** Token-level visibility for the active editor profile. */
+export function isTokenVisibleForProfile(
+  token: { profiles?: ThemeEditorProfile[] },
+  profile?: ThemeEditorProfile,
+): boolean {
+  if (!token.profiles || token.profiles.length === 0) return true;
+  const resolved = profile ?? tryGetThemeConfig()?.editorProfile ?? "full";
+  return token.profiles.includes(resolved);
+}
+
+/** Chrome-profile field order inside the Interface section (colors + sizes interleaved). */
+export const CHROME_INTERFACE_FIELD_ORDER = [
+  "--bg-surface",
+  "--bg-secondary",
+  "--bg-tertiary",
+  "--bg-input",
+  "--border",
+  "--border-width",
+  "--accent",
+  "--danger",
+  "--sidebar-chrome-opacity",
+] as const;
+
+function sortChromeInterfaceFields(fields: ThemeEditorField[]): ThemeEditorField[] {
+  const rank = new Map<string, number>(
+    CHROME_INTERFACE_FIELD_ORDER.map((name, i) => [name, i]),
+  );
+  return [...fields].sort((a, b) => {
+    const ar = rank.get(a.variable.name) ?? 1000;
+    const br = rank.get(b.variable.name) ?? 1000;
+    return ar - br;
+  });
+}
+
 /** 编辑器 UI 分组顺序 */
 export const THEME_EDITOR_SECTIONS: ThemeEditorSectionDef[] = [
-  { id: "chrome", titleKey: "groupChrome" },
   { id: "body", titleKey: "groupBody" },
+  { id: "chrome", titleKey: "groupChrome" },
+  { id: "controls", titleKey: "groupControls" },
   { id: "codeBlock", titleKey: "groupCodeBlock" },
   { id: "codeInline", titleKey: "groupCodeInline" },
   { id: "blockquote", titleKey: "groupBlockquote" },
@@ -96,29 +139,45 @@ export const THEME_COLOR_GROUPS: ThemeEditorSectionId[] = THEME_EDITOR_SECTIONS.
 
 /** Canonical editable color tokens for the theme editor. */
 export const THEME_COLOR_SCHEMA: ThemeColorToken[] = [
+  // 编辑器正文
+  { name: "--text-primary", section: "body", labelKey: "textPrimary" },
+  { name: "--bg-primary", section: "body", labelKey: "bgPrimary" },
+  { name: "--text-secondary", section: "body", labelKey: "textSecondary", profiles: ["full"] },
+  { name: "--text-tertiary", section: "body", labelKey: "textTertiary", profiles: ["full"] },
+  { name: "--text-strong", section: "body", labelKey: "textStrong", profiles: ["full"] },
   // 界面
-  { name: "--bg-secondary", section: "chrome", labelKey: "bgSecondary" },
   { name: "--bg-surface", section: "chrome", labelKey: "bgSurface" },
-  { name: "--bg-menu", section: "chrome", labelKey: "bgMenu" },
-  { name: "--bg-hover", section: "chrome", labelKey: "bgHover" },
+  { name: "--bg-secondary", section: "chrome", labelKey: "bgSecondary" },
   { name: "--bg-tertiary", section: "chrome", labelKey: "bgTertiary" },
   { name: "--bg-input", section: "chrome", labelKey: "bgInput" },
   { name: "--border", section: "chrome", labelKey: "border" },
   { name: "--accent", section: "chrome", labelKey: "accent" },
-  { name: "--accent-hover", section: "chrome", labelKey: "accentHover" },
-  { name: "--accent-rgb", section: "chrome", labelKey: "accentRgb", hidden: true },
   { name: "--danger", section: "chrome", labelKey: "danger" },
-  { name: "--tree-indent-hint-color", section: "chrome", labelKey: "treeIndentHintColor" },
-  { name: "--library-volume-bg", section: "chrome", labelKey: "libraryVolumeBg" },
-  { name: "--library-chapter-bg", section: "chrome", labelKey: "libraryChapterBg" },
-  { name: "--library-chapter-preview", section: "chrome", labelKey: "libraryChapterPreview" },
-  { name: "--library-chapter-meta", section: "chrome", labelKey: "libraryChapterMeta" },
-  // 正文
-  { name: "--bg-primary", section: "body", labelKey: "bgPrimary" },
-  { name: "--text-primary", section: "body", labelKey: "textPrimary" },
-  { name: "--text-secondary", section: "body", labelKey: "textSecondary" },
-  { name: "--text-tertiary", section: "body", labelKey: "textTertiary" },
-  { name: "--text-strong", section: "body", labelKey: "textStrong" },
+  // Derived / Inimark-only chrome colors
+  { name: "--bg-menu", section: "chrome", labelKey: "bgMenu", profiles: ["full"] },
+  { name: "--bg-hover", section: "chrome", labelKey: "bgHover", profiles: ["full"] },
+  { name: "--accent-hover", section: "chrome", labelKey: "accentHover", profiles: ["full"] },
+  { name: "--accent-rgb", section: "chrome", labelKey: "accentRgb", hidden: true },
+  {
+    name: "--tree-indent-hint-color",
+    section: "chrome",
+    labelKey: "treeIndentHintColor",
+    profiles: ["full"],
+  },
+  { name: "--library-volume-bg", section: "chrome", labelKey: "libraryVolumeBg", profiles: ["full"] },
+  { name: "--library-chapter-bg", section: "chrome", labelKey: "libraryChapterBg", profiles: ["full"] },
+  {
+    name: "--library-chapter-preview",
+    section: "chrome",
+    labelKey: "libraryChapterPreview",
+    profiles: ["full"],
+  },
+  {
+    name: "--library-chapter-meta",
+    section: "chrome",
+    labelKey: "libraryChapterMeta",
+    profiles: ["full"],
+  },
   // 代码块
   { name: "--bg-code", section: "codeBlock", labelKey: "bgCode" },
   // 行内代码
@@ -157,14 +216,36 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
     unit: "",
     asPercent: true,
   },
-  { name: "--radius-control", section: "chrome", labelKey: "radiusControl", min: 0, max: 16 },
-  { name: "--control-height", section: "chrome", labelKey: "controlHeight", min: 24, max: 44 },
-  { name: "--control-padding-x", section: "chrome", labelKey: "controlPaddingX", min: 4, max: 24 },
-  { name: "--control-font-size", section: "chrome", labelKey: "controlFontSize", min: 9, max: 36 },
-  { name: "--menu-item-padding-y", section: "chrome", labelKey: "menuItemPaddingY", min: 2, max: 16 },
-  { name: "--tree-item-padding-y", section: "chrome", labelKey: "treeItemPaddingY", min: 2, max: 16 },
-  { name: "--tree-indent-hint-width", section: "chrome", labelKey: "treeIndentHintWidth", min: 1, max: 4 },
-  { name: "--tree-indent-hint-size", section: "chrome", labelKey: "treeIndentHintSize", min: 8, max: 28 },
+  { name: "--border-width", section: "chrome", labelKey: "borderWidth", min: 0, max: 5 },
+  { name: "--radius-control", section: "controls", labelKey: "radiusControl", min: 0, max: 16 },
+  { name: "--control-height", section: "controls", labelKey: "controlHeight", min: 24, max: 44 },
+  { name: "--control-padding-x", section: "controls", labelKey: "controlPaddingX", min: 4, max: 24 },
+  { name: "--control-font-size", section: "controls", labelKey: "controlFontSize", min: 9, max: 36 },
+  { name: "--menu-item-padding-y", section: "controls", labelKey: "menuItemPaddingY", min: 2, max: 16 },
+  {
+    name: "--tree-item-padding-y",
+    section: "controls",
+    labelKey: "treeItemPaddingY",
+    min: 2,
+    max: 16,
+    profiles: ["full"],
+  },
+  {
+    name: "--tree-indent-hint-width",
+    section: "controls",
+    labelKey: "treeIndentHintWidth",
+    min: 1,
+    max: 4,
+    profiles: ["full"],
+  },
+  {
+    name: "--tree-indent-hint-size",
+    section: "controls",
+    labelKey: "treeIndentHintSize",
+    min: 8,
+    max: 28,
+    profiles: ["full"],
+  },
   { name: "--radius-code-block", section: "codeBlock", labelKey: "radiusCodeBlock", min: 0, max: 24 },
   { name: "--radius-code-inline", section: "codeInline", labelKey: "radiusCodeInline", min: 0, max: 16 },
   { name: "--padding-code-inline-y", section: "codeInline", labelKey: "paddingCodeInlineY", min: 0, max: 16 },
@@ -193,8 +274,9 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
 export const THEME_TOGGLE_SCHEMA: ThemeToggleToken[] = [
   {
     name: "--tree-indent-hint-visible",
-    section: "chrome",
+    section: "controls",
     labelKey: "treeIndentHintVisible",
+    profiles: ["full"],
   },
 ];
 
@@ -217,6 +299,7 @@ const PRESERVED_NON_COLOR = [
   "--editor-font-size",
   "--font-mono-size",
   "--sidebar-chrome-opacity",
+  "--border-width",
   "--radius-control",
   "--control-height",
   "--control-padding-x",
@@ -795,6 +878,7 @@ const DEFAULT_FONTS: ThemeVariable[] = [
 
 const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--sidebar-chrome-opacity", value: "0.21", type: "size" },
+  { name: "--border-width", value: "1px", type: "size" },
   { name: "--radius-control", value: "4px", type: "size" },
   { name: "--control-height", value: "32px", type: "size" },
   { name: "--control-padding-x", value: "10px", type: "size" },
@@ -1071,27 +1155,36 @@ export function buildThemeEditorSections(variables: ThemeVariable[]): ThemeEdito
   };
 
   const sections = filterEditorSectionsByProfile(THEME_EDITOR_SECTIONS);
+  const profile = tryGetThemeConfig()?.editorProfile ?? "full";
 
   return sections.map((section) => {
     const fields: ThemeEditorField[] = [];
 
     for (const token of THEME_COLOR_SCHEMA) {
       if (token.hidden || token.section !== section.id) continue;
+      if (!isTokenVisibleForProfile(token, profile)) continue;
       fields.push({ kind: "color", variable: resolveColor(token), meta: token });
     }
     for (const token of THEME_SIZE_SCHEMA) {
       if (token.section !== section.id) continue;
+      if (!isTokenVisibleForProfile(token, profile)) continue;
       fields.push({ kind: "size", variable: resolveSize(token), meta: token });
     }
     for (const token of THEME_TOGGLE_SCHEMA) {
       if (token.section !== section.id) continue;
+      if (!isTokenVisibleForProfile(token, profile)) continue;
       fields.push({ kind: "toggle", variable: resolveToggle(token), meta: token });
     }
+
+    const ordered =
+      profile === "chrome" && section.id === "chrome"
+        ? sortChromeInterfaceFields(fields)
+        : fields;
 
     return {
       id: section.id,
       titleKey: section.titleKey,
-      fields,
+      fields: ordered,
     };
   }).filter((s) => s.fields.length > 0);
 }

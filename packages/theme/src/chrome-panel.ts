@@ -2,8 +2,8 @@ import { createIconButton } from "@dionysen/ui";
 import type { AppearanceMode, ThemePair } from "./appearance.ts";
 import { BUILTIN_THEMES } from "./builtin.ts";
 import { createThemeColorField } from "./color-field.ts";
-import { syncAccentRgb } from "./color-utils.ts";
-import { themeT } from "./config.ts";
+import { syncAccentDerived, syncLinkedChromeBackgrounds } from "./color-utils.ts";
+import { themeT, tryGetThemeConfig } from "./config.ts";
 import { builtinThemeLabel, themeLabel, themeTokenDesc } from "./labels.ts";
 import { getThemeManager } from "./manager.ts";
 import { createThemeSizeField } from "./size-field.ts";
@@ -24,6 +24,14 @@ import {
   mergeWithSchema,
 } from "./theme-tokens.ts";
 import { createThemeToggleField } from "./toggle-field.ts";
+
+function syncDerivedThemeVariables(variables: ThemeVariable[]): ThemeVariable[] {
+  let next = syncAccentDerived(variables) as ThemeVariable[];
+  if (tryGetThemeConfig()?.editorProfile === "chrome") {
+    next = syncLinkedChromeBackgrounds(next) as ThemeVariable[];
+  }
+  return next;
+}
 
 export function getThemeSlotSelection(
   id: string,
@@ -205,9 +213,9 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
   }
 
   async function openEditor(manifest: ThemeManifest, variables: ThemeVariable[]): Promise<void> {
-    const merged = syncAccentRgb(
+    const merged = syncDerivedThemeVariables(
       mergeWithSchema(variables, getBuiltinColorMap("light") ?? undefined),
-    ) as ThemeVariable[];
+    );
     editVariables = merged;
     editingTheme = manifest;
     const snap = themeManager.getSnapshot();
@@ -258,7 +266,7 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
   }
 
   async function handleSaveAppEdit(manifest: ThemeManifest): Promise<void> {
-    const synced = syncAccentRgb(editVariables) as ThemeVariable[];
+    const synced = syncDerivedThemeVariables(editVariables);
     await themeManager.updateThemeVariables(manifest.id, synced);
     editingTheme = null;
     render();
@@ -311,7 +319,13 @@ export function renderChromeThemePanel(host: HTMLElement): () => void {
 
     function handleVariableChange(name: string, newValue: string): void {
       let next = editVariables.map((v) => (v.name === name ? { ...v, value: newValue } : v));
-      if (name === "--accent") next = syncAccentRgb(next) as ThemeVariable[];
+      if (
+        name === "--accent" ||
+        name === "--bg-secondary" ||
+        name === "--bg-primary"
+      ) {
+        next = syncDerivedThemeVariables(next);
+      }
       editVariables = next;
       schedulePreview(manifest.id, next);
     }
