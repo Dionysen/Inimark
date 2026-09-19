@@ -1087,31 +1087,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dionysen-cloud-sync"
-version = "0.1.0"
-dependencies = [
- "aes-gcm",
- "argon2",
- "base64 0.22.1",
- "chrono",
- "dirs",
- "hex",
- "hmac",
- "hostname",
- "open",
- "rand 0.8.8",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "sha2",
- "tauri",
- "tempfile",
- "thiserror 2.0.20",
- "url",
- "urlencoding",
-]
-
-[[package]]
 name = "dionysen-git-sync"
 version = "0.1.0"
 dependencies = [
@@ -2069,15 +2044,6 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-
-[[package]]
-name = "hmac"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
-dependencies = [
- "digest",
-]
 
 [[package]]
 name = "hostname"
@@ -5982,13 +5948,9 @@ dependencies = [
  "tauri-plugin-deep-link",
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
- "tauri-plugin-process",
  "tauri-plugin-single-instance",
- "tauri-plugin-updater",
  "tauri-plugin-window-state",
  "time",
- "url",
- "winreg",
 ]
 
 [[package]]

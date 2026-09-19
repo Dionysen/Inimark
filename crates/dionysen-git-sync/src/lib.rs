@@ -1,7 +1,6 @@
 //! GitHub / Gitee OAuth, encrypted vault, and PWB backup sync.
 //!
-//! Completely separate from `dionysen-cloud-sync` (Aliyun). Vault lives under
-//! `com.dionysen.git-sync`.
+//! Vault lives under `com.dionysen.git-sync`.
 
 pub mod commands;
 mod error;

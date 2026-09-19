@@ -2,7 +2,7 @@
 
 GitHub / Gitee login + Pure Writer `.pwb` backup sync for Dionysen desktop apps.
 
-Separate from `@dionysen/cloud-sync` (Aliyun). Vault path: `com.dionysen.git-sync`.
+Vault path: `com.dionysen.git-sync`.
 
 ## User flow
 

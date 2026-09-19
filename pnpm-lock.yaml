@@ -132,12 +132,6 @@ importers:
       '@tauri-apps/plugin-fs':
         specifier: ^2.2.1
         version: 2.5.2
-      '@tauri-apps/plugin-process':
-        specifier: ^2.3.1
-        version: 2.3.1
-      '@tauri-apps/plugin-updater':
-        specifier: ^2.11.0
-        version: 2.11.0
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0
@@ -154,18 +148,6 @@ importers:
       vite:
         specifier: ^6.3.5
         version: 6.4.3(@types/node@26.4.1)(tsx@4.23.13)
-
-  packages/cloud-sync:
-    devDependencies:
-      '@tauri-apps/api':
-        specifier: ^2.5.0
-        version: 2.11.1
-      tsx:
-        specifier: ^4.20.5
-        version: 4.23.13
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
 
   packages/editor:
     dependencies:

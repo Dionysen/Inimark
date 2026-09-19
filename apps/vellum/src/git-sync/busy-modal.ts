@@ -13,7 +13,7 @@ interface BusySession {
 let current: BusySession | null = null;
 
 /**
- * Modal spinner for a cloud-sync operation that cannot be cancelled.
+ * Modal spinner for a cloud backup that cannot be cancelled.
  * A later open replaces the previous one; `close` only removes the session it opened.
  */
 export function openBusyModal(message: string): BusyModal {

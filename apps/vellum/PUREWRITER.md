@@ -42,7 +42,7 @@ While you write, the open chapter is saved into `Room.db` immediately. Quitting 
 
 Configure OAuth `clientId` (and Gitee `clientSecret`) in `apps/vellum/src/git-sync/config.ts`. See `packages/git-sync/README.md`.
 
-Tokens live in an encrypted vault under `com.dionysen.git-sync` (separate from the unused Aliyun `com.dionysen.cloud-sync` module).
+Tokens live in an encrypted vault under `com.dionysen.git-sync`.
 
 This is **not** Pure Writer’s official cloud sync protocol. Sync-related timestamp fields in `Room.db` are preserved so the official app can reconcile if you use it separately.
 

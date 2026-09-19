@@ -5,7 +5,6 @@
  * Usage:
  *   node scripts/extract-release-notes.mjs v1.0.4
  *   node scripts/extract-release-notes.mjs 1.0.4 --fallback
- *   node scripts/extract-release-notes.mjs 0.1.0 --fallback --file apps/vellum/docs/版本历史.md
  *
  * Without --fallback: prints nothing and exits 0 if the version is missing
  * (caller can apply its own default). With --fallback: always prints a body.

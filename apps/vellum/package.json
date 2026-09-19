@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm --filter @dionysen/purewriter-store test && node --import tsx --test src/editor/*.test.ts src/library/*.test.ts src/shortcuts/*.test.ts src/git-sync/*.test.ts src/updater.test.ts",
+    "test": "pnpm --filter @dionysen/purewriter-store test && node --import tsx --test src/editor/*.test.ts src/library/*.test.ts src/shortcuts/*.test.ts src/git-sync/*.test.ts",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -23,9 +23,7 @@
     "@tauri-apps/api": "^2.5.0",
     "@tauri-apps/plugin-deep-link": "^2.4.0",
     "@tauri-apps/plugin-dialog": "^2.2.2",
-    "@tauri-apps/plugin-fs": "^2.2.1",
-    "@tauri-apps/plugin-process": "^2.3.1",
-    "@tauri-apps/plugin-updater": "^2.11.0"
+    "@tauri-apps/plugin-fs": "^2.2.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",

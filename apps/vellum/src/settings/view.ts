@@ -9,7 +9,7 @@ import {
   type SettingsSectionDef,
   type SettingsViewController,
 } from "@dionysen/settings-kit";
-import { createSelect, createToggle, createButton } from "@dionysen/ui";
+import { createSelect, createButton } from "@dionysen/ui";
 import { closeWindow, isTauri, listSystemFonts } from "@dionysen/shell";
 import { renderChromeThemePanel } from "@dionysen/theme";
 import { renderAccountSection } from "../git-sync/account-settings.ts";
@@ -45,7 +45,6 @@ import {
   renderShortcutsPanel,
   shortcutSearchEntries,
 } from "./shortcuts-panel.ts";
-import { mountAboutUpdateControl } from "./about-update-control.ts";
 import aboutIconUrl from "../../app-icon.svg";
 
 export type { SettingsViewController };
@@ -142,18 +141,6 @@ function searchEntries(): SettingSearchItem[] {
       id: "about.version",
       section: "about",
       getTitle: () => t("settings.about.versionInfo"),
-    },
-    {
-      id: "about.useSystemProxy",
-      section: "about",
-      getTitle: () => t("settings.about.useSystemProxy"),
-      getDescription: () => t("settings.about.useSystemProxyDesc"),
-    },
-    {
-      id: "about.updates",
-      section: "about",
-      getTitle: () => t("settings.about.softwareUpdate"),
-      getDescription: () => t("settings.about.checkUpdates"),
     },
     {
       id: "about.license",
@@ -298,11 +285,7 @@ function openExternalUrl(url: string): void {
   })();
 }
 
-function renderAbout(
-  body: HTMLElement,
-  settings: AppSettings,
-  update: (partial: Partial<AppSettings>) => void,
-): void {
+function renderAbout(body: HTMLElement): void {
   const about = document.createElement("div");
   about.className = "inimark-about";
 
@@ -341,14 +324,6 @@ function renderAbout(
     }
   })();
 
-  const proxyToggle = createToggle({
-    checked: settings.useSystemProxyForUpdates,
-    title: t("settings.about.useSystemProxy"),
-    onChange(checked) {
-      update({ useSystemProxyForUpdates: checked });
-    },
-  });
-
   const licenseLink = document.createElement("a");
   licenseLink.className = "inimark-about-link";
   licenseLink.href = ABOUT_LICENSE_URL;
@@ -362,18 +337,6 @@ function renderAbout(
   list.className = "inimark-about-list";
   list.append(
     createRow(t("settings.about.versionInfo"), "", versionValue, "about.version"),
-    createRow(
-      t("settings.about.useSystemProxy"),
-      t("settings.about.useSystemProxyDesc"),
-      proxyToggle.el,
-      "about.useSystemProxy",
-    ),
-    createRow(
-      t("settings.about.softwareUpdate"),
-      "",
-      mountAboutUpdateControl().el,
-      "about.updates",
-    ),
     createRow(
       t("settings.about.openSourceLicense"),
       "",
@@ -458,9 +421,7 @@ export function mountSettingsView(host: HTMLElement): SettingsViewController {
       } else if (id === "theme") {
         teardownTheme = renderTheme(body);
       } else {
-        renderAbout(body, settings, (partial) => {
-          settings = patchSettings(partial);
-        });
+        renderAbout(body);
       }
     },
     searchEntries: () => searchEntries().filter((e) => e.section === id),

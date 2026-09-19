@@ -20,8 +20,6 @@
     "core:window:allow-is-maximized",
     "core:window:allow-start-dragging",
     "core:webview:allow-create-webview-window",
-    "process:default",
-    "updater:default",
     "dialog:default",
     "fs:default",
     "window-state:default",
