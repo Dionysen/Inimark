@@ -46,6 +46,7 @@ import { VELLUM_GIT_SYNC } from "./git-sync/config.ts";
 import { createImmediateSaver } from "./library/immediate-save.ts";
 import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
+import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
 
@@ -175,6 +176,7 @@ const editor = mountPlaintextEditor(editorHost, {
     syncStatus?.markEdited();
   },
 });
+const editorContextMenu = mountEditorContextMenu(editorHost, editor);
 
 /** Click the gutter beside the writing column to focus the editor. */
 editorHost.addEventListener("pointerdown", (event) => {
@@ -376,6 +378,7 @@ window.addEventListener("beforeunload", () => {
   teardownShortcuts();
   titleBar.destroy();
   library.destroy();
+  editorContextMenu.destroy();
   editor.destroy();
 });
 }
