@@ -285,7 +285,7 @@ const ABOUT_REPO_URL = "https://github.com/Dionysen/Inimark";
 const ABOUT_ISSUES_URL = `${ABOUT_REPO_URL}/issues`;
 const ABOUT_LICENSE_URL = "https://opensource.org/licenses/MIT";
 const ABOUT_EMAIL = "solongnight@outlook.com";
-const ABOUT_VERSION_FALLBACK = "0.1.0";
+const ABOUT_VERSION_FALLBACK = "0.1.1";
 
 function openExternalUrl(url: string): void {
   void (async () => {

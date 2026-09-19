@@ -1,6 +1,6 @@
 [package]
 name = "vellum-app"
-version = "0.1.0"
+version = "0.1.1"
 description = "Vellum - minimal Dionysen writing shell"
 authors = ["Dionysen"]
 edition = "2021"

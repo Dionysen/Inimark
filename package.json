@@ -20,8 +20,9 @@
     "vellum:test": "pnpm --filter @vellum/app test",
 
     "bump-version": "node scripts/bump-version.mjs",
+    "bump-vellum-version": "node scripts/bump-vellum-version.mjs",
     "release-notes": "node scripts/extract-release-notes.mjs",
-    "test:release-notes": "node --test scripts/lib/release-notes.test.mjs",
+    "test:release-notes": "node --test scripts/lib/release-notes.test.mjs scripts/lib/bump-app-version.test.mjs",
     "replace-icon": "node scripts/replace-icon.mjs",
     "replace-vellum-icon": "node scripts/replace-vellum-icon.mjs",
     "docs:build": "tsx scripts/publish-docs.ts",
