@@ -14,6 +14,14 @@ export interface PlaintextEditor {
   getValue(): string;
   setValue(value: string): void;
   focus(): void;
+  /** True when the editor has a non-empty text selection. */
+  hasSelection(): boolean;
+  /** Copy the current selection to the clipboard. */
+  copySelection(): Promise<boolean>;
+  /** Cut the current selection to the clipboard. */
+  cutSelection(): Promise<boolean>;
+  /** Paste clipboard text at the caret, replacing any selection. */
+  pasteClipboard(): Promise<boolean>;
   destroy(): void;
 }
 
@@ -109,6 +117,147 @@ function ensureStructure(root: HTMLElement): void {
   root.innerHTML = plaintextToHtml(root.textContent ?? "");
 }
 
+function editorBlocks(root: HTMLElement): HTMLElement[] {
+  return [...root.children].filter((el): el is HTMLElement => el instanceof HTMLElement);
+}
+
+function serializedOffsetFromPoint(
+  root: HTMLElement,
+  container: Node,
+  nodeOffset: number,
+): number {
+  const blocks = editorBlocks(root);
+  const block = closestBlock(container, root);
+  if (!block) return serializePlaintextDom(root).length;
+  let pos = 0;
+  for (const item of blocks) {
+    if (item === block) {
+      const pre = document.createRange();
+      pre.selectNodeContents(block);
+      try {
+        pre.setEnd(container, nodeOffset);
+        pos += pre.toString().replace(/\u00a0/g, " ").replace(/\n/g, "").length;
+      } catch {
+        pos += blockText(block).length;
+      }
+      return pos;
+    }
+    pos += blockText(item).length + 1;
+  }
+  return pos;
+}
+
+function placeCaretAtSerializedOffset(root: HTMLElement, offset: number): void {
+  ensureStructure(root);
+  const blocks = editorBlocks(root);
+  if (blocks.length === 0) return;
+  let remaining = Math.max(0, offset);
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i]!;
+    const text = blockText(block);
+    if (remaining <= text.length) {
+      if (text.length === 0 || !block.firstChild) {
+        placeCaret(block, 0);
+        return;
+      }
+      if (block.firstChild.nodeType === Node.TEXT_NODE) {
+        placeCaret(block.firstChild, remaining);
+      } else {
+        placeCaret(block, 0);
+      }
+      return;
+    }
+    remaining -= text.length;
+    if (i < blocks.length - 1) remaining -= 1;
+  }
+  const last = blocks[blocks.length - 1]!;
+  const lastText = blockText(last);
+  if (lastText.length === 0 || !last.firstChild) {
+    placeCaret(last, 0);
+    return;
+  }
+  if (last.firstChild.nodeType === Node.TEXT_NODE) {
+    placeCaret(last.firstChild, lastText.length);
+  } else {
+    placeCaret(last, last.childNodes.length);
+  }
+}
+
+function readSelection(root: HTMLElement): { start: number; end: number; text: string } {
+  const value = serializePlaintextDom(root);
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) {
+    return { start: value.length, end: value.length, text: "" };
+  }
+  const anchor = sel.anchorNode;
+  if (!anchor || !root.contains(anchor)) {
+    return { start: value.length, end: value.length, text: "" };
+  }
+  const range = sel.getRangeAt(0);
+  let start = serializedOffsetFromPoint(root, range.startContainer, range.startOffset);
+  let end = serializedOffsetFromPoint(root, range.endContainer, range.endOffset);
+  if (end < start) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+  start = Math.max(0, Math.min(start, value.length));
+  end = Math.max(0, Math.min(end, value.length));
+  return { start, end, text: value.slice(start, end) };
+}
+
+function applyReplacement(
+  root: HTMLElement,
+  start: number,
+  end: number,
+  insertText: string,
+): void {
+  ensureStructure(root);
+  const value = serializePlaintextDom(root);
+  const next = value.slice(0, start) + insertText + value.slice(end);
+  root.innerHTML = plaintextToHtml(next);
+  placeCaretAtSerializedOffset(root, start + insertText.length);
+}
+
+function replaceSelection(root: HTMLElement, insertText: string): void {
+  const { start, end } = readSelection(root);
+  applyReplacement(root, start, end, insertText);
+}
+
+async function writeClipboardText(text: string): Promise<void> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    /* fall through to execCommand fallback */
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.append(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+  } finally {
+    ta.remove();
+  }
+}
+
+async function readClipboardText(): Promise<string> {
+  try {
+    if (navigator.clipboard?.readText) {
+      return (await navigator.clipboard.readText()) ?? "";
+    }
+  } catch {
+    /* ignore */
+  }
+  return "";
+}
+
 /**
  * Split `block` at the caret into [before][after], then open a new paragraph
  * after it whose content starts with the indent prefix + `after`.
@@ -190,51 +339,36 @@ export function mountPlaintextEditor(
     const raw = event.clipboardData?.getData("text/plain") ?? "";
     const text = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     if (!text) return;
-
-    ensureStructure(el);
-    const sel = window.getSelection();
-    const block =
-      closestBlock(sel?.anchorNode ?? null, el) ??
-      (el.lastElementChild as HTMLElement | null);
-    if (!block) {
-      el.innerHTML = plaintextToHtml(text);
-      emitChange();
-      return;
-    }
-
-    const current = blockText(block);
-    const offset = caretOffsetInBlock(block);
-    const lines = text.split("\n");
-    if (lines.length === 1) {
-      setBlockText(
-        block,
-        current.slice(0, offset) + lines[0]! + current.slice(offset),
-      );
-      const node = block.firstChild;
-      if (node) placeCaret(node, offset + lines[0]!.length);
-      emitChange();
-      return;
-    }
-
-    const first = current.slice(0, offset) + lines[0]!;
-    const last = lines[lines.length - 1]! + current.slice(offset);
-    setBlockText(block, first);
-    let insertAfter: HTMLElement = block;
-    for (let i = 1; i < lines.length - 1; i++) {
-      const p = document.createElement("p");
-      setBlockText(p, lines[i]!);
-      insertAfter.after(p);
-      insertAfter = p;
-    }
-    const lastP = document.createElement("p");
-    setBlockText(lastP, last);
-    insertAfter.after(lastP);
-    if (lastP.firstChild?.nodeType === Node.TEXT_NODE) {
-      placeCaret(lastP.firstChild, lines[lines.length - 1]!.length);
-    } else {
-      placeCaret(lastP, 0);
-    }
+    replaceSelection(el, text);
     emitChange();
+  };
+
+  const copySelection = async (): Promise<boolean> => {
+    const { text } = readSelection(el);
+    if (!text) return false;
+    el.focus();
+    await writeClipboardText(text);
+    return true;
+  };
+
+  const cutSelection = async (): Promise<boolean> => {
+    const { text, start, end } = readSelection(el);
+    if (!text) return false;
+    el.focus();
+    await writeClipboardText(text);
+    applyReplacement(el, start, end, "");
+    emitChange();
+    return true;
+  };
+
+  const pasteClipboard = async (): Promise<boolean> => {
+    el.focus();
+    const raw = await readClipboardText();
+    const text = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    if (!text) return false;
+    replaceSelection(el, text);
+    emitChange();
+    return true;
   };
 
   el.addEventListener("input", onInput);
@@ -249,6 +383,10 @@ export function mountPlaintextEditor(
       el.innerHTML = plaintextToHtml(value);
     },
     focus: () => el.focus(),
+    hasSelection: () => readSelection(el).text.length > 0,
+    copySelection,
+    cutSelection,
+    pasteClipboard,
     destroy: () => {
       el.removeEventListener("input", onInput);
       el.removeEventListener("keydown", onKeyDown);

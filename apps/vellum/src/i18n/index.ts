@@ -9,6 +9,9 @@ const en: Dictionary = {
   },
   editor: {
     placeholder: "Start writing…",
+    copy: "Copy",
+    cut: "Cut",
+    paste: "Paste",
   },
   library: {
     pathPlaceholder: "Pure Writer folder (contains App/Room.db)",
@@ -483,6 +486,9 @@ const zhCN: Dictionary = {
   },
   editor: {
     placeholder: "开始写作…",
+    copy: "复制",
+    cut: "剪切",
+    paste: "粘贴",
   },
   library: {
     pathPlaceholder: "纯纯写作文件夹（含 App/Room.db）",

@@ -75,3 +75,100 @@ describe("mountPlaintextEditor Enter indent", () => {
     host.remove();
   });
 });
+
+const clip = { value: "" };
+Object.defineProperty(globalThis, "navigator", {
+  configurable: true,
+  value: {
+    clipboard: {
+      writeText: async (text: string) => {
+        clip.value = text;
+      },
+      readText: async () => clip.value,
+    },
+  },
+});
+
+function selectOffsets(editorEl: HTMLElement, start: number, end: number): void {
+  const p = editorEl.querySelector("p");
+  assert.ok(p?.firstChild);
+  const range = doc.createRange();
+  range.setStart(p.firstChild as Node, start);
+  range.setEnd(p.firstChild as Node, end);
+  const sel = happy.getSelection();
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
+
+describe("plaintext clipboard", () => {
+  it("copy and cut no-op without a selection", async () => {
+    const host = doc.createElement("div");
+    doc.body.append(host);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "hello",
+    });
+    editor.el.focus();
+    const p = editor.el.querySelector("p");
+    assert.ok(p?.firstChild);
+    const range = doc.createRange();
+    range.setStart(p.firstChild as Node, 2);
+    range.collapse(true);
+    const sel = happy.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+
+    assert.equal(editor.hasSelection(), false);
+    assert.equal(await editor.copySelection(), false);
+    assert.equal(await editor.cutSelection(), false);
+    assert.equal(editor.getValue(), "hello");
+    editor.destroy();
+    host.remove();
+  });
+
+  it("copies the selected text and cut removes it", async () => {
+    const host = doc.createElement("div");
+    doc.body.append(host);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "hello",
+    });
+    clip.value = "";
+    selectOffsets(editor.el, 0, 3);
+    assert.equal(editor.hasSelection(), true);
+    assert.equal(await editor.copySelection(), true);
+    assert.equal(clip.value, "hel");
+    assert.equal(editor.getValue(), "hello");
+
+    selectOffsets(editor.el, 0, 3);
+    assert.equal(await editor.cutSelection(), true);
+    assert.equal(clip.value, "hel");
+    assert.equal(editor.getValue(), "lo");
+    editor.destroy();
+    host.remove();
+  });
+
+  it("paste inserts at the caret and replaces a selection", async () => {
+    const host = doc.createElement("div");
+    doc.body.append(host);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "hello",
+    });
+    clip.value = "XY";
+    const p = editor.el.querySelector("p");
+    assert.ok(p?.firstChild);
+    const caret = doc.createRange();
+    caret.setStart(p.firstChild as Node, 5);
+    caret.collapse(true);
+    const sel = happy.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(caret);
+    assert.equal(await editor.pasteClipboard(), true);
+    assert.equal(editor.getValue(), "helloXY");
+
+    selectOffsets(editor.el, 0, 5);
+    clip.value = "Z";
+    assert.equal(await editor.pasteClipboard(), true);
+    assert.equal(editor.getValue(), "ZXY");
+    editor.destroy();
+    host.remove();
+  });
+});
