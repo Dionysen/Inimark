@@ -8,12 +8,15 @@ import {
 } from "@dionysen/shell";
 import {
   createIconButton,
+  createMenu,
+  menuIcons,
+  moreIcon,
   windowCloseIcon,
   windowMaximizeIcon,
   windowMinimizeIcon,
   windowRestoreIcon,
 } from "@dionysen/ui";
-import { t } from "../i18n/index.ts";
+import { onLocaleChange, t } from "../i18n/index.ts";
 import { sidebarToggleIcon } from "./product-icons.ts";
 
 export interface TitleBarController {
@@ -28,10 +31,20 @@ export interface SidebarToggleOptions {
   onToggle: () => void;
 }
 
+/** Actions for the trailing overflow menu. Omitted on windows that have no editor. */
+export interface TitleBarMenuActions {
+  getImmersive(): boolean;
+  onToggleImmersive(): void;
+  /** False when there is no open chapter that can be renamed. */
+  canRename(): boolean;
+  onRename(): void;
+}
+
 export interface TitleBarOptions {
   title?: string;
   controlMode?: "full" | "close-only";
   sidebarToggle?: SidebarToggleOptions;
+  menuActions?: TitleBarMenuActions;
   onClose?: () => void | Promise<void>;
 }
 
@@ -88,6 +101,36 @@ export function mountTitleBar(
   markNoDrag(trailing);
 
   let unlistenMaximize: (() => void) | null = null;
+  let unsubscribeLocale: (() => void) | null = null;
+  const menuActions = options.menuActions;
+  let moreBtn: HTMLButtonElement | null = null;
+  let moreMenu: ReturnType<typeof createMenu> | null = null;
+
+  if (menuActions) {
+    moreMenu = createMenu();
+    moreMenu.el.classList.add("inimark-titlebar-more-menu");
+    moreMenu.setPath("");
+    // Fixed menu on body: the titlebar row is only one grid track tall.
+    document.body.append(moreMenu.el);
+
+    moreBtn = createIconButton({
+      label: t("titlebar.more"),
+      title: t("titlebar.more"),
+      onClick: () => toggleMoreMenu(),
+    });
+    moreBtn.className = "inimark-sidebar-toggle-btn inimark-titlebar-more-btn";
+    moreBtn.innerHTML = moreIcon();
+    moreBtn.setAttribute("aria-haspopup", "menu");
+    moreBtn.setAttribute("aria-expanded", "false");
+    markNoDrag(moreBtn);
+    moreBtn.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    trailing.append(moreBtn);
+    moreMenu.setDismissAnchors([moreBtn]);
+    unsubscribeLocale = onLocaleChange(() => updateMoreButton());
+  }
 
   if (showControls) {
     const controls = document.createElement("div");
@@ -132,6 +175,67 @@ export function mountTitleBar(
     trailing.append(controls);
   }
 
+  function closeMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    moreMenu.setOpen(false);
+    moreBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function positionMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    const rect = moreBtn.getBoundingClientRect();
+    const menuWidth = Math.max(160, moreMenu.el.offsetWidth || 160);
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8,
+    );
+    moreMenu.el.style.top = `${rect.bottom + 4}px`;
+    moreMenu.el.style.left = `${left}px`;
+  }
+
+  function renderMoreMenu(): void {
+    if (!moreMenu || !menuActions) return;
+    moreMenu.clear();
+    moreMenu.setPath("");
+    moreMenu.addItem({
+      label: t("titlebar.immersive"),
+      icon: menuIcons.immersive,
+      checked: menuActions.getImmersive(),
+      onClick() {
+        menuActions.onToggleImmersive();
+        closeMoreMenu();
+      },
+    });
+    moreMenu.addItem({
+      label: t("titlebar.rename"),
+      icon: menuIcons.rename,
+      disabled: !menuActions.canRename(),
+      onClick() {
+        closeMoreMenu();
+        menuActions.onRename();
+      },
+    });
+  }
+
+  function toggleMoreMenu(): void {
+    if (!moreMenu || !moreBtn) return;
+    if (moreMenu.isOpen()) {
+      closeMoreMenu();
+      return;
+    }
+    renderMoreMenu();
+    moreMenu.setOpen(true);
+    moreBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => positionMoreMenu());
+  }
+
+  function updateMoreButton(): void {
+    if (!moreBtn) return;
+    const label = t("titlebar.more");
+    moreBtn.title = label;
+    moreBtn.setAttribute("aria-label", label);
+  }
+
   host.append(leading, center, trailing);
 
   return {
@@ -151,6 +255,8 @@ export function mountTitleBar(
     },
     destroy() {
       unlistenMaximize?.();
+      unsubscribeLocale?.();
+      moreMenu?.destroy();
       host.replaceChildren();
     },
   };

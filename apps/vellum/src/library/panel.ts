@@ -57,6 +57,10 @@ export interface LibraryPanel {
   newChapter(): Promise<void>;
   /** Rename the focused volume, or the open / focused chapter. Works from the editor (F2). */
   renameSelection(): void;
+  /** Start an inline rename of the chapter open in the editor. Expands its volume if needed. */
+  renameOpenChapter(): void;
+  /** True when the open chapter can be renamed. */
+  canRenameOpenChapter(): boolean;
   /** Delete the focused volume or chapter. Only while the library tree is focused. */
   deleteSelection(): Promise<void>;
   /** Copy the focused or open chapter so Paste can create another. */
@@ -1224,6 +1228,21 @@ export function mountLibraryPanel(
     if (titleEl) beginChapterRename(chapter, titleEl);
   };
 
+  const renameOpenChapter = () => {
+    if (!canWrite()) return;
+    const chapter = chapterById(openArticleId);
+    if (!chapter) return;
+    const volumeKey = chapter.categoryId || UNCATEGORIZED;
+    if (collapsedVolumes.has(volumeKey)) {
+      collapsedVolumes.delete(volumeKey);
+      renderTree();
+    }
+    const titleEl = treeHost.querySelector<HTMLElement>(
+      `[data-chapter-id="${CSS.escape(chapter.id)}"] .vellum-chapter-title`,
+    );
+    if (titleEl) beginChapterRename(chapter, titleEl);
+  };
+
   const deleteSelection = async () => {
     if (!canWrite()) return;
     const row = focusedTreeRow();
@@ -1332,6 +1351,8 @@ export function mountLibraryPanel(
     save,
     newChapter,
     renameSelection,
+    renameOpenChapter,
+    canRenameOpenChapter: () => canWrite() && chapterById(openArticleId) != null,
     deleteSelection,
     copySelection,
     pasteClipboard,

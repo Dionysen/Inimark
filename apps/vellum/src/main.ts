@@ -80,6 +80,8 @@ let libraryApi: {
   save(options?: { quiet?: boolean }): Promise<void>;
   newChapter(): Promise<void>;
   renameSelection(): void;
+  renameOpenChapter(): void;
+  canRenameOpenChapter(): boolean;
   deleteSelection(): Promise<void>;
   copySelection(): Promise<void>;
   pasteClipboard(): Promise<void>;
@@ -197,12 +199,33 @@ function toggleSidebar(): void {
   applySidebarState();
 }
 
+let immersive = false;
+function setImmersive(next: boolean): void {
+  immersive = next;
+  shell.classList.toggle("is-immersive", next);
+}
+
 const titleBar = mountTitleBar(titleHost, {
   title: t("app.name"),
   onClose: () => void requestQuit(),
   sidebarToggle: {
     open: sidebarOpen,
     onToggle: toggleSidebar,
+  },
+  menuActions: {
+    getImmersive: () => immersive,
+    onToggleImmersive() {
+      setImmersive(!immersive);
+    },
+    canRename: () => libraryApi?.canRenameOpenChapter() ?? false,
+    onRename() {
+      if (immersive) setImmersive(false);
+      if (!sidebarOpen) {
+        sidebarOpen = true;
+        applySidebarState();
+      }
+      libraryApi?.renameOpenChapter();
+    },
   },
 });
 

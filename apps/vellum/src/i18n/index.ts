@@ -92,6 +92,11 @@ const en: Dictionary = {
     collapseSidebar: "Collapse sidebar",
     expandSidebar: "Expand sidebar",
   },
+  titlebar: {
+    more: "More",
+    immersive: "Immersive mode",
+    rename: "Rename",
+  },
   settings: {
     search: "Search settings",
     noMatch: "No matching settings",
@@ -558,6 +563,11 @@ const zhCN: Dictionary = {
     reset: "重置",
     collapseSidebar: "折叠侧边栏",
     expandSidebar: "展开侧边栏",
+  },
+  titlebar: {
+    more: "更多",
+    immersive: "沉浸模式",
+    rename: "重命名",
   },
   settings: {
     search: "搜索设置",

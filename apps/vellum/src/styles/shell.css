@@ -135,7 +135,28 @@ body.is-column-resizing * {
   justify-self: end;
   justify-content: flex-end;
   min-width: 0;
+  gap: var(--inimark-space-1);
   -webkit-app-region: no-drag;
+}
+
+html.platform-macos .inimark-titlebar-trailing {
+  padding-right: var(--inimark-space-2);
+}
+
+.inimark-titlebar-more-btn {
+  margin-right: 0;
+  flex-shrink: 0;
+}
+
+.inimark-icon--more {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.inimark-titlebar-more-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 11rem;
 }
 
 .inimark-titlebar-controls {
@@ -271,6 +292,10 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   grid-template-columns: 0 1fr;
 }
 
+.vellum-shell.is-immersive {
+  grid-template-columns: 0 1fr;
+}
+
 .vellum-library-host {
   min-height: 0;
   min-width: 0;
@@ -290,8 +315,16 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-library-host.is-collapsed > .inimark-resize-handle,
-.inimark-sidebar.is-collapsed > .inimark-resize-handle {
+.inimark-sidebar.is-collapsed > .inimark-resize-handle,
+.vellum-shell.is-immersive .vellum-library-host > .inimark-resize-handle {
   display: none;
+}
+
+.vellum-shell.is-immersive .vellum-library-host {
+  border-right: none;
+  pointer-events: none;
+  visibility: hidden;
+  overflow: hidden;
 }
 
 .vellum-library-host.is-resizing {
@@ -311,6 +344,82 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
   position: relative;
   min-height: 0;
   z-index: 15;
+}
+
+/* Immersive: the title bar leaves the layout and slides back when the pointer
+   hits a thin strip at the top, or while its menu is open. */
+.vellum-shell.is-immersive .vellum-main {
+  grid-template-rows: 1fr;
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--inimark-titlebar-height) + var(--inimark-space-2));
+  pointer-events: none;
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone > .inimark-titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.vellum-shell.is-immersive .inimark-titlebar-leading,
+.vellum-shell.is-immersive .inimark-titlebar-center,
+.vellum-shell.is-immersive .inimark-titlebar-more-btn {
+  opacity: 0;
+  transform: translateY(-100%);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.vellum-shell.is-immersive .inimark-titlebar-controls--native {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover > .inimark-titlebar,
+.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within > .inimark-titlebar,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) > .inimark-titlebar {
+  background: var(--inimark-content-bg);
+  pointer-events: auto;
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-leading,
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-center,
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-more-btn,
+.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-leading,
+.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-center,
+.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-more-btn,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-leading,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-center,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-more-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-controls--native,
+.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-controls--native,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-controls--native {
+  opacity: 1;
 }
 
 .vellum-library {
@@ -1087,8 +1196,13 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   max-width: min(420px, calc(100% - 24px));
 }
 
-.vellum-shell.is-sidebar-closed .vellum-git-sync-status-host {
+.vellum-shell.is-sidebar-closed .vellum-git-sync-status-host,
+.vellum-shell.is-immersive .vellum-git-sync-status-host {
   left: 12px;
+}
+
+.vellum-shell.is-immersive .vellum-git-sync-status-host {
+  display: none;
 }
 
 .vellum-git-sync-status {
