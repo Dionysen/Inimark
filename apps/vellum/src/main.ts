@@ -47,6 +47,7 @@ import { createImmediateSaver } from "./library/immediate-save.ts";
 import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
+import { mountJumpToEndButton } from "./editor/jump-to-end.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
 
@@ -180,6 +181,7 @@ function mountShell(shell: HTMLElement): void {
     },
   });
   const editorContextMenu = mountEditorContextMenu(editorHost, editor);
+  const jumpToEnd = mountJumpToEndButton(editorColumn, editorHost, editor);
 
   /** Click the gutter beside the writing column to focus the editor. */
   editorHost.addEventListener("pointerdown", (event) => {
@@ -396,6 +398,7 @@ function mountShell(shell: HTMLElement): void {
     titleBar.destroy();
     library.destroy();
     editorContextMenu.destroy();
+    jumpToEnd.destroy();
     editor.destroy();
   });
 }

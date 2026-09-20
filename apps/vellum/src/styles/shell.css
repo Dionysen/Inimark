@@ -1132,6 +1132,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 }
 
 .vellum-editor-column {
+    position: relative;
     flex: 1;
     min-width: 0;
     min-height: 0;
@@ -1186,6 +1187,52 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 
 .vellum-plaintext-editor>p:last-child {
     margin-bottom: 0;
+}
+
+/* Floating "jump to end" pill over the lower-middle of the editor. */
+.vellum-jump-to-end {
+    position: absolute;
+    left: 50%;
+    top: 85%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 5px 12px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.35;
+    white-space: nowrap;
+    color: var(--inimark-fg);
+    background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 150ms ease,
+        border-color 150ms ease,
+        visibility 150ms ease;
+}
+
+.vellum-jump-to-end.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.vellum-jump-to-end:hover {
+    border-color: var(--accent);
+}
+
+.vellum-jump-to-end:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 2px;
 }
 
 

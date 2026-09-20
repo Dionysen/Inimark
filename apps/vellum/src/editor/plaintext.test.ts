@@ -76,6 +76,33 @@ describe("mountPlaintextEditor Enter indent", () => {
   });
 });
 
+describe("mountPlaintextEditor focusAtEnd", () => {
+  it("places a collapsed caret at the end of the last line", () => {
+    const host = doc.createElement("div");
+    doc.body.append(host);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "甲\n乙",
+    });
+
+    editor.focusAtEnd();
+
+    const last = editor.el.lastElementChild;
+    assert.ok(last);
+    const sel = happy.getSelection();
+    assert.ok(sel && sel.rangeCount > 0);
+    const range = sel.getRangeAt(0);
+    assert.equal(range.collapsed, true);
+
+    const pre = doc.createRange();
+    pre.selectNodeContents(last as unknown as Node);
+    pre.setEnd(range.startContainer, range.startOffset);
+    assert.equal(pre.toString(), "乙");
+
+    editor.destroy();
+    host.remove();
+  });
+});
+
 const clip = { value: "" };
 Object.defineProperty(globalThis, "navigator", {
   configurable: true,

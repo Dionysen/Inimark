@@ -22,6 +22,8 @@ export interface PlaintextEditor {
   cutSelection(): Promise<boolean>;
   /** Paste clipboard text at the caret, replacing any selection. */
   pasteClipboard(): Promise<boolean>;
+  /** Place the caret at the end of the document and focus. */
+  focusAtEnd(): void;
   destroy(): void;
 }
 
@@ -387,6 +389,11 @@ export function mountPlaintextEditor(
     copySelection,
     cutSelection,
     pasteClipboard,
+    focusAtEnd: () => {
+      ensureStructure(el);
+      placeCaretAtSerializedOffset(el, serializePlaintextDom(el).length);
+      el.focus();
+    },
     destroy: () => {
       el.removeEventListener("input", onInput);
       el.removeEventListener("keydown", onKeyDown);

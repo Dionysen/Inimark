@@ -12,6 +12,7 @@ const en: Dictionary = {
     copy: "Copy",
     cut: "Cut",
     paste: "Paste",
+    focusToEnd: "Jump to end",
   },
   library: {
     pathPlaceholder: "Pure Writer folder (contains App/Room.db)",
@@ -164,7 +165,7 @@ const en: Dictionary = {
       loadFailed: "Could not load account state: {{error}}",
       tauriOnly: "Cloud sync requires the desktop app.",
     },
-      appearance: {
+    appearance: {
       locale: "Language",
       localeDesc: "UI language",
       theme: "Theme",
@@ -489,6 +490,7 @@ const zhCN: Dictionary = {
     copy: "复制",
     cut: "剪切",
     paste: "粘贴",
+    focusToEnd: "聚焦到文末",
   },
   library: {
     pathPlaceholder: "纯纯写作文件夹（含 App/Room.db）",
