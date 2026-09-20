@@ -155,6 +155,29 @@ describe("editor context menu", () => {
     dismissExclusiveLayers();
   });
 
+  it("closes on the first mousedown outside the menu", () => {
+    dismissExclusiveLayers();
+    const host = doc.createElement("div");
+    const outside = doc.createElement("div");
+    doc.body.append(host, outside);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "hello",
+    });
+    const menu = mountEditorContextMenu(host as unknown as HTMLElement, editor);
+
+    const panel = openEditorMenu(host as unknown as HTMLElement);
+    outside.dispatchEvent(
+      new happy.MouseEvent("mousedown", { bubbles: true }) as unknown as Event,
+    );
+    assert.equal(panel.hidden, true);
+
+    menu.destroy();
+    editor.destroy();
+    host.remove();
+    outside.remove();
+    dismissExclusiveLayers();
+  });
+
   it("paste inserts clipboard text at the caret", async () => {
     dismissExclusiveLayers();
     const host = doc.createElement("div");

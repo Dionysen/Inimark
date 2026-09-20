@@ -19,12 +19,18 @@ export type AppLocale = LocaleId | "system";
 
 export type { EditorTypographySettings };
 
+export interface WordCountSettings {
+  /** true = count punctuation; false = count pure text (letters + numbers) only. */
+  includeSymbols: boolean;
+}
+
 export interface AppSettings extends EditorTypographySettings {
   locale: AppLocale;
   /** Keep the caret line vertically centered while writing. */
   typewriterMode: boolean;
   /** Hide the bottom-corner status tools until the pointer enters that area. */
   autoHideStatusbar: boolean;
+  wordCount: WordCountSettings;
 }
 
 export const SETTINGS_STORAGE_KEY = "vellum-settings";
@@ -58,6 +64,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
   typewriterMode: false,
   autoHideStatusbar: false,
+  wordCount: { includeSymbols: false },
 };
 
 /** Read the last published editor-column width ceiling (fallback: viewport). */
@@ -92,10 +99,15 @@ export function normalizeSettings(raw: unknown): AppSettings {
     fontSizeMin: FONT_SIZE_MIN,
     fontSizeMax: FONT_SIZE_MAX,
   });
+  const wordCountSrc =
+    src.wordCount && typeof src.wordCount === "object"
+      ? (src.wordCount as Record<string, unknown>)
+      : {};
   return {
     locale,
     typewriterMode: src.typewriterMode === true,
     autoHideStatusbar: src.autoHideStatusbar === true,
+    wordCount: { includeSymbols: wordCountSrc.includeSymbols === true },
     ...typography,
   };
 }

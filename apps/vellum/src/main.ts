@@ -197,6 +197,9 @@ function mountShell(shell: HTMLElement): void {
     onTypewriterModeChange(enabled) {
       patchSettings({ typewriterMode: enabled });
     },
+    onWordCountChange(partial) {
+      patchSettings({ wordCount: { ...loadSettings().wordCount, ...partial } });
+    },
   });
   syncRuntimeSettings = () => statusBar?.syncChrome();
 

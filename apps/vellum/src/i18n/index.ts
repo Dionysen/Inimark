@@ -17,6 +17,9 @@ const en: Dictionary = {
   },
   wordCount: {
     label: "{{count}} chars",
+    panelTitle: "Word count",
+    includeSymbols: "Count punctuation",
+    includeSymbolsDesc: "When off, only letters and numbers are counted",
   },
   library: {
     pathPlaceholder: "Pure Writer folder (contains App/Room.db)",
@@ -504,6 +507,9 @@ const zhCN: Dictionary = {
   },
   wordCount: {
     label: "{{count}} 字",
+    panelTitle: "字数统计",
+    includeSymbols: "带标点符号",
+    includeSymbolsDesc: "关闭时只统计纯文字（字母、数字、汉字）",
   },
   library: {
     pathPlaceholder: "纯纯写作文件夹（含 App/Room.db）",

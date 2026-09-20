@@ -4,7 +4,7 @@
  * and titlebar overflow menu.
  */
 
-import { createMenu, menuIcons } from "@dionysen/ui";
+import { createMenu, menuIcons, onOutsideClick } from "@dionysen/ui";
 import { t } from "../i18n/index.ts";
 import type { PlaintextEditor } from "./plaintext.ts";
 
@@ -111,8 +111,15 @@ export function mountEditorContextMenu(
   host.addEventListener("mousedown", onMouseDownCapture, true);
   host.addEventListener("contextmenu", onContextMenuCapture, true);
 
+  // Close on the first click outside, regardless of pointer events support.
+  // (The menu's own exclusive layer only listens for `pointerdown`, which can
+  // be unreliable right after a right-click in WebKit — a plain `mousedown` is
+  // the dependable signal for the editor losing focus.)
+  const disposeOutsideClick = onOutsideClick([menu.el], () => close());
+
   return {
     destroy() {
+      disposeOutsideClick();
       host.removeEventListener("mousedown", onMouseDownCapture, true);
       host.removeEventListener("contextmenu", onContextMenuCapture, true);
       menu.destroy();
