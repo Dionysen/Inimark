@@ -118,7 +118,7 @@ updateJsonVersion("apps/inimark/package.json");
 updateJsonVersion("packages/editor/package.json");
 updateJsonVersion("apps/inimark/src-tauri/tauri.conf.json");
 updateCargoToml("apps/inimark/src-tauri/Cargo.toml");
-updateCargoLock("apps/inimark/src-tauri/Cargo.lock");
+updateCargoLock("Cargo.lock");
 updateViewFallbacks("apps/inimark/src/settings/view.ts");
 
 console.log(`

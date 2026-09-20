@@ -1,6 +1,6 @@
 [package]
 name = "inimark-app"
-version = "1.0.9"
+version = "1.0.10"
 description = "Inimark - native Markdown editor"
 authors = ["Dionysen"]
 edition = "2021"

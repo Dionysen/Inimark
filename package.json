@@ -1,24 +1,21 @@
 {
   "name": "inimark",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.0.10",
   "packageManager": "pnpm@10.15.1",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "test:editor": "pnpm --filter @inimark/editor test",
-
     "inimark": "pnpm --filter @inimark/app",
     "inimark:dev": "pnpm --filter @inimark/app dev",
     "inimark:tauri": "pnpm --filter @inimark/app tauri",
     "inimark:test": "pnpm --filter @inimark/app test",
-
     "vellum": "pnpm --filter @vellum/app",
     "vellum:dev": "pnpm --filter @vellum/app dev",
     "vellum:tauri": "pnpm --filter @vellum/app tauri",
     "vellum:test": "pnpm --filter @vellum/app test",
-
     "bump-version": "node scripts/bump-version.mjs",
     "release-notes": "node scripts/extract-release-notes.mjs",
     "test:release-notes": "node --test scripts/lib/release-notes.test.mjs",
