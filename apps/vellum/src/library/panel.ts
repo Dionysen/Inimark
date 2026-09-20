@@ -55,6 +55,7 @@ export interface LibraryPanel {
   save(options?: { quiet?: boolean }): Promise<void>;
   /** Create a chapter in the focused volume, or the volume used by New. */
   newChapter(): Promise<void>;
+  closeChapter(): Promise<void>;
   /** Rename the focused volume, or the open / focused chapter. Works from the editor (F2). */
   renameSelection(): void;
   /** Start an inline rename of the chapter open in the editor. Expands its volume if needed. */
@@ -73,7 +74,7 @@ export interface LibraryPanel {
 
 export interface LibraryPanelOptions {
   /** `id` is null when the library is closed / no chapter is open. */
-  onArticleOpen: (title: string, content: string, id: string | null) => void;
+  onArticleOpen: (title: string, content: string, id: string | null) => void | Promise<void>;
   onStatus: (message: string) => void;
   onOpenSettings: () => void;
   onToggleSidebar: () => void;
@@ -1077,6 +1078,7 @@ export function mountLibraryPanel(
     options.onStatus(options.t("library.opening"));
     closeBookMenu();
     try {
+      await options.onArticleOpen("", "", null);
       opened = await pwOpen(path);
       activeLibrary = upsertLibrary(opened.root);
       dock.setActive(activeLibrary);
@@ -1196,6 +1198,13 @@ export function mountLibraryPanel(
     const chapter = targetChapter();
     if (chapter) return chapter.categoryId;
     return selectedVolumeId;
+  };
+
+  const closeChapter = async () => {
+    // The shell flushes pending edits before clearing the writing surface.
+    await options.onArticleOpen("", "", null);
+    openArticleId = null;
+    renderTree();
   };
 
   const newChapter = () => createChapter(contextVolumeId());
@@ -1350,6 +1359,7 @@ export function mountLibraryPanel(
     el,
     save,
     newChapter,
+    closeChapter,
     renameSelection,
     renameOpenChapter,
     canRenameOpenChapter: () => canWrite() && chapterById(openArticleId) != null,

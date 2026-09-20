@@ -1490,3 +1490,43 @@ html[data-auto-hide-statusbar="true"] .vellum-status-corner:focus-within {
         transform: rotate(360deg);
     }
 }
+
+/* No document: show the app mark on the editor's own background. */
+.vellum-editor-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    text-align: center;
+    pointer-events: none;
+}
+
+.vellum-editor-empty[hidden],
+.vellum-editor-host[hidden],
+.has-no-article .vellum-jump-to-end,
+.has-no-article .vellum-status-bar--right {
+    display: none;
+}
+
+.vellum-editor-empty-icon {
+    width: clamp(160px, 32vw, 320px);
+    max-width: 65%;
+    color: color-mix(in srgb, var(--inimark-fg) 14%, var(--inimark-content-bg));
+}
+
+.vellum-editor-empty-icon svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.vellum-editor-empty p {
+    margin: 0;
+    color: var(--inimark-muted-fg);
+    font-size: 14px;
+    line-height: 1.6;
+}

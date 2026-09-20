@@ -32,6 +32,8 @@ export function shortcutActionLabel(id: string, fallback: string): string {
       return t("settings.shortcuts.newChapter");
     case "close":
       return t("settings.shortcuts.close");
+    case "quit":
+      return t("settings.shortcuts.quit");
     case "toggle-sidebar":
       return t("settings.shortcuts.toggleSidebar");
     case "tree-rename":
@@ -57,6 +59,8 @@ export function shortcutActionHint(id: string): string {
       return t("settings.shortcuts.newChapterHint");
     case "close":
       return t("settings.shortcuts.closeHint");
+    case "quit":
+      return t("settings.shortcuts.quitHint");
     case "toggle-sidebar":
       return t("settings.shortcuts.toggleSidebarHint");
     case "tree-rename":

@@ -10,7 +10,8 @@ export const SHORTCUTS_STORAGE_KEY = "vellum-shortcuts";
 export const DEFAULT_SHORTCUTS: ShortcutBinding[] = [
   { id: "save", label: "Save", group: "File", keys: ["Ctrl", "S"] },
   { id: "new-chapter", label: "New Chapter", group: "File", keys: ["Ctrl", "N"] },
-  { id: "close", label: "Close", group: "File", keys: ["Ctrl", "W"] },
+  { id: "close", label: "Close Article", group: "File", keys: ["Ctrl", "W"] },
+  { id: "quit", label: "Quit", group: "App", keys: ["Ctrl", "Q"] },
   { id: "toggle-sidebar", label: "Toggle Sidebar", group: "View", keys: ["Ctrl", "B"] },
   { id: "tree-rename", label: "Rename", group: "Library", keys: ["F2"] },
   { id: "tree-delete", label: "Delete", group: "Library", keys: ["Delete"] },

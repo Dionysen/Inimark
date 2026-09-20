@@ -14,7 +14,7 @@ import {
   persistWidth,
 } from "@dionysen/ui";
 import { initThemeManager } from "@dionysen/theme";
-import { initI18n, t } from "./i18n/index.ts";
+import { initI18n, onLocaleChange, t } from "./i18n/index.ts";
 import {
   configureVellumTheme,
   migrateLegacyAppearanceFromSettings,
@@ -46,6 +46,8 @@ import { getSession, pushBackup } from "@dionysen/git-sync";
 import { VELLUM_GIT_SYNC } from "./git-sync/config.ts";
 import { createImmediateSaver } from "./library/immediate-save.ts";
 import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup.ts";
+import appIcon from "../app-icon.svg?raw";
+import { mountEditorEmptyState } from "./editor/empty-state.ts";
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountJumpToEndButton } from "./editor/jump-to-end.ts";
@@ -83,6 +85,7 @@ const teardownShortcutGuard = installNativeShortcutGuard();
 let libraryApi: {
   save(options?: { quiet?: boolean }): Promise<void>;
   newChapter(): Promise<void>;
+  closeChapter(): Promise<void>;
   renameSelection(): void;
   renameOpenChapter(): void;
   canRenameOpenChapter(): boolean;
@@ -98,7 +101,8 @@ let flushSaver = (): Promise<void> => Promise.resolve();
 let syncRuntimeSettings = (): void => { };
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
-  close: () => void requestQuit(),
+  close: () => libraryApi?.closeChapter(),
+  quit: () => requestQuit(),
   save: () => {
     void flushSaver().then(() => libraryApi?.save());
   },
@@ -143,7 +147,7 @@ void initThemeManager().then(() => {
 });
 
 function mountShell(shell: HTMLElement): void {
-  shell.className = "vellum-shell";
+  shell.className = "vellum-shell has-no-article";
 
   let sidebarOpen = loadSidebarOpen();
   let sidebarWidth = loadPersistedWidth(
@@ -183,11 +187,14 @@ function mountShell(shell: HTMLElement): void {
   const editor = mountPlaintextEditor(editorHost, {
     placeholder: t("editor.placeholder"),
     onChange: () => {
+      if (!openArticleId) return;
       saver.kick();
       syncStatus?.markEdited();
       statusBar?.scheduleUpdate();
     },
   });
+  const emptyState = mountEditorEmptyState(editorColumn, editorHost, editor.el, appIcon, t("editor.openArticleHint"));
+  const unsubscribeEmptyLocale = onLocaleChange(() => emptyState.setMessage(t("editor.openArticleHint")));
   const editorContextMenu = mountEditorContextMenu(editorHost, editor);
   const jumpToEnd = mountJumpToEndButton(editorColumn, editorHost, editor);
   statusBar = mountStatusBar({
@@ -205,7 +212,7 @@ function mountShell(shell: HTMLElement): void {
 
   /** Click the gutter beside the writing column to focus the editor. */
   editorHost.addEventListener("pointerdown", (event) => {
-    if (event.target === editorHost) editor.focus();
+    if (openArticleId && event.target === editorHost) editor.focus();
   });
 
   function applySidebarWidth(): void {
@@ -264,11 +271,14 @@ function mountShell(shell: HTMLElement): void {
       openChain = openChain.then(async () => {
         await saver.flush();
         openArticleId = id;
-        editor.setValue(content);
+        editor.setValue(id ? content : "");
+        emptyState.setOpen(Boolean(id));
+        shell.classList.toggle("has-no-article", !id);
         statusBar?.scheduleUpdate();
         titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
         if (id) editor.focus();
       });
+      return openChain;
     },
     onStatus: () => { },
     onOpenSettings: () => void openSettingsWindow(),
@@ -418,6 +428,8 @@ function mountShell(shell: HTMLElement): void {
     teardownShortcuts();
     titleBar.destroy();
     library.destroy();
+    unsubscribeEmptyLocale();
+    emptyState.destroy();
     editorContextMenu.destroy();
     jumpToEnd.destroy();
     statusBar?.destroy();

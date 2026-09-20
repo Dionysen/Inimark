@@ -13,6 +13,7 @@ const ALWAYS_ALLOWED: readonly AppShortcutId[] = [
   "save",
   "new-chapter",
   "close",
+  "quit",
   "open-settings",
   "toggle-sidebar",
   "tree-rename",
