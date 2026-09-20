@@ -69,6 +69,8 @@ describe("renderSyncButton", () => {
     renderSyncButton(button, createSyncIndicator(), labels);
     assert.equal(button.querySelector(".vellum-sync-dot") ? true : false, true);
     assert.equal(button.textContent, "待同步");
+    assert.equal(button.getAttribute("aria-label"), "待同步");
+    const reveal = button.querySelector(".vellum-git-sync-status-label");
 
     renderSyncButton(
       button,
@@ -78,6 +80,8 @@ describe("renderSyncButton", () => {
     assert.equal(button.querySelector(".vellum-sync-spin") ? true : false, true);
     assert.equal(button.querySelector(".vellum-sync-dot"), null);
     assert.equal(button.textContent, "正在同步");
+    assert.equal(button.getAttribute("aria-label"), "正在同步");
+    assert.equal(button.querySelector(".vellum-git-sync-status-label"), reveal);
 
     renderSyncButton(
       button,

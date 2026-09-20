@@ -80,11 +80,21 @@ export function renderSyncButton(
   button.dataset.state = state.phase;
   button.setAttribute("aria-busy", state.phase === "syncing" ? "true" : "false");
   button.title = state.error;
-  const icon = document.createElement("span");
-  icon.className = "vellum-git-sync-status-icon";
+  button.setAttribute("aria-label", labels[state.phase]);
+  // Keep the label container mounted so status updates do not restart hover animation.
+  let icon = button.querySelector<HTMLSpanElement>(".vellum-git-sync-status-icon");
+  let label = button.querySelector<HTMLSpanElement>(".vellum-git-sync-status-label-text");
+  if (!icon || !label) {
+    icon = document.createElement("span");
+    icon.className = "vellum-git-sync-status-icon";
+    const reveal = document.createElement("span");
+    reveal.className = "vellum-git-sync-status-label";
+    reveal.setAttribute("aria-hidden", "true");
+    label = document.createElement("span");
+    label.className = "vellum-git-sync-status-label-text";
+    reveal.append(label);
+    button.replaceChildren(icon, reveal);
+  }
   icon.innerHTML = syncIconMarkup(state.phase);
-  const label = document.createElement("span");
-  label.className = "vellum-git-sync-status-label";
   label.textContent = labels[state.phase];
-  button.replaceChildren(icon, label);
 }

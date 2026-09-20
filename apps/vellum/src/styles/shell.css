@@ -1280,25 +1280,33 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
     pointer-events: auto;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0;
     font: inherit;
     font-size: 11px;
     line-height: 1.35;
     padding: 4px 8px;
     border-radius: 6px;
     background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
     color: var(--inimark-fg);
     cursor: pointer;
     white-space: nowrap;
+    transition: border-color 100ms ease;
 }
 
-.vellum-git-sync-status:hover {
+.vellum-git-sync-status:hover,
+.vellum-git-sync-status:focus-visible {
     border-color: var(--accent);
+}
+
+.vellum-git-sync-status:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .vellum-git-sync-status-icon {
     display: inline-flex;
+    flex: 0 0 14px;
     width: 14px;
     height: 14px;
 }
@@ -1306,6 +1314,33 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 .vellum-git-sync-status-icon .inimark-icon {
     width: 14px;
     height: 14px;
+}
+
+.vellum-git-sync-status-label {
+    display: grid;
+    grid-template-columns: 0fr;
+    margin-left: 0;
+    opacity: 0;
+    transition: grid-template-columns 120ms ease, margin-left 120ms ease, opacity 100ms ease;
+}
+
+.vellum-git-sync-status-label-text {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.vellum-git-sync-status:hover .vellum-git-sync-status-label,
+.vellum-git-sync-status:focus-visible .vellum-git-sync-status-label {
+    grid-template-columns: 1fr;
+    margin-left: 6px;
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vellum-git-sync-status,
+    .vellum-git-sync-status-label {
+        transition: none;
+    }
 }
 
 /* Bottom-right tools: typewriter toggle + live character count. */
