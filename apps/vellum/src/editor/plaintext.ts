@@ -8,6 +8,7 @@ import {
   firstLineIndentPrefix,
   readFirstLineIndent,
 } from "@dionysen/settings-kit/editor-typography";
+import { mountQuoteInput } from "./quote-input";
 
 export interface PlaintextEditor {
   el: HTMLDivElement;
@@ -165,11 +166,17 @@ function placeCaretAtSerializedOffset(root: HTMLElement, offset: number): void {
         placeCaret(block, 0);
         return;
       }
-      if (block.firstChild.nodeType === Node.TEXT_NODE) {
-        placeCaret(block.firstChild, remaining);
-      } else {
-        placeCaret(block, 0);
+      const walker = document.createTreeWalker(block, window.NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const length = node.textContent?.length ?? 0;
+        if (remaining <= length) {
+          placeCaret(node, remaining);
+          return;
+        }
+        remaining -= length;
       }
+      placeCaret(block, block.childNodes.length);
       return;
     }
     remaining -= text.length;
@@ -321,6 +328,11 @@ export function mountPlaintextEditor(
   let typewriterRaf: number | null = null;
   let pointerDown = false;
   let composing = false;
+  const quotes = mountQuoteInput(el, {
+    value: () => serializePlaintextDom(el),
+    selection: () => readSelection(el),
+    caret: (offset) => placeCaretAtSerializedOffset(el, offset),
+  });
 
   const applyTypewriterPad = (): void => {
     if (!typewriter) {
@@ -410,7 +422,13 @@ export function mountPlaintextEditor(
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+    if (event.key !== "Enter" || event.shiftKey || composing || event.isComposing || event.keyCode === 229) return;
+    if (!event.ctrlKey && !event.metaKey && !event.altKey && quotes.finish()) {
+      event.preventDefault();
+      scheduleCenter();
+      return;
+    }
+    quotes.reset();
     event.preventDefault();
     ensureStructure(el);
     const sel = window.getSelection();
@@ -434,6 +452,7 @@ export function mountPlaintextEditor(
     const raw = event.clipboardData?.getData("text/plain") ?? "";
     const text = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     if (!text) return;
+    quotes.reset();
     replaceSelection(el, text);
     emitChange();
   };
@@ -451,6 +470,7 @@ export function mountPlaintextEditor(
     if (!text) return false;
     el.focus();
     await writeClipboardText(text);
+    quotes.reset();
     applyReplacement(el, start, end, "");
     emitChange();
     return true;
@@ -461,6 +481,7 @@ export function mountPlaintextEditor(
     const raw = await readClipboardText();
     const text = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
     if (!text) return false;
+    quotes.reset();
     replaceSelection(el, text);
     emitChange();
     return true;
@@ -483,6 +504,7 @@ export function mountPlaintextEditor(
     getValue: () => serializePlaintextDom(el),
     setValue: (value: string) => {
       el.innerHTML = plaintextToHtml(value);
+      quotes.reset();
     },
     focus: () => el.focus(),
     hasSelection: () => readSelection(el).text.length > 0,
@@ -503,6 +525,7 @@ export function mountPlaintextEditor(
     },
     isTypewriterMode: () => typewriter,
     destroy: () => {
+      quotes.destroy();
       if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
       el.removeEventListener("input", onInput);
       el.removeEventListener("keydown", onKeyDown);

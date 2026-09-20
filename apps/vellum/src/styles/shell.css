@@ -1194,6 +1194,23 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
     margin-bottom: 0;
 }
 
+/* Quote-session outlines never become part of the editable document. */
+.vellum-quote-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.vellum-quote-frame {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border-radius: 3px;
+}
+
 /* Floating "jump to end" pill over the lower-middle of the editor. */
 .vellum-jump-to-end {
     position: absolute;
