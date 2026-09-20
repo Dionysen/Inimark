@@ -89,11 +89,13 @@ let libraryApi: {
 } | null = null;
 let toggleSidebarRef: (() => void) | null = null;
 let requestQuit = (): Promise<void> => closeWindow();
+/** Flush pending edits; assigned by mountShell once the saver exists. */
+let flushSaver = (): Promise<void> => Promise.resolve();
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void requestQuit(),
   save: () => {
-    void saver.flush().then(() => libraryApi?.save());
+    void flushSaver().then(() => libraryApi?.save());
   },
   "new-chapter": () => void libraryApi?.newChapter(),
   "toggle-sidebar": () => toggleSidebarRef?.(),
@@ -134,251 +136,266 @@ void initThemeManager().then(() => {
 });
 
 function mountShell(shell: HTMLElement): void {
-shell.className = "vellum-shell";
+  shell.className = "vellum-shell";
 
-let sidebarOpen = loadSidebarOpen();
-let sidebarWidth = loadPersistedWidth(
-  SIDEBAR_WIDTH_KEY,
-  SIDEBAR_WIDTH_DEFAULT,
-  SIDEBAR_WIDTH_MIN,
-  SIDEBAR_WIDTH_MAX,
-);
+  let sidebarOpen = loadSidebarOpen();
+  let sidebarWidth = loadPersistedWidth(
+    SIDEBAR_WIDTH_KEY,
+    SIDEBAR_WIDTH_DEFAULT,
+    SIDEBAR_WIDTH_MIN,
+    SIDEBAR_WIDTH_MAX,
+  );
 
-const libraryHost = document.createElement("aside");
-libraryHost.className = "vellum-library-host inimark-sidebar";
+  const libraryHost = document.createElement("aside");
+  libraryHost.className = "vellum-library-host inimark-sidebar";
 
-const mainColumn = document.createElement("div");
-mainColumn.className = "vellum-main";
+  const mainColumn = document.createElement("div");
+  mainColumn.className = "vellum-main";
 
-const titlebarZone = document.createElement("div");
-titlebarZone.className = "vellum-titlebar-zone";
-const titleHost = document.createElement("div");
+  const titlebarZone = document.createElement("div");
+  titlebarZone.className = "vellum-titlebar-zone";
+  const titleHost = document.createElement("div");
 
-const editorColumn = document.createElement("div");
-editorColumn.className = "vellum-editor-column";
+  const editorColumn = document.createElement("div");
+  editorColumn.className = "vellum-editor-column";
 
-const editorHost = document.createElement("div");
-editorHost.className = "vellum-editor-host inimark-scrollbar";
+  const editorHost = document.createElement("div");
+  editorHost.className = "vellum-editor-host inimark-scrollbar";
 
-let openArticleId: string | null = null;
-let openChain = Promise.resolve();
-const saver = createImmediateSaver(() => libraryApi?.save({ quiet: true }) ?? Promise.resolve());
-let stopLocalBackup: (() => void) | null = null;
-let syncStatus: ReturnType<typeof mountGitSyncStatusBar> | null = null;
-let teardownSyncStatus = (): void => {
-  syncStatus?.destroy();
-};
+  let openArticleId: string | null = null;
+  let openChain = Promise.resolve();
+  const saver = createImmediateSaver(() => libraryApi?.save({ quiet: true }) ?? Promise.resolve());
+  flushSaver = () => saver.flush();
+  let stopLocalBackup: (() => void) | null = null;
+  let syncStatus: ReturnType<typeof mountGitSyncStatusBar> | null = null;
+  let teardownSyncStatus = (): void => {
+    syncStatus?.destroy();
+  };
 
-const editor = mountPlaintextEditor(editorHost, {
-  placeholder: t("editor.placeholder"),
-  onChange: () => {
-    saver.kick();
-    syncStatus?.markEdited();
-  },
-});
-const editorContextMenu = mountEditorContextMenu(editorHost, editor);
-
-/** Click the gutter beside the writing column to focus the editor. */
-editorHost.addEventListener("pointerdown", (event) => {
-  if (event.target === editorHost) editor.focus();
-});
-
-function applySidebarWidth(): void {
-  shell.style.setProperty("--vellum-library-width", `${sidebarWidth}px`);
-}
-
-function applySidebarState(): void {
-  shell.classList.toggle("is-sidebar-closed", !sidebarOpen);
-  libraryHost.classList.toggle("is-collapsed", !sidebarOpen);
-  titleBar.setSidebarOpen(sidebarOpen);
-  library.setSidebarOpen(sidebarOpen);
-  localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
-  requestOverlayScrollbarRefresh();
-}
-
-function toggleSidebar(): void {
-  sidebarOpen = !sidebarOpen;
-  applySidebarState();
-}
-
-let immersive = false;
-function setImmersive(next: boolean): void {
-  immersive = next;
-  shell.classList.toggle("is-immersive", next);
-}
-
-const titleBar = mountTitleBar(titleHost, {
-  title: t("app.name"),
-  onClose: () => void requestQuit(),
-  sidebarToggle: {
-    open: sidebarOpen,
-    onToggle: toggleSidebar,
-  },
-  menuActions: {
-    getImmersive: () => immersive,
-    onToggleImmersive() {
-      setImmersive(!immersive);
+  const editor = mountPlaintextEditor(editorHost, {
+    placeholder: t("editor.placeholder"),
+    onChange: () => {
+      saver.kick();
+      syncStatus?.markEdited();
     },
-    canRename: () => libraryApi?.canRenameOpenChapter() ?? false,
-    onRename() {
-      if (immersive) setImmersive(false);
-      if (!sidebarOpen) {
-        sidebarOpen = true;
-        applySidebarState();
-      }
-      libraryApi?.renameOpenChapter();
-    },
-  },
-});
+  });
+  const editorContextMenu = mountEditorContextMenu(editorHost, editor);
 
-const library = mountLibraryPanel(libraryHost, {
-  t: (key, params) => t(key, params),
-  getEditorContent: () => editor.getValue(),
-  getOpenArticleId: () => openArticleId,
-  onArticleOpen: (title, content, id) => {
-    openChain = openChain.then(async () => {
-      await saver.flush();
-      openArticleId = id;
-      editor.setValue(content);
-      titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
-      if (id) editor.focus();
-    });
-  },
-  onStatus: () => {},
-  onOpenSettings: () => void openSettingsWindow(),
-  onToggleSidebar: toggleSidebar,
-});
-libraryApi = library;
-toggleSidebarRef = toggleSidebar;
-requestQuit = createQuitFlow({
-  flushEdits: () => saver.flush(),
-  cloudReady: async () => {
-    const session = await getSession(VELLUM_GIT_SYNC.appId);
-    return session.loggedIn && Boolean(session.repoFullName);
-  },
-  startBackground: async () => {
-    const { invoke } = await import("@tauri-apps/api/core");
-    await invoke("pw_detach_cloud_backup", {
-      input: {
-        appId: VELLUM_GIT_SYNC.appId,
-        successTitle: t("quit.cloudDoneTitle"),
-        successBody: t("quit.cloudDone"),
-        failTitle: t("quit.cloudFailedTitle"),
-        failMessage: t("quit.cloudFailedMessage"),
+  /** Click the gutter beside the writing column to focus the editor. */
+  editorHost.addEventListener("pointerdown", (event) => {
+    if (event.target === editorHost) editor.focus();
+  });
+
+  function applySidebarWidth(): void {
+    shell.style.setProperty("--vellum-library-width", `${sidebarWidth}px`);
+  }
+
+  function applySidebarState(): void {
+    shell.classList.toggle("is-sidebar-closed", !sidebarOpen);
+    libraryHost.classList.toggle("is-collapsed", !sidebarOpen);
+    titleBar.setSidebarOpen(sidebarOpen);
+    library.setSidebarOpen(sidebarOpen);
+    localStorage.setItem(SIDEBAR_OPEN_KEY, sidebarOpen ? "1" : "0");
+    requestOverlayScrollbarRefresh();
+  }
+
+  function toggleSidebar(): void {
+    sidebarOpen = !sidebarOpen;
+    applySidebarState();
+  }
+
+  let immersive = false;
+  function setImmersive(next: boolean): void {
+    immersive = next;
+    shell.classList.toggle("is-immersive", next);
+  }
+
+  const titleBar = mountTitleBar(titleHost, {
+    title: t("app.name"),
+    onClose: () => void requestQuit(),
+    sidebarToggle: {
+      open: sidebarOpen,
+      onToggle: toggleSidebar,
+    },
+    menuActions: {
+      getImmersive: () => immersive,
+      onToggleImmersive() {
+        setImmersive(!immersive);
+      },
+      canRename: () => libraryApi?.canRenameOpenChapter() ?? false,
+      onRename() {
+        if (immersive) setImmersive(false);
+        if (!sidebarOpen) {
+          sidebarOpen = true;
+          applySidebarState();
+        }
+        libraryApi?.renameOpenChapter();
+      },
+    },
+  });
+
+  const library = mountLibraryPanel(libraryHost, {
+    t: (key, params) => t(key, params),
+    getEditorContent: () => editor.getValue(),
+    getOpenArticleId: () => openArticleId,
+    onArticleOpen: (title, content, id) => {
+      openChain = openChain.then(async () => {
+        await saver.flush();
+        openArticleId = id;
+        editor.setValue(content);
+        titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
+        if (id) editor.focus();
+      });
+    },
+    onStatus: () => { },
+    onOpenSettings: () => void openSettingsWindow(),
+    onToggleSidebar: toggleSidebar,
+  });
+  libraryApi = library;
+  toggleSidebarRef = toggleSidebar;
+  requestQuit = createQuitFlow({
+    flushEdits: () => saver.flush(),
+    cloudReady: async () => {
+      const session = await getSession(VELLUM_GIT_SYNC.appId);
+      return session.loggedIn && Boolean(session.repoFullName);
+    },
+    startBackground: async () => {
+      const { invoke } = await import("@tauri-apps/api/core");
+      await invoke("pw_detach_cloud_backup", {
+        input: {
+          appId: VELLUM_GIT_SYNC.appId,
+          successTitle: t("quit.cloudDoneTitle"),
+          successBody: t("quit.cloudDone"),
+          failTitle: t("quit.cloudFailedTitle"),
+          failMessage: t("quit.cloudFailedMessage"),
+          retryLabel: t("quit.retry"),
+          exitLabel: t("quit.exit"),
+        },
+      });
+    },
+    askRetry: (error) =>
+      promptCloudBackupFailure({
+        title: t("quit.cloudFailedTitle"),
+        message: t("quit.cloudFailedMessage", { error }),
         retryLabel: t("quit.retry"),
         exitLabel: t("quit.exit"),
-      },
-    });
-  },
-  askRetry: (error) =>
-    promptCloudBackupFailure({
-      title: t("quit.cloudFailedTitle"),
-      message: t("quit.cloudFailedMessage", { error }),
-      retryLabel: t("quit.retry"),
-      exitLabel: t("quit.exit"),
-    }),
-  destroy: () => closeWindow(),
-});
-stopLocalBackup = startPeriodicBackup(async () => {
-  await saver.flush();
-  await writeLocalPwbBackup();
-});
-
-applySidebarWidth();
-applySidebarState();
-
-const columnResize = attachColumnResize(libraryHost, {
-  side: "left",
-  minWidth: SIDEBAR_WIDTH_MIN,
-  maxWidth: SIDEBAR_WIDTH_MAX,
-  getWidth: () => sidebarWidth,
-  onWidthChange(width) {
-    sidebarWidth = width;
-    applySidebarWidth();
-    persistWidth(SIDEBAR_WIDTH_KEY, width);
-    requestOverlayScrollbarRefresh();
-  },
-});
-
-editorColumn.append(editorHost);
-titlebarZone.append(titleHost);
-mainColumn.append(titlebarZone, editorColumn);
-shell.append(libraryHost, mainColumn);
-
-const syncStatusHost = document.createElement("div");
-syncStatusHost.className = "vellum-git-sync-status-host";
-shell.append(syncStatusHost);
-const runEditorSync = (): void => {
-  void (async () => {
-    try {
-      await saver.flush();
-      await pushBackup(VELLUM_GIT_SYNC.appId);
-    } catch (err) {
-      if (!isSyncBusy(err)) return;
-    }
-  })();
-};
-syncStatus = mountGitSyncStatusBar(syncStatusHost, { onSync: runEditorSync });
-if (isTauri()) {
-  void import("@tauri-apps/api/event").then(async ({ listen, emit }) => {
-    const unlistenRequest = await listen<CloudSyncRequest>(CLOUD_SYNC_REQUEST, (event) => {
-      void (async () => {
-        const id = event.payload?.id;
-        if (!id) return;
-        try {
-          await saver.flush();
-          const result = await pushBackup(VELLUM_GIT_SYNC.appId);
-          await emit(CLOUD_SYNC_RESULT, {
-            id,
-            ok: true,
-            path: result.path,
-            remoteBackupCount: result.remoteBackupCount,
-          });
-        } catch (err) {
-          await emit(CLOUD_SYNC_RESULT, {
-            id,
-            ok: false,
-            busy: isSyncBusy(err),
-            error: syncErrorText(err),
-          });
-        }
-      })();
-    });
-    teardownSyncStatus = () => {
-      unlistenRequest();
-      syncStatus?.destroy();
-    };
+      }),
+    destroy: () => closeWindow(),
   });
-  void getSession(VELLUM_GIT_SYNC.appId).then((session) => {
-    if (session.lastSyncAt) syncStatus?.noteSynced();
+  stopLocalBackup = startPeriodicBackup(async () => {
+    await saver.flush();
+    await writeLocalPwbBackup();
   });
-}
 
-function publishWidthCeiling(): void {
-  publishEditorWidthCeiling(editorHost.clientWidth || editorColumn.clientWidth);
-}
-publishWidthCeiling();
-const widthObserver = new ResizeObserver(() => publishWidthCeiling());
-widthObserver.observe(editorHost);
+  applySidebarWidth();
+  applySidebarState();
 
-editor.focus();
+  const columnResize = attachColumnResize(libraryHost, {
+    side: "left",
+    minWidth: SIDEBAR_WIDTH_MIN,
+    maxWidth: SIDEBAR_WIDTH_MAX,
+    getWidth: () => sidebarWidth,
+    onWidthChange(width) {
+      sidebarWidth = width;
+      applySidebarWidth();
+      persistWidth(SIDEBAR_WIDTH_KEY, width);
+      requestOverlayScrollbarRefresh();
+    },
+  });
 
-window.addEventListener("beforeunload", () => {
-  stopLocalBackup?.();
-  widthObserver.disconnect();
-  unlistenSettings?.();
-  window.removeEventListener("storage", onSettingsStorage);
-  teardownDeepLink?.();
-  teardownSyncStatus();
-  columnResize.destroy();
-  teardownClose();
-  teardownShell();
-  teardownTooltips();
-  teardownShortcutGuard();
-  teardownShortcuts();
-  titleBar.destroy();
-  library.destroy();
-  editorContextMenu.destroy();
-  editor.destroy();
-});
+  editorColumn.append(editorHost);
+  titlebarZone.append(titleHost);
+  mainColumn.append(titlebarZone, editorColumn);
+  shell.append(libraryHost, mainColumn);
+
+  const syncStatusHost = document.createElement("div");
+  syncStatusHost.className = "vellum-git-sync-status-host";
+  shell.append(syncStatusHost);
+  const runEditorSync = (): void => {
+    void (async () => {
+      try {
+        await saver.flush();
+        await pushBackup(VELLUM_GIT_SYNC.appId);
+      } catch (err) {
+        if (!isSyncBusy(err)) return;
+      }
+    })();
+  };
+  syncStatus = mountGitSyncStatusBar(syncStatusHost, { onSync: runEditorSync });
+  if (isTauri()) {
+    void import("@tauri-apps/api/event").then(async ({ listen, emit }) => {
+      const unlistenRequest = await listen<CloudSyncRequest>(CLOUD_SYNC_REQUEST, (event) => {
+        void (async () => {
+          const id = event.payload?.id;
+          if (!id) return;
+          try {
+            await saver.flush();
+            const result = await pushBackup(VELLUM_GIT_SYNC.appId);
+            await emit(CLOUD_SYNC_RESULT, {
+              id,
+              ok: true,
+              path: result.path,
+              remoteBackupCount: result.remoteBackupCount,
+            });
+          } catch (err) {
+            await emit(CLOUD_SYNC_RESULT, {
+              id,
+              ok: false,
+              busy: isSyncBusy(err),
+              error: syncErrorText(err),
+            });
+          }
+        })();
+      });
+      teardownSyncStatus = () => {
+        unlistenRequest();
+        syncStatus?.destroy();
+      };
+    });
+    void getSession(VELLUM_GIT_SYNC.appId).then((session) => {
+      if (session.lastSyncAt) syncStatus?.noteSynced();
+    });
+  }
+
+  function publishWidthCeiling(): void {
+    publishEditorWidthCeiling(editorHost.clientWidth || editorColumn.clientWidth);
+  }
+
+  /**
+   * Half-viewport end padding so the last line can scroll to the vertical
+   * center of the editor (and the top of the document can rest mid-screen).
+   */
+  function applyEditorScrollPad(): void {
+    const pad = Math.max(0, Math.floor(editorHost.clientHeight * 0.5));
+    editorHost.style.setProperty("--vellum-editor-scroll-pad", `${pad}px`);
+  }
+
+  publishWidthCeiling();
+  applyEditorScrollPad();
+  const widthObserver = new ResizeObserver(() => {
+    publishWidthCeiling();
+    applyEditorScrollPad();
+  });
+  widthObserver.observe(editorHost);
+
+  editor.focus();
+
+  window.addEventListener("beforeunload", () => {
+    stopLocalBackup?.();
+    widthObserver.disconnect();
+    unlistenSettings?.();
+    window.removeEventListener("storage", onSettingsStorage);
+    teardownDeepLink?.();
+    teardownSyncStatus();
+    columnResize.destroy();
+    teardownClose();
+    teardownShell();
+    teardownTooltips();
+    teardownShortcutGuard();
+    teardownShortcuts();
+    titleBar.destroy();
+    library.destroy();
+    editorContextMenu.destroy();
+    editor.destroy();
+  });
 }
