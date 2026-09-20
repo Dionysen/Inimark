@@ -24,6 +24,7 @@ import {
   isExternalSettingsSync,
   loadSettings,
   parseSettingsSyncPayload,
+  patchSettings,
   publishEditorWidthCeiling,
   SETTINGS_STORAGE_KEY,
   SETTINGS_SYNC_EVENT,
@@ -48,6 +49,7 @@ import { startPeriodicBackup, writeLocalPwbBackup } from "./library/local-backup
 import { mountPlaintextEditor } from "./editor/plaintext.ts";
 import { mountEditorContextMenu } from "./editor/context-menu.ts";
 import { mountJumpToEndButton } from "./editor/jump-to-end.ts";
+import { mountStatusBar, type StatusBarController } from "./editor/status-bar.ts";
 import { mountLibraryPanel } from "./library/panel.ts";
 import { mountTitleBar } from "./ui/titlebar.ts";
 
@@ -92,6 +94,8 @@ let toggleSidebarRef: (() => void) | null = null;
 let requestQuit = (): Promise<void> => closeWindow();
 /** Flush pending edits; assigned by mountShell once the saver exists. */
 let flushSaver = (): Promise<void> => Promise.resolve();
+/** Re-apply runtime settings (e.g. typewriter mode) once the shell is mounted. */
+let syncRuntimeSettings = (): void => { };
 const teardownShortcuts = mountShortcutHandler({
   "open-settings": () => void openSettingsWindow(),
   close: () => void requestQuit(),
@@ -113,6 +117,7 @@ void installGitOauthDeepLinkHandler().then((fn) => {
 const onSettingsStorage = (event: StorageEvent): void => {
   if (event.key === SETTINGS_STORAGE_KEY) {
     applySettings(loadSettings());
+    syncRuntimeSettings();
   }
 };
 window.addEventListener("storage", onSettingsStorage);
@@ -124,6 +129,7 @@ if (isTauri()) {
       const payload = parseSettingsSyncPayload(event.payload);
       if (!payload || !isExternalSettingsSync(payload)) return;
       applySettings(payload.settings);
+      syncRuntimeSettings();
     });
   });
 }
@@ -169,6 +175,7 @@ function mountShell(shell: HTMLElement): void {
   flushSaver = () => saver.flush();
   let stopLocalBackup: (() => void) | null = null;
   let syncStatus: ReturnType<typeof mountGitSyncStatusBar> | null = null;
+  let statusBar: StatusBarController | null = null;
   let teardownSyncStatus = (): void => {
     syncStatus?.destroy();
   };
@@ -178,10 +185,20 @@ function mountShell(shell: HTMLElement): void {
     onChange: () => {
       saver.kick();
       syncStatus?.markEdited();
+      statusBar?.scheduleUpdate();
     },
   });
   const editorContextMenu = mountEditorContextMenu(editorHost, editor);
   const jumpToEnd = mountJumpToEndButton(editorColumn, editorHost, editor);
+  statusBar = mountStatusBar({
+    host: shell,
+    editor,
+    getSettings: loadSettings,
+    onTypewriterModeChange(enabled) {
+      patchSettings({ typewriterMode: enabled });
+    },
+  });
+  syncRuntimeSettings = () => statusBar?.syncChrome();
 
   /** Click the gutter beside the writing column to focus the editor. */
   editorHost.addEventListener("pointerdown", (event) => {
@@ -245,6 +262,7 @@ function mountShell(shell: HTMLElement): void {
         await saver.flush();
         openArticleId = id;
         editor.setValue(content);
+        statusBar?.scheduleUpdate();
         titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
         if (id) editor.focus();
       });
@@ -311,7 +329,7 @@ function mountShell(shell: HTMLElement): void {
   shell.append(libraryHost, mainColumn);
 
   const syncStatusHost = document.createElement("div");
-  syncStatusHost.className = "vellum-git-sync-status-host";
+  syncStatusHost.className = "vellum-git-sync-status-host vellum-status-corner";
   shell.append(syncStatusHost);
   const runEditorSync = (): void => {
     void (async () => {
@@ -399,6 +417,7 @@ function mountShell(shell: HTMLElement): void {
     library.destroy();
     editorContextMenu.destroy();
     jumpToEnd.destroy();
+    statusBar?.destroy();
     editor.destroy();
   });
 }

@@ -1171,6 +1171,11 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
     word-break: break-word;
 }
 
+/* Typewriter mode: half-viewport top pad so the first line can rest at center. */
+.vellum-plaintext-editor.is-typewriter {
+    padding-top: calc(1.25rem + var(--vellum-typewriter-pad, 0px));
+}
+
 .vellum-plaintext-editor:empty::before,
 .vellum-plaintext-editor[data-placeholder]:not(:focus):has(> p:only-child:empty)::before,
 .vellum-plaintext-editor[data-placeholder]:not(:focus):has(> p:only-child > br:only-child)::before {
@@ -1284,6 +1289,93 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 .vellum-git-sync-status-icon .inimark-icon {
     width: 14px;
     height: 14px;
+}
+
+/* Bottom-right tools: typewriter toggle + live character count. */
+.vellum-status-bar {
+    position: absolute;
+    bottom: 8px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: var(--inimark-space-1, 4px);
+}
+
+.vellum-status-bar--right {
+    right: calc(var(--inimark-space-2, 8px) + 2px);
+}
+
+.vellum-status-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--inimark-chrome-btn-size, 26px);
+    height: var(--inimark-chrome-btn-size, 26px);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--inimark-radius-sm);
+    background: transparent;
+    color: var(--inimark-muted-fg);
+    cursor: pointer;
+    transition:
+        color 120ms ease,
+        border-color 120ms ease,
+        background 120ms ease;
+}
+
+.vellum-status-btn:hover {
+    color: var(--inimark-fg);
+    border-color: var(--inimark-border);
+    background: color-mix(in srgb, var(--inimark-bg) 92%, transparent);
+}
+
+.vellum-status-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--inimark-accent) 55%, transparent);
+    outline-offset: 2px;
+}
+
+.vellum-status-btn.is-active {
+    color: var(--inimark-accent);
+}
+
+.vellum-status-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.vellum-status-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--inimark-chrome-btn-size, 26px);
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--inimark-muted-fg);
+    white-space: nowrap;
+}
+
+/* Auto-hide both bottom corners until the pointer enters their area. */
+.vellum-status-corner {
+    transition: opacity 180ms ease;
+}
+
+html[data-auto-hide-statusbar="true"] .vellum-status-corner {
+    pointer-events: auto;
+    opacity: 0;
+}
+
+/* Enlarge the (invisible) hover target so hidden tools are easy to bring back. */
+html[data-auto-hide-statusbar="true"] .vellum-status-corner::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+}
+
+html[data-auto-hide-statusbar="true"] .vellum-status-corner:hover,
+html[data-auto-hide-statusbar="true"] .vellum-status-corner:focus-within {
+    opacity: 1;
 }
 
 .vellum-sync-spin {

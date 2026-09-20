@@ -9,7 +9,7 @@ import {
   type SettingsSectionDef,
   type SettingsViewController,
 } from "@dionysen/settings-kit";
-import { createSelect, createButton } from "@dionysen/ui";
+import { createSelect, createButton, createToggle } from "@dionysen/ui";
 import { closeWindow, isTauri, listSystemFonts } from "@dionysen/shell";
 import { renderChromeThemePanel } from "@dionysen/theme";
 import { renderAccountSection } from "../git-sync/account-settings.ts";
@@ -133,6 +133,18 @@ function searchEntries(): SettingSearchItem[] {
       getTitle: () => t("settings.editor.firstLineIndent"),
       getDescription: () => t("settings.editor.firstLineIndentDesc"),
     },
+    {
+      id: "editor.typewriter",
+      section: "editor",
+      getTitle: () => t("settings.editor.typewriter"),
+      getDescription: () => t("settings.editor.typewriterDesc"),
+    },
+    {
+      id: "editor.autoHideStatusbar",
+      section: "editor",
+      getTitle: () => t("settings.editor.autoHideStatusbar"),
+      getDescription: () => t("settings.editor.autoHideStatusbarDesc"),
+    },
     ...shortcutSearchEntries().map((entry) => ({
       ...entry,
       section: "shortcuts",
@@ -241,7 +253,7 @@ function renderEditor(
 ): EditorTypographyControls {
   body.append(createSectionTitle(t("settings.nav.editor")));
 
-  return appendEditorTypographyControls({
+  const controls = appendEditorTypographyControls({
     body,
     settings,
     editorWidthMax: readEditorWidthCeiling(),
@@ -266,6 +278,40 @@ function renderEditor(
     },
     onPatch,
   });
+
+  const typewriter = createToggle({
+    checked: settings.typewriterMode,
+    title: t("settings.editor.typewriter"),
+    onChange(checked) {
+      onPatch({ typewriterMode: checked });
+    },
+  });
+  body.append(
+    createRow(
+      t("settings.editor.typewriter"),
+      t("settings.editor.typewriterDesc"),
+      typewriter.el,
+      "editor.typewriter",
+    ),
+  );
+
+  const autoHide = createToggle({
+    checked: settings.autoHideStatusbar,
+    title: t("settings.editor.autoHideStatusbar"),
+    onChange(checked) {
+      onPatch({ autoHideStatusbar: checked });
+    },
+  });
+  body.append(
+    createRow(
+      t("settings.editor.autoHideStatusbar"),
+      t("settings.editor.autoHideStatusbarDesc"),
+      autoHide.el,
+      "editor.autoHideStatusbar",
+    ),
+  );
+
+  return controls;
 }
 
 const ABOUT_REPO_URL = "https://github.com/Dionysen/Inimark";

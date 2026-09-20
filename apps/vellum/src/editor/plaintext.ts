@@ -24,6 +24,9 @@ export interface PlaintextEditor {
   pasteClipboard(): Promise<boolean>;
   /** Place the caret at the end of the document and focus. */
   focusAtEnd(): void;
+  /** Keep the caret line vertically centered while writing. */
+  setTypewriterMode(enabled: boolean): void;
+  isTypewriterMode(): boolean;
   destroy(): void;
 }
 
@@ -311,9 +314,99 @@ export function mountPlaintextEditor(
     options.onChange?.(serializePlaintextDom(el));
   };
 
+  // ── Typewriter mode ──────────────────────────────────────────────────────
+  // Keep the caret line vertically centered. The top pad lets the first line
+  // rest at center even when the document is shorter than the viewport.
+  let typewriter = false;
+  let typewriterRaf: number | null = null;
+  let pointerDown = false;
+  let composing = false;
+
+  const applyTypewriterPad = (): void => {
+    if (!typewriter) {
+      el.style.removeProperty("--vellum-typewriter-pad");
+      return;
+    }
+    const next = `${Math.max(0, Math.floor(host.clientHeight * 0.5))}px`;
+    if (el.style.getPropertyValue("--vellum-typewriter-pad") !== next) {
+      el.style.setProperty("--vellum-typewriter-pad", next);
+    }
+  };
+
+  const caretLineRect = (range: Range): DOMRect | null => {
+    const rect = range.getBoundingClientRect();
+    if (rect.height > 0) return rect;
+    const node = range.startContainer;
+    const block =
+      node.nodeType === Node.ELEMENT_NODE
+        ? (node as Element)
+        : node.parentElement;
+    const blockRect = block?.getBoundingClientRect() ?? null;
+    return blockRect && blockRect.height > 0 ? blockRect : null;
+  };
+
+  const centerCaret = (): void => {
+    if (!typewriter) return;
+    // Refresh the top pad first — the host may have resized since last time.
+    applyTypewriterPad();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!el.contains(range.startContainer)) return;
+    const rect = caretLineRect(range);
+    if (!rect) return;
+    const hostRect = host.getBoundingClientRect();
+    const lineCenter = rect.top + rect.height / 2;
+    const viewCenter = hostRect.top + hostRect.height / 2;
+    const delta = lineCenter - viewCenter;
+    if (Math.abs(delta) < 1) return;
+    host.scrollTop += delta;
+  };
+
+  const scheduleCenter = (): void => {
+    if (!typewriter || pointerDown || composing || typewriterRaf != null) return;
+    typewriterRaf = requestAnimationFrame(() => {
+      typewriterRaf = null;
+      centerCaret();
+    });
+  };
+
+  const onDocumentSelectionChange = (): void => {
+    if (!typewriter) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (!el.contains(sel.anchorNode)) return;
+    scheduleCenter();
+  };
+
+  const onPointerDown = (): void => {
+    pointerDown = true;
+  };
+
+  const onPointerUp = (): void => {
+    if (!pointerDown) return;
+    pointerDown = false;
+    scheduleCenter();
+  };
+
+  const onCompositionStart = (): void => {
+    composing = true;
+  };
+
+  const onCompositionEnd = (): void => {
+    composing = false;
+    scheduleCenter();
+  };
+
+  const onWindowResize = (): void => {
+    applyTypewriterPad();
+    scheduleCenter();
+  };
+
   const onInput = (): void => {
     ensureStructure(el);
     emitChange();
+    scheduleCenter();
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
@@ -376,6 +469,13 @@ export function mountPlaintextEditor(
   el.addEventListener("input", onInput);
   el.addEventListener("keydown", onKeyDown);
   el.addEventListener("paste", onPaste);
+  el.addEventListener("compositionstart", onCompositionStart);
+  el.addEventListener("compositionend", onCompositionEnd);
+  document.addEventListener("selectionchange", onDocumentSelectionChange);
+  document.addEventListener("mousedown", onPointerDown, true);
+  document.addEventListener("mouseup", onPointerUp, true);
+  document.addEventListener("pointerup", onPointerUp, true);
+  window.addEventListener("resize", onWindowResize);
   host.append(el);
 
   return {
@@ -393,11 +493,27 @@ export function mountPlaintextEditor(
       ensureStructure(el);
       placeCaretAtSerializedOffset(el, serializePlaintextDom(el).length);
       el.focus();
+      scheduleCenter();
     },
+    setTypewriterMode: (enabled: boolean) => {
+      typewriter = enabled;
+      el.classList.toggle("is-typewriter", enabled);
+      applyTypewriterPad();
+      scheduleCenter();
+    },
+    isTypewriterMode: () => typewriter,
     destroy: () => {
+      if (typewriterRaf != null) cancelAnimationFrame(typewriterRaf);
       el.removeEventListener("input", onInput);
       el.removeEventListener("keydown", onKeyDown);
       el.removeEventListener("paste", onPaste);
+      el.removeEventListener("compositionstart", onCompositionStart);
+      el.removeEventListener("compositionend", onCompositionEnd);
+      document.removeEventListener("selectionchange", onDocumentSelectionChange);
+      document.removeEventListener("mousedown", onPointerDown, true);
+      document.removeEventListener("mouseup", onPointerUp, true);
+      document.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("resize", onWindowResize);
       el.remove();
     },
   };

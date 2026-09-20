@@ -13,6 +13,10 @@ const en: Dictionary = {
     cut: "Cut",
     paste: "Paste",
     focusToEnd: "Jump to end",
+    typewriter: "Typewriter mode",
+  },
+  wordCount: {
+    label: "{{count}} chars",
   },
   library: {
     pathPlaceholder: "Pure Writer folder (contains App/Room.db)",
@@ -425,6 +429,11 @@ const en: Dictionary = {
       firstLineIndentDesc:
         "Ideographic spaces (　) inserted when starting a new paragraph",
       firstLineIndentValue: "{{n}} characters",
+      typewriter: "Typewriter mode",
+      typewriterDesc: "Keep the caret line vertically centered while writing",
+      autoHideStatusbar: "Auto-hide corner tools",
+      autoHideStatusbarDesc:
+        "Hide the bottom-left and bottom-right tools until the pointer enters their area",
     },
     shortcuts: {
       intro: "Click a shortcut to record a new one. Press the keys, then Save. Esc clears the keys you just pressed.",
@@ -491,6 +500,10 @@ const zhCN: Dictionary = {
     cut: "剪切",
     paste: "粘贴",
     focusToEnd: "聚焦到文末",
+    typewriter: "打字机模式",
+  },
+  wordCount: {
+    label: "{{count}} 字",
   },
   library: {
     pathPlaceholder: "纯纯写作文件夹（含 App/Room.db）",
@@ -892,6 +905,10 @@ const zhCN: Dictionary = {
       firstLineIndent: "首行缩进",
       firstLineIndentDesc: "新建段落时自动插入的全角空格（　）字数",
       firstLineIndentValue: "{{n}} 字",
+      typewriter: "打字机模式",
+      typewriterDesc: "写作时将光标行垂直居中",
+      autoHideStatusbar: "角落工具自动隐藏",
+      autoHideStatusbarDesc: "自动隐藏左右下角工具，鼠标移入该区域时再显示（含左下角同步按钮）",
     },
     shortcuts: {
       intro: "点击快捷键开始录制。按下新的组合后点保存。按 Esc 会清掉刚才按下的键。",

@@ -21,6 +21,10 @@ export type { EditorTypographySettings };
 
 export interface AppSettings extends EditorTypographySettings {
   locale: AppLocale;
+  /** Keep the caret line vertically centered while writing. */
+  typewriterMode: boolean;
+  /** Hide the bottom-corner status tools until the pointer enters that area. */
+  autoHideStatusbar: boolean;
 }
 
 export const SETTINGS_STORAGE_KEY = "vellum-settings";
@@ -52,6 +56,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   paragraphSpacing: PARAGRAPH_SPACING_DEFAULT,
   editorWidth: EDITOR_WIDTH_DEFAULT,
   firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
+  typewriterMode: false,
+  autoHideStatusbar: false,
 };
 
 /** Read the last published editor-column width ceiling (fallback: viewport). */
@@ -88,6 +94,8 @@ export function normalizeSettings(raw: unknown): AppSettings {
   });
   return {
     locale,
+    typewriterMode: src.typewriterMode === true,
+    autoHideStatusbar: src.autoHideStatusbar === true,
     ...typography,
   };
 }
@@ -108,6 +116,9 @@ export const subscribeSettings = store.subscribe;
 /** Apply chrome side effects for the current settings object. */
 export function applySettings(settings: AppSettings): void {
   applyEditorTypographyCss(document.documentElement, settings, "shell");
+  document.documentElement.dataset.autoHideStatusbar = settings.autoHideStatusbar
+    ? "true"
+    : "false";
   setLocale(settings.locale === "system" ? detectSystemLocale() : settings.locale);
 }
 
