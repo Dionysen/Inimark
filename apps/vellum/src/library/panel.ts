@@ -179,7 +179,6 @@ export function mountLibraryPanel(
   const newBtn = toolbar.buttons[0]!;
   const foldBtn = toolbar.buttons[1]!;
   const locateBtn = toolbar.buttons[2]!;
-  locateBtn.classList.add("vellum-library-locate");
 
   const banner = document.createElement("div");
   banner.className = "vellum-library-banner";

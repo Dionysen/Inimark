@@ -450,13 +450,8 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-library .inimark-panel-toolbar {
     flex-shrink: 0;
-    justify-content: flex-start;
     padding-left: var(--vellum-library-inset);
     padding-right: var(--vellum-library-inset);
-}
-
-.vellum-library .vellum-library-locate {
-    margin-left: auto;
 }
 
 .vellum-library-tree.inimark-tree {
