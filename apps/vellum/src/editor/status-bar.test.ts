@@ -72,6 +72,17 @@ describe("countText", () => {
 });
 
 describe("mountStatusBar", () => {
+  it("renders the shared typewriter glyph", () => {
+    const { host, editor, statusBar } = mountFixture("hello");
+    const icon = host.querySelector('svg[data-icon="typewriter"]');
+    assert.ok(icon);
+    assert.ok(icon.querySelector('path[d="M8 10V4h8v6"]'));
+    assert.ok(icon.querySelector('path[d="M8 17h8"]'));
+    editor.destroy();
+    statusBar.destroy();
+    host.remove();
+  });
+
   it("renders a whitespace-excluded character count", () => {
     const { host, editor, statusBar } = mountFixture("你好 世界\n第二段");
     const count = host.querySelector(".vellum-status-count");

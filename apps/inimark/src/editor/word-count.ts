@@ -1,4 +1,5 @@
 import type { Editor } from "@inimark/editor";
+import { typewriterIcon } from "@dionysen/ui";
 import { onLocaleChange, t } from "../i18n/index.ts";
 import {
   type AppSettings,
@@ -78,8 +79,6 @@ const SCROLL_TOP_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m18 15-6-6-6 6"/></svg>`;
 const SCROLL_BOTTOM_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>`;
-const TYPEWRITER_ICON =
-  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 8h12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 8v8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 16h12"/></svg>`;
 const SOURCE_MODE_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m8 9-4 3 4 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m16 9 4 3-4 3"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M13 6 11 18"/></svg>`;
 
@@ -131,7 +130,7 @@ export function mountWordCount(options: WordCountOptions): WordCountController {
   const typewriterBtn = document.createElement("button");
   typewriterBtn.type = "button";
   typewriterBtn.className = "inimark-statusbar-scroll-btn";
-  typewriterBtn.innerHTML = TYPEWRITER_ICON;
+  typewriterBtn.innerHTML = typewriterIcon;
 
   const countBtn = document.createElement("button");
   countBtn.type = "button";

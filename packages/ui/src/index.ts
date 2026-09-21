@@ -98,6 +98,8 @@ export {
 
 export { showStatusToast } from "./status-toast.ts";
 
+export { typewriterIcon } from "./icons.ts";
+
 export {
   FONT_PRESETS,
   SYSTEM_FONT_SENTINEL,

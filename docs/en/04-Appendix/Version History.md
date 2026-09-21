@@ -29,6 +29,16 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.11 — 2026-09-21
+
+**Release page:** (unreleased)
+
+### What's new
+
+- Fix the typewriter-mode status-bar icon so it shows a recognizable typewriter instead of an I-beam; share the glyph with Vellum for consistent writing controls
+
+---
+
 ## 1.0.8 — 2026-09-16
 
 **Release page:** (unreleased)

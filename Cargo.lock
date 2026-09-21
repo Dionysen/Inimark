@@ -2371,7 +2371,7 @@ dependencies = [
 
 [[package]]
 name = "inimark-app"
-version = "1.0.10"
+version = "1.0.11"
 dependencies = [
  "block2",
  "dionysen-shell",

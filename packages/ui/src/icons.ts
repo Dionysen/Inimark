@@ -1,0 +1,3 @@
+/** A compact typewriter glyph for writing-mode controls. */
+export const typewriterIcon =
+  `<svg class="inimark-icon" data-icon="typewriter" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M8 10V4h8v6"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 10h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path fill="currentColor" d="M8 13.25a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm4 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm4 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 17h8"/></svg>`;

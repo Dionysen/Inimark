@@ -10,7 +10,7 @@
  * bottom-left sync button honours the same setting.
  */
 
-import { createToggle, onOutsideClick } from "@dionysen/ui";
+import { createToggle, onOutsideClick, typewriterIcon } from "@dionysen/ui";
 import { onLocaleChange, t } from "../i18n/index.ts";
 import type { AppSettings, WordCountSettings } from "../settings/store.ts";
 import type { PlaintextEditor } from "./plaintext.ts";
@@ -31,9 +31,6 @@ export interface StatusBarOptions {
 }
 
 const UPDATE_DEBOUNCE_MS = 120;
-
-const TYPEWRITER_ICON =
-  `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 8h12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M12 8v8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 16h12"/></svg>`;
 
 /**
  * Count characters. `includeSymbols` counts everything non-whitespace; otherwise
@@ -56,7 +53,7 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
   const typewriterBtn = document.createElement("button");
   typewriterBtn.type = "button";
   typewriterBtn.className = "vellum-status-btn";
-  typewriterBtn.innerHTML = TYPEWRITER_ICON;
+  typewriterBtn.innerHTML = typewriterIcon;
 
   const footer = document.createElement("div");
   footer.className = "vellum-status-footer";
