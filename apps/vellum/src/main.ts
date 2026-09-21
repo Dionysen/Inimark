@@ -99,6 +99,8 @@ let libraryApi: {
   deleteSelection(): Promise<void>;
   copySelection(): Promise<void>;
   pasteClipboard(): Promise<void>;
+  saveArticleViewState(id: string, view: { caret: number; scrollTop: number }): void;
+  flushWorkspaceState(): Promise<void>;
 } | null = null;
 let toggleSidebarRef: (() => void) | null = null;
 let requestQuit = (): Promise<void> => closeWindow();
@@ -184,7 +186,27 @@ function mountShell(shell: HTMLElement): void {
   let openArticleId: string | null = null;
   let openChain = Promise.resolve();
   const saver = createImmediateSaver(() => libraryApi?.save({ quiet: true }) ?? Promise.resolve());
-  flushSaver = () => saver.flush();
+  let viewStateTimer: ReturnType<typeof setTimeout> | null = null;
+  const persistEditorViewState = (): void => {
+    if (!openArticleId) return;
+    libraryApi?.saveArticleViewState(openArticleId, editor.getViewState());
+  };
+  const scheduleEditorViewStateSave = (): void => {
+    if (viewStateTimer != null) clearTimeout(viewStateTimer);
+    viewStateTimer = setTimeout(() => {
+      viewStateTimer = null;
+      persistEditorViewState();
+    }, 750);
+  };
+  flushSaver = async () => {
+    if (viewStateTimer != null) {
+      clearTimeout(viewStateTimer);
+      viewStateTimer = null;
+    }
+    persistEditorViewState();
+    await saver.flush();
+    await libraryApi?.flushWorkspaceState();
+  };
   let stopLocalBackup: (() => void) | null = null;
   let syncStatus: ReturnType<typeof mountGitSyncStatusBar> | null = null;
   let statusBar: StatusBarController | null = null;
@@ -197,9 +219,11 @@ function mountShell(shell: HTMLElement): void {
     onChange: () => {
       if (!openArticleId) return;
       saver.kick();
+      scheduleEditorViewStateSave();
       syncStatus?.markEdited();
       statusBar?.scheduleUpdate();
     },
+    onViewStateChange: scheduleEditorViewStateSave,
   });
   const emptyState = mountEditorEmptyState(editorColumn, editorHost, editor.el, appIcon, t("editor.openArticleHint"));
   const unsubscribeEmptyLocale = onLocaleChange(() => emptyState.setMessage(t("editor.openArticleHint")));
@@ -302,8 +326,9 @@ function mountShell(shell: HTMLElement): void {
     t: (key, params) => t(key, params),
     getEditorContent: () => editor.getValue(),
     getOpenArticleId: () => openArticleId,
-    onArticleOpen: (title, content, id) => {
+    onArticleOpen: (title, content, id, viewState) => {
       openChain = openChain.then(async () => {
+        persistEditorViewState();
         await saver.flush();
         openArticleId = id;
         editor.setValue(id ? content : "");
@@ -311,7 +336,10 @@ function mountShell(shell: HTMLElement): void {
         shell.classList.toggle("has-no-article", !id);
         statusBar?.scheduleUpdate();
         titleBar.setTitle(id ? title || t("app.untitled") : t("app.name"));
-        if (id) editor.focus();
+        if (id) {
+          if (viewState) editor.restoreViewState(viewState);
+          else editor.focus();
+        }
       });
       return openChain;
     },
@@ -326,7 +354,7 @@ function mountShell(shell: HTMLElement): void {
   libraryApi = library;
   toggleSidebarRef = toggleSidebar;
   requestQuit = createQuitFlow({
-    flushEdits: () => saver.flush(),
+    flushEdits: () => flushSaver(),
     cloudReady: async () => {
       const session = await getSession(VELLUM_GIT_SYNC.appId);
       return session.loggedIn && Boolean(session.repoFullName);
@@ -355,7 +383,7 @@ function mountShell(shell: HTMLElement): void {
     destroy: () => closeWindow(),
   });
   stopLocalBackup = startPeriodicBackup(async () => {
-    await saver.flush();
+    await flushSaver();
     await writeLocalPwbBackup();
   });
 
@@ -390,7 +418,7 @@ function mountShell(shell: HTMLElement): void {
   const runEditorSync = (): void => {
     void (async () => {
       try {
-        await saver.flush();
+        await flushSaver();
         await pushBackup(VELLUM_GIT_SYNC.appId);
       } catch (err) {
         if (!isSyncBusy(err)) return;
@@ -405,7 +433,7 @@ function mountShell(shell: HTMLElement): void {
           const id = event.payload?.id;
           if (!id) return;
           try {
-            await saver.flush();
+            await flushSaver();
             const result = await pushBackup(VELLUM_GIT_SYNC.appId);
             await emit(CLOUD_SYNC_RESULT, {
               id,
@@ -457,6 +485,8 @@ function mountShell(shell: HTMLElement): void {
   editor.focus();
 
   window.addEventListener("beforeunload", () => {
+    persistEditorViewState();
+    void libraryApi?.flushWorkspaceState();
     stopLocalBackup?.();
     widthObserver.disconnect();
     unlistenSettings?.();

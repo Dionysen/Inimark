@@ -48,6 +48,13 @@ import { scrollTopToCenter } from "./reveal.ts";
 import { mountLibraryDock, type LibraryDock } from "./dock.ts";
 import { bindRenameField } from "./rename-field.ts";
 import { bindPointerReorder, insertionIndex, moveIndex, seamLineY, seamSlot } from "./reorder.ts";
+import {
+  createWorkspaceState,
+  loadWorkspaceState,
+  rememberArticleView,
+  saveWorkspaceState,
+  type ArticleViewState,
+} from "./workspace-state.ts";
 
 export interface LibraryPanel {
   el: HTMLElement;
@@ -68,13 +75,22 @@ export interface LibraryPanel {
   copySelection(): Promise<void>;
   /** Create a chapter from the last copy, in the focused volume. */
   pasteClipboard(): Promise<void>;
+  /** Remember the current document's editing location for reopen and sync. */
+  saveArticleViewState(id: string, view: Omit<ArticleViewState, "updatedAt">): void;
+  /** Finish queued workspace-state writes before a backup or shutdown. */
+  flushWorkspaceState(): Promise<void>;
   setSidebarOpen(open: boolean): void;
   destroy(): void;
 }
 
 export interface LibraryPanelOptions {
   /** `id` is null when the library is closed / no chapter is open. */
-  onArticleOpen: (title: string, content: string, id: string | null) => void | Promise<void>;
+  onArticleOpen: (
+    title: string,
+    content: string,
+    id: string | null,
+    viewState?: ArticleViewState,
+  ) => void | Promise<void>;
   onStatus: (message: string) => void;
   onOpenSettings: () => void;
   onToggleSidebar: () => void;
@@ -205,6 +221,8 @@ export function mountLibraryPanel(
   let returnBookId: string | null = null;
   /** Collapsed volume keys (absent = expanded). */
   const collapsedVolumes = new Set<string>();
+  let workspaceState = createWorkspaceState();
+  let workspaceWrite = Promise.resolve();
   /** In-memory chapter clipboard for library copy / paste. */
   let chapterClip: { title: string; content: string } | null = null;
 
@@ -214,6 +232,21 @@ export function mountLibraryPanel(
   document.body.append(chapterMenu.el);
 
   const canWrite = () => Boolean(opened?.schema.writesAllowed);
+
+  const persistWorkspaceState = (): Promise<void> => {
+    if (!canWrite()) return workspaceWrite;
+    const snapshot = structuredClone(workspaceState);
+    workspaceWrite = workspaceWrite
+      .catch(() => undefined)
+      .then(() => saveWorkspaceState(snapshot))
+      .catch(() => undefined);
+    return workspaceWrite;
+  };
+
+  const rememberCollapsedVolumes = (): void => {
+    if (!selectedBookId) return;
+    workspaceState.collapsedVolumeIdsByBook[selectedBookId] = [...collapsedVolumes];
+  };
 
   let reorderGhost: HTMLElement | null = null;
   let reorderLine: HTMLElement | null = null;
@@ -772,6 +805,8 @@ export function mountLibraryPanel(
     } else {
       collapsedVolumes.clear();
     }
+    rememberCollapsedVolumes();
+    void persistWorkspaceState();
     renderTree();
   };
 
@@ -837,6 +872,8 @@ export function mountLibraryPanel(
           selectedVolumeId = vol.key === UNCATEGORIZED ? null : vol.key;
           if (collapsedVolumes.has(vol.key)) collapsedVolumes.delete(vol.key);
           else collapsedVolumes.add(vol.key);
+          rememberCollapsedVolumes();
+          void persistWorkspaceState();
           renderTree();
         },
       });
@@ -1003,11 +1040,18 @@ export function mountLibraryPanel(
     localStorage.setItem(BOOK_KEY, bookId);
     selectedVolumeId = null;
     if (!keepArticle) openArticleId = null;
+    workspaceState.selectedBookId = bookId;
+    if (!keepArticle) workspaceState.openArticleId = null;
     updateBookButton();
     renderBookMenu();
     volumes = await pwListCategories(bookId, false);
     chapters = await pwListArticles(bookId, null, false);
     collapsedVolumes.clear();
+    for (const volumeId of workspaceState.collapsedVolumeIdsByBook[bookId] ?? []) {
+      collapsedVolumes.add(volumeId);
+    }
+    rememberCollapsedVolumes();
+    void persistWorkspaceState();
     renderTree();
     newBtn.disabled = !opened?.schema.writesAllowed || bookId === TRASH_FOLDER;
   };
@@ -1015,9 +1059,11 @@ export function mountLibraryPanel(
   const openChapter = async (id: string) => {
     const art = await pwGetArticle(id);
     openArticleId = art.id;
+    workspaceState.openArticleId = art.id;
     if (art.folderId !== TRASH_FOLDER) selectedVolumeId = art.categoryId;
     renderTree();
-    options.onArticleOpen(art.title, art.content, art.id);
+    void persistWorkspaceState();
+    options.onArticleOpen(art.title, art.content, art.id, workspaceState.articleViews[art.id]);
   };
 
   /** Expand the open chapter’s volume and scroll that row into view. */
@@ -1058,6 +1104,10 @@ export function mountLibraryPanel(
   };
 
   const pickInitialBook = (list: Folder[]): string | null => {
+    const synced = workspaceState.selectedBookId;
+    if (synced && list.some((f) => f.id === synced && f.deleted === 0)) {
+      return synced;
+    }
     const remembered = localStorage.getItem(BOOK_KEY);
     if (remembered && list.some((f) => f.id === remembered && f.deleted === 0)) {
       return remembered;
@@ -1078,7 +1128,9 @@ export function mountLibraryPanel(
     closeBookMenu();
     try {
       await options.onArticleOpen("", "", null);
+      await workspaceWrite;
       opened = await pwOpen(path);
+      workspaceState = await loadWorkspaceState().catch(() => createWorkspaceState());
       activeLibrary = upsertLibrary(opened.root);
       dock.setActive(activeLibrary);
       dock.refreshList();
@@ -1090,7 +1142,11 @@ export function mountLibraryPanel(
       updateBookButton();
       renderBookMenu();
       if (selectedBookId) {
+        const rememberedArticleId = workspaceState.openArticleId;
         await selectBook(selectedBookId);
+        if (rememberedArticleId && chapters.some((chapter) => chapter.id === rememberedArticleId)) {
+          await openChapter(rememberedArticleId);
+        }
       } else {
         volumes = [];
         chapters = [];
@@ -1203,6 +1259,8 @@ export function mountLibraryPanel(
     // The shell flushes pending edits before clearing the writing surface.
     await options.onArticleOpen("", "", null);
     openArticleId = null;
+    workspaceState.openArticleId = null;
+    void persistWorkspaceState();
     renderTree();
   };
 
@@ -1365,6 +1423,11 @@ export function mountLibraryPanel(
     deleteSelection,
     copySelection,
     pasteClipboard,
+    saveArticleViewState(id, view) {
+      rememberArticleView(workspaceState, id, view);
+      void persistWorkspaceState();
+    },
+    flushWorkspaceState: () => workspaceWrite,
     setSidebarOpen(open) {
       collapseBtn.innerHTML = sidebarToggleIcon(open);
       const label = open

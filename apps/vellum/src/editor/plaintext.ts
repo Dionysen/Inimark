@@ -13,6 +13,10 @@ import { mountQuoteInput } from "./quote-input";
 export interface PlaintextEditor {
   el: HTMLDivElement;
   getValue(): string;
+  /** Current caret and scroll position in the serialized plain-text document. */
+  getViewState(): PlaintextEditorViewState;
+  /** Restore a previously captured caret and scroll position after loading an article. */
+  restoreViewState(state: PlaintextEditorViewState): void;
   /** Replace the article; emitChange is used by user-triggered transformations. */
   setValue(value: string, emitChange?: boolean): void;
   focus(): void;
@@ -32,12 +36,19 @@ export interface PlaintextEditor {
   destroy(): void;
 }
 
+export interface PlaintextEditorViewState {
+  caret: number;
+  scrollTop: number;
+}
+
 export interface MountPlaintextOptions {
   value?: string;
   placeholder?: string;
   onChange?: (value: string) => void;
   /** Override indent count; defaults to `document.documentElement` dataset. */
   getFirstLineIndent?: () => number;
+  /** Called after user activity can change the current caret or scroll location. */
+  onViewStateChange?: () => void;
 }
 
 function escapeText(text: string): string {
@@ -385,10 +396,11 @@ export function mountPlaintextEditor(
   };
 
   const onDocumentSelectionChange = (): void => {
-    if (!typewriter) return;
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (!el.contains(sel.anchorNode)) return;
+    options.onViewStateChange?.();
+    if (!typewriter) return;
     scheduleCenter();
   };
 
@@ -419,7 +431,12 @@ export function mountPlaintextEditor(
   const onInput = (): void => {
     ensureStructure(el);
     emitChange();
+    options.onViewStateChange?.();
     scheduleCenter();
+  };
+
+  const onScroll = (): void => {
+    options.onViewStateChange?.();
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
@@ -491,6 +508,7 @@ export function mountPlaintextEditor(
   el.addEventListener("input", onInput);
   el.addEventListener("keydown", onKeyDown);
   el.addEventListener("paste", onPaste);
+  host.addEventListener("scroll", onScroll);
   el.addEventListener("compositionstart", onCompositionStart);
   el.addEventListener("compositionend", onCompositionEnd);
   document.addEventListener("selectionchange", onDocumentSelectionChange);
@@ -503,6 +521,20 @@ export function mountPlaintextEditor(
   return {
     el,
     getValue: () => serializePlaintextDom(el),
+    getViewState: () => ({
+      caret: readSelection(el).start,
+      scrollTop: Math.max(0, Math.floor(host.scrollTop)),
+    }),
+    restoreViewState: (state) => {
+      const caret = Math.max(0, Math.floor(state.caret));
+      const scrollTop = Math.max(0, Math.floor(state.scrollTop));
+      requestAnimationFrame(() => {
+        placeCaretAtSerializedOffset(el, caret);
+        host.scrollTop = scrollTop;
+        el.focus();
+        scheduleCenter();
+      });
+    },
     setValue: (value: string, emitChange = false) => {
       el.innerHTML = plaintextToHtml(value);
       quotes.reset();
@@ -532,6 +564,7 @@ export function mountPlaintextEditor(
       el.removeEventListener("input", onInput);
       el.removeEventListener("keydown", onKeyDown);
       el.removeEventListener("paste", onPaste);
+      host.removeEventListener("scroll", onScroll);
       el.removeEventListener("compositionstart", onCompositionStart);
       el.removeEventListener("compositionend", onCompositionEnd);
       document.removeEventListener("selectionchange", onDocumentSelectionChange);

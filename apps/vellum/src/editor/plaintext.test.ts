@@ -21,6 +21,7 @@ Object.assign(globalThis, {
   HTMLElement: happy.HTMLElement,
   Node: happy.Node,
   getSelection: () => happy.getSelection(),
+  requestAnimationFrame: (cb: (time: number) => void) => setTimeout(() => cb(0), 0),
 });
 
 describe("plaintextToHtml / serializePlaintextDom", () => {
@@ -97,6 +98,27 @@ describe("mountPlaintextEditor focusAtEnd", () => {
     pre.selectNodeContents(last as unknown as Node);
     pre.setEnd(range.startContainer, range.startOffset);
     assert.equal(pre.toString(), "乙");
+
+    editor.destroy();
+    host.remove();
+  });
+});
+
+describe("mountPlaintextEditor view state", () => {
+  it("captures and restores the serialized caret offset and scroll position", async () => {
+    const host = doc.createElement("div");
+    doc.body.append(host);
+    const editor = mountPlaintextEditor(host as unknown as HTMLElement, {
+      value: "甲\n乙",
+    });
+
+    editor.focusAtEnd();
+    host.scrollTop = 73;
+    assert.deepEqual(editor.getViewState(), { caret: 3, scrollTop: 73 });
+
+    editor.restoreViewState({ caret: 0, scrollTop: 9 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(editor.getViewState(), { caret: 0, scrollTop: 9 });
 
     editor.destroy();
     host.remove();
