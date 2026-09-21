@@ -7,6 +7,7 @@ export { default as UiMenu } from "./overlays/UiMenu.vue";
 export { default as UiDialog } from "./overlays/UiDialog.vue";
 export { default as UiPopover } from "./overlays/UiPopover.vue";
 export { default as UiTree } from "./composites/UiTree.vue";
+export { default as UiIconTabs } from "./composites/UiIconTabs.vue";
 export type {
   ButtonSize,
   ButtonVariant,
@@ -27,3 +28,4 @@ export type { UiMenuItem, UiMenuProps } from "./overlays/menu.ts";
 export type { UiDialogProps } from "./overlays/dialog.ts";
 export type { UiPopoverProps } from "./overlays/popover.ts";
 export type { UiTreeNode, UiTreeProps } from "./composites/tree.ts";
+export type { UiIconTabItem, UiIconTabsProps } from "./composites/icon-tabs.ts";

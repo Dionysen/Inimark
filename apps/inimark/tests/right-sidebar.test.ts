@@ -3,38 +3,49 @@ import { describe, expect, test } from "vitest";
 import { mountRightSidebar } from "../src/right-sidebar.ts";
 
 describe("right sidebar tabs", () => {
-  test("keeps tabs visible on Windows when collapse control is hidden", () => {
-    document.documentElement.classList.remove("platform-macos", "platform-linux");
-    document.documentElement.classList.add("platform-windows");
-
+  test("renders the Vue tab strip with the configured tabs", () => {
     const host = document.createElement("aside");
-    host.style.width = "240px";
     document.body.appendChild(host);
 
     const sidebar = mountRightSidebar(host);
     const topbar = host.querySelector<HTMLElement>(".inimark-right-sidebar-topbar");
     expect(topbar).not.toBeNull();
 
-    Object.defineProperty(topbar!, "getBoundingClientRect", {
-      configurable: true,
-      value: () => ({
-        left: 800,
-        right: 1040,
-        top: 0,
-        bottom: 40,
-        width: 240,
-        height: 40,
-        x: 800,
-        y: 0,
-        toJSON: () => ({}),
-      }),
+    const tabs = host.querySelectorAll<HTMLButtonElement>("[role='tab']");
+    expect(tabs.length).toBeGreaterThan(0);
+
+    const ids = [...tabs].map((tab) => tab.getAttribute("data-tab-id"));
+    for (const expected of ["ai", "outline", "graph"]) {
+      expect(ids).toContain(expected);
+    }
+
+    sidebar.destroy();
+    host.remove();
+  });
+
+  test("routes tab selection and collapse toggle through the controller", () => {
+    const host = document.createElement("aside");
+    document.body.appendChild(host);
+
+    const sidebar = mountRightSidebar(host);
+
+    const activated: string[] = [];
+    sidebar.onActivateTab((id) => activated.push(id));
+
+    let toggled = false;
+    sidebar.onToggleSidebar(() => {
+      toggled = true;
     });
 
-    const tabs = host.querySelectorAll<HTMLButtonElement>(".inimark-sidebar-tab");
-    expect(tabs.length).toBeGreaterThan(0);
-    for (const tab of tabs) {
-      expect(tab.hidden).toBe(false);
-    }
+    sidebar.activatePanel("graph");
+    expect(activated).toContain("graph");
+
+    const toggle = host.querySelector<HTMLButtonElement>(
+      ".inimark-right-sidebar-collapse-btn",
+    );
+    expect(toggle).not.toBeNull();
+    toggle!.click();
+    expect(toggled).toBe(true);
 
     sidebar.destroy();
     host.remove();

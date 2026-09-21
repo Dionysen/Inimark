@@ -38,6 +38,9 @@ importers:
       '@dionysen/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@dionysen/ui-vue':
+        specifier: workspace:*
+        version: link:../../packages/ui-vue
       '@inimark/editor':
         specifier: workspace:*
         version: link:../../packages/editor
@@ -74,6 +77,9 @@ importers:
       mermaid:
         specifier: ^11.15.0
         version: 11.17.2
+      vue:
+        specifier: ^3.5.43
+        version: 3.5.43(typescript@5.8.3)
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2.5.0
@@ -81,6 +87,12 @@ importers:
       '@types/markdown-it':
         specifier: ^14.2.0
         version: 14.2.0
+      '@vitejs/plugin-vue':
+        specifier: ^6.0.9
+        version: 6.0.9(vite@6.4.3(@types/node@26.4.1)(tsx@4.23.13))(vue@3.5.43(typescript@5.8.3))
+      '@vue/test-utils':
+        specifier: ^2.5.1
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.8.3))
       happy-dom:
         specifier: ^20.9.0
         version: 20.14.0

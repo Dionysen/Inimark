@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { createRequire } from "node:module";
 import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 import { resolve } from "node:path";
 
 const require = createRequire(import.meta.url);
@@ -8,6 +9,7 @@ const host = process.env.TAURI_DEV_HOST;
 const editorRoot = resolve(__dirname, "../../packages/editor");
 const siteRenderRoot = resolve(__dirname, "../../packages/site-render");
 const uiRoot = resolve(__dirname, "../../packages/ui");
+const uiVueRoot = resolve(__dirname, "../../packages/ui-vue");
 const i18nRoot = resolve(__dirname, "../../packages/i18n");
 const shortcutKitRoot = resolve(__dirname, "../../packages/shortcut-kit");
 const settingsKitRoot = resolve(__dirname, "../../packages/settings-kit");
@@ -53,6 +55,11 @@ const editorAliases = [
     find: "@dionysen/ui/font-catalog",
     replacement: resolve(uiRoot, "src/font-catalog.ts"),
   },
+  {
+    find: "@dionysen/ui-vue/style.css",
+    replacement: resolve(uiVueRoot, "src/style.css"),
+  },
+  { find: "@dionysen/ui-vue", replacement: resolve(uiVueRoot, "src/index.ts") },
   { find: "@dionysen/ui", replacement: resolve(uiRoot, "src/index.ts") },
   { find: "@dionysen/i18n", replacement: resolve(i18nRoot, "src/index.ts") },
   {
@@ -76,6 +83,7 @@ const editorAliases = [
 ];
 
 export default defineConfig({
+  plugins: [vue()],
   clearScreen: false,
   server: {
     port: 1420,

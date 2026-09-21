@@ -11,6 +11,7 @@ import "@inimark/editor/widgets.css";
 import "@inimark/editor/theme-typora.css";
 import "katex/dist/katex.min.css";
 import "./styles/app.css";
+import "@dionysen/ui-vue/style.css";
 import { t } from "./i18n/index.ts";
 import { showLibraryAddedToast } from "./libraries/added-toast.ts";
 import {

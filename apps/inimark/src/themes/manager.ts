@@ -1,4 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event";
+import { isTauri } from "@dionysen/shell";
 import {
   type AppearanceMode,
   type AppearanceState,
@@ -121,7 +122,7 @@ class ThemeManager {
   }
 
   private emitCatalogSync(): void {
-    emit(THEME_CATALOG_SYNC_EVENT, null).catch(() => {});
+    if (isTauri()) emit(THEME_CATALOG_SYNC_EVENT, null).catch(() => {});
   }
 
   private async refreshCatalogFromDisk(): Promise<void> {
@@ -139,7 +140,7 @@ class ThemeManager {
     };
     persistAppearanceState(this.state);
     this.applyThemes();
-    emit(APPEARANCE_SYNC_EVENT, this.state).catch(() => {});
+    if (isTauri()) emit(APPEARANCE_SYNC_EVENT, this.state).catch(() => {});
     this.notify();
   }
 
@@ -156,35 +157,39 @@ class ThemeManager {
     onSystemChange();
     this.mediaQuery.addEventListener("change", onSystemChange);
 
-    this.unlistenAppearance = await listen<AppearanceState>(APPEARANCE_SYNC_EVENT, async (event) => {
-      const next = event.payload;
-      if (!next) return;
-      this.state = next;
-      persistAppearanceState(next);
-      await this.ensureCustomStylesForActive();
-      this.applyThemes();
-      this.notify();
-    });
+    if (isTauri()) {
+      this.unlistenAppearance = await listen<AppearanceState>(APPEARANCE_SYNC_EVENT, async (event) => {
+        const next = event.payload;
+        if (!next) return;
+        this.state = next;
+        persistAppearanceState(next);
+        await this.ensureCustomStylesForActive();
+        this.applyThemes();
+        this.notify();
+      });
 
-    this.unlistenCatalog = await listen(THEME_CATALOG_SYNC_EVENT, async () => {
-      await this.refreshCatalogFromDisk();
-    });
+      this.unlistenCatalog = await listen(THEME_CATALOG_SYNC_EVENT, async () => {
+        await this.refreshCatalogFromDisk();
+      });
 
-    this.unlistenCss = await listen<ThemeCssPayload>(THEME_CSS_EVENT, (event) => {
-      const { id, css, enable } = event.payload;
-      this.injectOrUpdateStyle(id, css, enable);
-    });
+      this.unlistenCss = await listen<ThemeCssPayload>(THEME_CSS_EVENT, (event) => {
+        const { id, css, enable } = event.payload;
+        this.injectOrUpdateStyle(id, css, enable);
+      });
 
-    this.unlistenCodeCss = await listen<CodeThemeCssPayload>(CODE_THEME_CSS_EVENT, (event) => {
-      const { id, css, enable } = event.payload;
-      // Apply only — do not re-emit or windows echo forever and freeze.
-      this.injectOrUpdateCodeThemeStyle(id, css, enable);
-    });
+      this.unlistenCodeCss = await listen<CodeThemeCssPayload>(CODE_THEME_CSS_EVENT, (event) => {
+        const { id, css, enable } = event.payload;
+        // Apply only — do not re-emit or windows echo forever and freeze.
+        this.injectOrUpdateCodeThemeStyle(id, css, enable);
+      });
+    }
 
-    setTimeout(() => {
-      void this.refreshCustomThemes();
-      void this.refreshCustomCodeThemes();
-    }, 300);
+    if (isTauri()) {
+      setTimeout(() => {
+        void this.refreshCustomThemes();
+        void this.refreshCustomCodeThemes();
+      }, 300);
+    }
 
     this.applyThemes();
   }

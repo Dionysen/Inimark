@@ -18,6 +18,7 @@
     "@dionysen/shortcut-kit": "workspace:*",
     "@dionysen/theme": "workspace:*",
     "@dionysen/ui": "workspace:*",
+    "@dionysen/ui-vue": "workspace:*",
     "@inimark/editor": "workspace:*",
     "@inimark/site-render": "workspace:*",
     "@tauri-apps/api": "^2.5.0",
@@ -29,10 +30,13 @@
     "isomorphic-dompurify": "^4.1.0",
     "katex": "^0.16.46",
     "markdown-it": "^14.3.1",
-    "mermaid": "^11.15.0"
+    "mermaid": "^11.15.0",
+    "vue": "^3.5.43"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
     "@types/markdown-it": "^14.2.0",
     "happy-dom": "^20.9.0",
     "typescript": "~5.8.3",

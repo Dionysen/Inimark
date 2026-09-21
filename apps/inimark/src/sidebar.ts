@@ -31,7 +31,6 @@ import {
   newFileIcon,
   newFolderIcon,
   settingsIcon,
-  sidebarToggleIcon,
   sortIcon,
 } from "./ui/widgets/index.ts";
 import { mountLibraryDropTarget } from "./libraries/drop-target.ts";
@@ -97,11 +96,10 @@ import {
 import { libraryIdFromPath } from "./libraries/store.ts";
 import {
   DEFAULT_LEFT_SIDEBAR_TABS,
-  sidebarTabIcon,
-  sidebarTabLabel,
   type SidebarTabId,
 } from "./sidebar/tab-layout.ts";
 import { loadSettings, type AppSettings } from "./settings/store.ts";
+import { mountSidebarTopbar } from "./sidebar/vue/mount-sidebar-topbar.ts";
 
 export type SidebarPanelId = SidebarTabId;
 
@@ -334,50 +332,21 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   topbar.className = "inimark-sidebar-topbar";
   topbar.setAttribute("data-tauri-drag-region", "");
 
-  const tabs = document.createElement("div");
-  tabs.className = "inimark-sidebar-tabs";
-  tabs.setAttribute("role", "tablist");
-
   let tabIds: SidebarTabId[] = (() => {
     const settings = loadSettings();
     return settings.leftSidebarTabs.length > 0
       ? [...settings.leftSidebarTabs]
       : [...DEFAULT_LEFT_SIDEBAR_TABS];
   })();
-  const tabButtons = new Map<SidebarTabId, HTMLButtonElement>();
+  const initialActivePanel = loadActivePanel(tabIds);
   let panelElements: Partial<Record<SidebarTabId, HTMLElement>> = {};
-
-  function rebuildTabButtons(): void {
-    tabs.replaceChildren();
-    tabButtons.clear();
-    for (const id of tabIds) {
-      const label = sidebarTabLabel(id);
-      const btn = createIconButton({
-        label,
-        title: label,
-      });
-      btn.className = "inimark-sidebar-tab";
-      btn.setAttribute("role", "tab");
-      btn.dataset.panel = id;
-      btn.innerHTML = sidebarTabIcon(id);
-      markNoDrag(btn);
-      btn.addEventListener("click", () => setActivePanel(id));
-      tabButtons.set(id, btn);
-      tabs.append(btn);
-    }
-  }
-
-  rebuildTabButtons();
-
-  const collapseBtn = createIconButton({
-    label: t("common.collapseSidebar"),
-    title: t("common.collapseSidebar"),
+  const topbarController = mountSidebarTopbar(topbar, {
+    tabs: tabIds,
+    activeId: initialActivePanel,
+    side: "left",
+    onSelect: (id) => setActivePanel(id),
+    onToggle: () => handlers.toggleSidebar(),
   });
-  collapseBtn.className = "inimark-sidebar-toggle-btn inimark-sidebar-collapse-btn";
-  collapseBtn.innerHTML = sidebarToggleIcon(true);
-  markNoDrag(collapseBtn);
-
-  topbar.append(tabs, collapseBtn);
 
   const body = document.createElement("div");
   body.className = "inimark-sidebar-body";
@@ -616,7 +585,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   let activeLibraryId: string | null = null;
   let savedLibraries: LibraryRecord[] = [];
   let currentWorkspace: Workspace | null = null;
-  let activePanel: SidebarPanelId = loadActivePanel(tabIds);
+  let activePanel: SidebarPanelId = initialActivePanel;
   let searchQuery = "";
   let searchHits: VaultSearchResult[] = [];
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -823,8 +792,6 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     closeMenu();
     handlers.openSettings();
   });
-  collapseBtn.addEventListener("click", () => handlers.toggleSidebar());
-
   document.addEventListener("click", (event) => {
     const target = event.target as Node | null;
     if (menu.isOpen() && !(target && dock.contains(target))) {
@@ -1090,11 +1057,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       /* ignore */
     }
 
-    for (const [id, btn] of tabButtons) {
-      const selected = id === panel;
-      btn.classList.toggle("is-active", selected);
-      btn.setAttribute("aria-selected", selected ? "true" : "false");
-    }
+    topbarController.setActivePanel(panel);
 
     for (const id of tabIds) {
       const el = panelElements[id];
@@ -1106,37 +1069,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
 
   /** Hide trailing tabs that would collide with the collapse control. */
   function updateTabVisibility(): void {
-    const order = tabIds;
-    for (const id of order) {
-      const btn = tabButtons.get(id);
-      if (btn) btn.hidden = false;
-    }
-
-    const topbarRect = topbar.getBoundingClientRect();
-    if (topbarRect.width <= 0) return;
-
-    const styles = getComputedStyle(topbar);
-    const padL = parseFloat(styles.paddingLeft) || 0;
-    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
-    const available = Math.max(
-      0,
-      collapseBtn.getBoundingClientRect().left - gap - (topbarRect.left + padL),
-    );
-    const tabGap = 2;
-
-    let used = 0;
-    for (let i = 0; i < order.length; i++) {
-      const btn = tabButtons.get(order[i]!)!;
-      const need = (used > 0 ? tabGap : 0) + btn.getBoundingClientRect().width;
-      if (used + need <= available + 0.5) {
-        used += need;
-        continue;
-      }
-      for (let j = i; j < order.length; j++) {
-        tabButtons.get(order[j]!)!.hidden = true;
-      }
-      break;
-    }
+    topbarController.reflow();
   }
 
   function applyTabs(
@@ -1145,7 +1078,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   ): void {
     tabIds = [...ids];
     panelElements = { ...panels };
-    rebuildTabButtons();
+    topbarController.setTabs(tabIds);
     body.replaceChildren();
     for (const id of tabIds) {
       const el = panelElements[id];
@@ -1163,10 +1096,6 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     queueMicrotask(() => updateTabVisibility());
   }
 
-  const tabVisibilityObserver = new ResizeObserver(() => {
-    updateTabVisibility();
-  });
-  tabVisibilityObserver.observe(topbar);
   document.addEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
 
   function flattenVisibleNodes(
@@ -2889,13 +2818,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
   queueMicrotask(() => updateTabVisibility());
 
   function refreshChrome(): void {
-    for (const [id, btn] of tabButtons) {
-      const label = sidebarTabLabel(id);
-      btn.title = label;
-      btn.setAttribute("aria-label", label);
-    }
-    collapseBtn.title = t("common.collapseSidebar");
-    collapseBtn.setAttribute("aria-label", t("common.collapseSidebar"));
+    topbarController.refreshLabels();
 
     newFileBtn.title = t("sidebar.toolbar.newFile");
     newFileBtn.setAttribute("aria-label", t("sidebar.toolbar.newFile"));
@@ -2966,10 +2889,7 @@ export function mountSidebar(host: HTMLElement): SidebarController {
       return [...expanded];
     },
     setSidebarOpen(open) {
-      collapseBtn.innerHTML = sidebarToggleIcon(open);
-      const label = open ? t("common.collapseSidebar") : t("common.expandSidebar");
-      collapseBtn.title = label;
-      collapseBtn.setAttribute("aria-label", label);
+      topbarController.setSidebarOpen(open);
     },
     getPanels() {
       return {
@@ -3040,8 +2960,8 @@ export function mountSidebar(host: HTMLElement): SidebarController {
     },
     destroy() {
       unsubscribeLocale();
-      tabVisibilityObserver.disconnect();
       document.removeEventListener(FULLSCREEN_CHANGE_EVENT, updateTabVisibility);
+      topbarController.destroy();
       cancelSearch();
       filesToolbar.destroy();
       searchToolbar.destroy();

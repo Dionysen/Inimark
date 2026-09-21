@@ -9,4 +9,5 @@
 @import "./overlays/dialog.css";
 @import "./overlays/popover.css";
 @import "./composites/tree.css";
+@import "./composites/icon-tabs.css";
 @import "./scrollbar.css";
