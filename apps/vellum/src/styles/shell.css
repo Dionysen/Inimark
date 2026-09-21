@@ -1538,6 +1538,23 @@ html[data-auto-hide-statusbar="true"] .vellum-status-corner:focus-within {
     opacity: 1;
 }
 
+/* Preserve the word count while auto-hiding the other bottom-right tools. */
+html[data-auto-hide-statusbar="true"][data-always-show-word-count="true"] .vellum-status-bar--right {
+    opacity: 1;
+}
+
+html[data-auto-hide-statusbar="true"][data-always-show-word-count="true"] .vellum-status-bar--right > :not(.vellum-status-footer) {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+html[data-auto-hide-statusbar="true"][data-always-show-word-count="true"] .vellum-status-bar--right:hover > :not(.vellum-status-footer),
+html[data-auto-hide-statusbar="true"][data-always-show-word-count="true"] .vellum-status-bar--right:focus-within > :not(.vellum-status-footer) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .vellum-sync-spin {
     transform-origin: center;
     animation: vellum-sync-spin 0.75s linear infinite;

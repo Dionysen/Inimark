@@ -145,6 +145,12 @@ function searchEntries(): SettingSearchItem[] {
       getTitle: () => t("settings.editor.autoHideStatusbar"),
       getDescription: () => t("settings.editor.autoHideStatusbarDesc"),
     },
+    {
+      id: "editor.alwaysShowWordCount",
+      section: "editor",
+      getTitle: () => t("settings.editor.alwaysShowWordCount"),
+      getDescription: () => t("settings.editor.alwaysShowWordCountDesc"),
+    },
     ...shortcutSearchEntries().map((entry) => ({
       ...entry,
       section: "shortcuts",
@@ -308,6 +314,22 @@ function renderEditor(
       t("settings.editor.autoHideStatusbarDesc"),
       autoHide.el,
       "editor.autoHideStatusbar",
+    ),
+  );
+
+  const alwaysShowWordCount = createToggle({
+    checked: settings.alwaysShowWordCount,
+    title: t("settings.editor.alwaysShowWordCount"),
+    onChange(checked) {
+      onPatch({ alwaysShowWordCount: checked });
+    },
+  });
+  body.append(
+    createRow(
+      t("settings.editor.alwaysShowWordCount"),
+      t("settings.editor.alwaysShowWordCountDesc"),
+      alwaysShowWordCount.el,
+      "editor.alwaysShowWordCount",
     ),
   );
 

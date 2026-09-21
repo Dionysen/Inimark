@@ -451,6 +451,9 @@ const en: Dictionary = {
       autoHideStatusbar: "Auto-hide corner tools",
       autoHideStatusbarDesc:
         "Hide the bottom-left and bottom-right tools until the pointer enters their area",
+      alwaysShowWordCount: "Always show word count",
+      alwaysShowWordCountDesc:
+        "Keep the word count visible when corner tools are auto-hidden",
     },
     shortcuts: {
       intro: "Click a shortcut to record a new one. Press the keys, then Save. Esc clears the keys you just pressed.",
@@ -945,6 +948,8 @@ const zhCN: Dictionary = {
       typewriterDesc: "写作时将光标行垂直居中",
       autoHideStatusbar: "角落工具自动隐藏",
       autoHideStatusbarDesc: "自动隐藏左右下角工具，鼠标移入该区域时再显示（含左下角同步按钮）",
+      alwaysShowWordCount: "总是显示字数统计",
+      alwaysShowWordCountDesc: "角落工具自动隐藏时，右下角字数统计仍会保持显示",
     },
     shortcuts: {
       intro: "点击快捷键开始录制。按下新的组合后点保存。按 Esc 会清掉刚才按下的键。",

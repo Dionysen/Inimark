@@ -30,6 +30,8 @@ export interface AppSettings extends EditorTypographySettings {
   typewriterMode: boolean;
   /** Hide the bottom-corner status tools until the pointer enters that area. */
   autoHideStatusbar: boolean;
+  /** Keep the bottom-right word count visible while corner tools are hidden. */
+  alwaysShowWordCount: boolean;
   wordCount: WordCountSettings;
 }
 
@@ -64,6 +66,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
   typewriterMode: false,
   autoHideStatusbar: false,
+  alwaysShowWordCount: false,
   wordCount: { includeSymbols: false },
 };
 
@@ -107,6 +110,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
     locale,
     typewriterMode: src.typewriterMode === true,
     autoHideStatusbar: src.autoHideStatusbar === true,
+    alwaysShowWordCount: src.alwaysShowWordCount === true,
     wordCount: { includeSymbols: wordCountSrc.includeSymbols === true },
     ...typography,
   };
@@ -129,6 +133,9 @@ export const subscribeSettings = store.subscribe;
 export function applySettings(settings: AppSettings): void {
   applyEditorTypographyCss(document.documentElement, settings, "shell");
   document.documentElement.dataset.autoHideStatusbar = settings.autoHideStatusbar
+    ? "true"
+    : "false";
+  document.documentElement.dataset.alwaysShowWordCount = settings.alwaysShowWordCount
     ? "true"
     : "false";
   setLocale(settings.locale === "system" ? detectSystemLocale() : settings.locale);
