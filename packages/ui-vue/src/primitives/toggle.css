@@ -1,0 +1,86 @@
+.dionysen-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--shell-space-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.dionysen-toggle-row:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-toggle-row__copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.dionysen-toggle-row__label {
+  font-weight: 550;
+}
+
+.dionysen-toggle-row__description {
+  color: var(--shell-muted-fg);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dionysen-toggle-row__track {
+  box-sizing: border-box;
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex: none;
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  background: var(--shell-control-bg);
+  transition:
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition);
+}
+
+.dionysen-toggle-row__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--shell-muted-fg);
+  transition:
+    background var(--shell-control-transition),
+    transform var(--shell-control-transition);
+}
+
+.dionysen-toggle-row.is-on .dionysen-toggle-row__track {
+  border-color: var(--shell-accent);
+  background: var(--shell-accent);
+}
+
+.dionysen-toggle-row.is-on .dionysen-toggle-row__thumb {
+  background: var(--shell-accent-fg);
+  transform: translateX(16px);
+}
+
+.dionysen-toggle-row:focus-visible .dionysen-toggle-row__track {
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dionysen-toggle-row__track,
+  .dionysen-toggle-row__thumb {
+    transition: none;
+  }
+}

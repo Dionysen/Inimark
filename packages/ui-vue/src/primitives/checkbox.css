@@ -1,0 +1,82 @@
+.dionysen-checkbox {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--shell-space-2);
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+  cursor: pointer;
+}
+
+.dionysen-checkbox.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-checkbox__native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+.dionysen-checkbox__box {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex: none;
+  border: 1px solid var(--shell-border);
+  border-radius: 4px;
+  background: var(--shell-control-bg);
+  color: var(--shell-accent-fg);
+  transition:
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition);
+}
+
+.dionysen-checkbox__box svg {
+  display: none;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dionysen-checkbox__native:checked + .dionysen-checkbox__box,
+.dionysen-checkbox__native:indeterminate + .dionysen-checkbox__box {
+  border-color: var(--shell-accent);
+  background: var(--shell-accent);
+}
+
+.dionysen-checkbox__native:checked + .dionysen-checkbox__box svg,
+.dionysen-checkbox__native:indeterminate + .dionysen-checkbox__box svg {
+  display: block;
+}
+
+.dionysen-checkbox__native:focus-visible + .dionysen-checkbox__box {
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+.dionysen-checkbox__copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dionysen-checkbox__label {
+  font-weight: 550;
+}
+
+.dionysen-checkbox__description {
+  color: var(--shell-muted-fg);
+  font-size: 12px;
+  line-height: 1.35;
+}

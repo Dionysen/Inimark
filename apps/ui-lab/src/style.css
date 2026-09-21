@@ -1,0 +1,163 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #202124;
+  background: #f5f6f8;
+  --text-primary: #202124;
+  --text-secondary: #667085;
+  --border: #d9dce3;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f6f8;
+  --bg-tertiary: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-hover: #eef0f4;
+  --bg-input: #ffffff;
+  --accent: #5268d8;
+  --accent-hover: #4559bd;
+  --danger: #dc3545;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.lab {
+  min-height: 100vh;
+  padding: 48px;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+:root[data-appearance="dark"] {
+  color-scheme: dark;
+  --text-primary: #eef0f4;
+  --text-secondary: #a1a7b3;
+  --border: #353943;
+  --bg-primary: #17191e;
+  --bg-secondary: #111318;
+  --bg-tertiary: #21242b;
+  --bg-surface: #1c1f25;
+  --bg-hover: #292d35;
+  --bg-input: #17191e;
+  --accent: #8194ff;
+  --accent-hover: #93a3ff;
+}
+
+.lab__header,
+.lab__section {
+  width: min(880px, 100%);
+  margin: 0 auto;
+}
+
+.lab__header,
+.lab__section-heading,
+.lab__row {
+  display: flex;
+  align-items: center;
+}
+
+.lab__header,
+.lab__section-heading {
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.lab__header {
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.lab__eyebrow {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  margin-block: 4px 8px;
+  font-size: 32px;
+}
+
+h2 {
+  margin-bottom: 6px;
+  font-size: 18px;
+}
+
+p,
+.lab__section-heading span {
+  color: var(--text-secondary);
+}
+
+.lab__section {
+  margin-bottom: 20px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-primary);
+}
+
+.lab__section-heading {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lab__row {
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 20px;
+}
+
+.lab__row svg,
+.lab__inline-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lab__form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-top: 20px;
+}
+
+.lab__control-stack {
+  display: grid;
+  gap: 18px;
+  padding-top: 20px;
+}
+
+.lab__divider {
+  height: 1px;
+  background: var(--border);
+}
+
+@media (max-width: 640px) {
+  .lab {
+    padding: 24px 16px;
+  }
+
+  .lab__header {
+    flex-direction: column;
+  }
+
+  .lab__form-grid {
+    grid-template-columns: 1fr;
+  }
+}

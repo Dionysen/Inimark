@@ -1,0 +1,79 @@
+.dionysen-icon-button {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--shell-radius-control);
+  background: transparent;
+  color: var(--shell-muted-fg);
+  cursor: pointer;
+  transition:
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition),
+    transform var(--shell-control-transition),
+    opacity var(--shell-control-transition);
+}
+
+.dionysen-icon-button--medium {
+  width: var(--shell-control-height);
+  height: var(--shell-control-height);
+}
+
+.dionysen-icon-button--small {
+  width: 26px;
+  height: 26px;
+}
+
+.dionysen-icon-button--default {
+  border-color: var(--shell-border);
+  background: var(--shell-surface);
+}
+
+.dionysen-icon-button--danger {
+  color: var(--danger, #dc3545);
+}
+
+.dionysen-icon-button:hover:not(:disabled) {
+  background: var(--shell-hover);
+  color: var(--shell-fg);
+}
+
+.dionysen-icon-button--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger, #dc3545) 12%, transparent);
+  color: var(--danger, #dc3545);
+}
+
+.dionysen-icon-button.is-active {
+  border-color: color-mix(in srgb, var(--shell-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--shell-accent) 12%, transparent);
+  color: var(--shell-fg);
+}
+
+.dionysen-icon-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.dionysen-icon-button:focus {
+  outline: none;
+}
+
+.dionysen-icon-button:focus-visible {
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+.dionysen-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-icon-button__icon,
+.dionysen-icon-button__icon :where(svg) {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}

@@ -150,6 +150,10 @@
 
 ```
 apps/inimark/          Tauri 2 桌面壳 + Vite/TS UI
+apps/vellum/           共用桌面壳的纯文本写作应用
+apps/ui-lab/           共享 Vue 控件的状态展示与人工验收页
+packages/ui/           @dionysen/ui — 原有控件与设计令牌
+packages/ui-vue/       @dionysen/ui-vue — Vue 3 控件库（迁移目标）
 packages/editor/       @inimark/editor — typora-web 风格 WYSIWYG（ProseMirror）
 packages/site-render/  库 → 静态站的 SSG 模型（Publish）
 crates/inimark-ssg/    写入 dist / 本地预览等原生 I/O
@@ -181,6 +185,11 @@ pnpm inimark:tauri dev
 pnpm vellum:dev
 pnpm vellum:tauri dev
 
+# Vue UI 控件库工作台
+pnpm ui:dev
+pnpm ui:test
+pnpm ui:build
+
 # 测试
 pnpm test:editor
 pnpm inimark:test
@@ -198,6 +207,7 @@ pnpm docs:deploy
 ### 开发提示
 
 - 改编辑器行为 → `packages/editor`（单元测试与 specs 在同包）。
+- 改共享 Vue 控件 → `packages/ui-vue`；查看控件状态和人工验收 → `apps/ui-lab`。
 - 改桌面壳、库管理、发布面板 → `apps/inimark`。
 - 改发布 HTML/CSS/路径 → `packages/site-render`；宣传页源文件在 `docs/landing/`。
 - 版本号可用 `pnpm bump-version`；图标替换可用 `pnpm replace-icon`。

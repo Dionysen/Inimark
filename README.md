@@ -151,7 +151,9 @@ Full docs:
 ```
 apps/inimark/              Inimark — Tauri 2 + Vite/TS product UI
 apps/vellum/               Vellum — plaintext writing app (shared shell)
+apps/ui-lab/               Vue component workbench for shared UI states
 packages/ui/               @dionysen/ui — shared widgets + design tokens
+packages/ui-vue/           @dionysen/ui-vue — Vue 3 component library (migration target)
 packages/shell/            @dionysen/shell — window chrome, platform, scrollbars
 packages/settings-kit/     @dionysen/settings-kit — settings window framework
 packages/shortcut-kit/     @dionysen/shortcut-kit — shortcut matching / persistence
@@ -193,6 +195,11 @@ pnpm inimark:tauri dev
 pnpm vellum:dev
 pnpm vellum:tauri dev
 
+# Vue UI library workbench
+pnpm ui:dev
+pnpm ui:test
+pnpm ui:build
+
 # Tests
 pnpm test:editor
 pnpm inimark:test
@@ -210,6 +217,7 @@ pnpm docs:deploy
 ### Where to change what
 
 - Editor behavior → `packages/editor` (unit tests and specs live there).
+- Shared Vue components → `packages/ui-vue`; component states and manual QA → `apps/ui-lab`.
 - Shell, libraries, publish UI → `apps/inimark`.
 - Published HTML/CSS/paths → `packages/site-render`; marketing page sources in `docs/landing/`.
 - Version bump: `pnpm bump-version`. Icon replace: `pnpm replace-icon`.

@@ -1,0 +1,85 @@
+.dionysen-text-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+}
+
+.dionysen-text-field__label {
+  font-weight: 550;
+}
+
+.dionysen-text-field__surface {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: var(--shell-control-height);
+  padding: 0 var(--shell-control-padding-x);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius-control);
+  background: var(--shell-control-bg);
+  transition:
+    background var(--shell-control-transition),
+    border-color var(--shell-control-transition),
+    box-shadow var(--shell-control-transition);
+}
+
+.dionysen-text-field__surface:hover {
+  border-color: color-mix(in srgb, var(--shell-accent) 45%, var(--shell-border));
+}
+
+.dionysen-text-field__surface:focus-within {
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+.dionysen-text-field__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.dionysen-text-field__input::placeholder {
+  color: var(--shell-muted-fg);
+  opacity: 0.75;
+}
+
+.dionysen-text-field__adornment {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--shell-muted-fg);
+}
+
+.dionysen-text-field__description,
+.dionysen-text-field__error {
+  color: var(--shell-muted-fg);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dionysen-text-field__error {
+  color: var(--danger, #dc3545);
+}
+
+.dionysen-text-field.is-invalid .dionysen-text-field__surface {
+  border-color: var(--danger, #dc3545);
+}
+
+.dionysen-text-field.is-disabled {
+  opacity: 0.45;
+}
+
+.dionysen-text-field.is-disabled .dionysen-text-field__surface {
+  cursor: not-allowed;
+}
