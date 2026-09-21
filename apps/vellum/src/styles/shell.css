@@ -286,6 +286,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     height: 100%;
     position: relative;
     background: var(--inimark-bg);
+    transition: grid-template-columns 160ms ease;
 }
 
 .vellum-shell.is-sidebar-closed {
@@ -310,6 +311,10 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     overflow: visible;
     border-right: var(--border-width, 1px) solid var(--border);
     background: var(--bg-secondary, var(--inimark-bg));
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        visibility 0s;
 }
 
 .vellum-library-host.is-collapsed {
@@ -317,6 +322,12 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     pointer-events: none;
     visibility: hidden;
     overflow: hidden;
+    opacity: 0;
+    transform: translateX(calc(-100% - var(--inimark-space-2)));
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        visibility 0s linear 160ms;
 }
 
 .vellum-library-host.is-collapsed>.inimark-resize-handle,
@@ -348,9 +359,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     width: min(480px, var(--vellum-library-width, 280px));
     max-width: calc(100% - 24px);
     box-shadow: 0 12px 32px color-mix(in srgb, #000 28%, transparent);
-    transition:
-        opacity 160ms ease,
-        transform 160ms ease;
 }
 
 .vellum-shell.is-sidebar-floating .vellum-library-host.is-collapsed {
@@ -359,6 +367,9 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     overflow: hidden;
     opacity: 0;
     transform: translateX(calc(-100% - var(--inimark-space-2)));
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease;
 }
 
 .vellum-main {
@@ -712,6 +723,21 @@ body.is-library-dragging * {
 
 .inimark-sidebar-toggle-btn:active {
     transform: scale(0.96);
+}
+
+.inimark-titlebar-sidebar-toggle-btn {
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        color 0.15s ease,
+        background 0.15s ease;
+}
+
+.inimark-titlebar-sidebar-toggle-btn.is-sidebar-toggle-entering,
+.inimark-titlebar-sidebar-toggle-btn.is-sidebar-toggle-exiting {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-0.35rem);
 }
 
 .inimark-icon--sidebar-toggle {

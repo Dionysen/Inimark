@@ -31,6 +31,8 @@ export interface SidebarToggleOptions {
   onToggle: () => void;
 }
 
+const SIDEBAR_TOGGLE_TRANSITION_MS = 160;
+
 /** Actions for the trailing overflow menu. Omitted on windows that have no editor. */
 export interface TitleBarMenuActions {
   getImmersive(): boolean;
@@ -74,6 +76,9 @@ export function mountTitleBar(
   leading.className = "inimark-titlebar-leading";
 
   let sidebarToggleBtn: HTMLButtonElement | null = null;
+  let sidebarToggleInitialized = false;
+  let sidebarToggleTimer: ReturnType<typeof setTimeout> | null = null;
+  let sidebarToggleFrame: number | null = null;
   if (options.sidebarToggle) {
     sidebarToggleBtn = createIconButton({
       label: sidebarOpen
@@ -84,7 +89,8 @@ export function mountTitleBar(
         : t("common.expandSidebar"),
       onClick: options.sidebarToggle.onToggle,
     });
-    sidebarToggleBtn.className = "inimark-sidebar-toggle-btn";
+    sidebarToggleBtn.className =
+      "inimark-sidebar-toggle-btn inimark-titlebar-sidebar-toggle-btn";
     sidebarToggleBtn.innerHTML = sidebarToggleIcon(sidebarOpen);
     // Obsidian-style: titlebar only shows the expand control while collapsed.
     sidebarToggleBtn.hidden = sidebarOpen;
@@ -282,6 +288,16 @@ export function mountTitleBar(
 
   host.append(leading, center, trailing);
 
+  function syncSidebarToggleLabel(open: boolean): void {
+    if (!sidebarToggleBtn) return;
+    sidebarToggleBtn.innerHTML = sidebarToggleIcon(open);
+    const label = open
+      ? t("common.collapseSidebar")
+      : t("common.expandSidebar");
+    sidebarToggleBtn.title = label;
+    sidebarToggleBtn.setAttribute("aria-label", label);
+  }
+
   return {
     setTitle(title: string) {
       titleEl.textContent = title;
@@ -289,18 +305,45 @@ export function mountTitleBar(
     setSidebarOpen(open: boolean) {
       sidebarOpen = open;
       if (!sidebarToggleBtn) return;
-      sidebarToggleBtn.hidden = open;
-      sidebarToggleBtn.innerHTML = sidebarToggleIcon(open);
-      const label = open
-        ? t("common.collapseSidebar")
-        : t("common.expandSidebar");
-      sidebarToggleBtn.title = label;
-      sidebarToggleBtn.setAttribute("aria-label", label);
+      if (sidebarToggleTimer != null) clearTimeout(sidebarToggleTimer);
+      if (sidebarToggleFrame != null) cancelAnimationFrame(sidebarToggleFrame);
+      syncSidebarToggleLabel(open);
+
+      if (!sidebarToggleInitialized) {
+        sidebarToggleInitialized = true;
+        sidebarToggleBtn.hidden = open;
+        return;
+      }
+
+      if (open) {
+        sidebarToggleBtn.disabled = true;
+        sidebarToggleBtn.classList.remove("is-sidebar-toggle-entering");
+        sidebarToggleBtn.classList.add("is-sidebar-toggle-exiting");
+        sidebarToggleTimer = setTimeout(() => {
+          sidebarToggleBtn!.hidden = true;
+          sidebarToggleBtn!.disabled = false;
+          sidebarToggleBtn!.classList.remove("is-sidebar-toggle-exiting");
+          sidebarToggleTimer = null;
+        }, SIDEBAR_TOGGLE_TRANSITION_MS);
+        return;
+      }
+
+      sidebarToggleBtn.hidden = false;
+      sidebarToggleBtn.disabled = true;
+      sidebarToggleBtn.classList.remove("is-sidebar-toggle-exiting");
+      sidebarToggleBtn.classList.add("is-sidebar-toggle-entering");
+      sidebarToggleFrame = requestAnimationFrame(() => {
+        sidebarToggleBtn!.classList.remove("is-sidebar-toggle-entering");
+        sidebarToggleBtn!.disabled = false;
+        sidebarToggleFrame = null;
+      });
     },
     destroy() {
       unlistenMaximize?.();
       unsubscribeLocale?.();
       unsubscribeMoreMenuOpen?.();
+      if (sidebarToggleTimer != null) clearTimeout(sidebarToggleTimer);
+      if (sidebarToggleFrame != null) cancelAnimationFrame(sidebarToggleFrame);
       moreMenu?.destroy();
       host.replaceChildren();
     },
