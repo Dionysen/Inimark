@@ -14,6 +14,7 @@ import { createToggle, onOutsideClick, typewriterIcon } from "@dionysen/ui";
 import { onLocaleChange, t } from "../i18n/index.ts";
 import type { AppSettings, WordCountSettings } from "../settings/store.ts";
 import type { PlaintextEditor } from "./plaintext.ts";
+import { mountPlaintextFormatPanel } from "./plaintext-format-panel.ts";
 
 export interface StatusBarController {
   scheduleUpdate(): void;
@@ -52,8 +53,11 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
 
   const typewriterBtn = document.createElement("button");
   typewriterBtn.type = "button";
-  typewriterBtn.className = "vellum-status-btn";
+  typewriterBtn.className = "vellum-status-btn vellum-typewriter-btn";
   typewriterBtn.innerHTML = typewriterIcon;
+
+  const formatAnchor = document.createElement("div");
+  formatAnchor.className = "vellum-status-format";
 
   const footer = document.createElement("div");
   footer.className = "vellum-status-footer";
@@ -63,7 +67,7 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
   countBtn.className = "vellum-status-count";
 
   const panel = document.createElement("div");
-  panel.className = "vellum-status-panel";
+  panel.className = "vellum-status-panel vellum-word-count-panel";
   panel.hidden = true;
 
   const panelTitle = document.createElement("div");
@@ -95,11 +99,18 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
   panel.append(panelTitle, row);
 
   footer.append(countBtn, panel);
-  root.append(typewriterBtn, footer);
+  root.append(formatAnchor, typewriterBtn, footer);
   host.append(root);
 
   let updateTimer: ReturnType<typeof setTimeout> | null = null;
   let open = false;
+  const formatPanel = mountPlaintextFormatPanel({
+    root,
+    anchor: formatAnchor,
+    editor,
+    getFirstLineIndent: () => getSettings().firstLineIndent,
+    onApplied: scheduleUpdate,
+  });
 
   function renderCount(): void {
     const value = countText(
@@ -188,6 +199,7 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
   document.addEventListener("keydown", onKeyDown);
 
   const unsubscribeLocale = onLocaleChange(() => refreshLabels());
+  const unsubscribeFormatLocale = onLocaleChange(() => formatPanel.refreshLabels());
 
   refreshLabels();
   syncChrome();
@@ -200,7 +212,9 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
       disposeOutsideClick();
       document.removeEventListener("keydown", onKeyDown);
       unsubscribeLocale();
+      unsubscribeFormatLocale();
       includeSymbolsToggle.destroy();
+      formatPanel.destroy();
       root.remove();
     },
   };

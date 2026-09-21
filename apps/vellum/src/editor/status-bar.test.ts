@@ -4,6 +4,7 @@ import { Window } from "happy-dom";
 import { initI18n } from "../i18n/index.ts";
 import { DEFAULT_SETTINGS, type AppSettings } from "../settings/store.ts";
 import { mountPlaintextEditor } from "./plaintext.ts";
+import { formatPlaintext } from "./plaintext-format.ts";
 import { countText, mountStatusBar } from "./status-bar.ts";
 
 const happy = new Window({ url: "https://localhost/" });
@@ -71,7 +72,75 @@ describe("countText", () => {
   });
 });
 
+describe("formatPlaintext", () => {
+  it("normalizes blank lines, spaces, and CJK boundaries", () => {
+    assert.equal(
+      formatPlaintext("第一段   text\n\n\n第二段text", {
+        collapseBlankLines: true,
+        indentParagraphs: false,
+        separateParagraphs: true,
+        trimExtraSpaces: true,
+        cjkSpacing: true,
+      }),
+      "第一段 text\n\n第二段 text",
+    );
+  });
+
+  it("indents every non-empty plain-text paragraph", () => {
+    assert.equal(
+      formatPlaintext("第一行\n第二行\n\n第三行", {
+        collapseBlankLines: false,
+        indentParagraphs: true,
+        separateParagraphs: false,
+        trimExtraSpaces: false,
+        cjkSpacing: false,
+      }, 3),
+      "　　　第一行\n　　　第二行\n\n　　　第三行",
+    );
+  });
+});
+
 describe("mountStatusBar", () => {
+  it("opens the format panel and applies its default plain-text rules", () => {
+    const { host, editor, statusBar } = mountFixture("第一段   text\n\n\n第二段text");
+    const formatBtn = host.querySelector<HTMLButtonElement>(".vellum-format-btn");
+    assert.ok(formatBtn);
+    formatBtn.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    const formatPanel = host.querySelector<HTMLElement>(".vellum-format-panel");
+    assert.ok(formatPanel);
+    assert.equal(formatPanel.hidden, false);
+
+    const apply = host.querySelector<HTMLButtonElement>(".vellum-format-apply");
+    assert.ok(apply);
+    apply.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    assert.equal(editor.getValue(), "第一段 text\n\n第二段 text");
+
+    editor.destroy();
+    statusBar.destroy();
+    host.remove();
+  });
+
+  it("uses the configured first-line indent when formatting paragraphs", () => {
+    const { host, editor, statusBar, settings } = mountFixture("第一段");
+    settings.firstLineIndent = 3;
+    const formatBtn = host.querySelector<HTMLButtonElement>(".vellum-format-btn");
+    assert.ok(formatBtn);
+    formatBtn.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    const formatPanel = host.querySelector<HTMLElement>(".vellum-format-panel");
+    assert.ok(formatPanel);
+    const toggles = formatPanel.querySelectorAll<HTMLButtonElement>(".inimark-toggle");
+    toggles[1]?.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+
+    const apply = host.querySelector<HTMLButtonElement>(".vellum-format-apply");
+    assert.ok(apply);
+    apply.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    assert.equal(editor.getValue(), "　　　第一段");
+
+    editor.destroy();
+    statusBar.destroy();
+    host.remove();
+  });
+
   it("renders the shared typewriter glyph", () => {
     const { host, editor, statusBar } = mountFixture("hello");
     const icon = host.querySelector('svg[data-icon="typewriter"]');
@@ -99,7 +168,7 @@ describe("mountStatusBar", () => {
     });
     assert.equal(editor.isTypewriterMode(), false);
 
-    const btn = host.querySelector<HTMLButtonElement>(".vellum-status-btn");
+    const btn = host.querySelector<HTMLButtonElement>(".vellum-typewriter-btn");
     assert.ok(btn);
     btn.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
 
@@ -139,11 +208,11 @@ describe("mountStatusBar", () => {
     assert.equal(count.textContent, "4 chars");
 
     count.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
-    const panel = host.querySelector<HTMLElement>(".vellum-status-panel");
+    const panel = host.querySelector<HTMLElement>(".vellum-word-count-panel");
     assert.ok(panel);
     assert.equal(panel.hidden, false);
 
-    const toggle = host.querySelector<HTMLButtonElement>(".inimark-toggle");
+    const toggle = panel.querySelector<HTMLButtonElement>(".inimark-toggle");
     assert.ok(toggle);
     toggle.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
 

@@ -1396,6 +1396,11 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
     height: 14px;
 }
 
+.vellum-status-format {
+    /* Keep the panel positioned against the whole status-bar corner. */
+    position: static;
+}
+
 .vellum-status-footer {
     position: relative;
 }
@@ -1453,6 +1458,29 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
 
 .vellum-status-panel[hidden] {
     display: none;
+}
+
+.vellum-format-panel {
+    right: 0;
+    left: auto;
+    width: 300px;
+    max-width: min(90vw, 340px);
+}
+
+.vellum-format-desc {
+    margin: -4px 0 2px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--inimark-muted-fg);
+}
+
+.vellum-format-row {
+    align-items: flex-start;
+}
+
+.vellum-format-apply {
+    width: 100%;
+    margin-top: 2px;
 }
 
 .vellum-status-panel-title {

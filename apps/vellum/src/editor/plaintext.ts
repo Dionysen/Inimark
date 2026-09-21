@@ -13,7 +13,8 @@ import { mountQuoteInput } from "./quote-input";
 export interface PlaintextEditor {
   el: HTMLDivElement;
   getValue(): string;
-  setValue(value: string): void;
+  /** Replace the article; emitChange is used by user-triggered transformations. */
+  setValue(value: string, emitChange?: boolean): void;
   focus(): void;
   /** True when the editor has a non-empty text selection. */
   hasSelection(): boolean;
@@ -502,9 +503,10 @@ export function mountPlaintextEditor(
   return {
     el,
     getValue: () => serializePlaintextDom(el),
-    setValue: (value: string) => {
+    setValue: (value: string, emitChange = false) => {
       el.innerHTML = plaintextToHtml(value);
       quotes.reset();
+      if (emitChange) options.onChange?.(value);
     },
     focus: () => el.focus(),
     hasSelection: () => readSelection(el).text.length > 0,
