@@ -1,0 +1,81 @@
+.dionysen-tree {
+  min-width: 0;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+}
+
+.dionysen-tree__item {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 16px 16px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 28px;
+  padding: var(--shell-tree-item-padding-y) var(--shell-space-2);
+  padding-left: calc(var(--shell-space-2) + var(--tree-depth) * 18px);
+  border-radius: var(--shell-radius-control);
+  outline: none;
+  cursor: default;
+  user-select: none;
+}
+
+.dionysen-tree__item:hover:not(.is-disabled) {
+  background: var(--shell-hover);
+}
+
+.dionysen-tree__item.is-selected {
+  background: color-mix(in srgb, var(--shell-accent) 14%, transparent);
+  color: var(--shell-fg);
+}
+
+.dionysen-tree__item:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--shell-accent);
+}
+
+.dionysen-tree__item.is-disabled {
+  opacity: 0.45;
+}
+
+.dionysen-tree__chevron,
+.dionysen-tree__kind-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  color: var(--shell-muted-fg);
+}
+
+.dionysen-tree__chevron svg,
+.dionysen-tree__kind-icon svg,
+.dionysen-tree__kind-icon :where(svg) {
+  display: block;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dionysen-tree__chevron {
+  cursor: pointer;
+  transition: transform var(--shell-control-transition);
+}
+
+.dionysen-tree__chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.dionysen-tree__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dionysen-tree__chevron {
+    transition: none;
+  }
+}

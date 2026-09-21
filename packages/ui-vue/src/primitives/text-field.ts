@@ -10,6 +10,7 @@ export interface UiTextFieldProps {
   type?: TextFieldType;
   disabled?: boolean;
   readonly?: boolean;
+  autofocus?: boolean;
   autocomplete?: string;
   name?: string;
 }

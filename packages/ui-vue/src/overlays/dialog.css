@@ -1,0 +1,79 @@
+.dionysen-dialog__backdrop {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--shell-space-4);
+  background: color-mix(in srgb, #000 42%, transparent);
+}
+
+.dionysen-dialog {
+  box-sizing: border-box;
+  width: min(100%, 34rem);
+  max-height: min(84vh, 720px);
+  overflow: auto;
+  border: 1px solid var(--shell-glass-border);
+  border-radius: var(--shell-radius-md);
+  outline: none;
+  background: var(--shell-surface-raised);
+  color: var(--shell-fg);
+  box-shadow: var(--shell-glass-shadow);
+  font-family: var(--shell-font-ui);
+}
+
+.dionysen-dialog--small {
+  width: min(100%, 26rem);
+}
+
+.dionysen-dialog--large {
+  width: min(100%, 48rem);
+}
+
+.dionysen-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--shell-space-3);
+  padding: var(--shell-space-4);
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.dionysen-dialog__heading {
+  display: grid;
+  gap: var(--shell-space-1);
+  min-width: 0;
+}
+
+.dionysen-dialog__title,
+.dionysen-dialog__description {
+  margin: 0;
+}
+
+.dionysen-dialog__title {
+  color: var(--shell-fg);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.dionysen-dialog__description {
+  color: var(--shell-muted-fg);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dionysen-dialog__body {
+  padding: var(--shell-space-4);
+  color: var(--shell-fg);
+  font-size: var(--shell-control-font-size);
+  line-height: 1.5;
+}
+
+.dionysen-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--shell-space-2);
+  padding: var(--shell-space-3) var(--shell-space-4) var(--shell-space-4);
+}

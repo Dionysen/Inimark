@@ -1,0 +1,166 @@
+.dionysen-menu {
+  position: relative;
+  display: inline-block;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+}
+
+.dionysen-menu__trigger {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: var(--shell-control-height);
+  padding: 0 var(--shell-control-padding-x);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius-control);
+  background: var(--shell-surface);
+  color: var(--shell-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dionysen-menu__trigger:hover:not(:disabled),
+.dionysen-menu__trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--shell-accent) 45%, var(--shell-border));
+  background: var(--shell-hover);
+}
+
+.dionysen-menu__trigger:focus {
+  outline: none;
+}
+
+.dionysen-menu__trigger:focus-visible {
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+.dionysen-menu__trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-menu__trigger-icon,
+.dionysen-menu__trigger-icon :where(svg),
+.dionysen-menu__chevron {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.dionysen-menu__chevron {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dionysen-menu__surface {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  padding: var(--shell-menu-padding);
+  border: 1px solid var(--shell-glass-border);
+  border-radius: var(--shell-radius-menu);
+  background: var(--shell-glass-bg);
+  box-shadow: var(--shell-glass-shadow);
+  backdrop-filter: blur(var(--shell-glass-blur)) saturate(var(--shell-glass-saturate));
+}
+
+.dionysen-menu--end .dionysen-menu__surface {
+  right: 0;
+  left: auto;
+}
+
+.dionysen-menu__item {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--shell-space-2);
+  width: 100%;
+  min-height: var(--shell-menu-row-height);
+  padding: var(--shell-menu-item-padding-y) var(--shell-space-2);
+  border: 0;
+  border-radius: var(--shell-radius-menu-item);
+  outline: none;
+  background: transparent;
+  color: var(--shell-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dionysen-menu__item:hover:not(:disabled),
+.dionysen-menu__item:focus-visible {
+  background: var(--shell-hover);
+}
+
+.dionysen-menu__item.is-danger {
+  color: var(--danger, #dc3545);
+}
+
+.dionysen-menu__item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-menu__item-icon,
+.dionysen-menu__item-icon :where(svg) {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.dionysen-menu__item-icon :where(svg) {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dionysen-menu__item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dionysen-menu__shortcut {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--shell-muted-fg);
+  font: inherit;
+  font-size: 11px;
+}
+
+.dionysen-menu__item-trailing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--shell-space-2);
+  min-width: 1rem;
+}
+
+.dionysen-menu__check {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dionysen-menu__separator {
+  height: 1px;
+  margin: var(--shell-menu-padding) var(--shell-space-1);
+  background: var(--shell-border);
+}

@@ -143,6 +143,20 @@ p,
   padding-top: 20px;
 }
 
+.lab__section--overlay-demo {
+  position: relative;
+  z-index: 2;
+}
+
+.lab__tree-demo {
+  width: min(420px, 100%);
+  margin-top: 20px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
 .lab__divider {
   height: 1px;
   background: var(--border);

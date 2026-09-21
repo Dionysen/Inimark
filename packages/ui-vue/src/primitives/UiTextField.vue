@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<UiTextFieldProps>(), {
   type: "text",
   disabled: false,
   readonly: false,
+  autofocus: false,
   autocomplete: undefined,
   name: undefined,
 });
@@ -63,6 +64,7 @@ defineExpose({
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly"
+        :autofocus="autofocus"
         :autocomplete="autocomplete"
         :aria-label="label ? undefined : ariaLabel"
         :aria-invalid="error ? 'true' : undefined"
