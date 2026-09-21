@@ -1,0 +1,63 @@
+.dionysen-icon-tabs {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+}
+
+.dionysen-icon-tabs__tab {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--shell-chrome-btn-size);
+  min-width: var(--shell-chrome-btn-size);
+  height: var(--shell-chrome-btn-size);
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--shell-radius-control) * 0.75);
+  outline: none;
+  background: transparent;
+  color: var(--shell-muted-fg);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition:
+    color var(--shell-control-transition),
+    background var(--shell-control-transition),
+    transform var(--shell-control-transition);
+}
+
+.dionysen-icon-tabs__tab:hover:not(:disabled),
+.dionysen-icon-tabs__tab.is-active {
+  background: var(--shell-hover);
+  color: var(--shell-fg);
+}
+
+.dionysen-icon-tabs__tab:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.dionysen-icon-tabs__tab:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--shell-accent);
+}
+
+.dionysen-icon-tabs__tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-icon-tabs__tab :where(svg) {
+  display: block;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dionysen-icon-tabs__tab {
+    transition: none;
+  }
+}
