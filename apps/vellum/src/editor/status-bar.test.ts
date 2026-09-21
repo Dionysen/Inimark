@@ -101,6 +101,34 @@ describe("formatPlaintext", () => {
 });
 
 describe("mountStatusBar", () => {
+  it("keeps corner-tool panels mutually exclusive", () => {
+    const { host, editor, statusBar } = mountFixture("第一段");
+    const format = host.querySelector<HTMLButtonElement>(".vellum-format-btn");
+    const count = host.querySelector<HTMLButtonElement>(".vellum-status-count");
+    const formatPanel = host.querySelector<HTMLElement>(".vellum-format-panel");
+    const countPanel = host.querySelector<HTMLElement>(".vellum-word-count-panel");
+    assert.ok(format);
+    assert.ok(count);
+    assert.ok(formatPanel);
+    assert.ok(countPanel);
+
+    format.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    assert.equal(formatPanel.hidden, false);
+    assert.equal(countPanel.hidden, true);
+
+    count.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    assert.equal(formatPanel.hidden, true);
+    assert.equal(countPanel.hidden, false);
+
+    format.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
+    assert.equal(formatPanel.hidden, false);
+    assert.equal(countPanel.hidden, true);
+
+    editor.destroy();
+    statusBar.destroy();
+    host.remove();
+  });
+
   it("opens the format panel with the requested default rules and applies them", () => {
     const { host, editor, statusBar } = mountFixture("第一段   text\n\n\n第二段text");
     const formatBtn = host.querySelector<HTMLButtonElement>(".vellum-format-btn");

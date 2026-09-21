@@ -23,9 +23,12 @@ export interface PlaintextFormatPanelOptions {
   editor: PlaintextEditor;
   getFirstLineIndent(): number;
   onApplied(): void;
+  /** Called immediately before this panel becomes visible. */
+  onOpen?(): void;
 }
 
 export interface PlaintextFormatPanelController {
+  close(): void;
   refreshLabels(): void;
   destroy(): void;
 }
@@ -34,7 +37,7 @@ export interface PlaintextFormatPanelController {
 export function mountPlaintextFormatPanel(
   options: PlaintextFormatPanelOptions,
 ): PlaintextFormatPanelController {
-  const { root, anchor, editor, getFirstLineIndent, onApplied } = options;
+  const { root, anchor, editor, getFirstLineIndent, onApplied, onOpen } = options;
   const formatOptions = { ...FORMAT_DEFAULTS };
   const formatBtn = document.createElement("button");
   formatBtn.type = "button";
@@ -110,6 +113,7 @@ export function mountPlaintextFormatPanel(
 
   const openPanel = (): void => {
     if (open) return;
+    onOpen?.();
     open = true;
     panel.hidden = false;
     formatBtn.classList.add("is-active");
@@ -159,6 +163,7 @@ export function mountPlaintextFormatPanel(
   refreshLabels();
 
   return {
+    close,
     refreshLabels,
     destroy() {
       disposeOutsideClick();

@@ -110,6 +110,7 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
     editor,
     getFirstLineIndent: () => getSettings().firstLineIndent,
     onApplied: scheduleUpdate,
+    onOpen: closePanel,
   });
 
   function renderCount(): void {
@@ -136,6 +137,7 @@ export function mountStatusBar(options: StatusBarOptions): StatusBarController {
 
   function openPanel(): void {
     if (open) return;
+    formatPanel.close();
     open = true;
     panel.hidden = false;
     countBtn.classList.add("is-active");
