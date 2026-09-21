@@ -1573,6 +1573,7 @@ html[data-auto-hide-statusbar="true"] .vellum-status-corner.is-open {
 
 /* Auto-hide both bottom corners until the pointer enters their area. */
 .vellum-status-corner {
+    isolation: isolate;
     transition: opacity 180ms ease;
 }
 
@@ -1586,6 +1587,7 @@ html[data-auto-hide-statusbar="true"] .vellum-status-corner::before {
     content: "";
     position: absolute;
     inset: -8px;
+    z-index: -1;
 }
 
 html[data-auto-hide-statusbar="true"] .vellum-status-corner:hover,
