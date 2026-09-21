@@ -28,6 +28,7 @@ import {
   publishEditorWidthCeiling,
   SETTINGS_STORAGE_KEY,
   SETTINGS_SYNC_EVENT,
+  type SidebarMode,
 } from "./settings/store.ts";
 import { openSettingsWindow } from "./settings/window.ts";
 import { installNativeShortcutGuard } from "./shortcuts/guard.ts";
@@ -156,6 +157,7 @@ function mountShell(shell: HTMLElement): void {
   shell.className = "vellum-shell has-no-article";
 
   let sidebarOpen = loadSidebarOpen();
+  let sidebarMode: SidebarMode = loadSettings().sidebarMode;
   let sidebarWidth = loadPersistedWidth(
     SIDEBAR_WIDTH_KEY,
     SIDEBAR_WIDTH_DEFAULT,
@@ -226,6 +228,7 @@ function mountShell(shell: HTMLElement): void {
   }
 
   function applySidebarState(): void {
+    shell.classList.toggle("is-sidebar-floating", sidebarMode === "floating");
     shell.classList.toggle("is-sidebar-closed", !sidebarOpen);
     libraryHost.classList.toggle("is-collapsed", !sidebarOpen);
     titleBar.setSidebarOpen(sidebarOpen);
@@ -236,6 +239,22 @@ function mountShell(shell: HTMLElement): void {
 
   function toggleSidebar(): void {
     sidebarOpen = !sidebarOpen;
+    applySidebarState();
+  }
+
+  /** Switch layout modes without changing the user's current open/closed state. */
+  function applySidebarMode(next: SidebarMode): void {
+    sidebarMode = next;
+    applySidebarState();
+  }
+
+  /** Floating sidebars dismiss as soon as interaction moves outside their surface. */
+  function dismissFloatingSidebar(target: EventTarget | null): void {
+    if (sidebarMode !== "floating" || !sidebarOpen || !(target instanceof Node)) {
+      return;
+    }
+    if (libraryHost.contains(target)) return;
+    sidebarOpen = false;
     applySidebarState();
   }
 
@@ -300,6 +319,10 @@ function mountShell(shell: HTMLElement): void {
     onOpenSettings: () => void openSettingsWindow(),
     onToggleSidebar: toggleSidebar,
   });
+  const onFloatingSidebarPointerDown = (event: PointerEvent): void => {
+    dismissFloatingSidebar(event.target);
+  };
+  document.addEventListener("pointerdown", onFloatingSidebarPointerDown, true);
   libraryApi = library;
   toggleSidebarRef = toggleSidebar;
   requestQuit = createQuitFlow({
@@ -338,6 +361,10 @@ function mountShell(shell: HTMLElement): void {
 
   applySidebarWidth();
   applySidebarState();
+  syncRuntimeSettings = () => {
+    statusBar?.syncChrome();
+    applySidebarMode(loadSettings().sidebarMode);
+  };
 
   const columnResize = attachColumnResize(libraryHost, {
     side: "left",
@@ -434,6 +461,7 @@ function mountShell(shell: HTMLElement): void {
     widthObserver.disconnect();
     unlistenSettings?.();
     window.removeEventListener("storage", onSettingsStorage);
+    document.removeEventListener("pointerdown", onFloatingSidebarPointerDown, true);
     teardownDeepLink?.();
     teardownSyncStatus();
     columnResize.destroy();

@@ -29,6 +29,7 @@ import {
 import {
   type AppLocale,
   type AppSettings,
+  type SidebarMode,
   EDITOR_WIDTH_CEILING_KEY,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
@@ -72,6 +73,12 @@ function searchEntries(): SettingSearchItem[] {
       section: "general",
       getTitle: () => t("settings.general.locale"),
       getDescription: () => t("settings.general.localeDesc"),
+    },
+    {
+      id: "general.sidebarMode",
+      section: "general",
+      getTitle: () => t("settings.general.sidebarMode"),
+      getDescription: () => t("settings.general.sidebarModeDesc"),
     },
     {
       id: "sync-login",
@@ -240,6 +247,23 @@ function renderGeneral(
       t("settings.general.localeDesc"),
       locale.el,
       "general-locale",
+    ),
+  );
+
+  const sidebarMode = createSelect({
+    value: settings.sidebarMode,
+    options: [
+      { value: "fixed", label: t("settings.general.sidebarModeFixed") },
+      { value: "floating", label: t("settings.general.sidebarModeFloating") },
+    ],
+    onChange: (value) => onPatch({ sidebarMode: value as SidebarMode }),
+  });
+  body.append(
+    createRow(
+      t("settings.general.sidebarMode"),
+      t("settings.general.sidebarModeDesc"),
+      sidebarMode.el,
+      "general.sidebarMode",
     ),
   );
 }

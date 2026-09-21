@@ -16,6 +16,7 @@ import {
 import { setLocale, detectSystemLocale, type LocaleId } from "../i18n/index.ts";
 
 export type AppLocale = LocaleId | "system";
+export type SidebarMode = "fixed" | "floating";
 
 export type { EditorTypographySettings };
 
@@ -28,6 +29,8 @@ export interface AppSettings extends EditorTypographySettings {
   locale: AppLocale;
   /** Keep the caret line vertically centered while writing. */
   typewriterMode: boolean;
+  /** Whether the library occupies a layout column or opens above the editor. */
+  sidebarMode: SidebarMode;
   /** Hide the bottom-corner status tools until the pointer enters that area. */
   autoHideStatusbar: boolean;
   /** Keep the bottom-right word count visible while corner tools are hidden. */
@@ -65,6 +68,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   editorWidth: EDITOR_WIDTH_DEFAULT,
   firstLineIndent: FIRST_LINE_INDENT_DEFAULT,
   typewriterMode: false,
+  sidebarMode: "fixed",
   autoHideStatusbar: false,
   alwaysShowWordCount: false,
   wordCount: { includeSymbols: false },
@@ -109,6 +113,7 @@ export function normalizeSettings(raw: unknown): AppSettings {
   return {
     locale,
     typewriterMode: src.typewriterMode === true,
+    sidebarMode: src.sidebarMode === "floating" ? "floating" : "fixed",
     autoHideStatusbar: src.autoHideStatusbar === true,
     alwaysShowWordCount: src.alwaysShowWordCount === true,
     wordCount: { includeSymbols: wordCountSrc.includeSymbols === true },
@@ -138,6 +143,7 @@ export function applySettings(settings: AppSettings): void {
   document.documentElement.dataset.alwaysShowWordCount = settings.alwaysShowWordCount
     ? "true"
     : "false";
+  document.documentElement.dataset.sidebarMode = settings.sidebarMode;
   setLocale(settings.locale === "system" ? detectSystemLocale() : settings.locale);
 }
 

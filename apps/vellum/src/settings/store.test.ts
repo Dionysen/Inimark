@@ -26,4 +26,9 @@ describe("settings", () => {
 
     assert.equal(settings.alwaysShowWordCount, true);
   });
+
+  it("uses fixed mode for existing settings and preserves floating mode", () => {
+    assert.equal(normalizeSettings({}).sidebarMode, "fixed");
+    assert.equal(normalizeSettings({ sidebarMode: "floating" }).sidebarMode, "floating");
+  });
 });

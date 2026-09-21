@@ -148,6 +148,10 @@ const en: Dictionary = {
       locale: "Language",
       localeDesc: "Interface language",
       localeSystem: "System",
+      sidebarMode: "Sidebar mode",
+      sidebarModeDesc: "Keep the library in the layout or open it above the editor",
+      sidebarModeFixed: "Fixed",
+      sidebarModeFloating: "Floating",
     },
     account: {
       loginTitle: "Cloud sync",
@@ -657,6 +661,10 @@ const zhCN: Dictionary = {
       locale: "语言",
       localeDesc: "界面语言",
       localeSystem: "跟随系统",
+      sidebarMode: "侧边栏模式",
+      sidebarModeDesc: "固定模式占用编辑区旁的空间；浮动模式会覆盖在编辑区上方",
+      sidebarModeFixed: "固定",
+      sidebarModeFloating: "浮动",
     },
     account: {
       loginTitle: "云同步",
