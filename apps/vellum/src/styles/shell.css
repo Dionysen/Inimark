@@ -347,7 +347,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 /* Immersive: the title bar leaves the layout and slides back when the pointer
-   hits a thin strip at the top, or while its menu is open. */
+   enters its full-height trigger area, or while its menu is open. */
 .vellum-shell.is-immersive .vellum-main {
     grid-template-rows: 1fr;
 }
@@ -367,7 +367,7 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     top: 0;
     left: 0;
     right: 0;
-    height: 6px;
+    height: var(--inimark-titlebar-height);
     z-index: 2;
     pointer-events: auto;
 }
@@ -377,12 +377,14 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
     top: 0;
     left: 0;
     right: 0;
+    z-index: 3;
     background: transparent;
     pointer-events: none;
 }
 
 .vellum-shell.is-immersive .inimark-titlebar-leading,
 .vellum-shell.is-immersive .inimark-titlebar-center,
+.vellum-shell.is-immersive .inimark-titlebar-immersive-btn,
 .vellum-shell.is-immersive .inimark-titlebar-more-btn {
     opacity: 0;
     transform: translateY(-100%);
@@ -397,7 +399,6 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 }
 
 .vellum-shell.is-immersive .vellum-titlebar-zone:hover>.inimark-titlebar,
-.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within>.inimark-titlebar,
 .vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"])>.inimark-titlebar {
     background: var(--inimark-content-bg);
     pointer-events: auto;
@@ -405,19 +406,17 @@ html.platform-windows .inimark-titlebar:has(.inimark-titlebar-controls--close-on
 
 .vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-leading,
 .vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-center,
+.vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-immersive-btn,
 .vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-more-btn,
-.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-leading,
-.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-center,
-.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-more-btn,
 .vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-leading,
 .vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-center,
+.vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-immersive-btn,
 .vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-more-btn {
     opacity: 1;
     transform: translateY(0);
 }
 
 .vellum-shell.is-immersive .vellum-titlebar-zone:hover .inimark-titlebar-controls--native,
-.vellum-shell.is-immersive .vellum-titlebar-zone:focus-within .inimark-titlebar-controls--native,
 .vellum-shell.is-immersive .vellum-titlebar-zone:has(.inimark-titlebar-more-btn[aria-expanded="true"]) .inimark-titlebar-controls--native {
     opacity: 1;
 }

@@ -57,6 +57,7 @@ import { mountTitleBar } from "./ui/titlebar.ts";
 
 const SIDEBAR_OPEN_KEY = "vellum-sidebar-open";
 const SIDEBAR_WIDTH_KEY = "vellum-sidebar-width";
+const IMMERSIVE_PINNED_KEY = "vellum-immersive-pinned";
 const SIDEBAR_WIDTH_DEFAULT = 280;
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 480;
@@ -65,6 +66,11 @@ function loadSidebarOpen(): boolean {
   const raw = localStorage.getItem(SIDEBAR_OPEN_KEY);
   if (raw === null) return true;
   return raw !== "0" && raw !== "false";
+}
+
+function loadImmersivePinned(): boolean {
+  const raw = localStorage.getItem(IMMERSIVE_PINNED_KEY);
+  return raw === "1" || raw === "true";
 }
 
 initPlatform();
@@ -234,9 +240,15 @@ function mountShell(shell: HTMLElement): void {
   }
 
   let immersive = false;
+  let immersivePinned = loadImmersivePinned();
   function setImmersive(next: boolean): void {
     immersive = next;
     shell.classList.toggle("is-immersive", next);
+  }
+
+  function setImmersivePinned(next: boolean): void {
+    immersivePinned = next;
+    localStorage.setItem(IMMERSIVE_PINNED_KEY, next ? "1" : "0");
   }
 
   const titleBar = mountTitleBar(titleHost, {
@@ -250,6 +262,10 @@ function mountShell(shell: HTMLElement): void {
       getImmersive: () => immersive,
       onToggleImmersive() {
         setImmersive(!immersive);
+      },
+      getImmersivePinned: () => immersivePinned,
+      onToggleImmersivePinned() {
+        setImmersivePinned(!immersivePinned);
       },
       canRename: () => libraryApi?.canRenameOpenChapter() ?? false,
       onRename() {

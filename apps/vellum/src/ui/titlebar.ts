@@ -35,6 +35,9 @@ export interface SidebarToggleOptions {
 export interface TitleBarMenuActions {
   getImmersive(): boolean;
   onToggleImmersive(): void;
+  /** Whether the immersive-mode action is pinned beside More. */
+  getImmersivePinned(): boolean;
+  onToggleImmersivePinned(): void;
   /** False when there is no open chapter that can be renamed. */
   canRename(): boolean;
   onRename(): void;
@@ -105,6 +108,8 @@ export function mountTitleBar(
   const menuActions = options.menuActions;
   let moreBtn: HTMLButtonElement | null = null;
   let moreMenu: ReturnType<typeof createMenu> | null = null;
+  let immersiveBtn: HTMLButtonElement | null = null;
+  let unsubscribeMoreMenuOpen: (() => void) | null = null;
 
   if (menuActions) {
     moreMenu = createMenu();
@@ -112,6 +117,20 @@ export function mountTitleBar(
     moreMenu.setPath("");
     // Fixed menu on body: the titlebar row is only one grid track tall.
     document.body.append(moreMenu.el);
+
+    immersiveBtn = createIconButton({
+      label: t("titlebar.immersive"),
+      title: t("titlebar.immersive"),
+      html: menuIcons.immersive,
+      onClick: () => {
+        menuActions.onToggleImmersive();
+        syncImmersiveButton();
+      },
+    });
+    immersiveBtn.className =
+      "inimark-sidebar-toggle-btn inimark-titlebar-immersive-btn";
+    immersiveBtn.hidden = !menuActions.getImmersivePinned();
+    markNoDrag(immersiveBtn);
 
     moreBtn = createIconButton({
       label: t("titlebar.more"),
@@ -127,8 +146,11 @@ export function mountTitleBar(
       event.preventDefault();
       event.stopPropagation();
     });
-    trailing.append(moreBtn);
+    trailing.append(immersiveBtn, moreBtn);
     moreMenu.setDismissAnchors([moreBtn]);
+    unsubscribeMoreMenuOpen = moreMenu.onOpenChange((open) => {
+      moreBtn?.setAttribute("aria-expanded", String(open));
+    });
     unsubscribeLocale = onLocaleChange(() => updateMoreButton());
   }
 
@@ -178,7 +200,6 @@ export function mountTitleBar(
   function closeMoreMenu(): void {
     if (!moreMenu || !moreBtn) return;
     moreMenu.setOpen(false);
-    moreBtn.setAttribute("aria-expanded", "false");
   }
 
   function positionMoreMenu(): void {
@@ -203,7 +224,20 @@ export function mountTitleBar(
       checked: menuActions.getImmersive(),
       onClick() {
         menuActions.onToggleImmersive();
+        syncImmersiveButton();
         closeMoreMenu();
+      },
+      trailingAction: {
+        icon: menuIcons.pinAnchor,
+        title: menuActions.getImmersivePinned()
+          ? t("titlebar.unpinImmersive")
+          : t("titlebar.pinImmersive"),
+        pressed: menuActions.getImmersivePinned(),
+        onClick() {
+          menuActions.onToggleImmersivePinned();
+          syncImmersiveButton();
+          renderMoreMenu();
+        },
       },
     });
     moreMenu.addItem({
@@ -225,7 +259,6 @@ export function mountTitleBar(
     }
     renderMoreMenu();
     moreMenu.setOpen(true);
-    moreBtn.setAttribute("aria-expanded", "true");
     requestAnimationFrame(() => positionMoreMenu());
   }
 
@@ -234,6 +267,17 @@ export function mountTitleBar(
     const label = t("titlebar.more");
     moreBtn.title = label;
     moreBtn.setAttribute("aria-label", label);
+    syncImmersiveButton();
+  }
+
+  function syncImmersiveButton(): void {
+    if (!immersiveBtn || !menuActions) return;
+    const pinned = menuActions.getImmersivePinned();
+    const label = t("titlebar.immersive");
+    immersiveBtn.hidden = !pinned;
+    immersiveBtn.title = label;
+    immersiveBtn.setAttribute("aria-label", label);
+    immersiveBtn.setAttribute("aria-pressed", String(menuActions.getImmersive()));
   }
 
   host.append(leading, center, trailing);
@@ -256,6 +300,7 @@ export function mountTitleBar(
     destroy() {
       unlistenMaximize?.();
       unsubscribeLocale?.();
+      unsubscribeMoreMenuOpen?.();
       moreMenu?.destroy();
       host.replaceChildren();
     },

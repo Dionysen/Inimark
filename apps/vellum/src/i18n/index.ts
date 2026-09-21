@@ -120,6 +120,8 @@ const en: Dictionary = {
   titlebar: {
     more: "More",
     immersive: "Immersive mode",
+    pinImmersive: "Pin immersive mode to title bar",
+    unpinImmersive: "Unpin immersive mode from title bar",
     rename: "Rename",
   },
   settings: {
@@ -627,6 +629,8 @@ const zhCN: Dictionary = {
   titlebar: {
     more: "更多",
     immersive: "沉浸模式",
+    pinImmersive: "固定沉浸模式到标题栏",
+    unpinImmersive: "从标题栏取消固定沉浸模式",
     rename: "重命名",
   },
   settings: {

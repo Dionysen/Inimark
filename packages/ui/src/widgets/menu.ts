@@ -46,6 +46,8 @@ export interface MenuController {
   el: HTMLDivElement;
   setOpen(open: boolean): void;
   isOpen(): boolean;
+  /** Subscribe to open-state changes, including dismissals triggered outside the menu. */
+  onOpenChange(listener: (open: boolean) => void): () => void;
   /** Elements treated as inside this menu for outside-click dismissal (triggers). */
   setDismissAnchors(anchors: HTMLElement[]): void;
   /** True when `node` is inside the root menu or any open flyout submenu. */
@@ -222,6 +224,7 @@ export function createMenu(): MenuController {
   const flyouts: HTMLElement[] = [];
   const submenuWraps: HTMLElement[] = [];
   const dismissAnchors: HTMLElement[] = [];
+  const openChangeListeners = new Set<(open: boolean) => void>();
   let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   function menuContains(node: Node | null): boolean {
@@ -252,6 +255,7 @@ export function createMenu(): MenuController {
   }
 
   function setOpen(next: boolean): void {
+    const changed = open !== next;
     if (next) {
       acquireExclusiveLayer(el, () => setOpen(false), { contains: menuContains });
     } else if (open) {
@@ -262,6 +266,9 @@ export function createMenu(): MenuController {
     el.hidden = !next;
     el.classList.toggle("is-open", next);
     if (!next) hideFlyouts();
+    if (changed) {
+      for (const listener of openChangeListeners) listener(next);
+    }
   }
 
   function destroyFlyouts(): void {
@@ -276,6 +283,10 @@ export function createMenu(): MenuController {
     setOpen,
     isOpen() {
       return open;
+    },
+    onOpenChange(listener) {
+      openChangeListeners.add(listener);
+      return () => openChangeListeners.delete(listener);
     },
     setDismissAnchors(anchors) {
       dismissAnchors.length = 0;
