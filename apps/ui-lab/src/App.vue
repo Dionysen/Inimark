@@ -6,6 +6,7 @@ import {
   UiDialog,
   UiIconButton,
   UiMenu,
+  UiPopover,
   UiTextField,
   UiToggle,
   UiTree,
@@ -22,6 +23,9 @@ const includeHidden = ref(false);
 const selectAll = ref(false);
 const menuOpen = ref(false);
 const dialogOpen = ref(false);
+const popoverOpen = ref(false);
+const compactMode = ref(true);
+const filterQuery = ref("");
 const lastAction = ref("None");
 const expandedIds = ref(["notes", "projects"]);
 const selectedNodeId = ref("welcome");
@@ -30,16 +34,23 @@ function makeIcon(paths: string[]) {
   return defineComponent(() => () =>
     h(
       "svg",
-      { viewBox: "0 0 16 16" },
-      paths.map((d) => h("path", { d })),
+      { viewBox: "0 0 24 24", fill: "none" },
+      paths.map((d) => h("path", {
+        d,
+        fill: "none",
+        stroke: "currentColor",
+        "stroke-width": "1.75",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+      })),
     ),
   );
 }
 
-const OpenIcon = makeIcon(["M3 3.5h4l1.2 1.5H13v7.5H3z"]);
-const RenameIcon = makeIcon(["m3 11.5.5-3 6-6 3 3-6 6z", "m8.5 3.5 3 3"]);
-const PinIcon = makeIcon(["m6 2 4 1-1 3 3 3-3 1-2 4-1-5-3-3 3-1z"]);
-const DeleteIcon = makeIcon(["M3 5h10M6 3h4M5 5l.5 8h5l.5-8"]);
+const OpenIcon = makeIcon(["M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10H3z"]);
+const RenameIcon = makeIcon(["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"]);
+const PinIcon = makeIcon(["m12 17-5 5", "m5 15 4-4-3-5 2-2 5 3 4-4 4 4-4 4 3 5-2 2-5-3-4 4z"]);
+const DeleteIcon = makeIcon(["M3 6h18", "M8 6V4h8v2", "M19 6l-1 15H6L5 6", "M10 11v5", "M14 11v5"]);
 
 const menuItems: UiMenuItem[] = [
   { id: "open", label: "Open", icon: OpenIcon, shortcut: "⌘O" },
@@ -53,6 +64,8 @@ const treeNodes: UiTreeNode[] = [
     id: "notes",
     label: "Notes",
     kind: "folder",
+    meta: "2 notes",
+    outlined: true,
     children: [
       { id: "welcome", label: "Welcome.md", kind: "file" },
       { id: "ideas", label: "Ideas.md", kind: "file" },
@@ -62,11 +75,14 @@ const treeNodes: UiTreeNode[] = [
     id: "projects",
     label: "Projects",
     kind: "folder",
+    meta: "1 folder",
     children: [
       {
         id: "inimark",
         label: "Inimark",
         kind: "folder",
+        meta: "Git",
+        outlined: true,
         children: [
           { id: "roadmap", label: "Roadmap.md", kind: "file" },
           { id: "release", label: "Release notes.md", kind: "file" },
@@ -146,16 +162,16 @@ onBeforeUnmount(() => {
 
       <div class="lab__row">
         <UiIconButton label="Add item" @press="presses++">
-          <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" /></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
         </UiIconButton>
         <UiIconButton label="Pin panel" :pressed="true">
-          <svg viewBox="0 0 16 16"><path d="m6 2 4 1-1 3 3 3-3 1-2 4-1-5-3-3 3-1z" /></svg>
+          <svg viewBox="0 0 24 24"><path d="m12 17-5 5M5 15l4-4-3-5 2-2 5 3 4-4 4 4-4 4 3 5-2 2-5-3-4 4z" /></svg>
         </UiIconButton>
         <UiIconButton label="Delete item" variant="danger" size="small">
-          <svg viewBox="0 0 16 16"><path d="M3 5h10M6 3h4M5 5l.5 8h5l.5-8" /></svg>
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v5M14 11v5" /></svg>
         </UiIconButton>
         <UiIconButton label="Unavailable action" disabled>
-          <svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
         </UiIconButton>
       </div>
     </section>
@@ -183,7 +199,7 @@ onBeforeUnmount(() => {
         <UiTextField label="Disabled field" model-value="Unavailable" disabled />
         <UiTextField aria-label="Search components" placeholder="Search components…">
           <template #leading>
-            <svg class="lab__inline-icon" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4" /><path d="m10 10 3 3" /></svg>
+            <svg class="lab__inline-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 5 5" /></svg>
           </template>
         </UiTextField>
       </div>
@@ -239,7 +255,7 @@ onBeforeUnmount(() => {
           @select="onMenuSelect"
         >
           <template #trigger-icon>
-            <svg viewBox="0 0 16 16"><circle cx="3" cy="8" r="1" /><circle cx="8" cy="8" r="1" /><circle cx="13" cy="8" r="1" /></svg>
+            <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></svg>
           </template>
         </UiMenu>
       </div>
@@ -259,6 +275,7 @@ onBeforeUnmount(() => {
           v-model:expanded-ids="expandedIds"
           :nodes="treeNodes"
           :selected-id="selectedNodeId"
+          indent-lines
           label="Example vault"
           @select="onTreeSelect"
         />
@@ -275,6 +292,51 @@ onBeforeUnmount(() => {
 
       <div class="lab__row">
         <UiButton variant="primary" @press="dialogOpen = true">Open dialog</UiButton>
+      </div>
+    </section>
+
+    <section class="lab__section lab__section--overlay-demo">
+      <div class="lab__section-heading">
+        <div>
+          <h2>Popover</h2>
+          <p>A non-modal local surface that accepts form controls and custom content.</p>
+        </div>
+      </div>
+
+      <div class="lab__row">
+        <UiPopover v-model="popoverOpen" trigger-label="View options" width="340px">
+          <template #trigger>
+            <span class="lab__popover-trigger">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+              View options
+            </span>
+          </template>
+          <template #default="{ close }">
+            <div class="lab__popover-content">
+              <div>
+                <strong>View options</strong>
+                <p>These controls do not block the rest of the page.</p>
+              </div>
+              <UiTextField v-model="filterQuery" label="Filter nodes" placeholder="Type to filter…" />
+              <UiToggle v-model="compactMode" label="Compact rows" />
+              <div class="lab__popover-actions">
+                <UiButton @press="close">Done</UiButton>
+              </div>
+            </div>
+          </template>
+        </UiPopover>
+      </div>
+    </section>
+
+    <section class="lab__section">
+      <div class="lab__section-heading">
+        <div>
+          <h2>Scrollbar</h2>
+          <p>Hidden at rest, visible on hover and stronger while active.</p>
+        </div>
+      </div>
+      <div class="lab__scroll-demo dionysen-scrollbar">
+        <p v-for="index in 12" :key="index">Scrollable item {{ index }}</p>
       </div>
     </section>
 

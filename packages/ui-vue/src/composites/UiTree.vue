@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<UiTreeProps>(), {
   expandedIds: () => [],
   selectedId: undefined,
   label: "Files",
+  indentLines: false,
 });
 
 const emit = defineEmits<{
@@ -113,7 +114,13 @@ function onKeydown(event: KeyboardEvent, entry: VisibleNode): void {
 </script>
 
 <template>
-  <div ref="tree" class="dionysen-tree" role="tree" :aria-label="label">
+  <div
+    ref="tree"
+    class="dionysen-tree"
+    :class="{ 'has-indent-lines': indentLines }"
+    role="tree"
+    :aria-label="label"
+  >
     <div
       v-for="entry in visibleNodes"
       :key="entry.node.id"
@@ -121,6 +128,7 @@ function onKeydown(event: KeyboardEvent, entry: VisibleNode): void {
       :class="{
         'is-selected': entry.node.id === selectedId,
         'is-disabled': entry.node.disabled,
+        'is-outlined': entry.node.kind === 'folder' && entry.node.outlined,
       }"
       role="treeitem"
       :data-node-id="entry.node.id"
@@ -140,17 +148,24 @@ function onKeydown(event: KeyboardEvent, entry: VisibleNode): void {
         aria-hidden="true"
         @click.stop="toggle(entry.node)"
       >
-        <svg v-if="entry.node.kind === 'folder'" viewBox="0 0 16 16"><path d="m6 4 4 4-4 4" /></svg>
+        <svg v-if="entry.node.kind === 'folder'" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></svg>
       </span>
       <span class="dionysen-tree__kind-icon" aria-hidden="true">
         <component :is="iconComponent(entry.node.icon)" v-if="entry.node.icon" />
-        <svg v-else-if="entry.node.kind === 'folder'" viewBox="0 0 16 16">
-          <path v-if="expandedIds.includes(entry.node.id)" d="M2 5h5l1.3 1.5H14l-1.5 6H3z" />
-          <path v-else d="M2 4h5l1.3 1.5H14V12H2z" />
+        <svg v-else-if="entry.node.kind === 'folder'" viewBox="0 0 24 24">
+          <path
+            v-if="expandedIds.includes(entry.node.id)"
+            d="M3 8.5h6l2 2h10l-2 8.5H5z"
+          />
+          <path v-else d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10H3z" />
         </svg>
-        <svg v-else viewBox="0 0 16 16"><path d="M4 2.5h5l3 3V13.5H4zM9 2.5v3h3" /></svg>
+        <svg v-else viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6" />
+        </svg>
       </span>
       <span class="dionysen-tree__label">{{ entry.node.label }}</span>
+      <span v-if="entry.node.meta" class="dionysen-tree__meta">{{ entry.node.meta }}</span>
     </div>
   </div>
 </template>

@@ -7,4 +7,6 @@
 @import "./primitives/checkbox.css";
 @import "./overlays/menu.css";
 @import "./overlays/dialog.css";
+@import "./overlays/popover.css";
 @import "./composites/tree.css";
+@import "./scrollbar.css";

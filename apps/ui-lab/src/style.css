@@ -125,9 +125,51 @@ p,
 .lab__inline-icon {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.5;
+  stroke-width: 1.75;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.lab__popover-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lab__popover-trigger svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lab__popover-content {
+  display: grid;
+  gap: 16px;
+}
+
+.lab__popover-content strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.lab__popover-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lab__scroll-demo {
+  width: min(420px, 100%);
+  height: 160px;
+  margin-top: 20px;
+  padding: 8px 14px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.lab__scroll-demo p {
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--border);
 }
 
 .lab__form-grid {

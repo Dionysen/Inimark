@@ -1,0 +1,36 @@
+.dionysen-scrollbar {
+  scrollbar-color: var(--shell-scrollbar-thumb-idle) var(--shell-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+.dionysen-scrollbar:hover {
+  scrollbar-color: var(--shell-scrollbar-thumb-hover) var(--shell-scrollbar-track);
+}
+
+.dionysen-scrollbar::-webkit-scrollbar {
+  width: var(--shell-scrollbar-size);
+  height: var(--shell-scrollbar-size);
+}
+
+.dionysen-scrollbar::-webkit-scrollbar-track {
+  background: var(--shell-scrollbar-track);
+}
+
+.dionysen-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--shell-scrollbar-radius);
+  background: var(--shell-scrollbar-thumb-idle);
+  background-clip: padding-box;
+}
+
+.dionysen-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: var(--shell-scrollbar-thumb-hover);
+}
+
+.dionysen-scrollbar::-webkit-scrollbar-thumb:active {
+  background-color: var(--shell-scrollbar-thumb-active);
+}
+
+.dionysen-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}

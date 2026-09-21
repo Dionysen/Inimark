@@ -6,9 +6,10 @@
 }
 
 .dionysen-tree__item {
+  position: relative;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 16px 16px minmax(0, 1fr);
+  grid-template-columns: 16px 16px minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.35rem;
   min-height: 28px;
@@ -18,6 +19,39 @@
   outline: none;
   cursor: default;
   user-select: none;
+}
+
+.dionysen-tree__item.is-outlined {
+  border: 1px solid color-mix(in srgb, var(--shell-border) 78%, transparent);
+  background: color-mix(in srgb, var(--shell-surface) 66%, transparent);
+}
+
+.dionysen-tree__item.is-outlined:hover:not(.is-disabled) {
+  border-color: color-mix(in srgb, var(--shell-accent) 38%, var(--shell-border));
+}
+
+.dionysen-tree.has-indent-lines .dionysen-tree__item::before {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--shell-space-2) + 7px);
+  width: calc(var(--tree-depth) * 18px);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--shell-border) 0,
+    var(--shell-border) 1px,
+    transparent 1px,
+    transparent 18px
+  );
+  content: "";
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.dionysen-tree__item > * {
+  position: relative;
+  z-index: 1;
 }
 
 .dionysen-tree__item:hover:not(.is-disabled) {
@@ -54,7 +88,7 @@
   height: 16px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.35;
+  stroke-width: 1.75;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -70,6 +104,15 @@
 
 .dionysen-tree__label {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dionysen-tree__meta {
+  overflow: hidden;
+  max-width: 12rem;
+  color: var(--shell-muted-fg);
+  font-size: 0.86em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

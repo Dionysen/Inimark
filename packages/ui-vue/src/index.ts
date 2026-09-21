@@ -5,6 +5,7 @@ export { default as UiTextField } from "./primitives/UiTextField.vue";
 export { default as UiToggle } from "./primitives/UiToggle.vue";
 export { default as UiMenu } from "./overlays/UiMenu.vue";
 export { default as UiDialog } from "./overlays/UiDialog.vue";
+export { default as UiPopover } from "./overlays/UiPopover.vue";
 export { default as UiTree } from "./composites/UiTree.vue";
 export type {
   ButtonSize,
@@ -24,4 +25,5 @@ export type { UiToggleProps } from "./primitives/toggle.ts";
 export type { UiCheckboxProps } from "./primitives/checkbox.ts";
 export type { UiMenuItem, UiMenuProps } from "./overlays/menu.ts";
 export type { UiDialogProps } from "./overlays/dialog.ts";
+export type { UiPopoverProps } from "./overlays/popover.ts";
 export type { UiTreeNode, UiTreeProps } from "./composites/tree.ts";

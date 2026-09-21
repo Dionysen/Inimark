@@ -1,0 +1,57 @@
+.dionysen-popover {
+  position: relative;
+  display: inline-block;
+  color: var(--shell-fg);
+  font-family: var(--shell-font-ui);
+  font-size: var(--shell-control-font-size);
+}
+
+.dionysen-popover__trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--shell-control-height);
+  padding: 0 var(--shell-control-padding-x);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--shell-radius-control);
+  background: var(--shell-surface);
+  color: var(--shell-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dionysen-popover__trigger:hover:not(:disabled),
+.dionysen-popover__trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--shell-accent) 45%, var(--shell-border));
+  background: var(--shell-hover);
+}
+
+.dionysen-popover__trigger:focus-visible {
+  outline: none;
+  border-color: var(--shell-accent);
+  box-shadow: 0 0 0 2px var(--shell-focus-ring);
+}
+
+.dionysen-popover__trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dionysen-popover__surface {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 6px);
+  left: 0;
+  box-sizing: border-box;
+  max-width: min(90vw, 480px);
+  padding: var(--shell-space-3);
+  border: 1px solid var(--shell-glass-border);
+  border-radius: var(--shell-radius-menu);
+  background: var(--shell-glass-bg);
+  box-shadow: var(--shell-glass-shadow);
+  backdrop-filter: blur(var(--shell-glass-blur)) saturate(var(--shell-glass-saturate));
+}
+
+.dionysen-popover--end .dionysen-popover__surface {
+  right: 0;
+  left: auto;
+}

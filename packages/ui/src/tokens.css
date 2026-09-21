@@ -85,8 +85,10 @@
   --shell-scrollbar-size: var(--scrollbar-size, 8px);
   --shell-scrollbar-radius: var(--radius-scrollbar, 4px);
   --shell-scrollbar-track: var(--scrollbar-track, transparent);
+  --shell-scrollbar-thumb-idle: var(--scrollbar-thumb-idle, transparent);
   --shell-scrollbar-thumb: var(--scrollbar-thumb, color-mix(in srgb, var(--shell-fg) 28%, transparent));
   --shell-scrollbar-thumb-hover: var(--scrollbar-thumb-hover, color-mix(in srgb, var(--shell-fg) 45%, transparent));
+  --shell-scrollbar-thumb-active: var(--scrollbar-thumb-active, color-mix(in srgb, var(--shell-fg) 68%, transparent));
 
   /* Graph view �?Obsidian-like neutrals (dark defaults) */
   --shell-graph-node: #b4b4b4;

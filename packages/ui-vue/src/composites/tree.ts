@@ -7,6 +7,10 @@ export interface UiTreeNode {
   icon?: Component;
   children?: UiTreeNode[];
   disabled?: boolean;
+  /** Muted information shown at the right edge of the row. */
+  meta?: string;
+  /** Draw a subtle border around a non-leaf row. */
+  outlined?: boolean;
 }
 
 export interface UiTreeProps {
@@ -14,4 +18,5 @@ export interface UiTreeProps {
   expandedIds?: string[];
   selectedId?: string;
   label?: string;
+  indentLines?: boolean;
 }
