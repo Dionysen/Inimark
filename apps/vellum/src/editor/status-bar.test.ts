@@ -101,7 +101,7 @@ describe("formatPlaintext", () => {
 });
 
 describe("mountStatusBar", () => {
-  it("opens the format panel and applies its default plain-text rules", () => {
+  it("opens the format panel with the requested default rules and applies them", () => {
     const { host, editor, statusBar } = mountFixture("第一段   text\n\n\n第二段text");
     const formatBtn = host.querySelector<HTMLButtonElement>(".vellum-format-btn");
     assert.ok(formatBtn);
@@ -109,11 +109,17 @@ describe("mountStatusBar", () => {
     const formatPanel = host.querySelector<HTMLElement>(".vellum-format-panel");
     assert.ok(formatPanel);
     assert.equal(formatPanel.hidden, false);
+    assert.deepEqual(
+      [...formatPanel.querySelectorAll<HTMLButtonElement>(".inimark-toggle")].map((toggle) =>
+        toggle.getAttribute("aria-checked"),
+      ),
+      ["false", "true", "false", "false", "true"],
+    );
 
     const apply = host.querySelector<HTMLButtonElement>(".vellum-format-apply");
     assert.ok(apply);
     apply.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
-    assert.equal(editor.getValue(), "第一段 text\n\n第二段 text");
+    assert.equal(editor.getValue(), "　　第一段   text\n\n\n　　第二段 text");
 
     editor.destroy();
     statusBar.destroy();
@@ -128,8 +134,6 @@ describe("mountStatusBar", () => {
     formatBtn.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
     const formatPanel = host.querySelector<HTMLElement>(".vellum-format-panel");
     assert.ok(formatPanel);
-    const toggles = formatPanel.querySelectorAll<HTMLButtonElement>(".inimark-toggle");
-    toggles[1]?.dispatchEvent(new happy.MouseEvent("click", { bubbles: true }));
 
     const apply = host.querySelector<HTMLButtonElement>(".vellum-format-apply");
     assert.ok(apply);

@@ -10,10 +10,10 @@ const FORMAT_ICON =
   `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M5 6h14M5 12h9M5 18h14"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="m17 10 2 2-2 2"/></svg>`;
 
 const FORMAT_DEFAULTS: PlaintextFormatOptions = {
-  collapseBlankLines: true,
-  indentParagraphs: false,
-  separateParagraphs: true,
-  trimExtraSpaces: true,
+  collapseBlankLines: false,
+  indentParagraphs: true,
+  separateParagraphs: false,
+  trimExtraSpaces: false,
   cjkSpacing: true,
 };
 
