@@ -38,6 +38,10 @@ const editorAliases = [
     replacement: resolve(uiRoot, "src/widgets/widgets.css"),
   },
   {
+    find: "@dionysen/ui/tooltip.css",
+    replacement: resolve(uiRoot, "src/widgets/tooltip.css"),
+  },
+  {
     find: "@dionysen/ui/confirm-dialog.css",
     replacement: resolve(uiRoot, "src/confirm-dialog.css"),
   },

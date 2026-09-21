@@ -1,6 +1,7 @@
 @import "@dionysen/ui/tokens.css";
 @import "./shell-token-alias.css";
 @import "@dionysen/ui/widgets.css";
+@import "@dionysen/ui/tooltip.css";
 @import "@dionysen/theme/themes.css";
 
 /* Global shell foundation — shared by every window entry (main, settings, …). */

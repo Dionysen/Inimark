@@ -50,6 +50,10 @@ export default defineConfig({
         replacement: resolve(uiRoot, "src/widgets/widgets.css"),
       },
       {
+        find: "@dionysen/ui/tooltip.css",
+        replacement: resolve(uiRoot, "src/widgets/tooltip.css"),
+      },
+      {
         find: "@dionysen/ui/font-catalog",
         replacement: resolve(uiRoot, "src/font-catalog.ts"),
       },

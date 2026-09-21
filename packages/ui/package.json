@@ -10,6 +10,7 @@
     "./font-catalog": "./src/font-catalog.ts",
     "./tokens.css": "./src/tokens.css",
     "./widgets.css": "./src/widgets/widgets.css",
+    "./tooltip.css": "./src/widgets/tooltip.css",
     "./confirm-dialog.css": "./src/confirm-dialog.css",
     "./status-toast.css": "./src/status-toast.css"
   },

@@ -106,7 +106,6 @@ function positionTooltip(anchor: HTMLElement): void {
 
   tip.style.visibility = "hidden";
   tip.hidden = false;
-  tip.classList.add("is-visible");
 
   const tipRect = tip.getBoundingClientRect();
   let top = rect.bottom + gap;
@@ -136,7 +135,11 @@ function show(target: HTMLElement, content: { label: string; meta?: string }): v
   }
   tip.id = `inimark-tooltip-${target.id || "active"}`;
   target.setAttribute("aria-describedby", tip.id);
+  // Restart the entrance keyframes when a visible tooltip changes targets.
+  tip.classList.remove("is-visible");
   positionTooltip(target);
+  void tip.offsetWidth;
+  tip.classList.add("is-visible");
 }
 
 function hide(): void {
