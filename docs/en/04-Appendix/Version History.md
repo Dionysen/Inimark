@@ -35,6 +35,7 @@ Prefer **Latest** unless you are debugging an older build.
 
 ### What's new
 
+- Fix theme-editor color sampling: the shared theme package no longer calls a Tauri command that another host has not registered, and hosts without a native sampler correctly fall back to the browser picker
 - Fix the typewriter-mode status-bar icon so it shows a recognizable typewriter instead of an I-beam; share the glyph with Vellum for consistent writing controls
 
 ---

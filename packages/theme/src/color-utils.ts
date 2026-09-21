@@ -1,5 +1,7 @@
 /** Color helpers for the theme editor. */
 
+import { tryGetThemeConfig } from "./config.ts";
+
 export interface RgbaColor {
   r: number; // 0–255
   g: number;
@@ -231,29 +233,13 @@ export function supportsEyeDropper(): boolean {
 
 /**
  * Pick a screen color.
- * Prefers the native Tauri sampler (macOS / Windows); falls back to EyeDropper
- * when the native command is unavailable (e.g. unsupported OS or plain web).
+ * Prefers the native sampler explicitly supplied by the current host; otherwise
+ * falls back to the standard browser EyeDropper API.
  */
 export async function pickColorWithEyeDropper(): Promise<string | null> {
-  let invoke: ((cmd: string) => Promise<string>) | null = null;
-  try {
-    const core = await import("@tauri-apps/api/core");
-    invoke = (cmd) => core.invoke<string>(cmd);
-  } catch {
-    invoke = null;
-  }
-
-  if (invoke) {
-    try {
-      const hex = await invoke("pick_screen_color");
-      return typeof hex === "string" && hex.length > 0 ? hex : null;
-    } catch (err) {
-      const msg = String(err);
-      if (/cancel/i.test(msg)) return null;
-      if (!/not available/i.test(msg)) {
-        throw err instanceof Error ? err : new Error(msg);
-      }
-    }
+  const nativePicker = tryGetThemeConfig()?.screenColorPicker;
+  if (nativePicker) {
+    return nativePicker();
   }
 
   if (supportsEyeDropper()) {

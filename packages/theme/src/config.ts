@@ -2,6 +2,9 @@ import type { AppearanceMode, ThemePair } from "./appearance.ts";
 
 export type ThemeEditorProfile = "chrome" | "full";
 
+/** Optional host-native screen sampler. `null` means the user cancelled. */
+export type ScreenColorPicker = () => Promise<string | null>;
+
 export interface ThemeProductConfig {
   productId: string;
   storageKeys: {
@@ -22,6 +25,13 @@ export interface ThemeProductConfig {
   features: {
     systemAppearance: boolean;
   };
+  /**
+   * Native screen sampler supplied by a desktop host when available.
+   *
+   * The shared theme package deliberately does not invoke an application command
+   * itself: command registration is owned by each Tauri host.
+   */
+  screenColorPicker?: ScreenColorPicker;
   /** Editor schema profile: chrome = chrome+body+scrollbar; full = all sections. */
   editorProfile: ThemeEditorProfile;
   defaults: {

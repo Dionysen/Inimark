@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   configureTheme,
   resolveAppearanceMode,
@@ -15,6 +15,7 @@ import {
   syncLinkedChromeBackgrounds,
   syncAccentDerived,
   accentHoverFromAccent,
+  pickColorWithEyeDropper,
 } from "./index.ts";
 
 describe("appearance resolve", () => {
@@ -196,5 +197,50 @@ describe("syncAccentDerived", () => {
     expect(synced.find((v) => v.name === "--accent-hover")?.value).toBe(
       accentHoverFromAccent("#2563eb"),
     );
+  });
+});
+
+describe("theme color picker capability", () => {
+  beforeEach(() => {
+    configureTheme(chromeConfig);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the native sampler explicitly provided by the host", async () => {
+    const nativePicker = vi.fn().mockResolvedValue("#123456");
+    const webPicker = vi.fn();
+    vi.stubGlobal("EyeDropper", class {
+      open = webPicker;
+    });
+    configureTheme({ ...chromeConfig, screenColorPicker: nativePicker });
+
+    await expect(pickColorWithEyeDropper()).resolves.toBe("#123456");
+    expect(nativePicker).toHaveBeenCalledOnce();
+    expect(webPicker).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the browser sampler when the host has no native command", async () => {
+    const open = vi.fn().mockResolvedValue({ sRGBHex: "#abcdef" });
+    vi.stubGlobal("EyeDropper", class {
+      open = open;
+    });
+
+    await expect(pickColorWithEyeDropper()).resolves.toBe("#abcdef");
+    expect(open).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a native cancellation distinct from a browser fallback", async () => {
+    const nativePicker = vi.fn().mockResolvedValue(null);
+    const webPicker = vi.fn();
+    vi.stubGlobal("EyeDropper", class {
+      open = webPicker;
+    });
+    configureTheme({ ...chromeConfig, screenColorPicker: nativePicker });
+
+    await expect(pickColorWithEyeDropper()).resolves.toBeNull();
+    expect(webPicker).not.toHaveBeenCalled();
   });
 });

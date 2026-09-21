@@ -5,6 +5,7 @@ export {
   themeT,
   type ThemeProductConfig,
   type ThemeEditorProfile,
+  type ScreenColorPicker,
 } from "./config.ts";
 
 export {
