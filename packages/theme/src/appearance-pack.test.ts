@@ -113,7 +113,7 @@ describe("editor schema profile", () => {
     expect(filtered).toHaveLength(THEME_EDITOR_SECTIONS.length);
   });
 
-  it("chrome profile shows the simplified Vellum field set in order", () => {
+  it("chrome profile shows the simplified shell field set in order", () => {
     const sections = buildThemeEditorSections([]);
     expect(sections.map((s) => s.id)).toEqual([
       "body",

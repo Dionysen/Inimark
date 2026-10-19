@@ -25,7 +25,7 @@ import "@dionysen/theme/themes.css";
 import "@dionysen/theme/theme-settings.css"; // settings window only
 
 configureTheme({
-  productId: "vellum",
+  productId: "inimark",
   storageKeys: { /* … */ },
   syncEvents: { /* … */ },
   pack: { format: "inimark-theme-pack", fileExtension: "inimark-theme.json", dialogTitle: "Theme Pack" },

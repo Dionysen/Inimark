@@ -2,11 +2,8 @@
 resolver = "2"
 members = [
   "apps/inimark/src-tauri",
-  "apps/vellum/src-tauri",
   "crates/dionysen-shell",
-  "crates/dionysen-git-sync",
   "crates/inimark-ssg",
-  "crates/purewriter-store",
 ]
 
 [workspace.package]

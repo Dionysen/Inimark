@@ -64,7 +64,7 @@ export interface ThemeEditorSectionDef {
   titleKey: string;
 }
 
-/** Sections shown in the chrome profile (Vellum / shell-only editors). */
+/** Sections shown in the chrome profile (shell-only editors). */
 export const CHROME_EDITOR_SECTIONS: ThemeEditorSectionId[] = [
   "body",
   "chrome",

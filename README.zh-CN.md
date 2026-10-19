@@ -149,13 +149,21 @@
 ### 架构
 
 ```
-apps/inimark/          Tauri 2 桌面壳 + Vite/TS UI
-packages/editor/       @inimark/editor — typora-web 风格 WYSIWYG（ProseMirror）
-packages/site-render/  库 → 静态站的 SSG 模型（Publish）
-crates/inimark-ssg/    写入 dist / 本地预览等原生 I/O
-docs/                  产品帮助库 + 宣传落地页（docs/landing）
+apps/inimark/              Inimark — Tauri 2 桌面壳 + Vite/TS UI
+packages/ui/               @dionysen/ui — 共享组件与设计令牌
+packages/shell/            @dionysen/shell — 窗口 chrome、平台能力、滚动条
+packages/settings-kit/     @dionysen/settings-kit — 设置窗口框架
+packages/shortcut-kit/     @dionysen/shortcut-kit — 快捷键匹配与持久化
+packages/i18n/             @dionysen/i18n — 语言引擎（文案目录在应用内）
+packages/editor/           @inimark/editor — typora-web 风格 WYSIWYG（ProseMirror）
+packages/site-render/      库 → 静态站的 SSG 模型（Publish）
+crates/dionysen-shell/     共享双窗口 Tauri 策略
+crates/inimark-ssg/        写入 dist / 本地预览等原生 I/O
+vendor/wry/                补丁版 wry（macOS 交通灯）
+docs/                      产品帮助库 + 宣传落地页（docs/landing）
 ```
 
+- **共享壳层**（`@dionysen/*`）：可复用桌面 chrome，不含 Inimark 产品逻辑。
 - **编辑器核心**（`@inimark/editor`）：源自 [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web)（MIT）。详见 `NOTICE` 与 `packages/editor/UPSTREAM-LICENSE`。
 - **Inimark 应用**（`@inimark/app`）：Tauri 2 + Vite；Rust 侧负责文件、更新、发布写入等原生能力。
 - **文档站**：`pnpm docs:build` 构建帮助库；存在 `docs/landing` 时，站点根路径为宣传主页，文档在 `/docs/` 下。
@@ -166,7 +174,7 @@ docs/                  产品帮助库 + 宣传落地页（docs/landing）
 | --- | --- |
 | Node.js | 20+ |
 | pnpm | 10+（仓库已锁定 `packageManager`） |
-| Rust | stable（跑 `pnpm inimark:tauri` / `pnpm vellum:tauri` 需要） |
+| Rust | stable（跑 `pnpm inimark:tauri` 需要） |
 
 ### 常用命令
 
@@ -176,10 +184,6 @@ pnpm install
 # Inimark
 pnpm inimark:dev
 pnpm inimark:tauri dev
-
-# Vellum
-pnpm vellum:dev
-pnpm vellum:tauri dev
 
 # 测试
 pnpm test:editor

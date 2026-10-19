@@ -150,26 +150,22 @@ Full docs:
 
 ```
 apps/inimark/              Inimark — Tauri 2 + Vite/TS product UI
-apps/vellum/               Vellum — plaintext writing app (shared shell)
 packages/ui/               @dionysen/ui — shared widgets + design tokens
 packages/shell/            @dionysen/shell — window chrome, platform, scrollbars
 packages/settings-kit/     @dionysen/settings-kit — settings window framework
 packages/shortcut-kit/     @dionysen/shortcut-kit — shortcut matching / persistence
 packages/i18n/             @dionysen/i18n — locale engine (catalogs stay in apps)
-packages/purewriter-store/ @dionysen/purewriter-store — Pure Writer library IPC types (Vellum)
 packages/editor/           @inimark/editor — Typora-style WYSIWYG (ProseMirror)
 packages/site-render/      Vault → static site SSG model (Publish)
 crates/dionysen-shell/     Shared dual-window Tauri policy
-crates/purewriter-store/   Pure Writer Room.db + PWB full-fidelity store (Vellum)
 crates/inimark-ssg/        Native I/O for writing dist / local preview
 vendor/wry/                Patched wry (macOS traffic lights)
 docs/                      Help vault + marketing landing (docs/landing)
 ```
 
-- **Shared shell** (`@dionysen/*`): reusable desktop chrome for Inimark and Vellum — not product logic.
+- **Shared shell** (`@dionysen/*`): reusable desktop chrome — not Inimark product logic.
 - **Editor core** (`@inimark/editor`): derived from [Albert-PZY/typora-web](https://github.com/Albert-PZY/typora-web) (MIT). See `NOTICE` and `packages/editor/UPSTREAM-LICENSE`.
 - **Inimark app** (`@inimark/app`): Tauri 2 + Vite; Rust handles files, updates, publish writes, and other native I/O.
-- **Vellum** (`@vellum/app`): plaintext writing scaffold on the same Dionysen shell (`pnpm vellum:dev` / `pnpm vellum:tauri`).
 - **Docs site**: `pnpm docs:build` builds the help vault. With `docs/landing` present, the site root is the marketing homepage and docs live under `/docs/`.
 
 ### Prerequisites
@@ -178,7 +174,7 @@ docs/                      Help vault + marketing landing (docs/landing)
 | --- | --- |
 | Node.js | 20+ |
 | pnpm | 10+ (pinned via `packageManager`) |
-| Rust | stable (needed for `pnpm inimark:tauri` / `pnpm vellum:tauri`) |
+| Rust | stable (needed for `pnpm inimark:tauri`) |
 
 ### Commands
 
@@ -188,10 +184,6 @@ pnpm install
 # Inimark
 pnpm inimark:dev
 pnpm inimark:tauri dev
-
-# Vellum
-pnpm vellum:dev
-pnpm vellum:tauri dev
 
 # Tests
 pnpm test:editor

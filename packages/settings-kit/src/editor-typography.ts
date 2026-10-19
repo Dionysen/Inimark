@@ -29,7 +29,7 @@ export const FIRST_LINE_INDENT_MIN = 0;
 export const FIRST_LINE_INDENT_MAX = 4;
 export const FIRST_LINE_INDENT_DEFAULT = 2;
 
-/** Shared typography fields used by writing shells (Vellum) and editors. */
+/** Shared typography fields used by shell chrome and editors. */
 export interface EditorTypographySettings {
   /** Preset id or system font family name. */
   editorFont: string;
@@ -150,7 +150,7 @@ export function normalizeEditorTypography(
 /**
  * Map typography settings onto CSS variables / datasets on `root`.
  *
- * - `shell`: `--shell-editor-*` (Vellum / shared chrome tokens)
+ * - `shell`: `--shell-editor-*` (shared chrome tokens)
  * - `editor`: `--editor-*` + `--inimark-editor-*` (Inimark / @inimark/editor)
  */
 export function applyEditorTypographyCss(

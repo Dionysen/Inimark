@@ -876,9 +876,7 @@ html.is-color-picking * {
 }
 
 .inimark-settings-theme-host:has(.theme-editor),
-.vellum-theme-panel-host:has(.theme-editor),
-.inimark-settings-body:has(.theme-editor)>.inimark-settings-theme-host,
-.inimark-settings-body:has(.theme-editor)>.vellum-theme-panel-host {
+.inimark-settings-body:has(.theme-editor)>.inimark-settings-theme-host {
   flex: 1;
   min-height: 0;
   display: flex;
