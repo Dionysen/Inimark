@@ -478,6 +478,9 @@
 }
 
 .inimark-ai-tool-card > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
   padding: var(--inimark-space-2);
   color: var(--inimark-muted-fg);
@@ -512,6 +515,9 @@
 }
 
 .inimark-ai-thinking > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
   padding: var(--inimark-space-2);
   color: var(--inimark-muted-fg);
@@ -522,6 +528,19 @@
 .inimark-ai-thinking > summary::-webkit-details-marker,
 .inimark-ai-tool-card > summary::-webkit-details-marker {
   display: none;
+}
+
+.inimark-ai-disclosure-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inimark-ai-thinking[open] > summary .inimark-tree-chevron,
+.inimark-ai-tool-card[open] > summary .inimark-tree-chevron {
+  transform: rotate(90deg);
 }
 
 .inimark-ai-thinking-body {

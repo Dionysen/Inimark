@@ -37,6 +37,7 @@ Prefer **Latest** unless you are debugging an older build.
 
 - Fix theme-editor color sampling: the shared theme package no longer calls a Tauri command that another host has not registered, and hosts without a native sampler correctly fall back to the browser picker
 - Fix the typewriter-mode status-bar icon so it shows a recognizable typewriter instead of an I-beam
+- AI assistant: add file-tree-style chevrons on “Thinking” and tool-call headers; the chevron rotates when expanded
 
 ---
 

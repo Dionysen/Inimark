@@ -14,6 +14,25 @@ const AGE_TICK_MS = 30_000;
 /** px — treat as “at bottom” so tiny layout jitter does not unpin. */
 const STICK_THRESHOLD_PX = 48;
 
+/** Same chevron as `packages/ui` tree rows — pairs with `.inimark-tree-chevron` styles. */
+const DISCLOSURE_CHEVRON_SVG =
+  `<svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/** Ensures a tree-style chevron + label inside a `<summary>` (updated via `label`). */
+function ensureDisclosureSummary(summary: HTMLElement): HTMLElement {
+  let label = summary.querySelector<HTMLElement>(":scope > .inimark-ai-disclosure-label");
+  if (!label) {
+    const chevron = document.createElement("span");
+    chevron.className = "inimark-tree-chevron";
+    chevron.setAttribute("aria-hidden", "true");
+    chevron.innerHTML = DISCLOSURE_CHEVRON_SVG;
+    label = document.createElement("span");
+    label.className = "inimark-ai-disclosure-label";
+    summary.replaceChildren(chevron, label);
+  }
+  return label;
+}
+
 export interface ChatViewController {
   el: HTMLElement;
   setMessages(messages: UiChatMessage[]): void;
@@ -160,7 +179,8 @@ export function mountChatView(host: HTMLElement): ChatViewController {
 
     const summary = thinking.querySelector(":scope > summary");
     if (summary) {
-      summary.textContent = msg.reasoningStreaming
+      const label = ensureDisclosureSummary(summary);
+      label.textContent = msg.reasoningStreaming
         ? t("ai.thinkingStreaming")
         : t("ai.thinkingProcess");
     }
@@ -271,7 +291,10 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     }
     card.open = msg.tool.status === "pending" || msg.tool.status === "error";
     const summary = card.querySelector(":scope > summary");
-    if (summary) summary.textContent = formatToolCardSummary(msg.tool);
+    if (summary) {
+      const label = ensureDisclosureSummary(summary);
+      label.textContent = formatToolCardSummary(msg.tool);
+    }
     const body = card.querySelector(":scope > .inimark-ai-tool-body");
     if (body) {
       body.textContent = [

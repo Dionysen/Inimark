@@ -160,4 +160,46 @@ describe("chat-view streaming", () => {
     chat.destroy();
     host.remove();
   });
+
+  test("thinking and tool summaries show a tree-style expand chevron", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const chat = mountChatView(host);
+
+    chat.setMessages([
+      assistant({
+        id: "a1",
+        reasoning: "think",
+        reasoningStreaming: false,
+        content: "answer",
+      }),
+      {
+        id: "t1",
+        kind: "tool",
+        content: "",
+        tool: {
+          id: "tc1",
+          name: "read_file",
+          status: "done",
+          argsPreview: "path: notes.md",
+          resultPreview: "hello",
+        },
+      },
+    ]);
+
+    const thinking = host.querySelector<HTMLDetailsElement>(".inimark-ai-thinking")!;
+    expect(thinking.querySelector("summary .inimark-tree-chevron svg")).toBeTruthy();
+    expect(thinking.open).toBe(false);
+
+    thinking.open = true;
+    expect(
+      getComputedStyle(thinking.querySelector(".inimark-tree-chevron")!).transform,
+    ).not.toBe("none");
+
+    const toolCard = host.querySelector<HTMLDetailsElement>(".inimark-ai-tool-card")!;
+    expect(toolCard.querySelector("summary .inimark-tree-chevron svg")).toBeTruthy();
+
+    chat.destroy();
+    host.remove();
+  });
 });
