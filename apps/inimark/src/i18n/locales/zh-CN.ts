@@ -201,6 +201,8 @@ export const zhCN: Dictionary = {
     copyAnswer: "复制回答",
     toolSectionArgs: "参数",
     toolSectionResult: "结果",
+    workedFor: "Worked for {{duration}}",
+    workingFor: "Working… {{duration}}",
     answerAge: {
       justNow: "刚刚",
       minutes: "{{n}} 分钟前",

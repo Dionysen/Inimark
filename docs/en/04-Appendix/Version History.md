@@ -39,6 +39,7 @@ Prefer **Latest** unless you are debugging an older build.
 - Fix the typewriter-mode status-bar icon so it shows a recognizable typewriter instead of an I-beam
 - AI assistant: add file-tree-style chevrons on “Thinking” and tool-call headers; the chevron rotates when expanded
 - AI assistant: render thinking and tool-call details as Markdown (JSON args/results in fenced blocks), matching final answers
+- AI assistant: collapse thinking and tool steps between visible answers into a “Worked for …” trace (Cursor-style), collapsed by default
 
 ---
 

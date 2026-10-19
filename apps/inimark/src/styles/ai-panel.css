@@ -531,8 +531,53 @@
 }
 
 .inimark-ai-thinking[open] > summary .inimark-tree-chevron,
-.inimark-ai-tool-card[open] > summary .inimark-tree-chevron {
+.inimark-ai-tool-card[open] > summary .inimark-tree-chevron,
+.inimark-ai-work-trace[open] > summary .inimark-tree-chevron {
   transform: rotate(90deg);
+}
+
+.inimark-ai-msg--work {
+  align-items: stretch;
+}
+
+.inimark-ai-work-trace {
+  border: 1px solid var(--inimark-border);
+  border-radius: var(--inimark-radius-sm);
+  background: color-mix(in srgb, var(--inimark-fg) 2.5%, var(--inimark-surface));
+  font-size: 12px;
+}
+
+.inimark-ai-work-trace > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: var(--inimark-space-2);
+  color: var(--inimark-muted-fg);
+  list-style: none;
+  user-select: none;
+}
+
+.inimark-ai-work-trace > summary::-webkit-details-marker {
+  display: none;
+}
+
+.inimark-ai-work-trace-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--inimark-space-1);
+  padding: 0 var(--inimark-space-2) var(--inimark-space-2);
+  max-height: 280px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.inimark-ai-work-step--tool .inimark-ai-tool-card {
+  margin: 0;
+}
+
+.inimark-ai-work-step--thinking .inimark-ai-thinking {
+  margin: 0;
 }
 
 .inimark-ai-thinking-body {

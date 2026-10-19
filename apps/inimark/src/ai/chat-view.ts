@@ -1,3 +1,10 @@
+import {
+  buildChatDisplayItems,
+  displayItemKey,
+  formatWorkTraceLabel,
+  type ChatDisplayItem,
+  type UiWorkTrace,
+} from "./chat-transcript.ts";
 import { handleChatLinkClick, syncChatMarkdownElement } from "./markdown-render.ts";
 import { formatAnswerAge } from "./relative-time.ts";
 import {
@@ -110,6 +117,22 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       if (!Number.isFinite(endedAt)) continue;
       el.textContent = formatAnswerAge(endedAt, now);
     }
+    for (const details of list.querySelectorAll<HTMLDetailsElement>(".inimark-ai-work-trace")) {
+      if (details.dataset.active !== "1") continue;
+      const startedAt = Number(details.dataset.startedAt);
+      if (!Number.isFinite(startedAt)) continue;
+      const label = details.querySelector<HTMLElement>(".inimark-ai-disclosure-label");
+      if (!label) continue;
+      label.textContent = formatWorkTraceLabel(
+        {
+          id: "",
+          items: [],
+          startedAt,
+          active: true,
+        },
+        now,
+      );
+    }
   }
 
   function ensureAgeTimer(): void {
@@ -124,8 +147,9 @@ export function mountChatView(host: HTMLElement): ChatViewController {
   }
 
   function syncAgeTimer(): void {
-    if (list.querySelector(".inimark-ai-msg-age")) ensureAgeTimer();
-    else clearAgeTimer();
+    if (list.querySelector(".inimark-ai-msg-age, .inimark-ai-work-trace[data-active='1']")) {
+      ensureAgeTimer();
+    } else clearAgeTimer();
   }
 
   /**
@@ -141,7 +165,7 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     }
 
     const thinkingBody = list.querySelector<HTMLElement>(
-      ".inimark-ai-msg--assistant:last-child .inimark-ai-thinking-body",
+      ".inimark-ai-work-trace[data-active='1'] .inimark-ai-thinking-body, .inimark-ai-msg--assistant:last-child .inimark-ai-thinking-body",
     );
     if (thinkingBody && (opts?.forceThinking || thinkingPinned)) {
       thinkingPinned = true;
@@ -308,6 +332,73 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     }
   }
 
+  function syncWorkStep(step: HTMLElement, msg: UiChatMessage): void {
+    step.dataset.msgId = msg.id;
+    step.querySelector(":scope > .inimark-ai-bubble")?.remove();
+    step.querySelector(":scope > .inimark-ai-msg-actions")?.remove();
+
+    if (msg.kind === "tool" && msg.tool) {
+      step.className = "inimark-ai-work-step inimark-ai-work-step--tool";
+      step.querySelector(":scope > .inimark-ai-thinking")?.remove();
+      syncToolRow(step, msg);
+      return;
+    }
+
+    step.className = "inimark-ai-work-step inimark-ai-work-step--thinking";
+    step.querySelector(":scope > .inimark-ai-tool-card")?.remove();
+    ensureThinking(step, msg);
+  }
+
+  function syncWorkTraceRow(row: HTMLElement, trace: UiWorkTrace): void {
+    row.className = "inimark-ai-msg inimark-ai-msg--work";
+    row.dataset.id = trace.id;
+
+    let details = row.querySelector<HTMLDetailsElement>(":scope > .inimark-ai-work-trace");
+    if (!details) {
+      details = document.createElement("details");
+      details.className = "inimark-ai-work-trace";
+      const summary = document.createElement("summary");
+      const body = document.createElement("div");
+      body.className = "inimark-ai-work-trace-body inimark-scrollbar";
+      details.append(summary, body);
+      row.append(details);
+    }
+
+    const wasActive = details.dataset.active === "1";
+    details.dataset.active = trace.active ? "1" : "0";
+    details.dataset.startedAt = String(trace.startedAt);
+    if (trace.endedAt != null) details.dataset.endedAt = String(trace.endedAt);
+    else delete details.dataset.endedAt;
+
+    if (trace.active) details.open = true;
+    else if (wasActive && !trace.active) details.open = false;
+
+    const summary = details.querySelector(":scope > summary");
+    if (summary) {
+      const label = ensureDisclosureSummary(summary);
+      label.textContent = formatWorkTraceLabel(trace);
+    }
+
+    const body = details.querySelector<HTMLElement>(":scope > .inimark-ai-work-trace-body");
+    if (!body) return;
+
+    const wantIds = new Set(trace.items.map((it) => it.msg.id));
+    for (const stale of [...body.querySelectorAll<HTMLElement>(".inimark-ai-work-step")]) {
+      if (!wantIds.has(stale.dataset.msgId ?? "")) stale.remove();
+    }
+
+    for (const { msg } of trace.items) {
+      let step = body.querySelector<HTMLElement>(
+        `:scope > .inimark-ai-work-step[data-msg-id="${msg.id}"]`,
+      );
+      if (!step) {
+        step = document.createElement("div");
+        body.append(step);
+      }
+      syncWorkStep(step, msg);
+    }
+  }
+
   function syncMessageRow(
     row: HTMLElement,
     msg: UiChatMessage,
@@ -332,56 +423,55 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     syncActions(row, msg, index, messages);
   }
 
-  function renderMessage(
-    msg: UiChatMessage,
-    index: number,
+  function syncDisplayRow(
+    row: HTMLElement,
+    item: ChatDisplayItem,
     messages: UiChatMessage[],
-  ): HTMLElement {
+  ): void {
+    if (item.type === "work") {
+      syncWorkTraceRow(row, item.trace);
+      return;
+    }
+    syncMessageRow(row, item.msg, item.index, messages);
+  }
+
+  function renderDisplayItem(item: ChatDisplayItem, messages: UiChatMessage[]): HTMLElement {
     const row = document.createElement("div");
-    syncMessageRow(row, msg, index, messages);
+    syncDisplayRow(row, item, messages);
     return row;
   }
 
-  function sameIdSequence(messages: UiChatMessage[]): boolean {
-    if (messages.length !== renderedIds.length) return false;
-    return messages.every((msg, i) => msg.id === renderedIds[i]);
-  }
-
-  function isAppendOnly(messages: UiChatMessage[]): boolean {
-    if (messages.length <= renderedIds.length) return false;
-    return renderedIds.every((id, i) => id === messages[i]?.id);
-  }
-
-  function rebuildAll(messages: UiChatMessage[]): void {
-    list.replaceChildren(...messages.map((msg, i) => renderMessage(msg, i, messages)));
-  }
-
   function setMessages(messages: UiChatMessage[]): void {
-    if (sameIdSequence(messages)) {
-      for (let i = 0; i < messages.length; i++) {
+    const displayItems = buildChatDisplayItems(messages);
+    const keys = displayItems.map(displayItemKey);
+
+    if (keys.length === renderedIds.length && keys.every((id, i) => id === renderedIds[i])) {
+      for (let i = 0; i < displayItems.length; i++) {
         const row = list.children[i] as HTMLElement | undefined;
-        const msg = messages[i]!;
+        const item = displayItems[i]!;
         if (!row) continue;
-        syncMessageRow(row, msg, i, messages);
+        syncDisplayRow(row, item, messages);
       }
-    } else if (isAppendOnly(messages)) {
+    } else if (
+      keys.length > renderedIds.length &&
+      renderedIds.every((id, i) => id === keys[i])
+    ) {
       for (let i = 0; i < renderedIds.length; i++) {
         const row = list.children[i] as HTMLElement | undefined;
-        const msg = messages[i]!;
+        const item = displayItems[i]!;
         if (!row) continue;
-        syncMessageRow(row, msg, i, messages);
+        syncDisplayRow(row, item, messages);
       }
-      for (let i = renderedIds.length; i < messages.length; i++) {
-        list.append(renderMessage(messages[i]!, i, messages));
+      for (let i = renderedIds.length; i < keys.length; i++) {
+        list.append(renderDisplayItem(displayItems[i]!, messages));
       }
     } else {
-      rebuildAll(messages);
-      // Fresh transcript (new chat / switch session) — pin to latest.
+      list.replaceChildren(...displayItems.map((item) => renderDisplayItem(item, messages)));
       listPinned = true;
       thinkingPinned = true;
     }
 
-    renderedIds = messages.map((msg) => msg.id);
+    renderedIds = keys;
     syncAgeTimer();
     applyStickyScroll();
   }

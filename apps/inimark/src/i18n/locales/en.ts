@@ -201,6 +201,8 @@ export const en: Dictionary = {
     copyAnswer: "Copy answer",
     toolSectionArgs: "Arguments",
     toolSectionResult: "Result",
+    workedFor: "Worked for {{duration}}",
+    workingFor: "Working… {{duration}}",
     answerAge: {
       justNow: "just now",
       minutes: "{{n}}m ago",

@@ -64,6 +64,8 @@ export interface UiToolCard {
 
 export interface UiChatMessage {
   id: string;
+  /** Epoch ms when this UI row was created (used for work-trace duration). */
+  createdAt?: number;
   kind: UiMessageKind;
   /** Markdown or plain text for display. */
   content: string;

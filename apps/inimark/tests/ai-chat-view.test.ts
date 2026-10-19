@@ -22,6 +22,7 @@ describe("chat-view streaming", () => {
     const chat = mountChatView(host);
 
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "step 1",
@@ -29,12 +30,11 @@ describe("chat-view streaming", () => {
         streaming: true,
       }),
     ]);
-    const thinking = host.querySelector(".inimark-ai-thinking");
-    const body = host.querySelector(".inimark-ai-thinking-body");
-    expect(thinking).toBeTruthy();
+    const body = host.querySelector(".inimark-ai-work-trace .inimark-ai-thinking-body");
     expect(body?.textContent).toContain("step 1");
 
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "step 1\nstep 2",
@@ -42,8 +42,7 @@ describe("chat-view streaming", () => {
         streaming: true,
       }),
     ]);
-    expect(host.querySelector(".inimark-ai-thinking")).toBe(thinking);
-    expect(host.querySelector(".inimark-ai-thinking-body")).toBe(body);
+    expect(host.querySelector(".inimark-ai-work-trace .inimark-ai-thinking-body")).toBe(body);
     expect(body?.textContent).toContain("step 2");
 
     chat.destroy();
@@ -59,6 +58,7 @@ describe("chat-view streaming", () => {
 
     const long = Array.from({ length: 80 }, (_, i) => `line ${i}`).join("\n");
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: long,
@@ -124,6 +124,7 @@ describe("chat-view streaming", () => {
     const chat = mountChatView(host);
 
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "think",
@@ -131,10 +132,13 @@ describe("chat-view streaming", () => {
         streaming: true,
       }),
     ]);
-    const thinking = host.querySelector<HTMLDetailsElement>(".inimark-ai-thinking")!;
+    const thinking = host.querySelector<HTMLDetailsElement>(
+      ".inimark-ai-work-trace .inimark-ai-thinking",
+    )!;
     expect(thinking.open).toBe(true);
 
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "think",
@@ -147,6 +151,7 @@ describe("chat-view streaming", () => {
 
     thinking.open = true;
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "think",
@@ -167,6 +172,7 @@ describe("chat-view streaming", () => {
     const chat = mountChatView(host);
 
     chat.setMessages([
+      { id: "u1", kind: "user", content: "go" },
       assistant({
         id: "a1",
         reasoning: "**Plan**\n\n- step one",
@@ -174,7 +180,7 @@ describe("chat-view streaming", () => {
       }),
     ]);
 
-    const body = host.querySelector(".inimark-ai-thinking-body");
+    const body = host.querySelector(".inimark-ai-work-trace .inimark-ai-thinking-body");
     expect(body?.querySelector("strong")?.textContent).toBe("Plan");
     expect(body?.querySelector("li")?.textContent).toContain("step one");
 
@@ -188,12 +194,7 @@ describe("chat-view streaming", () => {
     const chat = mountChatView(host);
 
     chat.setMessages([
-      assistant({
-        id: "a1",
-        reasoning: "think",
-        reasoningStreaming: false,
-        content: "answer",
-      }),
+      { id: "u1", kind: "user", content: "go" },
       {
         id: "t1",
         kind: "tool",
@@ -206,18 +207,26 @@ describe("chat-view streaming", () => {
           resultPreview: "hello",
         },
       },
+      assistant({
+        id: "a1",
+        reasoning: "think",
+        reasoningStreaming: false,
+        content: "answer",
+      }),
     ]);
 
-    const thinking = host.querySelector<HTMLDetailsElement>(".inimark-ai-thinking")!;
-    expect(thinking.querySelector("summary .inimark-tree-chevron svg")).toBeTruthy();
-    expect(thinking.open).toBe(false);
+    const workTrace = host.querySelector<HTMLDetailsElement>(".inimark-ai-work-trace")!;
+    expect(workTrace.querySelector("summary .inimark-tree-chevron svg")).toBeTruthy();
+    expect(workTrace.open).toBe(false);
 
-    thinking.open = true;
+    workTrace.open = true;
     expect(
-      getComputedStyle(thinking.querySelector(".inimark-tree-chevron")!).transform,
+      getComputedStyle(workTrace.querySelector(".inimark-tree-chevron")!).transform,
     ).not.toBe("none");
 
-    const toolCard = host.querySelector<HTMLDetailsElement>(".inimark-ai-tool-card")!;
+    const toolCard = host.querySelector<HTMLDetailsElement>(
+      ".inimark-ai-work-trace .inimark-ai-tool-card",
+    )!;
     expect(toolCard.querySelector("summary .inimark-tree-chevron svg")).toBeTruthy();
 
     chat.destroy();

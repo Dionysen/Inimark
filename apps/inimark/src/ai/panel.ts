@@ -93,6 +93,11 @@ function newId(): string {
   return `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function pushUiMessage(msg: Omit<UiChatMessage, "id" | "createdAt">): void {
+  const now = Date.now();
+  uiMessages.push({ ...msg, id: newId(), createdAt: now });
+}
+
 function findNode(
   nodes: WorkspaceTreeNode[],
   path: string,
@@ -423,8 +428,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       changeSet.remove(path);
       refreshReview();
     } catch (error) {
-      uiMessages.push({
-        id: newId(),
+      pushUiMessage({
         kind: "error",
         content: error instanceof Error ? error.message : String(error),
       });
@@ -442,8 +446,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       changeSet.clear();
       refreshReview();
     } catch (error) {
-      uiMessages.push({
-        id: newId(),
+      pushUiMessage({
         kind: "error",
         content: error instanceof Error ? error.message : String(error),
       });
@@ -626,8 +629,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
         last.reasoning = (last.reasoning ?? "") + event.text;
         last.reasoningStreaming = true;
       } else {
-        uiMessages.push({
-          id: newId(),
+        pushUiMessage({
           kind: "assistant",
           content: "",
           reasoning: event.text,
@@ -644,8 +646,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
         last.content += event.text;
         last.reasoningStreaming = false;
       } else {
-        uiMessages.push({
-          id: newId(),
+        pushUiMessage({
           kind: "assistant",
           content: event.text,
           streaming: true,
@@ -663,8 +664,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
         last.endedAt = now;
         if (event.content) last.content = event.content;
       } else if (event.content) {
-        uiMessages.push({
-          id: newId(),
+        pushUiMessage({
           kind: "assistant",
           content: event.content,
           endedAt: now,
@@ -674,8 +674,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       return;
     }
     if (event.type === "tool_start") {
-      uiMessages.push({
-        id: newId(),
+      pushUiMessage({
         kind: "tool",
         content: "",
         tool: {
@@ -710,7 +709,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     }
     if (event.type === "error") {
       if (event.message !== "cancelled") {
-        uiMessages.push({ id: newId(), kind: "error", content: event.message });
+        pushUiMessage({ kind: "error", content: event.message });
       }
       refreshChat();
       return;
@@ -723,8 +722,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     const prefs = loadAiPrefs();
     const apiKey = getApiKeyForProvider(secrets, prefs.providerId);
     if (!apiKey) {
-      uiMessages.push({
-        id: newId(),
+      pushUiMessage({
         kind: "error",
         content: t("ai.missingKey"),
       });
@@ -743,8 +741,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     });
 
     if (!resolved.baseUrl.trim()) {
-      uiMessages.push({
-        id: newId(),
+      pushUiMessage({
         kind: "error",
         content: t("ai.missingBaseUrl"),
       });
@@ -768,7 +765,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       if (!ok) return;
     }
 
-    uiMessages.push({ id: newId(), kind: "user", content: text });
+    pushUiMessage({ kind: "user", content: text });
     history.push({ role: "user", content: userContent });
     ensureSessionForFirstMessage(text);
     composer.setText("");
