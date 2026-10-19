@@ -887,7 +887,8 @@ html[data-glass="true"] .inimark-select-panel {
 
 .inimark-menu--submenu {
   position: fixed;
-  z-index: 45;
+  /* Above titlebar More (50) and AI menus (45); JS also stacks above the parent. */
+  z-index: 55;
   min-width: 10rem;
   opacity: 1;
   transform: none;

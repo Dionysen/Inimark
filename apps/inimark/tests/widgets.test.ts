@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
+import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import { createSelect } from "../src/ui/widgets/select.ts";
 import { createSlider } from "../src/ui/widgets/slider.ts";
 import { createMenu } from "../src/ui/widgets/menu.ts";
@@ -274,7 +274,124 @@ describe("widgets/menu", () => {
 
     menu.destroy();
   });
+
+  test("opens a flyout beside the parent and stacks it above", () => {
+    stubViewport(1024, 768);
+    const menu = createMenu();
+    menu.el.style.zIndex = "50";
+    document.body.append(menu.el);
+    menu.addSubmenuItem({
+      label: "Theme",
+      items: [{ label: "Dark Modern" }, { label: "Light" }],
+    });
+    menu.setOpen(true);
+
+    stubRect(menu.el, { left: 800, top: 40, width: 224, height: 280 });
+    const wrap = menu.el.querySelector(".inimark-menu-submenu-wrap") as HTMLElement;
+    stubRect(wrap, { left: 804, top: 180, width: 216, height: 28 });
+    const panel = document.body.querySelector(".inimark-menu--submenu") as HTMLElement;
+    stubRect(panel, { left: 0, top: 0, width: 160, height: 240 });
+
+    wrap.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+
+    expect(panel.hidden).toBe(false);
+    expect(Number(panel.style.zIndex)).toBeGreaterThan(50);
+    expect(parseFloat(panel.style.left)).toBeLessThan(800);
+    expect(parseFloat(panel.style.top)).toBe(180);
+
+    menu.destroy();
+  });
+
+  test("opens a flyout to the right when the parent sits on the left edge", () => {
+    stubViewport(1024, 768);
+    const menu = createMenu();
+    document.body.append(menu.el);
+    menu.addSubmenuItem({
+      label: "Sort",
+      items: [{ label: "Name" }],
+    });
+    menu.setOpen(true);
+
+    stubRect(menu.el, { left: 8, top: 400, width: 200, height: 160 });
+    const wrap = menu.el.querySelector(".inimark-menu-submenu-wrap") as HTMLElement;
+    stubRect(wrap, { left: 12, top: 420, width: 192, height: 28 });
+    const panel = document.body.querySelector(".inimark-menu--submenu") as HTMLElement;
+    stubRect(panel, { left: 0, top: 0, width: 160, height: 80 });
+
+    wrap.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+
+    expect(parseFloat(panel.style.left)).toBeGreaterThanOrEqual(8 + 200 - 4);
+
+    menu.destroy();
+  });
+
+  test("keeps the flyout open while the pointer crosses from the row onto it", () => {
+    vi.useFakeTimers();
+    const menu = createMenu();
+    try {
+      document.body.append(menu.el);
+      menu.addSubmenuItem({
+        label: "Theme",
+        items: [{ label: "Mint" }],
+      });
+      menu.setOpen(true);
+
+      const wrap = menu.el.querySelector(".inimark-menu-submenu-wrap") as HTMLElement;
+      const panel = document.body.querySelector(".inimark-menu--submenu") as HTMLElement;
+      wrap.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      expect(panel.hidden).toBe(false);
+
+      wrap.dispatchEvent(
+        new MouseEvent("mouseleave", { bubbles: true, relatedTarget: panel }),
+      );
+      vi.advanceTimersByTime(200);
+      expect(panel.hidden).toBe(false);
+
+      wrap.dispatchEvent(
+        new MouseEvent("mouseleave", { bubbles: true, relatedTarget: document.body }),
+      );
+      panel.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      vi.advanceTimersByTime(200);
+      expect(panel.hidden).toBe(false);
+
+      panel.dispatchEvent(
+        new MouseEvent("mouseleave", { bubbles: true, relatedTarget: document.body }),
+      );
+      vi.advanceTimersByTime(199);
+      expect(panel.hidden).toBe(false);
+      vi.advanceTimersByTime(1);
+      expect(panel.hidden).toBe(true);
+    } finally {
+      menu.destroy();
+      vi.useRealTimers();
+    }
+  });
 });
+
+function stubViewport(width: number, height: number): void {
+  Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+  Object.defineProperty(window, "innerHeight", { configurable: true, value: height });
+}
+
+function stubRect(
+  el: HTMLElement,
+  rect: { left: number; top: number; width: number; height: number },
+): void {
+  const box = {
+    x: rect.left,
+    y: rect.top,
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+    right: rect.left + rect.width,
+    bottom: rect.top + rect.height,
+    toJSON() {
+      return box;
+    },
+  };
+  el.getBoundingClientRect = () => box;
+}
 
 describe("widgets/font-picker", () => {
   let host: HTMLElement;

@@ -204,6 +204,57 @@ function blockTitlebarDoubleClickMaximize(el: HTMLElement): void {
   });
 }
 
+/** Delay before closing a flyout so the pointer can cross parent padding. */
+const SUBMENU_CLOSE_MS = 200;
+/** Overlap the parent chrome so the flyout sits on top of the padding gap. */
+const SUBMENU_OVERLAP_PX = 4;
+const SUBMENU_VIEWPORT_GAP_PX = 4;
+
+/**
+ * Place a body-mounted submenu beside its parent menu and stack it above.
+ * Opens toward the chevron (right) when there is room, otherwise to the left.
+ */
+function placeSubmenuPanel(
+  panel: HTMLElement,
+  trigger: HTMLElement,
+  parentMenu: HTMLElement,
+): void {
+  const parsedZ = Number.parseInt(getComputedStyle(parentMenu).zIndex, 10);
+  const parentZ = Number.isFinite(parsedZ) ? parsedZ : 30;
+  panel.style.zIndex = String(parentZ + 1);
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const menuRect = parentMenu.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const width = panelRect.width || 160;
+  const height = panelRect.height || 40;
+  const needed = width - SUBMENU_OVERLAP_PX;
+  const spaceRight = window.innerWidth - menuRect.right;
+  const spaceLeft = menuRect.left;
+
+  let left =
+    spaceRight >= needed || spaceRight >= spaceLeft
+      ? menuRect.right - SUBMENU_OVERLAP_PX
+      : menuRect.left - width + SUBMENU_OVERLAP_PX;
+  if (left < SUBMENU_VIEWPORT_GAP_PX) left = SUBMENU_VIEWPORT_GAP_PX;
+  if (left + width > window.innerWidth - SUBMENU_VIEWPORT_GAP_PX) {
+    left = Math.max(
+      SUBMENU_VIEWPORT_GAP_PX,
+      window.innerWidth - width - SUBMENU_VIEWPORT_GAP_PX,
+    );
+  }
+
+  let top = triggerRect.top;
+  if (top + height > window.innerHeight - SUBMENU_VIEWPORT_GAP_PX) {
+    top = Math.max(
+      SUBMENU_VIEWPORT_GAP_PX,
+      window.innerHeight - height - SUBMENU_VIEWPORT_GAP_PX,
+    );
+  }
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+}
+
 export function createMenu(): MenuController {
   const el = document.createElement("div");
   el.className = "inimark-menu inimark-glass";
@@ -252,6 +303,14 @@ export function createMenu(): MenuController {
       const trigger = wrap.querySelector<HTMLElement>(".inimark-menu-item--submenu");
       trigger?.setAttribute("aria-expanded", "false");
     }
+  }
+
+  function scheduleHideFlyouts(): void {
+    clearCloseTimer();
+    closeTimer = setTimeout(() => {
+      closeTimer = null;
+      hideFlyouts();
+    }, SUBMENU_CLOSE_MS);
   }
 
   function setOpen(next: boolean): void {
@@ -353,25 +412,6 @@ export function createMenu(): MenuController {
       flyouts.push(panel);
       submenuWraps.push(wrap);
 
-      function positionPanel(): void {
-        const rect = wrap.getBoundingClientRect();
-        const GAP = 2;
-        const width = Math.max(160, panel.offsetWidth || 160);
-        const height = Math.max(40, panel.offsetHeight || 40);
-        // Prefer left of the parent — overlap slightly so the pointer can cross without a dead zone.
-        let left = rect.left - width + GAP;
-        if (left < GAP) left = rect.right + GAP;
-        if (left + width > window.innerWidth - GAP) {
-          left = Math.max(GAP, window.innerWidth - width - GAP);
-        }
-        let top = rect.top;
-        if (top + height > window.innerHeight - GAP) {
-          top = Math.max(GAP, window.innerHeight - height - GAP);
-        }
-        panel.style.left = `${left}px`;
-        panel.style.top = `${top}px`;
-      }
-
       function deactivateOtherSubmenus(): void {
         for (const other of flyouts) {
           if (other === panel) continue;
@@ -395,16 +435,8 @@ export function createMenu(): MenuController {
         panel.classList.add("is-open");
         btn.setAttribute("aria-expanded", "true");
         wrap.classList.add("is-open");
-        positionPanel();
-        requestAnimationFrame(positionPanel);
-      }
-
-      function hidePanel(): void {
-        clearCloseTimer();
-        panel.hidden = true;
-        panel.classList.remove("is-open");
-        btn.setAttribute("aria-expanded", "false");
-        wrap.classList.remove("is-open");
+        placeSubmenuPanel(panel, wrap, el);
+        requestAnimationFrame(() => placeSubmenuPanel(panel, wrap, el));
       }
 
       function handlePointerLeave(event: MouseEvent): void {
@@ -412,7 +444,7 @@ export function createMenu(): MenuController {
         if (related instanceof Node && (panel.contains(related) || wrap.contains(related))) {
           return;
         }
-        hidePanel();
+        scheduleHideFlyouts();
       }
 
       wrap.addEventListener("mouseenter", showPanel);
