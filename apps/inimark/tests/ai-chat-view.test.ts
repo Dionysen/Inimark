@@ -32,7 +32,7 @@ describe("chat-view streaming", () => {
     const thinking = host.querySelector(".inimark-ai-thinking");
     const body = host.querySelector(".inimark-ai-thinking-body");
     expect(thinking).toBeTruthy();
-    expect(body?.textContent).toBe("step 1");
+    expect(body?.textContent).toContain("step 1");
 
     chat.setMessages([
       assistant({
@@ -44,7 +44,7 @@ describe("chat-view streaming", () => {
     ]);
     expect(host.querySelector(".inimark-ai-thinking")).toBe(thinking);
     expect(host.querySelector(".inimark-ai-thinking-body")).toBe(body);
-    expect(body?.textContent).toBe("step 1\nstep 2");
+    expect(body?.textContent).toContain("step 2");
 
     chat.destroy();
     host.remove();
@@ -156,6 +156,27 @@ describe("chat-view streaming", () => {
       }),
     ]);
     expect(thinking.open).toBe(true);
+
+    chat.destroy();
+    host.remove();
+  });
+
+  test("renders markdown inside the thinking body", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const chat = mountChatView(host);
+
+    chat.setMessages([
+      assistant({
+        id: "a1",
+        reasoning: "**Plan**\n\n- step one",
+        content: "done",
+      }),
+    ]);
+
+    const body = host.querySelector(".inimark-ai-thinking-body");
+    expect(body?.querySelector("strong")?.textContent).toBe("Plan");
+    expect(body?.querySelector("li")?.textContent).toContain("step one");
 
     chat.destroy();
     host.remove();

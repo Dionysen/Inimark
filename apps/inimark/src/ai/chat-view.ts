@@ -1,6 +1,10 @@
-import { handleChatLinkClick, hydrateChatRichContent, renderChatMarkdown } from "./markdown-render.ts";
+import { handleChatLinkClick, syncChatMarkdownElement } from "./markdown-render.ts";
 import { formatAnswerAge } from "./relative-time.ts";
-import { formatToolCardSummary, isFinalAssistantAnswer } from "./tool-labels.ts";
+import {
+  formatToolCardBody,
+  formatToolCardSummary,
+  isFinalAssistantAnswer,
+} from "./tool-labels.ts";
 import type { UiChatMessage } from "./types.ts";
 import { t } from "../i18n/index.ts";
 import { isTauri } from "../platform/env.ts";
@@ -160,8 +164,8 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       thinking = document.createElement("details");
       thinking.className = "inimark-ai-thinking";
       const summary = document.createElement("summary");
-      const body = document.createElement("pre");
-      body.className = "inimark-ai-thinking-body inimark-scrollbar";
+      const body = document.createElement("div");
+      body.className = "inimark-ai-thinking-body inimark-ai-md inimark-scrollbar";
       thinking.append(summary, body);
       const bubble = row.querySelector(":scope > .inimark-ai-bubble");
       if (bubble) row.insertBefore(thinking, bubble);
@@ -185,8 +189,10 @@ export function mountChatView(host: HTMLElement): ChatViewController {
         : t("ai.thinkingProcess");
     }
     const body = thinking.querySelector<HTMLElement>(":scope > .inimark-ai-thinking-body");
-    if (body && body.textContent !== msg.reasoning) {
-      body.textContent = msg.reasoning;
+    if (body) {
+      syncChatMarkdownElement(body, msg.reasoning, {
+        hydrate: !msg.reasoningStreaming,
+      });
     }
   }
 
@@ -194,8 +200,10 @@ export function mountChatView(host: HTMLElement): ChatViewController {
     let bubble = row.querySelector<HTMLElement>(":scope > .inimark-ai-bubble");
     if (!bubble) {
       bubble = document.createElement("div");
-      bubble.className = "inimark-ai-bubble";
+      bubble.className = "inimark-ai-bubble inimark-ai-md";
       row.append(bubble);
+    } else if (!bubble.classList.contains("inimark-ai-md")) {
+      bubble.classList.add("inimark-ai-md");
     }
     return bubble;
   }
@@ -211,20 +219,17 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       bubble.hidden = true;
       bubble.replaceChildren();
       delete bubble.dataset.md;
+      delete bubble.dataset.mdSource;
       bubble.classList.toggle("is-streaming", Boolean(msg.streaming));
       return;
     }
 
     bubble.hidden = false;
-    const html =
-      msg.kind === "error"
-        ? renderChatMarkdown(`**${t("ai.error")}:** ${msg.content}`)
-        : renderChatMarkdown(msg.content);
-    if (bubble.dataset.md !== html) {
-      bubble.dataset.md = html;
-      bubble.innerHTML = html;
-      if (!msg.streaming) void hydrateChatRichContent(bubble);
-    }
+    const mdSource =
+      msg.kind === "error" ? `**${t("ai.error")}:** ${msg.content}` : msg.content;
+    syncChatMarkdownElement(bubble, mdSource, {
+      hydrate: !msg.streaming,
+    });
     bubble.classList.toggle("is-streaming", Boolean(msg.streaming));
   }
 
@@ -284,8 +289,8 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       card = document.createElement("details");
       card.className = "inimark-ai-tool-card";
       const summary = document.createElement("summary");
-      const body = document.createElement("pre");
-      body.className = "inimark-ai-tool-body";
+      const body = document.createElement("div");
+      body.className = "inimark-ai-tool-body inimark-ai-md";
       card.append(summary, body);
       row.append(card);
     }
@@ -295,14 +300,11 @@ export function mountChatView(host: HTMLElement): ChatViewController {
       const label = ensureDisclosureSummary(summary);
       label.textContent = formatToolCardSummary(msg.tool);
     }
-    const body = card.querySelector(":scope > .inimark-ai-tool-body");
+    const body = card.querySelector<HTMLElement>(":scope > .inimark-ai-tool-body");
     if (body) {
-      body.textContent = [
-        msg.tool.argsPreview,
-        msg.tool.resultPreview ? `\n---\n${msg.tool.resultPreview}` : "",
-      ]
-        .join("")
-        .trim();
+      syncChatMarkdownElement(body, formatToolCardBody(msg.tool), {
+        hydrate: msg.tool.status !== "pending",
+      });
     }
   }
 

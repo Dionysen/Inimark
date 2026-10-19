@@ -3,7 +3,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 import { calloutsPlugin } from "./markdown/callouts.ts";
 import { mathPlugin } from "./markdown/math.ts";
-import { mermaidPlugin } from "./markdown/mermaid.ts";
+import { hydrateChatRichContent, mermaidPlugin } from "./markdown/mermaid.ts";
 import { taskListsPlugin } from "./markdown/task-lists.ts";
 import { wikiLinksPlugin } from "./markdown/wiki-links.ts";
 
@@ -38,4 +38,21 @@ export function renderChatMarkdown(source: string): string {
       "data-lang",
     ],
   });
+}
+
+/**
+ * Patch a chat markdown host (bubble, thinking body, tool body) when `source` changes.
+ * Skips DOM work when the source string is unchanged.
+ */
+export function syncChatMarkdownElement(
+  host: HTMLElement,
+  source: string,
+  opts?: { hydrate?: boolean },
+): void {
+  if (host.dataset.mdSource === source) return;
+  host.dataset.mdSource = source;
+  const html = renderChatMarkdown(source);
+  host.dataset.md = html;
+  host.innerHTML = html;
+  if (opts?.hydrate !== false) void hydrateChatRichContent(host);
 }

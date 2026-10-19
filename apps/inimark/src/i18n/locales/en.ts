@@ -199,6 +199,8 @@ export const en: Dictionary = {
     missingKey: "Add an API key for the current provider in Settings → AI.",
     missingBaseUrl: "Set a Base URL in Settings → AI.",
     copyAnswer: "Copy answer",
+    toolSectionArgs: "Arguments",
+    toolSectionResult: "Result",
     answerAge: {
       justNow: "just now",
       minutes: "{{n}}m ago",

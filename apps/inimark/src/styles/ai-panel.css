@@ -139,7 +139,7 @@
   }
 }
 
-.inimark-ai-bubble pre {
+:is(.inimark-ai-bubble, .inimark-ai-md) pre {
   overflow: auto;
   margin: 0 0 0.75em;
   padding: 12px 14px;
@@ -161,7 +161,7 @@
   word-break: break-word;
 }
 
-.inimark-ai-bubble code {
+:is(.inimark-ai-bubble, .inimark-ai-md) code {
   font-family: var(
     --font-mono,
     "SF Mono",
@@ -180,7 +180,7 @@
   white-space: break-spaces;
 }
 
-.inimark-ai-bubble pre code {
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code {
   display: inline;
   padding: 0;
   background: transparent;
@@ -192,18 +192,18 @@
 }
 
 /* Same Lezer token colors as the editor / published site. */
-.inimark-ai-bubble pre code .tok-comment { color: var(--tw-code-comment); }
-.inimark-ai-bubble pre code .tok-keyword { color: var(--tw-code-keyword); }
-.inimark-ai-bubble pre code .tok-string { color: var(--tw-code-string); }
-.inimark-ai-bubble pre code .tok-literal { color: var(--tw-code-literal); }
-.inimark-ai-bubble pre code .tok-type { color: var(--tw-code-type); }
-.inimark-ai-bubble pre code .tok-function { color: var(--tw-code-function); }
-.inimark-ai-bubble pre code .tok-name { color: var(--tw-code-name); }
-.inimark-ai-bubble pre code .tok-punctuation { color: var(--tw-code-punctuation); }
-.inimark-ai-bubble pre code .tok-meta { color: var(--tw-code-meta); }
-.inimark-ai-bubble pre code .tok-invalid { color: var(--tw-code-invalid); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-comment { color: var(--tw-code-comment); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-keyword { color: var(--tw-code-keyword); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-string { color: var(--tw-code-string); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-literal { color: var(--tw-code-literal); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-type { color: var(--tw-code-type); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-function { color: var(--tw-code-function); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-name { color: var(--tw-code-name); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-punctuation { color: var(--tw-code-punctuation); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-meta { color: var(--tw-code-meta); }
+:is(.inimark-ai-bubble, .inimark-ai-md) pre code .tok-invalid { color: var(--tw-code-invalid); }
 
-.inimark-ai-bubble hr {
+:is(.inimark-ai-bubble, .inimark-ai-md) hr {
   height: 1px;
   padding: 0;
   margin: 1em 0;
@@ -211,19 +211,19 @@
   border: 0;
 }
 
-.inimark-ai-bubble a {
+:is(.inimark-ai-bubble, .inimark-ai-md) a {
   color: var(--accent, var(--inimark-accent));
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
 
-.inimark-ai-bubble a.inimark-ai-wiki.is-unresolved {
+:is(.inimark-ai-bubble, .inimark-ai-md) a.inimark-ai-wiki.is-unresolved {
   color: var(--danger, #ef4444);
   text-decoration-style: dashed;
 }
 
-.inimark-ai-bubble table {
+:is(.inimark-ai-bubble, .inimark-ai-md) table {
   width: 100%;
   margin: 0 0 0.75em;
   border-collapse: collapse;
@@ -232,106 +232,106 @@
   font-size: 0.95em;
 }
 
-.inimark-ai-bubble th,
-.inimark-ai-bubble td {
+:is(.inimark-ai-bubble, .inimark-ai-md) th,
+:is(.inimark-ai-bubble, .inimark-ai-md) td {
   padding: 5px 8px;
   border: 1px solid var(--border, var(--inimark-border));
   vertical-align: top;
 }
 
-.inimark-ai-bubble th {
+:is(.inimark-ai-bubble, .inimark-ai-md) th {
   background: var(--table-header-bg, color-mix(in srgb, var(--inimark-fg) 6%, transparent));
   color: var(--text-strong, var(--inimark-fg));
   font-weight: 600;
 }
 
-.inimark-ai-bubble td {
+:is(.inimark-ai-bubble, .inimark-ai-md) td {
   background: var(--table-cell-bg, transparent);
 }
 
-.inimark-ai-bubble .inimark-ai-math--block {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-math--block {
   margin: 0 0 0.75em;
   overflow-x: auto;
   text-align: center;
 }
 
-.inimark-ai-bubble .inimark-ai-math--inline {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-math--inline {
   display: inline;
 }
 
-.inimark-ai-bubble .inimark-ai-math[data-math-state="error"],
-.inimark-ai-bubble .math-error {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-math[data-math-state="error"],
+:is(.inimark-ai-bubble, .inimark-ai-md) .math-error {
   color: var(--danger, #e06c75);
   font-family: var(--font-mono, var(--inimark-font-mono));
   font-size: var(--font-mono-size, 14px);
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid {
   margin: 0 0 0.75em;
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid-source {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid-source {
   margin: 0;
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid[data-rendered="1"]:not(.is-error) .inimark-ai-mermaid-source {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid[data-rendered="1"]:not(.is-error) .inimark-ai-mermaid-source {
   display: none;
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid-svg {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid-svg {
   overflow-x: auto;
   text-align: center;
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid-svg svg {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid-svg svg {
   max-width: 100%;
   height: auto;
 }
 
-.inimark-ai-bubble .inimark-ai-mermaid.is-error .inimark-ai-mermaid-source {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-mermaid.is-error .inimark-ai-mermaid-source {
   border-color: color-mix(in srgb, var(--danger, #e06c75) 45%, var(--border, var(--inimark-border)));
 }
 
-.inimark-ai-bubble p {
+:is(.inimark-ai-bubble, .inimark-ai-md) p {
   margin: 0 0 0.75em;
 }
 
-.inimark-ai-bubble p:last-child {
+:is(.inimark-ai-bubble, .inimark-ai-md) p:last-child {
   margin-bottom: 0;
 }
 
-.inimark-ai-bubble ul,
-.inimark-ai-bubble ol {
+:is(.inimark-ai-bubble, .inimark-ai-md) ul,
+:is(.inimark-ai-bubble, .inimark-ai-md) ol {
   margin: 0 0 0.75em;
   padding-left: 1.4em;
 }
 
-.inimark-ai-bubble li + li {
+:is(.inimark-ai-bubble, .inimark-ai-md) li + li {
   margin-top: 0.25em;
 }
 
-.inimark-ai-bubble h1,
-.inimark-ai-bubble h2,
-.inimark-ai-bubble h3,
-.inimark-ai-bubble h4,
-.inimark-ai-bubble h5,
-.inimark-ai-bubble h6 {
+:is(.inimark-ai-bubble, .inimark-ai-md) h1,
+:is(.inimark-ai-bubble, .inimark-ai-md) h2,
+:is(.inimark-ai-bubble, .inimark-ai-md) h3,
+:is(.inimark-ai-bubble, .inimark-ai-md) h4,
+:is(.inimark-ai-bubble, .inimark-ai-md) h5,
+:is(.inimark-ai-bubble, .inimark-ai-md) h6 {
   margin: 1.1em 0 0.45em;
   line-height: 1.25;
   font-weight: 600;
   color: var(--text-strong, var(--text-primary, var(--inimark-fg)));
 }
 
-.inimark-ai-bubble h1:first-child,
-.inimark-ai-bubble h2:first-child,
-.inimark-ai-bubble h3:first-child,
-.inimark-ai-bubble h4:first-child,
-.inimark-ai-bubble h5:first-child,
-.inimark-ai-bubble h6:first-child {
+:is(.inimark-ai-bubble, .inimark-ai-md) h1:first-child,
+:is(.inimark-ai-bubble, .inimark-ai-md) h2:first-child,
+:is(.inimark-ai-bubble, .inimark-ai-md) h3:first-child,
+:is(.inimark-ai-bubble, .inimark-ai-md) h4:first-child,
+:is(.inimark-ai-bubble, .inimark-ai-md) h5:first-child,
+:is(.inimark-ai-bubble, .inimark-ai-md) h6:first-child {
   margin-top: 0;
 }
 
-.inimark-ai-bubble blockquote {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote {
   margin: 0 0 0.75em;
   padding: var(--padding-blockquote-y, 4px) var(--padding-blockquote-x, 16px);
   color: var(--blockquote-text, var(--inimark-muted-fg));
@@ -340,28 +340,28 @@
     var(--blockquote-border, var(--inimark-border));
 }
 
-.inimark-ai-bubble blockquote > :first-child {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote > :first-child {
   margin-top: 0;
 }
 
-.inimark-ai-bubble blockquote > :last-child {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote > :last-child {
   margin-bottom: 0;
 }
 
 /* Task lists — circular checkboxes (editor-like, display-only). */
-.inimark-ai-bubble ul.inimark-ai-task-list {
+:is(.inimark-ai-bubble, .inimark-ai-md) ul.inimark-ai-task-list {
   list-style: none;
   padding-left: 0.15em;
 }
 
-.inimark-ai-bubble li.inimark-ai-task {
+:is(.inimark-ai-bubble, .inimark-ai-md) li.inimark-ai-task {
   display: flex;
   align-items: flex-start;
   gap: 0.45em;
   list-style: none;
 }
 
-.inimark-ai-bubble .inimark-ai-checkbox {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-checkbox {
   flex-shrink: 0;
   width: 1.05em;
   height: 1.05em;
@@ -373,12 +373,12 @@
   position: relative;
 }
 
-.inimark-ai-bubble .inimark-ai-checkbox[data-checked="1"] {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-checkbox[data-checked="1"] {
   background: var(--accent, var(--inimark-accent));
   border-color: var(--border, var(--inimark-border));
 }
 
-.inimark-ai-bubble .inimark-ai-checkbox[data-checked="1"]::after {
+:is(.inimark-ai-bubble, .inimark-ai-md) .inimark-ai-checkbox[data-checked="1"]::after {
   content: "";
   position: absolute;
   left: 50%;
@@ -392,7 +392,7 @@
 }
 
 /* Callouts — same color language as the editor, without hover glow. */
-.inimark-ai-bubble blockquote.md-alert {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert {
   --md-alert-color: #448aff;
   --md-alert-bg: color-mix(in srgb, var(--md-alert-color) 14%, transparent);
   display: grid;
@@ -407,7 +407,7 @@
   border-radius: 4px;
 }
 
-.inimark-ai-bubble blockquote.md-alert::before {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert::before {
   content: "";
   grid-column: 1;
   grid-row: 1;
@@ -425,7 +425,7 @@
   -webkit-mask-size: contain;
 }
 
-.inimark-ai-bubble blockquote.md-alert::after {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert::after {
   content: var(--md-alert-label);
   grid-column: 2;
   grid-row: 1;
@@ -436,35 +436,35 @@
   line-height: 1.3;
 }
 
-.inimark-ai-bubble blockquote.md-alert > * {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert > * {
   grid-column: 1 / -1;
 }
 
-.inimark-ai-bubble blockquote.md-alert-note {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert-note {
   --md-alert-color: #448aff;
   --md-alert-label: "Note";
   --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M12%202C6.47%202%202%206.47%202%2012s4.47%2010%2010%2010%2010-4.47%2010-10S17.53%202%2012%202m3.1%205.07c.14%200%20.28.05.4.16l1.27%201.27c.23.22.23.57%200%20.78l-1%201-2.05-2.05%201-1c.1-.11.24-.16.38-.16m-1.97%201.74%202.06%202.06-6.06%206.06H7.07v-2.06z'%2F%3E%3C%2Fsvg%3E");
 }
 
-.inimark-ai-bubble blockquote.md-alert-tip {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert-tip {
   --md-alert-color: #00bfa5;
   --md-alert-label: "Tip";
   --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27'%2F%3E%3C%2Fsvg%3E");
 }
 
-.inimark-ai-bubble blockquote.md-alert-important {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert-important {
   --md-alert-color: #00bfa5;
   --md-alert-label: "Important";
   --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M17.66%2011.2c-.23-.3-.51-.56-.77-.82-.67-.6-1.43-1.03-2.07-1.66C13.33%207.26%2013%204.85%2013.95%203c-.95.23-1.78.75-2.49%201.32-2.59%202.08-3.61%205.75-2.39%208.9.04.1.08.2.08.33%200%20.22-.15.42-.35.5-.23.1-.47.04-.66-.12a.6.6%200%200%201-.14-.17c-1.13-1.43-1.31-3.48-.55-5.12C5.78%2010%204.87%2012.3%205%2014.47c.06.5.12%201%20.29%201.5.14.6.41%201.2.71%201.73%201.08%201.73%202.95%202.97%204.96%203.22%202.14.27%204.43-.12%206.07-1.6%201.83-1.66%202.47-4.32%201.53-6.6l-.13-.26c-.21-.46-.77-1.26-.77-1.26m-3.16%206.3c-.28.24-.74.5-1.1.6-1.12.4-2.24-.16-2.9-.82%201.19-.28%201.9-1.16%202.11-2.05.17-.8-.15-1.46-.28-2.23-.12-.74-.1-1.37.17-2.06.19.38.39.76.63%201.06.77%201%201.98%201.44%202.24%202.8.04.14.06.28.06.43.03.82-.33%201.72-.93%202.27'%2F%3E%3C%2Fsvg%3E");
 }
 
-.inimark-ai-bubble blockquote.md-alert-warning {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert-warning {
   --md-alert-color: #ff9100;
   --md-alert-label: "Warning";
   --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'M13%2014h-2V9h2m0%209h-2v-2h2M1%2021h22L12%202z'%2F%3E%3C%2Fsvg%3E");
 }
 
-.inimark-ai-bubble blockquote.md-alert-danger {
+:is(.inimark-ai-bubble, .inimark-ai-md) blockquote.md-alert-danger {
   --md-alert-color: #ff1744;
   --md-alert-label: "Danger";
   --md-alert-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%3E%3Cpath%20fill%3D'black'%20d%3D'm11.5%2020%204.86-9.73H13V4l-5%209.73h3.5zM12%202c2.75%200%205.1%201%207.05%202.95S22%209.25%2022%2012s-1%205.1-2.95%207.05S14.75%2022%2012%2022s-5.1-1-7.05-2.95S2%2014.75%202%2012s1-5.1%202.95-7.05S9.25%202%2012%202'%2F%3E%3C%2Fsvg%3E");
@@ -490,20 +490,12 @@
 .inimark-ai-tool-body {
   margin: 0;
   padding: 0 var(--inimark-space-2) var(--inimark-space-2);
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: var(
-    --font-mono,
-    "SF Mono",
-    "Source Code Pro",
-    Consolas,
-    ui-monospace,
-    monospace
-  );
-  font-size: var(--font-mono-size, 14px);
-  line-height: var(--code-line-height, 1.5);
   max-height: 160px;
   overflow: auto;
+  overscroll-behavior: contain;
+  word-break: break-word;
+  font-size: var(--inimark-ai-font-size);
+  line-height: 1.5;
 }
 
 .inimark-ai-thinking {
@@ -546,22 +538,13 @@
 .inimark-ai-thinking-body {
   margin: 0;
   padding: 0 var(--inimark-space-2) var(--inimark-space-2);
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: var(
-    --font-mono,
-    "SF Mono",
-    "Source Code Pro",
-    Consolas,
-    ui-monospace,
-    monospace
-  );
-  font-size: var(--font-mono-size, 14px);
-  line-height: var(--code-line-height, 1.5);
-  color: var(--inimark-muted-fg);
   max-height: 160px;
   overflow: auto;
   overscroll-behavior: contain;
+  word-break: break-word;
+  font-size: var(--inimark-ai-font-size);
+  line-height: 1.5;
+  color: var(--inimark-muted-fg);
 }
 
 .inimark-ai-review {

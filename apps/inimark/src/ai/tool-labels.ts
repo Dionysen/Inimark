@@ -31,6 +31,42 @@ export function formatToolCardSummary(tool: UiToolCard): string {
   return `${agentToolLabel(tool.name)} · ${agentToolStatusLabel(tool.status)}`;
 }
 
+function tryPrettyJson(raw: string): string | null {
+  try {
+    return JSON.stringify(JSON.parse(raw) as unknown, null, 2);
+  } catch {
+    return null;
+  }
+}
+
+function fencedCode(text: string, lang?: string): string {
+  const fence = text.includes("```") ? "````" : "```";
+  const info = lang ? lang : "";
+  return `${fence}${info}\n${text}\n${fence}`;
+}
+
+/** Markdown source for the expanded tool card body (rendered like assistant replies). */
+export function formatToolCardBody(tool: UiToolCard): string {
+  const parts: string[] = [];
+  const args = tool.argsPreview.trim();
+  if (args) {
+    const pretty = tryPrettyJson(args);
+    parts.push(
+      `**${t("ai.toolSectionArgs")}**\n\n${fencedCode(pretty ?? args, pretty ? "json" : undefined)}`,
+    );
+  }
+  const result = tool.resultPreview?.trim();
+  if (result) {
+    const pretty = tryPrettyJson(result);
+    parts.push(
+      pretty
+        ? `**${t("ai.toolSectionResult")}**\n\n${fencedCode(pretty, "json")}`
+        : `**${t("ai.toolSectionResult")}**\n\n${result}`,
+    );
+  }
+  return parts.join("\n\n");
+}
+
 /**
  * Whether this assistant message is the final answer of its turn
  * (last assistant before the next user message / end). Used for the copy control.

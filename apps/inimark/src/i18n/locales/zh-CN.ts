@@ -199,6 +199,8 @@ export const zhCN: Dictionary = {
     missingKey: "请先在 设置 → AI 中为当前供应商填写 API Key。",
     missingBaseUrl: "请先在 设置 → AI 中填写 Base URL。",
     copyAnswer: "复制回答",
+    toolSectionArgs: "参数",
+    toolSectionResult: "结果",
     answerAge: {
       justNow: "刚刚",
       minutes: "{{n}} 分钟前",
