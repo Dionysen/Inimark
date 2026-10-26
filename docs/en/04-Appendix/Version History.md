@@ -29,18 +29,22 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
-## 1.0.11 — 2026-09-21
+## 1.0.11 — 2026-10-26
 
-**Release page:** (unreleased)
+**Release page:** [v1.0.11](https://github.com/Dionysen/Inimark/releases/tag/v1.0.11)
 
 ### What's new
 
-- Fix theme-editor color sampling: the shared theme package no longer calls a Tauri command that another host has not registered, and hosts without a native sampler correctly fall back to the browser picker
-- Fix the typewriter-mode status-bar icon so it shows a recognizable typewriter instead of an I-beam
-- AI assistant: add file-tree-style chevrons on “Thinking” and tool-call headers; the chevron rotates when expanded
-- AI assistant: render thinking and tool-call details as Markdown (JSON args/results in fenced blocks), matching final answers
-- AI assistant: collapse thinking and tool steps between visible answers into a “Worked for …” trace (Cursor-style), collapsed by default
-- Fix submenu flyouts in the titlebar More menu (and other menus): they stacked under the parent, so moving onto them closed them immediately
+- Export the current note as **HTML / PNG / PDF** from the titlebar (pinable like Graph): themed live preview, silent save
+- Image viewer for note attachments; AI chat attachments support images / multimodal content
+- Sidebar: smoother open/close animation; tab panels (files / search / tags / …) slide horizontally when switching
+- Floating sidebar mode and pin-for-immersive titlebar action
+- Remember library workspace state and chapter editing position across sessions
+- Typewriter mode + status-bar controls; always-show word count and punctuation toggle; floating jump-to-end button
+- Plain-text notes: format panel (font / spacing / indent), paired-symbol input sessions
+- Empty editor state; close article vs quit are separate actions
+- AI assistant: file-tree-style chevrons on “Thinking” / tool-call headers; Markdown in thinking and tool details; “Worked for …” work-trace between answers (collapsed by default)
+- Fix theme-editor color sampling (host-provided screen picker / browser fallback); fix typewriter status-bar icon; fix submenu flyouts stacking under the parent menu
 
 ---
 
