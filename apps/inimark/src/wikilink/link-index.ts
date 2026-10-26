@@ -1,4 +1,5 @@
 import { parseWikiLinks, isImageWikiTarget } from "./parser.ts";
+import { isImageFile } from "../platform/env.ts";
 import {
   getWorkspaceLinkIndexCache,
   setWorkspaceLinkIndexCache,
@@ -16,25 +17,6 @@ export interface NoteSearchHit {
   path: string;
 }
 
-const IMAGE_EXTENSIONS = new Set([
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "webp",
-  "svg",
-  "bmp",
-  "avif",
-  "ico",
-  "heic",
-  "heif",
-  "tif",
-  "tiff",
-  "apng",
-  "jfif",
-  "jxl",
-]);
-
 const CACHE_KEY = "inimark:link-index";
 const CACHE_VAULT_KEY = "inimark:link-index-vault";
 
@@ -42,11 +24,6 @@ function pathToNoteName(relativePath: string): string {
   return relativePath
     .replace(/\\/g, "/")
     .replace(/\.(md|markdown|mdown|canvas)$/i, "");
-}
-
-function fileExt(name: string): string {
-  const i = name.lastIndexOf(".");
-  return i >= 0 ? name.slice(i + 1).toLowerCase() : "";
 }
 
 function escapeRegex(s: string): string {
@@ -101,8 +78,7 @@ class LinkIndexServiceImpl {
 
   registerFile(relativePath: string): void {
     const name = relativePath.split(/[/\\]/).pop() || "";
-    const ext = fileExt(name);
-    if (IMAGE_EXTENSIONS.has(ext)) {
+    if (isImageFile(name)) {
       this.ensureImageByName(name.toLowerCase(), relativePath.replace(/\\/g, "/"));
       return;
     }

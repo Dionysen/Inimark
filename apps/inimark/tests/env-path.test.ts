@@ -4,8 +4,10 @@ import {
   documentFormatFromPath,
   fileNameFromPath,
   isEditableNoteFile,
+  isImageFile,
   isMarkdownFile,
   isPlainTextFile,
+  isVaultVisibleFile,
   parentDirFromPath,
 } from "../src/platform/env.ts";
 
@@ -41,5 +43,14 @@ describe("document format helpers", () => {
     expect(isPlainTextFile("b.txt")).toBe(true);
     expect(isEditableNoteFile("b.txt")).toBe(true);
     expect(isEditableNoteFile("c.png")).toBe(false);
+  });
+
+  test("classifies vault images and visible files", () => {
+    expect(isImageFile("photo.PNG")).toBe(true);
+    expect(isImageFile("a.webp")).toBe(true);
+    expect(isImageFile("a.md")).toBe(false);
+    expect(isVaultVisibleFile("a.md")).toBe(true);
+    expect(isVaultVisibleFile("shot.jpg")).toBe(true);
+    expect(isVaultVisibleFile("data.json")).toBe(false);
   });
 });

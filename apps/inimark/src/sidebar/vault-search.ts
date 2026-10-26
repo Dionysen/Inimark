@@ -1,3 +1,4 @@
+import { isEditableNoteFile } from "../platform/env.ts";
 import { readWorkspaceFile } from "../platform/workspace.ts";
 import type { Workspace, WorkspaceTreeNode } from "../platform/types.ts";
 
@@ -75,13 +76,16 @@ export async function searchVaultIncremental(
         if (signal.cancelled) return null;
         const nameMatch = file.name.toLowerCase().includes(lowerQuery);
         let matches: VaultSearchMatch[] = [];
-        try {
-          const opened = await readWorkspaceFile(workspace, file.path);
-          if (opened.status === "opened") {
-            matches = matchLines(opened.text, lowerQuery);
+        // Images (and other non-notes) only participate via filename match.
+        if (isEditableNoteFile(file.name)) {
+          try {
+            const opened = await readWorkspaceFile(workspace, file.path);
+            if (opened.status === "opened") {
+              matches = matchLines(opened.text, lowerQuery);
+            }
+          } catch {
+            /* skip unreadable files */
           }
-        } catch {
-          /* skip unreadable files */
         }
         if (!nameMatch && matches.length === 0) return null;
         return {

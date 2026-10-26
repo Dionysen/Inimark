@@ -11,7 +11,7 @@ import {
   saveDirectoryHandle,
 } from "../libraries/handles.ts";
 import { libraryIdFromPath, upsertLibrary } from "../libraries/store.ts";
-import { fileNameFromPath, isEditableNoteFile, isTauri, joinWorkspacePath } from "./env.ts";
+import { fileNameFromPath, isTauri, isVaultVisibleFile, joinWorkspacePath } from "./env.ts";
 import type {
   Workspace,
   WorkspaceFileResult,
@@ -35,6 +35,77 @@ export async function readWorkspaceFile(
 ): Promise<WorkspaceFileResult> {
   if (isTauri()) return readWorkspaceFileTauri(workspace, relativePath);
   return readWorkspaceFileBrowser(workspace, relativePath);
+}
+
+function imageMimeFromPath(path: string): string {
+  const name = path.replace(/\\/g, "/").split("/").pop() ?? path;
+  const dot = name.lastIndexOf(".");
+  const ext = dot >= 0 ? name.slice(dot + 1).toLowerCase() : "";
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+    case "jfif":
+      return "image/jpeg";
+    case "gif":
+      return "image/gif";
+    case "webp":
+      return "image/webp";
+    case "svg":
+      return "image/svg+xml";
+    case "bmp":
+      return "image/bmp";
+    case "avif":
+      return "image/avif";
+    case "ico":
+      return "image/x-icon";
+    case "tif":
+    case "tiff":
+      return "image/tiff";
+    case "apng":
+      return "image/apng";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+/**
+ * Resolve a vault-relative image path to a URL suitable for `<img src>`.
+ * Prefer a blob URL from file bytes (works for any vault path / Unicode name).
+ * Caller should revoke blob URLs when done — image viewer tracks them.
+ */
+export async function resolveWorkspaceImageUrl(
+  workspace: Workspace,
+  relativePath: string,
+): Promise<string | null> {
+  if (isTauri()) {
+    try {
+      const { readFile } = await import("@tauri-apps/plugin-fs");
+      const fullPath = joinWorkspacePath(workspace.rootPath, relativePath);
+      const bytes = await readFile(fullPath);
+      const mime = imageMimeFromPath(relativePath);
+      // Copy into a plain ArrayBuffer — plugin buffers may be SharedArrayBuffer-backed.
+      const copy = new Uint8Array(bytes.byteLength);
+      copy.set(bytes);
+      return URL.createObjectURL(new Blob([copy], { type: mime }));
+    } catch {
+      try {
+        const { convertFileSrc } = await import("@tauri-apps/api/core");
+        return convertFileSrc(joinWorkspacePath(workspace.rootPath, relativePath));
+      } catch {
+        return null;
+      }
+    }
+  }
+  const node = findTreeNode(workspace.tree, relativePath);
+  if (!node?.handle) return null;
+  try {
+    const file = await node.handle.getFile();
+    return URL.createObjectURL(file);
+  } catch {
+    return null;
+  }
 }
 
 export async function writeWorkspaceFile(
@@ -242,7 +313,7 @@ async function readTauriDirectory(
           };
         }
 
-        if (isEditableNoteFile(entry.name)) {
+        if (isVaultVisibleFile(entry.name)) {
           return {
             name: entry.name,
             path: relativePath,

@@ -1,4 +1,4 @@
-import { isEditableNoteFile } from "./document-format.ts";
+import { isVaultVisibleFile } from "./document-format.ts";
 
 export type FileResult =
   | { status: "opened"; name: string }
@@ -54,7 +54,7 @@ async function readDirectoryEntries(
     if ("entries" in handle) {
       const child = await readDirectoryEntries(handle, path);
       if ((child.children?.length ?? 0) > 0) children.push(child);
-    } else if (isEditableNoteFile(handle.name)) {
+    } else if (isVaultVisibleFile(handle.name)) {
       children.push({ name: handle.name, path, kind: "file", handle });
     }
   }

@@ -16,8 +16,10 @@ export type { DocumentFormat } from "./document-format.ts";
 export {
   documentFormatFromPath,
   isEditableNoteFile,
+  isImageFile,
   isMarkdownFile,
   isPlainTextFile,
+  isVaultVisibleFile,
 } from "./document-format.ts";
 export type { FindOptions, MdMatch } from "./find-in-markdown.ts";
 export type { SearchRevealOptions } from "./search-reveal.ts";

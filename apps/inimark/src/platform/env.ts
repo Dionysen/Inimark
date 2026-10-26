@@ -1,8 +1,10 @@
 export {
   documentFormatFromPath,
   isEditableNoteFile,
+  isImageFile,
   isMarkdownFile,
   isPlainTextFile,
+  isVaultVisibleFile,
 } from "@inimark/editor";
 export type { DocumentFormat } from "@inimark/editor";
 

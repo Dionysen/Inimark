@@ -1231,6 +1231,106 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   cursor: text;
 }
 
+.inimark-editor-pane.is-image-view .inimark-editor-host,
+.inimark-editor-pane.is-image-view .inimark-statusbar {
+  display: none;
+}
+
+.inimark-image-viewer {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--inimark-space-2);
+  padding: 0 0 0.75rem;
+  box-sizing: border-box;
+  background: var(--inimark-content-bg);
+  outline: none;
+}
+
+.inimark-image-viewer[hidden] {
+  display: none;
+}
+
+.inimark-image-viewer__frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.inimark-image-viewer__frame.is-panning {
+  cursor: grabbing;
+}
+
+.inimark-image-viewer__stage {
+  max-width: 100%;
+  max-height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.inimark-image-viewer__img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform-origin: center center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.inimark-image-viewer__toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 0.25rem;
+}
+
+.inimark-image-viewer__toolbar .inimark-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  color: var(--inimark-muted-fg);
+}
+
+.inimark-image-viewer__toolbar .inimark-icon-btn:hover:not(:disabled) {
+  color: var(--inimark-fg);
+  background: var(--inimark-hover);
+}
+
+.inimark-image-viewer__toolbar .inimark-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.inimark-image-viewer__error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--inimark-muted-fg);
+  font-size: 0.9rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.inimark-image-viewer__error[hidden] {
+  display: none;
+}
+
 .inimark-statusbar {
   position: absolute;
   bottom: var(--inimark-space-1);

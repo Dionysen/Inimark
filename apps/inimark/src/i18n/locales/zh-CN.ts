@@ -321,6 +321,10 @@ export const zhCN: Dictionary = {
     moreBreakLabel: "更多",
     sourceMode: "源码模式",
     exitSourceMode: "退出源码模式",
+    imageLoadError: "无法加载这张图片。",
+    imageZoomIn: "放大",
+    imageZoomOut: "缩小",
+    imageZoomReset: "默认大小",
     ctx: {
       cut: "剪切",
       copy: "复制",

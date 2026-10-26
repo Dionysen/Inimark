@@ -5,8 +5,10 @@ import { TextSelection } from "prosemirror-state";
 import {
   documentFormatFromPath,
   isEditableNoteFile,
+  isImageFile,
   isMarkdownFile,
   isPlainTextFile,
+  isVaultVisibleFile,
 } from "../src/document-format.ts";
 import {
   insertPlaintextAtSelection,
@@ -36,6 +38,14 @@ describe("documentFormatFromPath", () => {
     expect(isEditableNoteFile("image.png")).toBe(false);
     expect(isEditableNoteFile("a.md")).toBe(true);
     expect(isEditableNoteFile("a.txt")).toBe(true);
+  });
+
+  test("detects vault-visible images", () => {
+    expect(isImageFile("image.png")).toBe(true);
+    expect(isImageFile("x.SVG")).toBe(true);
+    expect(isVaultVisibleFile("image.png")).toBe(true);
+    expect(isVaultVisibleFile("note.md")).toBe(true);
+    expect(isVaultVisibleFile("bin.exe")).toBe(false);
   });
 });
 

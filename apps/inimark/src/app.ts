@@ -25,7 +25,7 @@ import {
   upsertLibrary,
   type FileViewState,
 } from "./libraries/store.ts";
-import { isTauri, joinWorkspacePath, fileNameFromPath, documentFormatFromPath, isMarkdownFile, isPlainTextFile } from "./platform/env.ts";
+import { isTauri, joinWorkspacePath, fileNameFromPath, documentFormatFromPath, isImageFile, isMarkdownFile, isPlainTextFile } from "./platform/env.ts";
 import { openExternalUrl } from "./platform/open-url.ts";
 import { mountUpdatePreflightHandler } from "./update-bridge.ts";
 import { createAutoUpdateService } from "./update/auto-update.ts";
@@ -34,6 +34,7 @@ import { promptUnsavedChanges, promptDiskConflict } from "./ui/confirm-dialog.ts
 import { mountDiskChangeBanner } from "./ui/disk-change-banner.ts";
 import { showStatusToast } from "./ui/status-toast.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
+import { mountImageViewer } from "./image-viewer.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
   createWorkspaceDirectory,
@@ -43,6 +44,7 @@ import {
   pickWorkspace,
   readWorkspaceFile,
   refreshWorkspaceTree,
+  resolveWorkspaceImageUrl,
   writeWorkspaceFile,
 } from "./platform/workspace.ts";
 import { createActiveFileSync, type ActiveFileDiskEvent } from "./workspace/active-file-sync.ts";
@@ -266,6 +268,18 @@ export function mountApp(host: HTMLElement): AppController {
   let pendingDiskRevision: DiskRevision | null = null;
   const diskBanner = mountDiskChangeBanner(shell.editorPane);
   cleanups.push(() => diskBanner.destroy());
+
+  const imageViewer = mountImageViewer(shell.editorPane);
+  cleanups.push(() => imageViewer.destroy());
+
+  function showNoteEditor(): void {
+    shell.editorPane.classList.remove("is-image-view");
+    imageViewer.hide();
+  }
+
+  function showImagePane(): void {
+    shell.editorPane.classList.add("is-image-view");
+  }
 
   const fileSync = createActiveFileSync({
     onDiskEvent(event) {
@@ -508,11 +522,12 @@ export function mountApp(host: HTMLElement): AppController {
   }
 
   function captureActiveFileViewState(): void {
+    if (!activeFilePath || isImageFile(activeFilePath)) return;
     sessionFileViews = captureFileViewState(editor, sessionFileViews, activeFilePath);
   }
 
   function scheduleCaptureViewState(): void {
-    if (!activeFilePath) return;
+    if (!activeFilePath || isImageFile(activeFilePath)) return;
     clearViewStateTimer();
     viewStateTimer = setTimeout(() => {
       viewStateTimer = null;
@@ -626,6 +641,7 @@ export function mountApp(host: HTMLElement): AppController {
   }
 
   async function saveCurrentFile(options?: { quiet?: boolean }): Promise<boolean> {
+    if (activeFilePath && isImageFile(activeFilePath)) return true;
     const markdown = currentMarkdownForSave();
     if (workspace && activeFilePath) {
       const probe = await fileSync.probe();
@@ -710,6 +726,7 @@ export function mountApp(host: HTMLElement): AppController {
   }
 
   function resetToUntitled(): void {
+    showNoteEditor();
     editor.setFormat("markdown");
     editor.newMarkdownFile();
     activeFilePath = null;
@@ -724,6 +741,33 @@ export function mountApp(host: HTMLElement): AppController {
     persistLibrarySession();
     scheduleOutlineSync("");
     wordCount?.syncChrome();
+  }
+
+  async function openWorkspaceImage(path: string): Promise<void> {
+    if (!workspace) return;
+    const src = await resolveWorkspaceImageUrl(workspace, path);
+    if (!src) {
+      console.error(`Unable to resolve image URL for ${path}`);
+      return;
+    }
+    captureActiveFileViewState();
+    diskBanner.hide();
+    pendingDiskRevision = null;
+    await fileSync.unbind();
+    activeFilePath = path;
+    const name = fileNameFromPath(path);
+    shell.setFileName(name);
+    shell.sidebar.setActiveFile(path);
+    shell.graph.setActiveFile(null);
+    shell.tags.setActiveFile(null);
+    shell.setDirty(false);
+    scheduleOutlineSync("");
+    recordRecentFile(activeLibraryId, path);
+    navHistory.record(path);
+    showImagePane();
+    imageViewer.show({ src, name });
+    wordCount?.syncChrome();
+    persistLibrarySession({ capture: false });
   }
 
   async function confirmDiscardChanges(): Promise<boolean> {
@@ -749,6 +793,17 @@ export function mountApp(host: HTMLElement): AppController {
   ): Promise<void> {
     if (!workspace) return;
     if (!options?.skipConfirm && !(await confirmDiscardChanges())) return;
+
+    if (isImageFile(path)) {
+      if (activeFilePath === path && imageViewer.isVisible()) {
+        shell.sidebar.setActiveFile(path);
+        return;
+      }
+      await openWorkspaceImage(path);
+      return;
+    }
+
+    showNoteEditor();
 
     const sameFile = activeFilePath === path;
     if (!sameFile) {
@@ -881,6 +936,7 @@ export function mountApp(host: HTMLElement): AppController {
       diskBanner.hide();
       pendingDiskRevision = null;
       await fileSync.unbind();
+      showNoteEditor();
       shell.sidebar.setActiveFile(null);
     }
   }
@@ -1181,6 +1237,7 @@ export function mountApp(host: HTMLElement): AppController {
     diskBanner.hide();
     pendingDiskRevision = null;
     void fileSync.unbind();
+    showNoteEditor();
     navHistory.clear();
     shell.sidebar.setWorkspace(null);
     linkIndex.clear();

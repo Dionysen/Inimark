@@ -321,6 +321,10 @@ export const en: Dictionary = {
     moreBreakLabel: "more",
     sourceMode: "Source mode",
     exitSourceMode: "Exit source mode",
+    imageLoadError: "Could not load this image.",
+    imageZoomIn: "Zoom in",
+    imageZoomOut: "Zoom out",
+    imageZoomReset: "Reset zoom",
     ctx: {
       cut: "Cut",
       copy: "Copy",
