@@ -4,6 +4,7 @@
  */
 
 import type {
+  ChatContentPart,
   ChatMessage,
   ChatProvider,
   ChatRequest,
@@ -11,6 +12,7 @@ import type {
   ChatToolCall,
   ChatToolDefinition,
 } from "../types.ts";
+import { chatContentToText } from "../types.ts";
 import { streamHttpRaw } from "./http-stream.ts";
 import { consumeSseDataLines } from "./sse-buffer.ts";
 
@@ -27,6 +29,20 @@ function streamUrl(baseUrl: string, model: string): string {
   return `${trimmed}/models/${encoded}:streamGenerateContent?alt=sse`;
 }
 
+function toGeminiParts(content: string | ChatContentPart[] | null): unknown[] {
+  if (content == null) return [{ text: "" }];
+  if (typeof content === "string") return [{ text: content }];
+  return content.map((part) => {
+    if (part.type === "text") return { text: part.text };
+    return {
+      inlineData: {
+        mimeType: part.mime,
+        data: part.base64,
+      },
+    };
+  });
+}
+
 function toGeminiContents(messages: ChatMessage[]): {
   systemInstruction?: { parts: Array<{ text: string }> };
   contents: unknown[];
@@ -35,8 +51,9 @@ function toGeminiContents(messages: ChatMessage[]): {
   const contents: unknown[] = [];
 
   for (const m of messages) {
-    if (m.role === "system" && m.content) {
-      systemParts.push(m.content);
+    if (m.role === "system") {
+      const text = chatContentToText(m.content);
+      if (text) systemParts.push(text);
       continue;
     }
     if (m.role === "tool") {
@@ -46,7 +63,7 @@ function toGeminiContents(messages: ChatMessage[]): {
           {
             functionResponse: {
               name: m.name ?? "tool",
-              response: { result: m.content ?? "" },
+              response: { result: chatContentToText(m.content) },
             },
           },
         ],
@@ -55,7 +72,8 @@ function toGeminiContents(messages: ChatMessage[]): {
     }
     if (m.role === "assistant" && m.toolCalls?.length) {
       const parts: unknown[] = [];
-      if (m.content) parts.push({ text: m.content });
+      const text = chatContentToText(m.content);
+      if (text) parts.push({ text });
       for (const tc of m.toolCalls) {
         let args: unknown = {};
         try {
@@ -72,7 +90,7 @@ function toGeminiContents(messages: ChatMessage[]): {
     }
     contents.push({
       role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content ?? "" }],
+      parts: toGeminiParts(m.content),
     });
   }
 

@@ -1,8 +1,13 @@
 import type { ChatAttachment } from "./types.ts";
+import { isAiVisionImagePath } from "./vision.ts";
+
+function isExplicitAttachment(kind: ChatAttachment["kind"]): boolean {
+  return kind === "file" || kind === "directory" || kind === "image";
+}
 
 /**
  * Build the attachment list for a send.
- * User file/folder chips win; only when none are present may we silently
+ * User file/folder/image chips win; only when none are present may we silently
  * include the current note (never shown as a chip).
  */
 export function resolveSendAttachments(options: {
@@ -12,9 +17,7 @@ export function resolveSendAttachments(options: {
   makeId: () => string;
   labelForPath: (path: string) => string;
 }): ChatAttachment[] {
-  const explicit = options.userAttachments.filter(
-    (a) => a.kind === "file" || a.kind === "directory",
-  );
+  const explicit = options.userAttachments.filter((a) => isExplicitAttachment(a.kind));
   if (explicit.length > 0) return [...explicit];
   const path = options.activeFilePath?.trim();
   if (!options.attachActiveNote || !path) return [];
@@ -34,20 +37,22 @@ export function mergeVaultPathAttachments(
   items: readonly { path: string; kind: "file" | "directory" }[],
   makeId: () => string,
 ): ChatAttachment[] {
-  const next = existing.filter((a) => a.kind === "file" || a.kind === "directory");
+  const next = existing.filter((a) => isExplicitAttachment(a.kind));
   const seen = new Set(next.map((a) => `${a.kind}:${a.path}`));
   for (const item of items) {
     const path = item.path.trim();
     if (!path) continue;
-    const key = `${item.kind}:${path}`;
+    const kind =
+      item.kind === "file" && isAiVisionImagePath(path) ? "image" : item.kind;
+    const key = `${kind}:${path}`;
     if (seen.has(key)) continue;
     seen.add(key);
     const base = path.split(/[/\\]/).pop() || path;
     next.push({
       id: makeId(),
-      kind: item.kind,
+      kind,
       path,
-      label: item.kind === "directory" ? `${base}/` : base,
+      label: kind === "directory" ? `${base}/` : base,
     });
   }
   return next;

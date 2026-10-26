@@ -41,6 +41,7 @@ describe("resolveChatCall", () => {
     expect(off.protocol).toBe("openai_compat");
     expect(off.model).toBe("deepseek-flash");
     expect(off.toolsAllowed).toBe(true);
+    expect(off.vision).toBe(true);
     expect(off.extras).toEqual({ thinking: { type: "disabled" } });
 
     const high = resolveChatCall({
@@ -64,6 +65,7 @@ describe("resolveChatCall", () => {
       effort: "medium",
     });
     expect(mid.model).toBe("deepseek-v4-pro");
+    expect(mid.vision).toBe(false);
     expect(mid.extras).toEqual({
       thinking: { type: "enabled" },
       reasoning_effort: "high",

@@ -4,6 +4,7 @@
  */
 
 import type {
+  ChatContentPart,
   ChatMessage,
   ChatProvider,
   ChatRequest,
@@ -11,6 +12,7 @@ import type {
   ChatToolCall,
   ChatToolDefinition,
 } from "../types.ts";
+import { chatContentToText } from "../types.ts";
 import { streamHttpRaw } from "./http-stream.ts";
 import { consumeSseBlocks, parseSseBlock } from "./sse-buffer.ts";
 
@@ -36,8 +38,9 @@ function splitSystem(messages: ChatMessage[]): {
   const systemParts: string[] = [];
   const rest: ChatMessage[] = [];
   for (const m of messages) {
-    if (m.role === "system" && m.content) {
-      systemParts.push(m.content);
+    if (m.role === "system") {
+      const text = chatContentToText(m.content);
+      if (text) systemParts.push(text);
     } else {
       rest.push(m);
     }
@@ -46,6 +49,22 @@ function splitSystem(messages: ChatMessage[]): {
     system: systemParts.length ? systemParts.join("\n\n") : undefined,
     rest,
   };
+}
+
+function toAnthropicUserContent(content: string | ChatContentPart[] | null): unknown {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  return content.map((part) => {
+    if (part.type === "text") return { type: "text", text: part.text };
+    return {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: part.mime,
+        data: part.base64,
+      },
+    };
+  });
 }
 
 function toAnthropicMessages(messages: ChatMessage[]): unknown[] {
@@ -59,7 +78,7 @@ function toAnthropicMessages(messages: ChatMessage[]): unknown[] {
           {
             type: "tool_result",
             tool_use_id: m.toolCallId,
-            content: m.content ?? "",
+            content: chatContentToText(m.content),
           },
         ],
       });
@@ -67,7 +86,8 @@ function toAnthropicMessages(messages: ChatMessage[]): unknown[] {
     }
     if (m.role === "assistant" && m.toolCalls?.length) {
       const content: unknown[] = [];
-      if (m.content) content.push({ type: "text", text: m.content });
+      const text = chatContentToText(m.content);
+      if (text) content.push({ type: "text", text });
       for (const tc of m.toolCalls) {
         let input: unknown = {};
         try {
@@ -87,7 +107,7 @@ function toAnthropicMessages(messages: ChatMessage[]): unknown[] {
     }
     out.push({
       role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content ?? "",
+      content: toAnthropicUserContent(m.content),
     });
   }
   return out;

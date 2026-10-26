@@ -198,6 +198,8 @@ export const en: Dictionary = {
     error: "Error",
     missingKey: "Add an API key for the current provider in Settings → AI.",
     missingBaseUrl: "Set a Base URL in Settings → AI.",
+    visionUnsupported: "The current model does not support images. Switch to a vision-capable model (e.g. DeepSeek Flash) or remove image attachments.",
+    visionReadFailed: "Could not read one or more attached images.",
     copyAnswer: "Copy answer",
     toolSectionArgs: "Arguments",
     toolSectionResult: "Result",

@@ -800,6 +800,11 @@
   overflow: hidden;
 }
 
+.inimark-ai-chip[data-kind="image"] {
+  border-color: color-mix(in srgb, var(--inimark-accent) 35%, var(--inimark-border));
+  background: color-mix(in srgb, var(--inimark-accent) 8%, var(--inimark-content-bg, var(--inimark-bg)));
+}
+
 .inimark-ai-chip__label,
 .inimark-ai-chip__remove {
   appearance: none;

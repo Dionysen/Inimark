@@ -182,18 +182,27 @@ function model(
   labelKey: string,
   efforts: EffortProfile[],
   defaultEffort: EffortProfile["id"],
+  opts?: { vision?: boolean },
 ): ModelProfile {
-  return { id, providerId, labelKey, efforts, defaultEffort };
+  return {
+    id,
+    providerId,
+    labelKey,
+    efforts,
+    defaultEffort,
+    vision: opts?.vision,
+  };
 }
 
 const DEEPSEEK_MODELS: ModelProfile[] = [
-  // https://api-docs.deepseek.com/zh-cn/quick_start/pricing
+  // https://api-docs.deepseek.com/guides/vision/
   model(
     "deepseek-flash",
     "deepseek",
     "ai.models.deepseekFlash",
     deepseekThinkingEfforts(),
     "off",
+    { vision: true },
   ),
   model(
     "deepseek-v4-pro",
@@ -205,10 +214,16 @@ const DEEPSEEK_MODELS: ModelProfile[] = [
 ];
 
 const OPENAI_MODELS: ModelProfile[] = [
-  model("gpt-4.1", "openai", "ai.models.gpt41", offOnly(), "off"),
-  model("gpt-4.1-mini", "openai", "ai.models.gpt41Mini", offOnly(), "off"),
-  model("o4-mini", "openai", "ai.models.o4Mini", openaiReasoningEfforts(), "low"),
-  model("o3", "openai", "ai.models.o3", openaiReasoningEfforts(), "medium"),
+  model("gpt-4.1", "openai", "ai.models.gpt41", offOnly(), "off", { vision: true }),
+  model("gpt-4.1-mini", "openai", "ai.models.gpt41Mini", offOnly(), "off", {
+    vision: true,
+  }),
+  model("o4-mini", "openai", "ai.models.o4Mini", openaiReasoningEfforts(), "low", {
+    vision: true,
+  }),
+  model("o3", "openai", "ai.models.o3", openaiReasoningEfforts(), "medium", {
+    vision: true,
+  }),
 ];
 
 const ANTHROPIC_MODELS: ModelProfile[] = [
@@ -218,6 +233,7 @@ const ANTHROPIC_MODELS: ModelProfile[] = [
     "ai.models.claudeSonnet45",
     anthropicThinkingEfforts(),
     "off",
+    { vision: true },
   ),
   model(
     "claude-opus-4-5",
@@ -225,6 +241,7 @@ const ANTHROPIC_MODELS: ModelProfile[] = [
     "ai.models.claudeOpus45",
     anthropicThinkingEfforts(),
     "off",
+    { vision: true },
   ),
   model(
     "claude-haiku-4-5",
@@ -232,6 +249,7 @@ const ANTHROPIC_MODELS: ModelProfile[] = [
     "ai.models.claudeHaiku45",
     anthropicThinkingEfforts(),
     "off",
+    { vision: true },
   ),
 ];
 
@@ -242,6 +260,7 @@ const GEMINI_MODELS: ModelProfile[] = [
     "ai.models.gemini25Flash",
     geminiFlashEfforts(),
     "off",
+    { vision: true },
   ),
   model(
     "gemini-2.5-pro",
@@ -249,6 +268,7 @@ const GEMINI_MODELS: ModelProfile[] = [
     "ai.models.gemini25Pro",
     geminiProEfforts(),
     "low",
+    { vision: true },
   ),
 ];
 
@@ -318,6 +338,8 @@ export function customModelProfile(modelId: string): ModelProfile {
     labelKey: "ai.models.custom",
     efforts: offOnly(true),
     defaultEffort: "off",
+    // Custom OpenAI-compat endpoints often accept vision; allow attach and let the API decide.
+    vision: true,
   };
 }
 

@@ -1,5 +1,5 @@
 import { onLocaleChange, getLocale, t } from "../i18n/index.ts";
-import { isTauri } from "../platform/env.ts";
+import { isTauri, joinWorkspacePath } from "../platform/env.ts";
 import type { Workspace, WorkspaceTreeNode } from "../platform/types.ts";
 import {
   readWorkspaceFile,
@@ -36,9 +36,12 @@ import {
 } from "./catalog/index.ts";
 import { agentFallbackLanguageLabel } from "./agent/tool-defs.ts";
 import {
+  buildUserApiContent,
   formatDirectoryListing,
+  formatHistoryUserContent,
   formatUserTurnWithAttachments,
   packAttachmentContext,
+  partitionAttachmentContents,
   type AttachmentContent,
 } from "./agent/context.ts";
 import type { AgentToolHost } from "./agent/tools.ts";
@@ -58,6 +61,12 @@ import type {
   ChatMessage,
   UiChatMessage,
 } from "./types.ts";
+import {
+  aiVisionImageMime,
+  isAiVisionImagePath,
+  prefsSupportVision,
+  uint8ToBase64,
+} from "./vision.ts";
 import { registerVaultPathDropTarget } from "../platform/vault-path-drop.ts";
 
 export interface AiPanelHost {
@@ -468,11 +477,20 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   async function addFileAttachment(): Promise<void> {
     if (!isTauri() || !panelHost?.getWorkspace()) return;
     const workspace = panelHost.getWorkspace()!;
+    const visionOk = prefsSupportVision(loadAiPrefs());
     const { open } = await import("@tauri-apps/plugin-dialog");
     const picked = await open({
       multiple: false,
       directory: false,
       defaultPath: workspace.rootPath,
+      filters: visionOk
+        ? [
+            {
+              name: "Notes & images",
+              extensions: ["md", "markdown", "mdown", "txt", "png", "jpg", "jpeg", "gif", "webp"],
+            },
+          ]
+        : undefined,
     });
     if (!picked || typeof picked !== "string") return;
     const root = workspace.rootPath.replace(/\\/g, "/");
@@ -480,9 +498,18 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
     if (!full.startsWith(root)) return;
     let rel = full.slice(root.length);
     if (rel.startsWith("/")) rel = rel.slice(1);
+    const isImage = isAiVisionImagePath(rel);
+    if (isImage && !visionOk) {
+      pushUiMessage({
+        kind: "error",
+        content: t("ai.visionUnsupported"),
+      });
+      refreshChat();
+      return;
+    }
     attachments.push({
       id: newId(),
-      kind: "file",
+      kind: isImage ? "image" : "file",
       path: rel,
       label: fileLabel(rel),
     });
@@ -530,6 +557,36 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
         continue;
       }
       if (!workspace) continue;
+      if (item.kind === "image") {
+        if (!isTauri()) {
+          out.push({
+            attachment: item,
+            content: `Error: ${t("ai.visionReadFailed")}`,
+          });
+          continue;
+        }
+        try {
+          const { readFile } = await import("@tauri-apps/plugin-fs");
+          const fullPath = joinWorkspacePath(workspace.rootPath, item.path);
+          const bytes = await readFile(fullPath);
+          const copy = new Uint8Array(bytes.byteLength);
+          copy.set(bytes);
+          out.push({
+            attachment: item,
+            content: "",
+            image: {
+              mime: aiVisionImageMime(item.path),
+              base64: uint8ToBase64(copy),
+            },
+          });
+        } catch (error) {
+          out.push({
+            attachment: item,
+            content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          });
+        }
+        continue;
+      }
       if (item.kind === "file") {
         const opened = await readWorkspaceFile(workspace, item.path);
         out.push({
@@ -756,8 +813,34 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       makeId: newId,
       labelForPath: fileLabel,
     });
-    const packed = packAttachmentContext(await loadAttachmentContents(sendAttachments));
-    const userContent = formatUserTurnWithAttachments(text, packed.text);
+    const imageAtts = sendAttachments.filter((a) => a.kind === "image");
+    if (imageAtts.length > 0 && !resolved.vision) {
+      pushUiMessage({
+        kind: "error",
+        content: t("ai.visionUnsupported"),
+      });
+      refreshChat();
+      return;
+    }
+
+    const loaded = await loadAttachmentContents(sendAttachments);
+    const { textItems, images } = partitionAttachmentContents(loaded);
+    const failedImages = loaded.filter(
+      (item) => item.attachment.kind === "image" && !item.image,
+    );
+    if (failedImages.length > 0) {
+      pushUiMessage({
+        kind: "error",
+        content: t("ai.visionReadFailed"),
+      });
+      refreshChat();
+      return;
+    }
+
+    const packed = packAttachmentContext(textItems);
+    const turnText = formatUserTurnWithAttachments(text, packed.text);
+    const apiUserContent = buildUserApiContent(turnText, images);
+    const historyUserContent = formatHistoryUserContent(turnText, images);
 
     // Cap check before mutating the draft so cancel leaves the composer intact.
     if (!currentSessionId && wouldEvictAiChatSession(sessions, { id: "__new__" })) {
@@ -765,12 +848,20 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       if (!ok) return;
     }
 
-    pushUiMessage({ kind: "user", content: text });
-    history.push({ role: "user", content: userContent });
+    pushUiMessage({
+      kind: "user",
+      content:
+        images.length > 0
+          ? `${text}\n\n${images.map((img) => `[image] ${img.label}`).join("\n")}`
+          : text,
+    });
+    history.push({ role: "user", content: historyUserContent });
     ensureSessionForFirstMessage(text);
     composer.setText("");
     // Chips stay as the user’s explicit attachments only (never silent active-note).
-    attachments = attachments.filter((a) => a.kind === "file" || a.kind === "directory");
+    attachments = attachments.filter(
+      (a) => a.kind === "file" || a.kind === "directory" || a.kind === "image",
+    );
     composer.setAttachments(attachments);
     refreshChat({ pin: true });
     persistCurrentSession();
@@ -786,7 +877,7 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
       provider,
       model: resolved.model,
       history: prior,
-      userContent,
+      userContent: apiUserContent,
       host: createToolHost(),
       signal: abort.signal,
       enableTools: resolved.toolsAllowed,

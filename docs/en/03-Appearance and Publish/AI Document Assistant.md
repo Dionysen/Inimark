@@ -52,8 +52,9 @@ Which levels exist—and whether vault tools stay enabled—depends on the model
 ## Attachments and the open note
 
 - Attach files or folders as context for the turn.
+- With a vision-capable model (e.g. DeepSeek Flash, GPT-4.1, Claude, Gemini), you can also attach PNG / JPEG / GIF / WebP images; they are sent as multimodal content. Models without vision (e.g. DeepSeek V4 Pro) will refuse image attachments.
 - With “Attach current note when empty” enabled, the open note is included silently when you have not attached anything (no chip).
-- Explicit attachments take priority and show as chips; click a chip to open that note.
+- Explicit attachments take priority and show as chips; click a chip to open that note or image.
 
 ## History and review
 

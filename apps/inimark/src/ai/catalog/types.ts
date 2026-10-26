@@ -39,6 +39,8 @@ export interface ModelProfile {
   labelKey: string;
   efforts: EffortProfile[];
   defaultEffort: EffortId;
+  /** When true, the chat API accepts image parts on user turns. */
+  vision?: boolean;
 }
 
 export interface ProviderProfile {
@@ -60,6 +62,8 @@ export interface ResolvedChatCall {
   model: string;
   toolsAllowed: boolean;
   effort: EffortId;
+  /** Whether this call may include image content parts. */
+  vision: boolean;
   /** Protocol-specific body fields merged by the adapter. */
   extras: Record<string, unknown>;
 }

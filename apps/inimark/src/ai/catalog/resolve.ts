@@ -110,6 +110,7 @@ export function resolveChatCall(input: ResolveChatCallInput): ResolvedChatCall {
     model,
     toolsAllowed: effortProfile.toolsAllowed,
     effort: effortProfile.id,
+    vision: Boolean(modelProfile.vision),
     extras,
   };
 }

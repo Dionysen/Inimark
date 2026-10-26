@@ -1,4 +1,4 @@
-import type { ChatAttachment } from "../types.ts";
+import type { ChatAttachment, ChatContentPart } from "../types.ts";
 
 /** Soft character budget for packed attachment context (~tokens*4). */
 export const DEFAULT_CONTEXT_BUDGET = 48_000;
@@ -19,6 +19,53 @@ export interface AttachmentContent {
   attachment: ChatAttachment;
   /** Full file text, or directory listing text. */
   content: string;
+  /** Populated for vision image attachments. */
+  image?: { mime: string; base64: string };
+}
+
+/** Split text vs image payloads from loaded attachments. */
+export function partitionAttachmentContents(items: AttachmentContent[]): {
+  textItems: AttachmentContent[];
+  images: Array<{ path: string; label: string; mime: string; base64: string }>;
+} {
+  const textItems: AttachmentContent[] = [];
+  const images: Array<{ path: string; label: string; mime: string; base64: string }> = [];
+  for (const item of items) {
+    if (item.attachment.kind === "image" && item.image) {
+      images.push({
+        path: item.attachment.path,
+        label: item.attachment.label,
+        mime: item.image.mime,
+        base64: item.image.base64,
+      });
+      continue;
+    }
+    textItems.push(item);
+  }
+  return { textItems, images };
+}
+
+/** Build API user content: plain string, or multimodal parts when images are present. */
+export function buildUserApiContent(
+  text: string,
+  images: Array<{ mime: string; base64: string }>,
+): string | ChatContentPart[] {
+  if (images.length === 0) return text;
+  const parts: ChatContentPart[] = [{ type: "text", text }];
+  for (const image of images) {
+    parts.push({ type: "image", mime: image.mime, base64: image.base64 });
+  }
+  return parts;
+}
+
+/** History-safe text that mentions attached images without embedding bytes. */
+export function formatHistoryUserContent(
+  text: string,
+  images: Array<{ path: string; label: string }>,
+): string {
+  if (images.length === 0) return text;
+  const lines = images.map((img) => `- ${img.path || img.label}`);
+  return `${text}\n\n[Attached images]\n${lines.join("\n")}`;
 }
 
 /**
@@ -35,6 +82,7 @@ export function packAttachmentContext(
 
   for (const item of items) {
     if (remaining <= 0) break;
+    if (item.attachment.kind === "image") continue;
     const header =
       item.attachment.kind === "directory"
         ? `### Directory: ${item.attachment.path || item.attachment.label}`

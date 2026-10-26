@@ -1,4 +1,5 @@
 import type {
+  ChatContentPart,
   ChatMessage,
   ChatProvider,
   ChatToolCall,
@@ -25,7 +26,8 @@ export interface RunAgentLoopOptions {
   model: string;
   /** Prior turns excluding system (system is injected). */
   history: ChatMessage[];
-  userContent: string;
+  /** Current user turn (plain text or multimodal parts). */
+  userContent: string | ChatContentPart[];
   host: AgentToolHost;
   signal: AbortSignal;
   maxSteps?: number;

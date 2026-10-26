@@ -198,6 +198,8 @@ export const zhCN: Dictionary = {
     error: "错误",
     missingKey: "请先在 设置 → AI 中为当前供应商填写 API Key。",
     missingBaseUrl: "请先在 设置 → AI 中填写 Base URL。",
+    visionUnsupported: "当前模型不支持图片。请切换到支持视觉的模型（如 DeepSeek Flash），或移除图片附件。",
+    visionReadFailed: "无法读取一个或多个图片附件。",
     copyAnswer: "复制回答",
     toolSectionArgs: "参数",
     toolSectionResult: "结果",

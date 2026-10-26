@@ -8,12 +8,28 @@ export interface ChatToolCall {
   arguments: string;
 }
 
+/** Multimodal user content (text + inline images). */
+export type ChatContentPart =
+  | { type: "text"; text: string }
+  | { type: "image"; mime: string; base64: string };
+
 export interface ChatMessage {
   role: ChatRole;
-  content: string | null;
+  /** Plain text, or multimodal parts for vision-capable models. */
+  content: string | null | ChatContentPart[];
   toolCallId?: string;
   toolCalls?: ChatToolCall[];
   name?: string;
+}
+
+/** Flatten message content to plain text (images become short labels). */
+export function chatContentToText(content: ChatMessage["content"]): string {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  return content
+    .map((part) => (part.type === "text" ? part.text : `[image:${part.mime}]`))
+    .join("\n")
+    .trim();
 }
 
 export type ChatStreamEvent =
@@ -42,7 +58,7 @@ export interface ChatProvider {
   streamChat(req: ChatRequest, signal: AbortSignal): AsyncIterable<ChatStreamEvent>;
 }
 
-export type AttachmentKind = "file" | "directory" | "active-note";
+export type AttachmentKind = "file" | "directory" | "active-note" | "image";
 
 export interface ChatAttachment {
   id: string;

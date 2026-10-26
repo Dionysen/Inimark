@@ -3,7 +3,12 @@
  * Pure helpers for unit tests and the provider client.
  */
 
-import type { ChatMessage, ChatStreamEvent, ChatToolCall } from "../types.ts";
+import {
+  chatContentToText,
+  type ChatMessage,
+  type ChatStreamEvent,
+  type ChatToolCall,
+} from "../types.ts";
 
 export interface ToolCallAccumulator {
   id: string;
@@ -120,6 +125,18 @@ export function consumeSseBuffer(buffer: string): {
   return { events, rest };
 }
 
+function toOpenAiContent(content: ChatMessage["content"]): unknown {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  return content.map((part) => {
+    if (part.type === "text") return { type: "text", text: part.text };
+    return {
+      type: "image_url",
+      image_url: { url: `data:${part.mime};base64,${part.base64}` },
+    };
+  });
+}
+
 export function toOpenAiMessages(
   messages: ChatMessage[],
 ): Array<Record<string, unknown>> {
@@ -128,14 +145,17 @@ export function toOpenAiMessages(
       return {
         role: "tool",
         tool_call_id: m.toolCallId,
-        content: m.content ?? "",
+        content: chatContentToText(m.content),
         name: m.name,
       };
     }
     if (m.role === "assistant" && m.toolCalls?.length) {
       return {
         role: "assistant",
-        content: m.content,
+        content:
+          typeof m.content === "string" || m.content == null
+            ? m.content
+            : chatContentToText(m.content),
         tool_calls: m.toolCalls.map((tc) => ({
           id: tc.id,
           type: "function",
@@ -143,7 +163,7 @@ export function toOpenAiMessages(
         })),
       };
     }
-    return { role: m.role, content: m.content ?? "" };
+    return { role: m.role, content: toOpenAiContent(m.content) };
   });
 }
 
