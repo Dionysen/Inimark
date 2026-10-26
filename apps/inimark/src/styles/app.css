@@ -10,6 +10,21 @@
   background: var(--inimark-bg);
 }
 
+/* Sidebar open/close — snappy ease-out; gated until shell is ready (no load flash). */
+.inimark-shell.is-chrome-ready {
+  transition: grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.is-column-resizing .inimark-shell.is-chrome-ready {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inimark-shell.is-chrome-ready {
+    transition: none;
+  }
+}
+
 .inimark-shell.is-sidebar-closed {
   grid-template-columns: 0 1fr var(--inimark-right-sidebar-width);
 }
@@ -116,14 +131,41 @@ html[data-auto-hide-titlebar="true"] .inimark-font-size-indicator {
   border-right: 1px solid var(--inimark-border);
   background: var(--bg-secondary, var(--inimark-bg));
   position: relative;
-  /* visible so the resize handle can overhang the border */
-  overflow: visible;
+  /* Clip during width spring; resize handle still has ~4px hit area inside. */
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 0s,
+    border-color 200ms ease;
 }
 
-.inimark-sidebar.is-collapsed {
-  border-right: none;
+.inimark-shell.is-chrome-ready .inimark-sidebar.is-collapsed {
+  border-right-color: transparent;
+  border-left-color: transparent;
+  opacity: 0;
   pointer-events: none;
   visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    visibility 0s linear 200ms,
+    border-color 200ms ease;
+}
+
+/* Before chrome-ready: keep instant hide so restore doesn't flash. */
+.inimark-shell:not(.is-chrome-ready) .inimark-sidebar.is-collapsed {
+  border-right: none;
+  border-left: none;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inimark-shell.is-chrome-ready .inimark-sidebar {
+    transition: none;
+  }
 }
 
 .inimark-sidebar.is-resizing {
@@ -133,10 +175,6 @@ html[data-auto-hide-titlebar="true"] .inimark-font-size-indicator {
 .inimark-right-sidebar {
   border-right: none;
   border-left: 1px solid var(--inimark-border);
-}
-
-.inimark-right-sidebar.is-collapsed {
-  border-left: none;
 }
 
 .inimark-right-sidebar-topbar {

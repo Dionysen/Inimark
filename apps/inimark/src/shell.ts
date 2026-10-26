@@ -294,6 +294,12 @@ export function mountShell(
   applyRightSidebarWidth();
   applySidebarState();
   applyRightSidebarState();
+  // Enable sidebar spring after the initial open/closed layout is painted.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      host.classList.add("is-chrome-ready");
+    });
+  });
 
   const resize: ColumnResizeController = attachColumnResize(sidebarHost, {
     side: "left",
@@ -362,6 +368,7 @@ export function mountShell(
     applySidebarTabLayout,
     destroy() {
       unsubscribeLocale();
+      host.classList.remove("is-chrome-ready");
       resize.destroy();
       rightResize.destroy();
       titlebar.destroy();
