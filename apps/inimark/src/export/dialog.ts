@@ -99,7 +99,7 @@ export async function showExportDialog(
 
   const formatField = document.createElement("fieldset");
   formatField.className = "inimark-export-dialog-fieldset";
-  const formatLegend = document.createElement("legend");
+  const formatLegend = document.createElement("div");
   formatLegend.className = "inimark-export-dialog-label";
   formatLegend.textContent = t("export.format");
   formatField.append(formatLegend);
@@ -133,6 +133,11 @@ export async function showExportDialog(
   themeLabel.textContent = t("export.theme");
   const themeHost = document.createElement("div");
   themeHost.className = "inimark-export-dialog-select-host";
+  function syncDialogTheme(): void {
+    panel.dataset.theme = themeId;
+    panel.dataset.appearance = appearance;
+  }
+
   const themeSelect = createSelect({
     value: themeId,
     options: themes.map((th) => ({ value: th.id, label: th.label })),
@@ -140,6 +145,7 @@ export async function showExportDialog(
     searchable: themes.length > 8,
     onChange(value) {
       themeId = value;
+      syncDialogTheme();
       schedulePreview();
     },
   });
@@ -163,12 +169,15 @@ export async function showExportDialog(
     matchTriggerWidth: true,
     onChange(value) {
       appearance = value as ExportAppearance;
+      syncDialogTheme();
       schedulePreview();
     },
   });
   appearanceSelect.el.classList.add("inimark-export-dialog-select");
   appearanceHost.append(appearanceSelect.el);
   appearanceField.append(appearanceLabel, appearanceHost);
+
+  syncDialogTheme();
 
   sidebar.append(formatField, themeField, appearanceField);
 

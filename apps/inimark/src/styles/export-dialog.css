@@ -1,10 +1,54 @@
-.inimark-export-dialog .inimark-export-dialog-panel {
+/*
+ * Export dialog chrome follows the theme selected in the dialog
+ * (`data-theme` / `data-appearance` on the panel). One chrome surface
+ * for header / sidebar / footer — no tertiary sandwich bands.
+ */
+.inimark-export-dialog-panel {
+  --shell-fg: var(--text-primary);
+  --shell-bg: var(--bg-surface, var(--bg-secondary));
+  --shell-muted-fg: var(--text-secondary);
+  --shell-border: var(--border);
+  --shell-surface: var(--bg-surface, var(--bg-secondary));
+  --shell-surface-raised: var(--bg-surface, var(--bg-secondary));
+  --shell-content-bg: var(--bg-primary);
+  --shell-hover: var(--bg-hover);
+  --shell-active: color-mix(in srgb, var(--bg-hover) 75%, var(--text-primary) 25%);
+  --shell-accent: var(--accent);
+  --shell-accent-fg: #fff;
+  --shell-focus-ring: color-mix(in srgb, var(--accent) 45%, transparent);
+  --shell-control-bg: var(--bg-input, var(--bg-surface, var(--bg-secondary)));
+  --shell-input-bg: var(--bg-input, var(--bg-surface, var(--bg-secondary)));
+
+  --inimark-fg: var(--shell-fg);
+  --inimark-bg: var(--shell-bg);
+  --inimark-muted-fg: var(--shell-muted-fg);
+  --inimark-border: var(--shell-border);
+  --inimark-surface: var(--shell-surface);
+  --inimark-surface-raised: var(--shell-surface-raised);
+  --inimark-content-bg: var(--shell-content-bg);
+  --inimark-hover: var(--shell-hover);
+  --inimark-accent: var(--shell-accent);
+  --inimark-control-bg: var(--shell-control-bg);
+
   width: min(980px, calc(100vw - 32px));
   height: min(720px, calc(100vh - 48px));
   padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  color: var(--shell-fg);
+  background: var(--shell-surface);
+  border-color: var(--shell-border);
+  color-scheme: light dark;
+}
+
+.inimark-export-dialog-panel[data-appearance="dark"] {
+  --shell-accent-fg: #101214;
+  color-scheme: dark;
+}
+
+.inimark-export-dialog-panel[data-appearance="light"] {
+  color-scheme: light;
 }
 
 .inimark-export-dialog-header {
@@ -13,16 +57,25 @@
   justify-content: space-between;
   gap: var(--shell-space-3, 12px);
   padding: var(--shell-space-4, 16px);
-  border-bottom: 1px solid var(--shell-border, var(--inimark-border));
+  border-bottom: 1px solid var(--shell-border);
   flex-shrink: 0;
+  background: transparent;
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-header .inimark-confirm-dialog-title {
   margin: 0;
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-close {
   flex-shrink: 0;
+  color: var(--shell-muted-fg);
+}
+
+.inimark-export-dialog-close:hover {
+  color: var(--shell-fg);
+  background: var(--shell-hover);
 }
 
 .inimark-export-dialog-body {
@@ -30,6 +83,7 @@
   grid-template-columns: 220px minmax(0, 1fr);
   min-height: 0;
   flex: 1;
+  background: transparent;
 }
 
 .inimark-export-dialog-sidebar {
@@ -37,8 +91,10 @@
   flex-direction: column;
   gap: var(--shell-space-4, 16px);
   padding: var(--shell-space-4, 16px);
-  border-right: 1px solid var(--shell-border, var(--inimark-border));
+  border-right: 1px solid var(--shell-border);
   overflow: auto;
+  background: transparent;
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-fieldset {
@@ -50,10 +106,15 @@
   gap: var(--shell-space-2, 8px);
 }
 
+/* Label → options: match theme/appearance field spacing. */
+.inimark-export-dialog-fieldset > .inimark-export-dialog-label {
+  margin-bottom: var(--shell-space-1, 4px);
+}
+
 .inimark-export-dialog-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--shell-muted-fg, var(--inimark-muted-fg));
+  color: var(--shell-muted-fg);
 }
 
 .inimark-export-dialog-radio {
@@ -61,13 +122,13 @@
   align-items: center;
   gap: var(--shell-space-2, 8px);
   font-size: var(--shell-control-font-size, 0.875rem);
-  color: var(--shell-fg, var(--inimark-fg));
+  color: var(--shell-fg);
   cursor: pointer;
   user-select: none;
 }
 
 .inimark-export-dialog-radio input {
-  accent-color: var(--shell-accent, var(--inimark-accent));
+  accent-color: var(--shell-accent);
   width: 1rem;
   height: 1rem;
   margin: 0;
@@ -88,6 +149,9 @@
 
 .inimark-export-dialog-select .inimark-select__trigger {
   width: 100%;
+  background: var(--shell-control-bg);
+  border-color: var(--shell-border);
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-preview-pane {
@@ -98,21 +162,18 @@
   padding: var(--shell-space-3, 12px) var(--shell-space-4, 16px)
     var(--shell-space-4, 16px);
   gap: var(--shell-space-2, 8px);
-  background: color-mix(
-    in srgb,
-    var(--shell-surface, var(--inimark-surface, #fff)) 92%,
-    var(--shell-fg, #000) 4%
-  );
+  background: transparent;
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-preview {
   flex: 1;
   width: 100%;
   min-height: 0;
-  border: 1px solid var(--shell-border, var(--inimark-border));
+  border: 1px solid var(--shell-border);
   border-radius: var(--shell-radius-md, 8px);
-  /* Let the themed document paint its own --bg-primary. */
-  background: transparent;
+  /* Document paints --bg-primary inside the iframe. */
+  background: var(--bg-primary, var(--shell-content-bg));
   color-scheme: inherit;
 }
 
@@ -122,13 +183,15 @@
   justify-content: space-between;
   gap: var(--shell-space-3, 12px);
   padding: var(--shell-space-3, 12px) var(--shell-space-4, 16px);
-  border-top: 1px solid var(--shell-border, var(--inimark-border));
+  border-top: 1px solid var(--shell-border);
   flex-shrink: 0;
+  background: transparent;
+  color: var(--shell-fg);
 }
 
 .inimark-export-dialog-status {
   font-size: 0.8rem;
-  color: var(--shell-muted-fg, var(--inimark-muted-fg));
+  color: var(--shell-muted-fg);
   min-height: 1.2em;
   min-width: 0;
   overflow: hidden;
@@ -141,6 +204,28 @@
   margin: 0;
 }
 
+.inimark-export-dialog-footer .inimark-btn {
+  background: var(--shell-control-bg);
+  border-color: var(--shell-border);
+  color: var(--shell-fg);
+}
+
+.inimark-export-dialog-footer .inimark-btn:hover:not(:disabled) {
+  background: var(--shell-hover);
+  border-color: color-mix(in srgb, var(--shell-accent) 40%, var(--shell-border));
+}
+
+.inimark-export-dialog-footer .inimark-btn--primary {
+  background: var(--shell-accent);
+  border-color: var(--shell-accent);
+  color: var(--shell-accent-fg);
+}
+
+.inimark-export-dialog-footer .inimark-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover, var(--shell-accent));
+  border-color: var(--accent-hover, var(--shell-accent));
+}
+
 @media (max-width: 720px) {
   .inimark-export-dialog-body {
     grid-template-columns: 1fr;
@@ -149,6 +234,6 @@
 
   .inimark-export-dialog-sidebar {
     border-right: none;
-    border-bottom: 1px solid var(--shell-border, var(--inimark-border));
+    border-bottom: 1px solid var(--shell-border);
   }
 }
