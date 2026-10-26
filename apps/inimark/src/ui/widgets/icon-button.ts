@@ -17,6 +17,7 @@ export {
   bookmarksTabIcon,
   outlineTabIcon,
   graphTabIcon,
+  exportNoteIcon,
   tagsTabIcon,
   aiTabIcon,
   newChatIcon,

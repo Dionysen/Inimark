@@ -29,6 +29,9 @@ export function outlineTabIcon(): string {
 export function graphTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="18" cy="7" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="8" cy="18" r="2.25" stroke="currentColor" stroke-width="1.75"/><circle cx="17" cy="17" r="2.25" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 7.5 16 8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M7.5 8.2 9.2 15.8"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M16.2 9.1 15.5 14.8"/></svg>`;
 }
+export function exportNoteIcon(): string {
+  return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m8 11 4 4 4-4"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 19h14"/></svg>`;
+}
 export function tagsTabIcon(): string {
   return `<svg class="inimark-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12.4 2.6A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1.25" stroke="currentColor" stroke-width="1.75"/></svg>`;
 }

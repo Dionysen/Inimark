@@ -14,6 +14,7 @@ import { builtinThemeLabel } from "../themes/labels.ts";
 import type { ThemeManifest } from "../themes/custom-theme-manager.ts";
 import {
   createIconButton,
+  exportNoteIcon,
   graphTabIcon,
   moreIcon,
   rightSidebarToggleIcon,
@@ -33,7 +34,9 @@ export interface TitleBarController {
   setTitle(title: string): void;
   setSidebarOpen(open: boolean): void;
   setRightSidebarOpen(open: boolean): void;
-  /** Refresh pinned graph-view titlebar button and More menu chrome. */
+  /** Refresh pinned titlebar buttons (graph / export) and More menu chrome. */
+  refreshPinnableChrome(): void;
+  /** @deprecated Prefer refreshPinnableChrome. */
   refreshGraphChrome(): void;
   destroy(): void;
 }
@@ -76,6 +79,16 @@ export interface TitleBarGraphActions {
   onTogglePin: () => void;
 }
 
+/** Note export: More-menu entry + optional titlebar pin. */
+export interface TitleBarExportActions {
+  isOpen: () => boolean;
+  onOpen: () => void;
+  isPinned: () => boolean;
+  onTogglePin: () => void;
+  /** When false, More-menu row and pin button are disabled. */
+  canExport: () => boolean;
+}
+
 export interface TitleBarImmersiveMenuActions {
   getFocusMode: () => boolean;
   getAutoHideTitlebar: () => boolean;
@@ -97,6 +110,7 @@ export interface TitleBarOptions {
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
   graphActions?: TitleBarGraphActions;
+  exportActions?: TitleBarExportActions;
   /** Open sidebar tab layout configuration. */
   onConfigureSidebarTabs?: () => void;
   /** Mount widgets inside the More-button cluster (e.g. update capsule). */
@@ -140,6 +154,7 @@ export function mountTitleBar(
   const moreActions = options.moreMenuActions;
   const immersiveActions = options.immersiveMenuActions;
   const graphActions = options.graphActions;
+  const exportActions = options.exportActions;
   let unlistenMaximize: (() => void) | null = null;
   let sidebarOpen = options.sidebarToggle?.open ?? true;
   let rightSidebarOpen = options.rightSidebarToggle?.open ?? true;
@@ -179,6 +194,7 @@ export function mountTitleBar(
   let moreBtn: HTMLButtonElement | null = null;
   let moreCluster: HTMLDivElement | null = null;
   let graphPinBtn: HTMLButtonElement | null = null;
+  let exportPinBtn: HTMLButtonElement | null = null;
   let moreMenu: ReturnType<typeof createMenu> | null = null;
   let destroyMoreClusterExtras: (() => void) | null = null;
   let unsubscribeTheme: (() => void) | null = null;
@@ -473,6 +489,32 @@ export function mountTitleBar(
           },
         });
       }
+      if (exportActions) {
+        const canExport = exportActions.canExport();
+        moreMenu.addItem({
+          label: t("titlebar.more.exportNote"),
+          icon: menuIcons.exportNote,
+          disabled: !canExport,
+          selected: exportActions.isOpen(),
+          trailingAction: {
+            icon: menuIcons.pinAnchor,
+            title: exportActions.isPinned()
+              ? t("titlebar.more.unpinExport")
+              : t("titlebar.more.pinExport"),
+            pressed: exportActions.isPinned(),
+            onClick() {
+              exportActions.onTogglePin();
+              updateExportPinButton();
+              renderMoreMenu();
+            },
+          },
+          onClick() {
+            if (!canExport) return;
+            closeMoreMenu();
+            exportActions.onOpen();
+          },
+        });
+      }
       moreMenu.addDivider();
     }
 
@@ -602,7 +644,7 @@ export function mountTitleBar(
         },
       });
       graphPinBtn.className =
-        "inimark-sidebar-toggle-btn inimark-titlebar-graph-pin-btn";
+        "inimark-sidebar-toggle-btn inimark-titlebar-pin-btn inimark-titlebar-graph-pin-btn";
       graphPinBtn.innerHTML = graphTabIcon();
       markNoDrag(graphPinBtn);
       graphPinBtn.addEventListener("dblclick", (event) => {
@@ -619,6 +661,53 @@ export function mountTitleBar(
     graphPinBtn.title = label;
     graphPinBtn.setAttribute("aria-label", label);
     graphPinBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+
+  function updateExportPinButton(): void {
+    if (!moreCluster || !moreBtn || !exportActions) return;
+    const pinned = exportActions.isPinned();
+    if (!pinned) {
+      exportPinBtn?.remove();
+      exportPinBtn = null;
+      return;
+    }
+    if (!exportPinBtn) {
+      exportPinBtn = createIconButton({
+        label: t("titlebar.more.exportNote"),
+        title: t("titlebar.more.exportNote"),
+        onClick() {
+          if (!exportActions.canExport()) return;
+          exportActions.onOpen();
+          updateExportPinButton();
+          if (moreMenu?.isOpen()) renderMoreMenu();
+        },
+      });
+      exportPinBtn.className =
+        "inimark-sidebar-toggle-btn inimark-titlebar-pin-btn inimark-titlebar-export-pin-btn";
+      exportPinBtn.innerHTML = exportNoteIcon();
+      markNoDrag(exportPinBtn);
+      exportPinBtn.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      moreCluster.insertBefore(exportPinBtn, moreBtn);
+    }
+    const canExport = exportActions.canExport();
+    const open = exportActions.isOpen();
+    exportPinBtn.disabled = !canExport;
+    exportPinBtn.classList.toggle("is-active", open);
+    const label = canExport
+      ? t("titlebar.more.exportNote")
+      : t("export.disabledNoNote");
+    exportPinBtn.title = label;
+    exportPinBtn.setAttribute("aria-label", label);
+    exportPinBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  }
+
+  function refreshPinnableChrome(): void {
+    updateGraphPinButton();
+    updateExportPinButton();
+    if (moreMenu?.isOpen()) renderMoreMenu();
   }
 
   function updateSidebarToggle(): void {
@@ -648,13 +737,12 @@ export function mountTitleBar(
   updateSidebarToggle();
   updateRightSidebarToggle();
   updateMoreButton();
-  updateGraphPinButton();
+  refreshPinnableChrome();
   const unsubscribeLocale = onLocaleChange(() => {
     updateSidebarToggle();
     updateRightSidebarToggle();
     updateMoreButton();
-    updateGraphPinButton();
-    if (moreMenu?.isOpen()) renderMoreMenu();
+    refreshPinnableChrome();
   });
 
   return {
@@ -672,9 +760,9 @@ export function mountTitleBar(
         requestAnimationFrame(() => positionMoreMenu());
       }
     },
+    refreshPinnableChrome,
     refreshGraphChrome() {
-      updateGraphPinButton();
-      if (moreMenu?.isOpen()) renderMoreMenu();
+      refreshPinnableChrome();
     },
     destroy() {
       unsubscribeLocale();

@@ -35,6 +35,10 @@ import { mountDiskChangeBanner } from "./ui/disk-change-banner.ts";
 import { showStatusToast } from "./ui/status-toast.ts";
 import { closeWindow } from "./platform/window-chrome.ts";
 import { mountImageViewer } from "./image-viewer.ts";
+import {
+  createNoteExportController,
+  type NoteExportController,
+} from "./export/controller.ts";
 import type { Workspace } from "./platform/types.ts";
 import {
   createWorkspaceDirectory,
@@ -122,6 +126,7 @@ export function mountApp(host: HTMLElement): AppController {
   }
 
   let shellRef: ReturnType<typeof mountShell> | null = null;
+  let noteExport!: NoteExportController;
   const shell = mountShell(host, {
     onCloseRequest: () => requestAppClose(),
     mountMoreClusterExtras(cluster) {
@@ -174,7 +179,7 @@ export function mountApp(host: HTMLElement): AppController {
       isOpen: () => shellRef?.graph.isEditorGraphOpen() ?? false,
       onToggle: () => {
         shellRef?.graph.toggleEditorGraph();
-        shellRef?.refreshGraphChrome();
+        shellRef?.refreshPinnableChrome();
       },
       isPinned: () => settings.pinGraphViewInTitlebar,
       onTogglePin: () => {
@@ -183,8 +188,24 @@ export function mountApp(host: HTMLElement): AppController {
           pinGraphViewInTitlebar: !settings.pinGraphViewInTitlebar,
         };
         saveSettings(settings);
-        shellRef?.refreshGraphChrome();
+        shellRef?.refreshPinnableChrome();
       },
+    },
+    exportActions: {
+      isOpen: () => noteExport.isOpen(),
+      onOpen: () => {
+        void openExportDialog();
+      },
+      isPinned: () => settings.pinExportInTitlebar,
+      onTogglePin: () => {
+        settings = {
+          ...settings,
+          pinExportInTitlebar: !settings.pinExportInTitlebar,
+        };
+        saveSettings(settings);
+        shellRef?.refreshPinnableChrome();
+      },
+      canExport: () => canExportActiveNote(),
     },
     immersiveMenuActions: {
       getFocusMode: () => settings.focusMode,
@@ -226,7 +247,7 @@ export function mountApp(host: HTMLElement): AppController {
   });
   shellRef = shell;
   shell.graph.onEditorGraphChange(() => {
-    shell.refreshGraphChrome();
+    shell.refreshPinnableChrome();
   });
   let workspace: Workspace | null = null;
   let activeFilePath: string | null = null;
@@ -237,6 +258,12 @@ export function mountApp(host: HTMLElement): AppController {
   let viewStateTimer: ReturnType<typeof setTimeout> | null = null;
   const cleanups: Array<() => void> = [];
   let wordCount: ReturnType<typeof mountWordCount> | null = null;
+  noteExport = createNoteExportController();
+  cleanups.push(
+    noteExport.onChange(() => {
+      shell.refreshPinnableChrome();
+    }),
+  );
 
   const editor = createEditor(shell.editorHost, {
     initialContent: t("editor.welcome"),
@@ -275,10 +302,45 @@ export function mountApp(host: HTMLElement): AppController {
   function showNoteEditor(): void {
     shell.editorPane.classList.remove("is-image-view");
     imageViewer.hide();
+    shell.refreshPinnableChrome();
   }
 
   function showImagePane(): void {
     shell.editorPane.classList.add("is-image-view");
+    shell.refreshPinnableChrome();
+  }
+
+  function canExportActiveNote(): boolean {
+    return !imageViewer.isVisible();
+  }
+
+  async function openExportDialog(): Promise<void> {
+    if (!canExportActiveNote()) {
+      showStatusToast(shell.mainColumn, t("export.disabledNoNote"));
+      return;
+    }
+    const title =
+      (activeFilePath ? fileNameFromPath(activeFilePath) : null) ??
+      t("common.untitled");
+    const baseName = title.replace(/\.[^.]+$/, "") || "export";
+    const rewriteSrc = async (src: string): Promise<string | null> => {
+      if (!workspace || !src || /^(https?:|data:|blob:|asset:)/i.test(src)) {
+        return null;
+      }
+      const resolved = await resolveWorkspaceImageUrl(workspace, src);
+      return resolved;
+    };
+    try {
+      await noteExport.open({
+        markdown: editor.getMarkdown(),
+        title,
+        baseName,
+        rewriteSrc,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      showStatusToast(shell.mainColumn, message || t("export.failed"));
+    }
   }
 
   const fileSync = createActiveFileSync({

@@ -142,6 +142,8 @@ export interface AppSettings {
   autoHideTitlebar: boolean;
   /** Pin the editor graph-view control to the left of the titlebar More button. */
   pinGraphViewInTitlebar: boolean;
+  /** Pin the note-export control to the left of the titlebar More button. */
+  pinExportInTitlebar: boolean;
   autoSave: boolean;
   /** Milliseconds to wait after edits before auto-saving. */
   autoSaveDelayMs: number;
@@ -231,6 +233,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoHideStatusbar: false,
   autoHideTitlebar: false,
   pinGraphViewInTitlebar: false,
+  pinExportInTitlebar: false,
   autoSave: false,
   autoSaveDelayMs: AUTO_SAVE_DELAY_MS_DEFAULT,
   linkUpdateOnMove: "ask",
@@ -455,6 +458,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     ),
     pinGraphViewInTitlebar: Boolean(
       parsed.pinGraphViewInTitlebar ?? DEFAULT_SETTINGS.pinGraphViewInTitlebar,
+    ),
+    pinExportInTitlebar: Boolean(
+      parsed.pinExportInTitlebar ?? DEFAULT_SETTINGS.pinExportInTitlebar,
     ),
     autoSave: Boolean(parsed.autoSave ?? DEFAULT_SETTINGS.autoSave),
     autoSaveDelayMs: normalizeAutoSaveDelayMs(parsed.autoSaveDelayMs),

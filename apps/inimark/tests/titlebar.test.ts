@@ -208,4 +208,49 @@ describe("titlebar", () => {
     titlebar.destroy();
     host.remove();
   });
+
+  test("pins export button in the titlebar More cluster", () => {
+    let pinned = true;
+    let open = false;
+    let canExport = true;
+    const host = document.createElement("header");
+    document.body.append(host);
+    const titlebar = mountTitleBar(host, {
+      showWindowControls: false,
+      showMoreMenu: true,
+      exportActions: {
+        isOpen: () => open,
+        onOpen() {
+          open = true;
+          titlebar.refreshPinnableChrome();
+        },
+        isPinned: () => pinned,
+        onTogglePin() {
+          pinned = !pinned;
+        },
+        canExport: () => canExport,
+      },
+    });
+
+    const pinBtn = host.querySelector<HTMLButtonElement>(
+      ".inimark-titlebar-export-pin-btn",
+    );
+    expect(pinBtn).not.toBeNull();
+    expect(pinBtn?.disabled).toBe(false);
+
+    pinBtn?.click();
+    expect(open).toBe(true);
+    expect(pinBtn?.classList.contains("is-active")).toBe(true);
+
+    canExport = false;
+    titlebar.refreshPinnableChrome();
+    expect(pinBtn?.disabled).toBe(true);
+
+    pinned = false;
+    titlebar.refreshPinnableChrome();
+    expect(host.querySelector(".inimark-titlebar-export-pin-btn")).toBeNull();
+
+    titlebar.destroy();
+    host.remove();
+  });
 });

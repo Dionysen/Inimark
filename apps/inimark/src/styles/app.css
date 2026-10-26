@@ -312,14 +312,19 @@ html.platform-windows .inimark-right-sidebar-collapse-btn {
   grid-template-columns: auto minmax(0, 1fr) minmax(0, max-content);
 }
 
-.inimark-titlebar-graph-pin-btn {
+.inimark-titlebar-pin-btn {
   margin-left: 0;
   margin-right: 0;
   flex-shrink: 0;
 }
 
-.inimark-titlebar-graph-pin-btn.is-active {
+.inimark-titlebar-pin-btn.is-active {
   color: var(--inimark-accent);
+}
+
+.inimark-titlebar-pin-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .inimark-titlebar-more-menu .inimark-menu-item__content {

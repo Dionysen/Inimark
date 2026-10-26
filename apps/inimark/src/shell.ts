@@ -11,7 +11,14 @@ import {
   persistWidth,
   type ColumnResizeController,
 } from "./ui/column-resize.ts";
-import { mountTitleBar, type TitleBarController, type TitleBarGraphActions, type TitleBarImmersiveMenuActions, type TitleBarMoreMenuActions } from "./ui/titlebar.ts";
+import {
+  mountTitleBar,
+  type TitleBarController,
+  type TitleBarExportActions,
+  type TitleBarGraphActions,
+  type TitleBarImmersiveMenuActions,
+  type TitleBarMoreMenuActions,
+} from "./ui/titlebar.ts";
 import { mountOutlinePanel } from "./sidebar/outline-panel.ts";
 import {
   mountGraphPanel,
@@ -50,6 +57,8 @@ export interface ShellController {
   setDirty(dirty: boolean): void;
   isDirty(): boolean;
   toggleSidebar(): void;
+  refreshPinnableChrome(): void;
+  /** @deprecated Prefer refreshPinnableChrome. */
   refreshGraphChrome(): void;
   toggleRightSidebar(): void;
   focusSearch(): void;
@@ -85,6 +94,7 @@ export interface ShellMountOptions {
   moreMenuActions?: TitleBarMoreMenuActions;
   immersiveMenuActions?: TitleBarImmersiveMenuActions;
   graphActions?: TitleBarGraphActions;
+  exportActions?: TitleBarExportActions;
   onConfigureSidebarTabs?: () => void;
   mountMoreClusterExtras?: (cluster: HTMLElement) => () => void;
 }
@@ -255,6 +265,7 @@ export function mountShell(
     moreMenuActions: options.moreMenuActions,
     immersiveMenuActions: options.immersiveMenuActions,
     graphActions: options.graphActions,
+    exportActions: options.exportActions,
     onConfigureSidebarTabs: options.onConfigureSidebarTabs,
     mountMoreClusterExtras: options.mountMoreClusterExtras,
     sidebarToggle: {
@@ -339,8 +350,11 @@ export function mountShell(
       return dirty;
     },
     toggleSidebar,
+    refreshPinnableChrome() {
+      titlebar.refreshPinnableChrome();
+    },
     refreshGraphChrome() {
-      titlebar.refreshGraphChrome();
+      titlebar.refreshPinnableChrome();
     },
     toggleRightSidebar,
     focusSearch,
