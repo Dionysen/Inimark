@@ -93,11 +93,6 @@ function newId(): string {
   return `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function pushUiMessage(msg: Omit<UiChatMessage, "id" | "createdAt">): void {
-  const now = Date.now();
-  uiMessages.push({ ...msg, id: newId(), createdAt: now });
-}
-
 function findNode(
   nodes: WorkspaceTreeNode[],
   path: string,
@@ -138,6 +133,11 @@ export function mountAiPanel(hostEl: HTMLElement): AiPanelController {
   let running = false;
   let sessions: AiChatSession[] = [];
   let currentSessionId: string | null = null;
+
+  function pushUiMessage(msg: Omit<UiChatMessage, "id" | "createdAt">): void {
+    const now = Date.now();
+    uiMessages.push({ ...msg, id: newId(), createdAt: now });
+  }
 
   const historyMenu = createMenu();
   historyMenu.el.classList.add("inimark-ai-history-menu");
