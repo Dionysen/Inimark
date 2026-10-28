@@ -780,6 +780,8 @@ export const en: Dictionary = {
         scrollbarTrackDesc: "Track behind the thumb (usually transparent).",
         sidebarChromeOpacity: "Sidebar chrome opacity",
         sidebarChromeOpacityDesc: "Opacity of frosted sidebar chrome overlays.",
+        radiusLibraryBar: "Library bar radius",
+        radiusLibraryBarDesc: "Corner radius of the floating library bar in the left sidebar.",
         radiusControl: "Control radius",
         radiusControlDesc: "Corner radius for buttons, inputs, and similar controls.",
         controlHeight: "Control height",

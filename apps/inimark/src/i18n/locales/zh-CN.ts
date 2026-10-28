@@ -767,6 +767,8 @@ export const zhCN: Dictionary = {
         scrollbarTrackDesc: "滑块后方的轨道颜色（通常透明）。",
         sidebarChromeOpacity: "侧栏玻璃不透明度",
         sidebarChromeOpacityDesc: "侧栏毛玻璃叠层的不透明度。",
+        radiusLibraryBar: "文库浮动栏圆角",
+        radiusLibraryBarDesc: "左侧边栏文库管理浮动栏的圆角。",
         radiusControl: "控件圆角",
         radiusControlDesc: "按钮、输入框等控件的圆角。",
         controlHeight: "控件高度",

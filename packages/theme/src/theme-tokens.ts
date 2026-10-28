@@ -108,6 +108,7 @@ export const CHROME_INTERFACE_FIELD_ORDER = [
   "--accent",
   "--danger",
   "--sidebar-chrome-opacity",
+  "--radius-library-bar",
 ] as const;
 
 function sortChromeInterfaceFields(fields: ThemeEditorField[]): ThemeEditorField[] {
@@ -217,6 +218,7 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
     unit: "",
     asPercent: true,
   },
+  { name: "--radius-library-bar", section: "chrome", labelKey: "radiusLibraryBar", min: 0, max: 24 },
   { name: "--border-width", section: "chrome", labelKey: "borderWidth", min: 0, max: 5 },
   { name: "--radius-control", section: "controls", labelKey: "radiusControl", min: 0, max: 16 },
   { name: "--control-height", section: "controls", labelKey: "controlHeight", min: 24, max: 44 },
@@ -300,6 +302,7 @@ const PRESERVED_NON_COLOR = [
   "--editor-font-size",
   "--font-mono-size",
   "--sidebar-chrome-opacity",
+  "--radius-library-bar",
   "--border-width",
   "--radius-control",
   "--control-height",
@@ -879,6 +882,7 @@ const DEFAULT_FONTS: ThemeVariable[] = [
 
 const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--sidebar-chrome-opacity", value: "0.21", type: "size" },
+  { name: "--radius-library-bar", value: "4px", type: "size" },
   { name: "--border-width", value: "1px", type: "size" },
   { name: "--radius-control", value: "4px", type: "size" },
   { name: "--control-height", value: "32px", type: "size" },

@@ -137,6 +137,7 @@ describe("editor schema profile", () => {
       "--accent",
       "--danger",
       "--sidebar-chrome-opacity",
+      "--radius-library-bar",
     ]);
 
     const controls = sections

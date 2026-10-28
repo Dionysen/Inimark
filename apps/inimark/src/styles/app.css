@@ -1750,7 +1750,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   min-height: 2.5rem;
   margin: 0;
   padding: 0.45rem 2.55rem 0.45rem 0.85rem;
-  border-radius: 999px;
+  border-radius: var(--radius-library-bar, 4px);
   color: var(--inimark-fg);
   font: inherit;
   font-size: 0.88rem;
