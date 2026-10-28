@@ -63,8 +63,7 @@
   --shell-editor-paragraph-spacing: var(--editor-paragraph-spacing, 1.05em);
   --shell-editor-max-width: 720px;
 
-  /* Menus �?solid by default; frosted when html[data-glass="true"].
-     Floating library chrome always uses liquid glass (see app.css). */
+  /* Menus + floating library bar — solid by default; frosted when html[data-glass="true"]. */
   --shell-glass-bg: var(--bg-menu, var(--shell-surface-raised));
   --shell-glass-border: var(--shell-border);
   --shell-glass-shadow: 0 8px 28px color-mix(in srgb, #000 14%, transparent);

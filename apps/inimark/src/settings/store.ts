@@ -160,7 +160,7 @@ export interface AppSettings {
   rightSidebarTabs: SidebarTabId[];
   /** Show folder/file icons before names in the explorer tree. */
   showFileTreeIcons: boolean;
-  /** Frosted glass for menus. Floating library chrome is always frosted. */
+  /** Frosted glass for menus and the floating library bar. */
   glassEffect: boolean;
   image: ImageSettings;
   graph: GraphSettings;

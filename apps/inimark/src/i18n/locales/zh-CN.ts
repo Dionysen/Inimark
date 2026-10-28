@@ -604,7 +604,7 @@ export const zhCN: Dictionary = {
     },
     theme: {
       glassEffect: "毛玻璃效果",
-      glassEffectDesc: "菜单使用半透明模糊。关闭后菜单使用「菜单背景」实色。",
+      glassEffectDesc: "菜单与文库浮动栏使用半透明模糊。关闭后使用「菜单背景」实色。",
       appearanceMode: "外观模式",
       appearanceModeDesc: "选择跟随系统，或固定为浅色 / 深色模式。",
       system: "跟随系统",

@@ -613,7 +613,7 @@ export const en: Dictionary = {
     theme: {
       glassEffect: "Frosted glass",
       glassEffectDesc:
-        "Translucent blur on menus. When off, menus use the Menu background color.",
+        "Translucent blur on menus and the floating library bar. When off, they use the Menu background color.",
       appearanceMode: "Appearance mode",
       appearanceModeDesc:
         "Choose whether the app follows your system, or stays in light or dark mode.",
