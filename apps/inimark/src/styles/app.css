@@ -1671,9 +1671,9 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
   border: 1px solid rgb(255 255 255 / var(--_border));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
-    inset 0 0 10px 2px rgb(255 255 255 / calc(0.1 * var(--_o))),
-    inset 0 -1px 0 rgb(0 0 0 / calc(0.06 * var(--_o))),
-    0 8px 28px rgb(0 0 0 / calc(0.14 * var(--_o)));
+    inset 0 0 12px 2px rgb(255 255 255 / calc(0.08 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
+    0 12px 40px rgb(0 0 0 / calc(0.18 * var(--_o)));
 }
 
 /* Soft milk tint behind content (liquid-glass ::before) */
@@ -1765,31 +1765,9 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
     filter 200ms ease;
 }
 
-.inimark-library-bar-wrap:has(.inimark-library-bar:hover) .inimark-library-bar {
-  box-shadow: 0 10px 32px color-mix(in srgb, #000 18%, transparent);
-}
-
 .inimark-library-bar-wrap:has(.inimark-library-bar:active) .inimark-library-bar {
   transition-duration: 80ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
-  box-shadow: 0 4px 14px color-mix(in srgb, #000 12%, transparent);
-}
-
-html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:hover) .inimark-library-bar {
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / calc(0.55 * var(--_o))),
-    inset 0 0 12px 3px rgb(255 255 255 / calc(0.12 * var(--_o))),
-    inset 0 -1px 0 rgb(0 0 0 / calc(0.05 * var(--_o))),
-    0 10px 32px rgb(0 0 0 / calc(0.2 * var(--_o))),
-    0 2px 6px rgb(0 0 0 / calc(0.1 * var(--_o)));
-}
-
-html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:active) .inimark-library-bar {
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / calc(0.32 * var(--_o))),
-    inset 0 2px 8px rgb(0 0 0 / calc(0.12 * var(--_o))),
-    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
-    0 4px 14px rgb(0 0 0 / calc(0.12 * var(--_o)));
 }
 
 .inimark-library-bar:focus-visible {
@@ -1807,9 +1785,9 @@ html[data-glass="true"] .inimark-library-bar-wrap:has(.inimark-library-bar:activ
 html[data-glass="true"] .inimark-library-bar.is-library-drop-target {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
-    inset 0 0 10px 2px rgb(255 255 255 / calc(0.1 * var(--_o))),
-    inset 0 -1px 0 rgb(0 0 0 / calc(0.06 * var(--_o))),
-    0 8px 28px rgb(0 0 0 / calc(0.14 * var(--_o))),
+    inset 0 0 12px 2px rgb(255 255 255 / calc(0.08 * var(--_o))),
+    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
+    0 12px 40px rgb(0 0 0 / calc(0.18 * var(--_o))),
     0 0 0 2px color-mix(in srgb, var(--inimark-accent) 28%, transparent);
 }
 
@@ -1865,14 +1843,6 @@ html[data-glass="true"] .inimark-library-bar.is-library-drop-target {
   --inimark-lg-blur: 12px;
   transform: translateY(6px) scale(0.98);
   transform-origin: bottom center;
-}
-
-html[data-glass="true"] .inimark-sidebar-dock .inimark-menu {
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / calc(0.48 * var(--_o))),
-    inset 0 0 12px 2px rgb(255 255 255 / calc(0.08 * var(--_o))),
-    inset 0 -1px 0 rgb(0 0 0 / calc(0.08 * var(--_o))),
-    0 12px 40px rgb(0 0 0 / calc(0.18 * var(--_o)));
 }
 
 .inimark-sidebar-dock .inimark-menu.is-open {
