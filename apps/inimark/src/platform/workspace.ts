@@ -124,12 +124,6 @@ export async function refreshWorkspaceTree(
   return workspace.tree;
 }
 
-export function defaultExpandedDirs(workspace: Workspace): string[] {
-  return workspace.tree
-    .filter((node) => node.kind === "directory")
-    .map((node) => node.path);
-}
-
 function toWorkspaceTree(nodes: WorkspaceTreeNode[] | undefined): WorkspaceTreeNode[] {
   return nodes ?? [];
 }

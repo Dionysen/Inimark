@@ -43,7 +43,6 @@ import type { Workspace } from "./platform/types.ts";
 import {
   createWorkspaceDirectory,
   createWorkspaceFile,
-  defaultExpandedDirs,
   openWorkspaceByPath,
   pickWorkspace,
   readWorkspaceFile,
@@ -985,11 +984,9 @@ export function mountApp(host: HTMLElement): AppController {
 
     const session = getLibrarySession(activeLibraryId);
     sessionFileViews = session.fileViews ?? {};
-    const expandedDirs =
-      options?.restoreSession && session.expandedDirs.length > 0
-        ? session.expandedDirs
-        : defaultExpandedDirs(workspace);
-    shell.sidebar.setExpandedDirs(expandedDirs);
+    // Always restore fold state (new libraries start with []). Do not treat an
+    // empty list as "missing" — that would re-expand after the user collapsed all.
+    shell.sidebar.setExpandedDirs(session.expandedDirs);
 
     if (options?.restoreSession && session.activeFilePath) {
       await openWorkspaceFile(session.activeFilePath, { skipConfirm: true });

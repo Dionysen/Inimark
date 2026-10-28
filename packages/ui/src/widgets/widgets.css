@@ -1141,7 +1141,6 @@ html[data-glass="true"] .inimark-select-panel {
 
 .inimark-tree-item--dir {
   color: var(--shell-muted-fg);
-  font-weight: 600;
 }
 
 .inimark-tree-item--dir:hover {
