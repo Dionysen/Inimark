@@ -37,6 +37,7 @@ const BUILTIN_THEMES = [
   "hermes",
   "ocean",
   "dark-modern",
+  "rider-dark",
   "cursor",
   "dracula",
 ] as const;

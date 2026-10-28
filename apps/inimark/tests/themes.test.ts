@@ -20,6 +20,7 @@ describe("theme system", () => {
       "hermes",
       "ocean",
       "dark-modern",
+      "rider-dark",
       "cursor",
       "dracula",
     ]);
@@ -33,12 +34,14 @@ describe("theme system", () => {
     expect(BUILTIN_THEME_IS_DARK.mint).toBe(false);
     expect(BUILTIN_THEME_IS_DARK.dracula).toBe(true);
     expect(BUILTIN_THEME_IS_DARK.cursor).toBe(true);
+    expect(BUILTIN_THEME_IS_DARK["rider-dark"]).toBe(true);
   });
 
   test("migrates removed dark and promoted custom ids", () => {
     expect(normalizeAppThemeId("dark", "ocean")).toBe("ocean");
     expect(normalizeAppThemeId("custom-er44d9pe", "ocean")).toBe("ocean");
     expect(normalizeAppThemeId("custom-vz8ojnvc", "ocean")).toBe("dark-modern");
+    expect(normalizeAppThemeId("custom-twlk3g28", "ocean")).toBe("rider-dark");
     expect(normalizeAppThemeId("ocean", "light")).toBe("ocean");
     expect(normalizeAppThemeId("slate", "light")).toBe("slate");
     expect(normalizeAppThemeId("claude-code", "light")).toBe("claude-code");

@@ -8,6 +8,7 @@ export const BUILTIN_THEMES = [
   "hermes",
   "ocean",
   "dark-modern",
+  "rider-dark",
   "cursor",
   "dracula",
 ] as const;
@@ -27,6 +28,7 @@ const LEGACY_THEME_IDS: Record<string, BuiltinThemeName> = {
   // Promoted customs → builtins
   "custom-er44d9pe": "ocean",
   "custom-vz8ojnvc": "dark-modern",
+  "custom-twlk3g28": "rider-dark",
 };
 
 export function isBuiltinTheme(theme: string): theme is BuiltinThemeName {

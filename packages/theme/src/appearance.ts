@@ -35,6 +35,7 @@ export const BUILTIN_THEME_IS_DARK: Record<BuiltinThemeName, boolean> = {
   hermes: false,
   ocean: true,
   "dark-modern": true,
+  "rider-dark": true,
   cursor: true,
   dracula: true,
 };

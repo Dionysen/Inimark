@@ -670,6 +670,7 @@ export const zhCN: Dictionary = {
         hermes: "Hermes",
         ocean: "Ocean",
         "dark-modern": "Dark Modern",
+        "rider-dark": "Rider Dark",
         cursor: "Cursor",
         dracula: "Dracula",
       },

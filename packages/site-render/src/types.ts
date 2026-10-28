@@ -62,6 +62,7 @@ export function resolveSiteThemePair(
     "hermes",
     "ocean",
     "dark-modern",
+    "rider-dark",
     "cursor",
     "dracula",
   ],
@@ -71,7 +72,7 @@ export function resolveSiteThemePair(
   let darkTheme = pickThemeId(config.darkTheme, "ocean", available);
 
   if (!config.lightTheme && !config.darkTheme && config.defaultTheme) {
-    if (/dark|ocean|cursor|dracula/i.test(config.defaultTheme)) {
+    if (/dark|ocean|cursor|dracula|rider/i.test(config.defaultTheme)) {
       darkTheme = pickThemeId(config.defaultTheme, darkTheme, available);
     } else {
       lightTheme = pickThemeId(config.defaultTheme, lightTheme, available);
@@ -80,7 +81,7 @@ export function resolveSiteThemePair(
 
   const defaultAppearance: SiteAppearance =
     config.defaultTheme === darkTheme ||
-    /dark|ocean|cursor|dracula/i.test(config.defaultTheme || "")
+    /dark|ocean|cursor|dracula|rider/i.test(config.defaultTheme || "")
       ? "dark"
       : "light";
 

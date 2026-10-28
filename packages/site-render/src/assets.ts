@@ -62,6 +62,7 @@ html[data-theme="purple"],
 html[data-theme="hermes"] { color-scheme: light; }
 html[data-theme="ocean"],
 html[data-theme="dark-modern"],
+html[data-theme="rider-dark"],
 html[data-theme="cursor"],
 html[data-theme="dracula"] { color-scheme: dark; }
 
