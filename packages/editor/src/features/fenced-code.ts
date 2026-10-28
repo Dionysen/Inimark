@@ -22,6 +22,7 @@ import {
   filterLanguageOptions,
   type EmbeddedCodeMirrorEditor,
 } from "../code-highlighter.ts";
+import { requestTypewriterScroll } from "../typewriter-sync.ts";
 import { createLatestTaskScheduler } from "../renderers/latest-task.ts";
 import {
   getMermaidThemeFingerprint,
@@ -399,6 +400,7 @@ class CodeBlockView implements NodeView {
       language: lang,
       className: "typora-web-cm-code",
       onChange: this.onCodeChange,
+      onCaretActivity: () => requestTypewriterScroll(this.view.dom),
       extraExtensions: [this.createBoundaryKeymap()],
     });
     this.unregisterIndent = registerCodeIndentEditor(view, this.cm);

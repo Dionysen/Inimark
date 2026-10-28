@@ -167,6 +167,7 @@ type CodeMirrorEditorOptions = {
   markdownSource?: boolean;
   indentSize?: number;
   onChange?: (doc: string, update: ViewUpdate) => void;
+  onCaretActivity?: (update: ViewUpdate) => void;
   extraExtensions?: Extension[];
 };
 
@@ -185,9 +186,22 @@ export type EmbeddedCodeMirrorEditor = {
   destroy(): void;
 };
 
+/** Embedded CM in rendered doc (fenced code, HTML block source, …). */
+export function getFocusedEmbeddedCodeMirrorView(): CodeMirrorView | null {
+  const active = document.activeElement;
+  if (!(active instanceof HTMLElement)) return null;
+  const editorRoot = active.closest(".cm-editor");
+  if (!(editorRoot instanceof HTMLElement)) return null;
+  return (
+    (editorRoot as HTMLElement & { __typoraWebCodeMirrorView?: CodeMirrorView })
+      .__typoraWebCodeMirrorView ?? null
+  );
+}
+
 function commonExtensions(
   languageCompartment: Compartment,
   onChange?: (doc: string, update: ViewUpdate) => void,
+  onCaretActivity?: (update: ViewUpdate) => void,
 ): Extension[] {
   return [
     history(),
@@ -199,6 +213,7 @@ function commonExtensions(
     languageCompartment.of([]),
     CodeMirrorView.updateListener.of((update) => {
       if (update.docChanged) onChange?.(update.state.doc.toString(), update);
+      if (update.docChanged || update.selectionSet) onCaretActivity?.(update);
     }),
     CodeMirrorView.theme({
       "&": {
@@ -245,7 +260,11 @@ export function createEmbeddedCodeMirrorEditor(
   const languageCompartment = new Compartment();
   const indentCompartment = new Compartment();
   let indentSize = clampCodeIndentSize(options.indentSize ?? CODE_INDENT_SIZE_DEFAULT);
-  const extensions = commonExtensions(languageCompartment, options.onChange);
+  const extensions = commonExtensions(
+    languageCompartment,
+    options.onChange,
+    options.onCaretActivity,
+  );
   extensions.push(indentCompartment.of(codeIndentExtensions(indentSize)));
   if (options.markdownSource) {
     extensions.push(markdown({ codeLanguages: codeMirrorLanguages }));

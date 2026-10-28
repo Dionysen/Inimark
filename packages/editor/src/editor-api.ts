@@ -36,6 +36,7 @@ import { mdOffsetToRenderedPos, renderedPosToMdOffset } from "./selection-md-map
 import { safeTextSelection } from "./selection-utils.ts";
 import {
   createEmbeddedCodeMirrorEditor,
+  getFocusedEmbeddedCodeMirrorView,
   type EmbeddedCodeMirrorEditor,
 } from "./code-highlighter.ts";
 import { defaultPlugins, plaintextPlugins } from "./editor.ts";
@@ -70,6 +71,7 @@ import { serialize } from "./serializer.ts";
 import { executeEditorCommand, type EditorCommandName } from "./commands.ts";
 import { isImeComposing } from "./ime-position.ts";
 import { getCodeIndentSize, setCodeIndentSize } from "./code-indent.ts";
+import { TYPEWRITER_SYNC_EVENT } from "./typewriter-sync.ts";
 
 /** Commands that remain meaningful when Markdown features are disabled. */
 const PLAINTEXT_COMMANDS = new Set<string>([
@@ -402,7 +404,13 @@ export function createEditor(
     if (inSource || pointerSelecting || isImeComposing() || view.composing) return;
     try {
       const sc = findScrollContainer();
-      const coords = view.coordsAtPos(view.state.selection.head);
+      let coords: { top: number; bottom: number };
+      const cmView = getFocusedEmbeddedCodeMirrorView();
+      if (cmView && editorHost.contains(cmView.dom)) {
+        coords = cmView.coordsAtPos(cmView.state.selection.main.head);
+      } else {
+        coords = view.coordsAtPos(view.state.selection.head);
+      }
       const lineCenter = (coords.top + coords.bottom) / 2;
       const containerTop = sc.getBoundingClientRect().top;
       const lineCenterInContent = lineCenter - containerTop + sc.scrollTop;
@@ -716,6 +724,9 @@ export function createEditor(
     },
     true,
   );
+  wrap.addEventListener(TYPEWRITER_SYNC_EVENT, () => {
+    if (typewriterMode) scheduleScrollCursorToCenter();
+  });
 
   const controller: Editor = {
     getMarkdown(): string {
