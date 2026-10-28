@@ -178,6 +178,7 @@ export function mountShell(
     RIGHT_SIDEBAR_WIDTH_MAX,
   );
   let titlebar: TitleBarController;
+  let postLayoutTitlebarSync: (() => void) | null = null;
 
   function applySidebarWidth(): void {
     host.style.setProperty("--inimark-sidebar-width", `${sidebarWidth}px`);
@@ -201,6 +202,7 @@ export function mountShell(
     titlebar.setRightSidebarOpen(rightSidebarOpen);
     rightSidebar.setSidebarOpen(rightSidebarOpen);
     requestOverlayScrollbarRefresh();
+    postLayoutTitlebarSync?.();
   }
 
   function toggleSidebar(): void {
@@ -258,8 +260,127 @@ export function mountShell(
   const titlebarZone = document.createElement("div");
   titlebarZone.className = "inimark-titlebar-zone";
 
-  const titlebarHost = document.createElement("header");
-  titlebar = mountTitleBar(titlebarHost, {
+  const rightSidebarTopbar = rightSidebarHost.querySelector<HTMLElement>(
+    ".inimark-right-sidebar-topbar",
+  );
+
+  // Sticky reveal class (same idea as statusbar): pure :hover + transform made the
+  // bar flash twice when drag-region / fixed Windows chrome briefly stole hit-testing.
+  let titlebarHideTimer: ReturnType<typeof setTimeout> | null = null;
+  const TITLEBAR_HIDE_DELAY_MS = 120;
+  let titlebarMoreCluster: HTMLElement | null = null;
+  let rightSidebarTitlebarToggle: HTMLElement | null = null;
+  let titlebarHost: HTMLElement | null = null;
+  const titlebarRevealTargets: HTMLElement[] = [];
+  let pointerX = -1;
+  let pointerY = -1;
+  let pointerMoveHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function onDocumentPointerMove(event: PointerEvent): void {
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    if (!isAutoHideTitlebarEnabled() || !titlebarZone.classList.contains("is-revealed")) {
+      return;
+    }
+    if (pointerMoveHideTimer != null) clearTimeout(pointerMoveHideTimer);
+    pointerMoveHideTimer = setTimeout(() => {
+      pointerMoveHideTimer = null;
+      if (!titlebarZone.classList.contains("is-revealed")) return;
+      if (pointerOverTitlebarReveal()) return;
+      commitHideTitlebarZone();
+    }, TITLEBAR_HIDE_DELAY_MS);
+  }
+
+  document.addEventListener("pointermove", onDocumentPointerMove, { passive: true });
+
+  function isAutoHideTitlebarEnabled(): boolean {
+    return document.documentElement.dataset.autoHideTitlebar === "true";
+  }
+
+  function elementUnderPointer(): Element | null {
+    if (pointerX < 0 || pointerY < 0) return null;
+    return document.elementFromPoint(pointerX, pointerY);
+  }
+
+  function isTitlebarRevealElement(el: Element): boolean {
+    if (titlebarZone.contains(el)) return true;
+    if (rightSidebarTopbar?.contains(el)) return true;
+    if (titlebarHost?.contains(el)) return true;
+    return false;
+  }
+
+  function pointerOverTitlebarReveal(): boolean {
+    const hit = elementUnderPointer();
+    if (hit && isTitlebarRevealElement(hit)) return true;
+    // Fallback before the first pointermove (e.g. tests).
+    if (titlebarZone.matches(":hover")) return true;
+    if (rightSidebarTopbar?.matches(":hover")) return true;
+    if (rightSidebarTitlebarToggle?.matches(":hover")) return true;
+    if (titlebarMoreCluster?.matches(":hover")) return true;
+    return false;
+  }
+
+  function commitHideTitlebarZone(): void {
+    titlebarZone.classList.remove("is-revealed");
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && titlebarHost?.contains(active)) {
+      active.blur();
+    }
+  }
+
+  function revealTitlebarZone(): void {
+    if (!isAutoHideTitlebarEnabled()) return;
+    if (titlebarHideTimer != null) {
+      clearTimeout(titlebarHideTimer);
+      titlebarHideTimer = null;
+    }
+    titlebarZone.classList.add("is-revealed");
+  }
+
+  function scheduleHideTitlebarZone(): void {
+    if (!isAutoHideTitlebarEnabled()) return;
+    if (titlebarHideTimer != null) clearTimeout(titlebarHideTimer);
+    titlebarHideTimer = setTimeout(() => {
+      titlebarHideTimer = null;
+      if (pointerOverTitlebarReveal()) return;
+      commitHideTitlebarZone();
+    }, TITLEBAR_HIDE_DELAY_MS);
+  }
+
+  function syncTitlebarAutoHide(): void {
+    if (!isAutoHideTitlebarEnabled()) {
+      commitHideTitlebarZone();
+      return;
+    }
+    if (pointerOverTitlebarReveal()) {
+      revealTitlebarZone();
+      return;
+    }
+    if (titlebarHideTimer != null) {
+      clearTimeout(titlebarHideTimer);
+      titlebarHideTimer = null;
+    }
+    commitHideTitlebarZone();
+  }
+
+  function bindTitlebarRevealTarget(el: HTMLElement | null | undefined): void {
+    if (!el || titlebarRevealTargets.includes(el)) return;
+    titlebarRevealTargets.push(el);
+    el.addEventListener("pointerenter", revealTitlebarZone);
+    el.addEventListener("pointerleave", scheduleHideTitlebarZone);
+  }
+
+  bindTitlebarRevealTarget(titlebarZone);
+  bindTitlebarRevealTarget(rightSidebarTopbar);
+
+  postLayoutTitlebarSync = () => {
+    queueMicrotask(() => syncTitlebarAutoHide());
+    requestAnimationFrame(() => syncTitlebarAutoHide());
+  };
+
+  const titlebarHostEl = document.createElement("header");
+  titlebarHost = titlebarHostEl;
+  titlebar = mountTitleBar(titlebarHostEl, {
     title: "Untitled",
     onClose: options.onCloseRequest,
     moreMenuActions: options.moreMenuActions,
@@ -287,13 +408,22 @@ export function mountShell(
   editorPane.append(editorHost);
   graph.setEditorHost(editorPane);
 
-  titlebarZone.append(titlebarHost);
+  titlebarMoreCluster = titlebarHostEl.querySelector(".inimark-titlebar-more-cluster");
+  rightSidebarTitlebarToggle = titlebarHostEl.querySelector(
+    ".inimark-right-sidebar-titlebar-toggle",
+  );
+  bindTitlebarRevealTarget(titlebarMoreCluster);
+  bindTitlebarRevealTarget(rightSidebarTitlebarToggle);
+
+  titlebarZone.append(titlebarHostEl);
+
   mainColumn.append(titlebarZone, editorPane);
   host.append(sidebarHost, mainColumn, rightSidebarHost);
   applySidebarWidth();
   applyRightSidebarWidth();
   applySidebarState();
   applyRightSidebarState();
+  syncTitlebarAutoHide();
   // Enable sidebar spring after the initial open/closed layout is painted.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -368,6 +498,22 @@ export function mountShell(
     applySidebarTabLayout,
     destroy() {
       unsubscribeLocale();
+      postLayoutTitlebarSync = null;
+      document.removeEventListener("pointermove", onDocumentPointerMove);
+      if (pointerMoveHideTimer != null) {
+        clearTimeout(pointerMoveHideTimer);
+        pointerMoveHideTimer = null;
+      }
+      if (titlebarHideTimer != null) {
+        clearTimeout(titlebarHideTimer);
+        titlebarHideTimer = null;
+      }
+      for (const el of titlebarRevealTargets) {
+        el.removeEventListener("pointerenter", revealTitlebarZone);
+        el.removeEventListener("pointerleave", scheduleHideTitlebarZone);
+      }
+      titlebarRevealTargets.length = 0;
+      titlebarZone.classList.remove("is-revealed");
       host.classList.remove("is-chrome-ready");
       resize.destroy();
       rightResize.destroy();

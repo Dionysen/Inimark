@@ -73,47 +73,39 @@ html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone>.inimark-titlebar {
   background: transparent;
 }
 
+/* Opacity-only reveal (no translateY): transforming chrome while flipping
+   pointer-events drops :hover for a frame and causes a double flash.
+   Reveal is driven by .is-revealed (JS) / :focus-within, not :hover. */
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-leading,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-center,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-cluster,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-btn,
-html[data-auto-hide-titlebar="true"] .inimark-right-sidebar-titlebar-toggle {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-100%);
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
-}
-
-/* Keep viewport-fixed caption buttons out of a transformed ancestor. */
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-controls--native {
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease;
 }
 
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover>.inimark-titlebar,
+/* Fixed / trailing hit targets stay hoverable while hidden (outside main titlebar-zone box). */
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-more-cluster,
+html[data-auto-hide-titlebar="true"] .inimark-right-sidebar-titlebar-toggle {
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 180ms ease;
+}
+
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed>.inimark-titlebar,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within>.inimark-titlebar {
   background: var(--inimark-content-bg);
 }
 
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-leading,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-center,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-more-cluster,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-more-btn,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-right-sidebar-titlebar-toggle,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed .inimark-titlebar-leading,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed .inimark-titlebar-center,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed .inimark-titlebar-more-cluster,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed .inimark-right-sidebar-titlebar-toggle,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone.is-revealed .inimark-titlebar-controls--native,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-leading,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-center,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-more-cluster,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-more-btn,
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-right-sidebar-titlebar-toggle {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-
-html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:hover .inimark-titlebar-controls--native,
+html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-right-sidebar-titlebar-toggle,
 html[data-auto-hide-titlebar="true"] .inimark-titlebar-zone:focus-within .inimark-titlebar-controls--native {
   opacity: 1;
   pointer-events: auto;
