@@ -29,6 +29,20 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.12 — 2026-10-28
+
+**Release page:** [v1.0.12](https://github.com/Dionysen/Inimark/releases/tag/v1.0.12)
+
+### What's new
+
+- Library floating bar: themeable corner radius (default 4px); frosted glass and drop shadow follow the same settings as menus
+- File tree: folder names use regular weight; expand/collapse state is remembered per library (new libraries start collapsed)
+- Light themes refined toward VS Code / GitHub Primer norms; Light sidebars brightened
+- New built-in **Rider Dark** theme (promoted from a custom theme)
+- All dark themes share Cursor Dark’s border color
+
+---
+
 ## 1.0.11 — 2026-10-26
 
 **Release page:** [v1.0.11](https://github.com/Dionysen/Inimark/releases/tag/v1.0.11)
