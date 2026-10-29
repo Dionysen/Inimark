@@ -29,6 +29,17 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.0.13 — 2026-10-29
+
+**Release page:** [v1.0.13](https://github.com/Dionysen/Inimark/releases/tag/v1.0.13)
+
+### What's new
+
+- Titlebar auto-hides on pointer movement to reduce chrome clutter, with smooth show/hide transitions while controls stay reachable
+- Embedded CodeMirror (fenced code): caret activity tracking and typewriter-mode scroll sync so focus and scrolling stay consistent with the main editor
+
+---
+
 ## 1.0.12 — 2026-10-28
 
 **Release page:** [v1.0.12](https://github.com/Dionysen/Inimark/releases/tag/v1.0.12)
