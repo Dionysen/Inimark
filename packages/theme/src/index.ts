@@ -49,6 +49,7 @@ export {
   parseCssVariables,
   convertSelectorsToDataTheme,
   buildThemeCss,
+  normalizeThemeVariables,
   importTheme,
   deleteTheme,
   getCustomThemeCss,

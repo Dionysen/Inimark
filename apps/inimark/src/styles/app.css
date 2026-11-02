@@ -501,7 +501,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   height: var(--inimark-chrome-btn-size);
   min-width: var(--inimark-chrome-btn-size);
   border: 0;
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  border-radius: var(--inimark-radius-control);
   padding: 0;
   background: transparent;
   color: var(--inimark-muted-fg);
@@ -1743,7 +1743,7 @@ html[data-glass="true"] .inimark-sidebar-dock .inimark-menu::after {
   min-height: 2.5rem;
   margin: 0;
   padding: 0.45rem 2.55rem 0.45rem 0.85rem;
-  border-radius: var(--radius-library-bar, 4px);
+  border-radius: var(--radius, 6px);
   color: var(--inimark-fg);
   font: inherit;
   font-size: 0.88rem;
@@ -1828,7 +1828,7 @@ html[data-glass="true"] .inimark-library-bar.is-library-drop-target {
   right: 0;
   bottom: calc(100% + 0.45rem);
   min-width: 0;
-  border-radius: 14px;
+  border-radius: var(--radius, 6px);
   overflow: hidden;
   /* Slightly denser fill than the pill so menu text stays readable */
   --inimark-lg-fill: 0.28;

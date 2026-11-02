@@ -100,7 +100,7 @@ html[data-first-line-indent-txt="true"] .typora-web-wrap[data-doc-format="plaint
   color: var(--text-code, inherit);
   border: var(--code-inline-border-width, 1px) solid
     var(--code-inline-border, var(--border, transparent));
-  border-radius: var(--radius-code-inline, 3px);
+  border-radius: var(--radius, 6px);
   white-space: break-spaces;
 }
 .ProseMirror pre {
@@ -118,7 +118,7 @@ html[data-first-line-indent-txt="true"] .typora-web-wrap[data-doc-format="plaint
   color: var(--text-primary, inherit);
   padding: 12px 14px;
   margin: 0 0 1em;
-  border-radius: var(--radius-code-block, 4px);
+  border-radius: var(--radius, 6px);
   overflow-x: hidden;
   overflow-y: visible;
   border: 1px solid var(--border, #ececec);
@@ -175,7 +175,7 @@ html[data-first-line-indent-txt="true"] .typora-web-wrap[data-doc-format="plaint
 
 /* ─── tables (cells; layout from widgets.css) ────────────────────── */
 .ProseMirror table {
-  border-radius: var(--radius-table, 0);
+  border-radius: var(--radius, 6px);
   overflow: hidden;
 }
 .ProseMirror table th,
@@ -200,7 +200,7 @@ html[data-first-line-indent-txt="true"] .typora-web-wrap[data-doc-format="plaint
   background: var(--tag-bg, color-mix(in srgb, var(--accent, #4078c0) 15%, transparent));
   color: var(--tag-text, var(--accent, #4078c0));
   border: 1px solid var(--tag-border, color-mix(in srgb, var(--accent, #4078c0) 20%, transparent));
-  border-radius: var(--radius-tag, 20px);
+  border-radius: var(--radius, 6px);
   padding: var(--padding-tag-y, 2px) var(--padding-tag-x, 7px);
   font-size: 0.9em;
   box-decoration-break: clone;

@@ -146,7 +146,7 @@
   background: var(--bg-code, var(--inimark-surface-raised));
   color: var(--text-primary, var(--inimark-fg));
   border: 1px solid var(--border, var(--inimark-border));
-  border-radius: var(--radius-code-block, var(--inimark-radius-sm));
+  border-radius: var(--radius, var(--inimark-radius-sm));
   font-family: var(
     --font-mono,
     "SF Mono",
@@ -176,7 +176,7 @@
   color: var(--text-code, inherit);
   border: var(--code-inline-border-width, 1px) solid
     var(--code-inline-border, var(--border, transparent));
-  border-radius: var(--radius-code-inline, 3px);
+  border-radius: var(--radius, 6px);
   white-space: break-spaces;
 }
 
@@ -227,7 +227,7 @@
   width: 100%;
   margin: 0 0 0.75em;
   border-collapse: collapse;
-  border-radius: var(--radius-table, 0);
+  border-radius: var(--radius, 6px);
   overflow: hidden;
   font-size: 0.95em;
 }

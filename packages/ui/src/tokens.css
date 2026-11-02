@@ -21,17 +21,18 @@
   --shell-accent-fg: #fff;
   --shell-focus-ring: color-mix(in srgb, var(--accent) 45%, transparent);
 
-  --shell-radius-sm: 0.35rem;
-  --shell-radius-md: 0.5rem;
+  /* Surfaces / dialogs / menus / controls — one theme radius */
+  --shell-radius-sm: var(--radius, 6px);
+  --shell-radius-md: var(--radius, 6px);
   --shell-space-1: 0.25rem;
   --shell-space-2: 0.5rem;
   --shell-space-3: 0.75rem;
   --shell-space-4: 1rem;
 
-  /* Unified widgets �?theme-editable via --control-* / --radius-control */
-  --shell-radius-control: var(--radius-control, 6px);
-  /* Floating menus / context menus �?match editor chrome */
-  --shell-radius-menu: 8px;
+  /* Unified widgets — theme-editable via --radius */
+  --shell-radius-control: var(--radius, 6px);
+  /* Floating menus / context menus — same theme radius */
+  --shell-radius-menu: var(--radius, 6px);
   --shell-radius-menu-item: var(--shell-radius-control);
   --shell-menu-padding: 4px;
   --shell-control-height: var(--control-height, 32px);
@@ -82,7 +83,7 @@
   --shell-lg-sheen-lo: 0.14;
 
   --shell-scrollbar-size: var(--scrollbar-size, 8px);
-  --shell-scrollbar-radius: var(--radius-scrollbar, 4px);
+  --shell-scrollbar-radius: var(--radius, 6px);
   --shell-scrollbar-track: var(--scrollbar-track, transparent);
   --shell-scrollbar-thumb: var(--scrollbar-thumb, color-mix(in srgb, var(--shell-fg) 28%, transparent));
   --shell-scrollbar-thumb-hover: var(--scrollbar-thumb-hover, color-mix(in srgb, var(--shell-fg) 45%, transparent));

@@ -136,8 +136,41 @@ export function convertSelectorsToDataTheme(css: string, themeId: string): strin
   return result;
 }
 
+/** Older per-surface radius tokens — collapsed into `--radius`. */
+const LEGACY_RADIUS_VARS = [
+  "--radius-library-bar",
+  "--radius-control",
+  "--radius-code-block",
+  "--radius-code-inline",
+  "--radius-metadata",
+  "--radius-table",
+  "--radius-tag",
+  "--radius-scrollbar",
+] as const;
+
+/** Collapse legacy radius tokens into a single `--radius` (default 6px). */
+export function normalizeThemeVariables(variables: ThemeVariable[]): ThemeVariable[] {
+  const byName = new Map(variables.map((v) => [v.name, v]));
+  if (!byName.has("--radius")) {
+    for (const name of LEGACY_RADIUS_VARS) {
+      const existing = byName.get(name);
+      if (existing) {
+        byName.set("--radius", { name: "--radius", value: existing.value, type: "size" });
+        break;
+      }
+    }
+  }
+  for (const name of LEGACY_RADIUS_VARS) {
+    byName.delete(name);
+  }
+  if (!byName.has("--radius")) {
+    byName.set("--radius", { name: "--radius", value: "6px", type: "size" });
+  }
+  return Array.from(byName.values());
+}
+
 export function buildThemeCss(id: string, variables: ThemeVariable[]): string {
-  const lines = variables.map((v) => `  ${v.name}: ${v.value};`);
+  const lines = normalizeThemeVariables(variables).map((v) => `  ${v.name}: ${v.value};`);
   return `[data-theme="custom-${id}"] {\n${lines.join("\n")}\n}`;
 }
 

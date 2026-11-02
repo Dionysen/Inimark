@@ -137,14 +137,13 @@ describe("editor schema profile", () => {
       "--accent",
       "--danger",
       "--sidebar-chrome-opacity",
-      "--radius-library-bar",
+      "--radius",
     ]);
 
     const controls = sections
       .find((s) => s.id === "controls")!
       .fields.map((f) => f.variable.name);
     expect(controls).toEqual([
-      "--radius-control",
       "--control-height",
       "--control-padding-x",
       "--control-font-size",
@@ -166,7 +165,8 @@ describe("editor schema profile", () => {
     expect(names).toContain("--bg-menu");
     expect(names).toContain("--accent-hover");
     expect(names).toContain("--tree-indent-hint-visible");
-    expect(names).toContain("--radius-control");
+    expect(names).toContain("--radius");
+    expect(names).not.toContain("--radius-control");
   });
 });
 

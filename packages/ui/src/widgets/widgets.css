@@ -245,7 +245,7 @@
   width: 1.35rem;
   height: 1.35rem;
   border: 0;
-  border-radius: calc(var(--shell-radius-control) * 0.75);
+  border-radius: var(--shell-radius-control);
   background: transparent;
   color: var(--shell-muted-fg);
   cursor: pointer;
@@ -940,7 +940,7 @@ html[data-glass="true"] .inimark-select-panel {
   width: var(--shell-chrome-btn-size);
   height: var(--shell-chrome-btn-size);
   min-width: var(--shell-chrome-btn-size);
-  border-radius: calc(var(--shell-radius-control) * 0.75);
+  border-radius: var(--shell-radius-control);
 }
 
 .inimark-panel-toolbar .inimark-icon {
@@ -974,7 +974,7 @@ html[data-glass="true"] .inimark-select-panel {
   margin: 0;
   padding: 0.05rem 0.3rem;
   border: 1px solid var(--shell-accent);
-  border-radius: calc(var(--shell-radius-control) * 0.75);
+  border-radius: var(--shell-radius-control);
   background: var(--shell-input-bg, var(--shell-content-bg));
   color: var(--shell-fg);
   font: inherit;

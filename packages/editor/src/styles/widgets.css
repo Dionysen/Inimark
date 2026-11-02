@@ -302,7 +302,7 @@
   padding: 10px 14px;
   margin: 8px 0 var(--margin-metadata-bottom, 16px);
   border: 1px solid var(--metadata-border, var(--border, transparent));
-  border-radius: var(--radius-metadata, 4px);
+  border-radius: var(--radius, 6px);
 }
 
 /* ─── TOC NodeView ───────────────────────────────────────────────── */
@@ -561,7 +561,7 @@
   width: var(--inimark-menu-row-height, 28px);
   height: var(--inimark-menu-row-height, 28px);
   padding: 0;
-  border-radius: var(--radius-code-block, 4px);
+  border-radius: var(--radius, 6px);
   color: var(--inimark-fg, #1f1f1f);
   cursor: pointer;
   outline: none;
@@ -586,7 +586,7 @@
   font-family: var(--inimark-font-ui, system-ui, -apple-system, "Segoe UI", sans-serif);
   font-size: var(--inimark-control-font-size, 13px);
   line-height: 1.25;
-  border-radius: var(--radius-code-block, 4px);
+  border-radius: var(--radius, 6px);
   color: var(--inimark-fg, #1f1f1f);
   outline: none;
 }
@@ -605,7 +605,7 @@
   max-height: 220px;
   overflow-y: auto;
   padding: var(--inimark-menu-padding, 4px);
-  border-radius: var(--inimark-radius-menu, 8px);
+  border-radius: var(--inimark-radius-menu, 6px);
   font-family: var(--inimark-font-ui, system-ui, -apple-system, "Segoe UI", sans-serif);
   font-size: var(--inimark-control-font-size, 13px);
   color: var(--inimark-fg, #1f1f1f);
@@ -709,7 +709,7 @@ html[data-glass="true"] .inimark-glass {
 .inimark-editor-context-menu,
 .inimark-editor-context-submenu {
   padding: var(--inimark-menu-padding, 4px);
-  border-radius: var(--inimark-radius-menu, 8px);
+  border-radius: var(--inimark-radius-menu, 6px);
   font-family: var(--inimark-font-ui, system-ui, -apple-system, sans-serif);
   font-size: var(--inimark-control-font-size, 13px);
   color: var(--inimark-fg, #1f1f1f);
@@ -984,7 +984,7 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   width: 18px;
   height: 18px;
   border: 1px solid var(--inimark-border, #ccc);
-  border-radius: calc(var(--inimark-radius-control, 6px) * 0.5);
+  border-radius: var(--inimark-radius-control, 6px);
   background: var(--inimark-input-bg, var(--inimark-content-bg, #fff));
   cursor: pointer;
   transition:

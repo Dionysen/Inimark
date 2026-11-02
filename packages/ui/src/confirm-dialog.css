@@ -12,7 +12,7 @@
   width: min(26rem, 100%);
   padding: var(--shell-space-4);
   border: 1px solid var(--shell-border);
-  border-radius: var(--shell-radius-md);
+  border-radius: var(--shell-radius-control, 6px);
   background: var(--shell-surface-raised);
   box-shadow: var(--shell-glass-shadow);
 }

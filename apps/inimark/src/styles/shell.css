@@ -163,7 +163,7 @@ body.is-column-resizing * {
   height: var(--inimark-chrome-btn-size);
   min-width: var(--inimark-chrome-btn-size);
   border: 0;
-  border-radius: calc(var(--inimark-radius-control) * 0.75);
+  border-radius: var(--inimark-radius-control);
   padding: 0;
   background: transparent;
   color: var(--inimark-muted-fg);

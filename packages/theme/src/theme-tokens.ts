@@ -1,4 +1,4 @@
-import type { ThemeVariable } from "./theme-store.ts";
+import { normalizeThemeVariables, type ThemeVariable } from "./theme-store.ts";
 import type { BuiltinThemeName } from "./builtin.ts";
 import { BUILTIN_THEMES } from "./builtin.ts";
 import type { ThemeEditorProfile } from "./config.ts";
@@ -108,7 +108,7 @@ export const CHROME_INTERFACE_FIELD_ORDER = [
   "--accent",
   "--danger",
   "--sidebar-chrome-opacity",
-  "--radius-library-bar",
+  "--radius",
 ] as const;
 
 function sortChromeInterfaceFields(fields: ThemeEditorField[]): ThemeEditorField[] {
@@ -218,9 +218,8 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
     unit: "",
     asPercent: true,
   },
-  { name: "--radius-library-bar", section: "chrome", labelKey: "radiusLibraryBar", min: 0, max: 24 },
+  { name: "--radius", section: "chrome", labelKey: "radius", min: 0, max: 24 },
   { name: "--border-width", section: "chrome", labelKey: "borderWidth", min: 0, max: 5 },
-  { name: "--radius-control", section: "controls", labelKey: "radiusControl", min: 0, max: 16 },
   { name: "--control-height", section: "controls", labelKey: "controlHeight", min: 24, max: 44 },
   { name: "--control-padding-x", section: "controls", labelKey: "controlPaddingX", min: 4, max: 24 },
   { name: "--control-font-size", section: "controls", labelKey: "controlFontSize", min: 9, max: 36 },
@@ -249,8 +248,6 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
     max: 28,
     profiles: ["full"],
   },
-  { name: "--radius-code-block", section: "codeBlock", labelKey: "radiusCodeBlock", min: 0, max: 24 },
-  { name: "--radius-code-inline", section: "codeInline", labelKey: "radiusCodeInline", min: 0, max: 16 },
   { name: "--padding-code-inline-y", section: "codeInline", labelKey: "paddingCodeInlineY", min: 0, max: 16 },
   { name: "--padding-code-inline-x", section: "codeInline", labelKey: "paddingCodeInlineX", min: 0, max: 24 },
   {
@@ -263,13 +260,9 @@ export const THEME_SIZE_SCHEMA: ThemeSizeToken[] = [
   { name: "--blockquote-border-width", section: "blockquote", labelKey: "blockquoteBorderWidth", min: 0, max: 16 },
   { name: "--padding-blockquote-y", section: "blockquote", labelKey: "paddingBlockquoteY", min: 0, max: 32 },
   { name: "--padding-blockquote-x", section: "blockquote", labelKey: "paddingBlockquoteX", min: 0, max: 48 },
-  { name: "--radius-metadata", section: "metadata", labelKey: "radiusMetadata", min: 0, max: 24 },
   { name: "--margin-metadata-bottom", section: "metadata", labelKey: "marginMetadataBottom", min: 0, max: 64 },
-  { name: "--radius-table", section: "table", labelKey: "radiusTable", min: 0, max: 24 },
-  { name: "--radius-tag", section: "tag", labelKey: "radiusTag", min: 0, max: 24 },
   { name: "--padding-tag-y", section: "tag", labelKey: "paddingTagY", min: 0, max: 16 },
   { name: "--padding-tag-x", section: "tag", labelKey: "paddingTagX", min: 0, max: 24 },
-  { name: "--radius-scrollbar", section: "scrollbar", labelKey: "radiusScrollbar", min: 0, max: 16 },
   { name: "--scrollbar-size", section: "scrollbar", labelKey: "scrollbarSize", min: 4, max: 20 },
 ];
 
@@ -302,9 +295,8 @@ const PRESERVED_NON_COLOR = [
   "--editor-font-size",
   "--font-mono-size",
   "--sidebar-chrome-opacity",
-  "--radius-library-bar",
+  "--radius",
   "--border-width",
-  "--radius-control",
   "--control-height",
   "--control-padding-x",
   "--control-font-size",
@@ -313,23 +305,18 @@ const PRESERVED_NON_COLOR = [
   "--tree-indent-hint-width",
   "--tree-indent-hint-size",
   "--tree-indent-hint-visible",
-  "--radius-code-block",
-  "--radius-code-inline",
   "--padding-code-inline-y",
   "--padding-code-inline-x",
   "--code-inline-border-width",
-  "--radius-metadata",
   "--margin-metadata-bottom",
   "--blockquote-border-width",
   "--padding-blockquote-y",
   "--padding-blockquote-x",
-  "--radius-table",
-  "--radius-tag",
   "--padding-tag-y",
   "--padding-tag-x",
-  "--radius-scrollbar",
   "--scrollbar-size",
 ] as const;
+
 
 const LIGHT_DEFAULTS: Record<string, string> = {
   "--bg-primary": "#ffffff",
@@ -922,9 +909,8 @@ const DEFAULT_FONTS: ThemeVariable[] = [
 
 const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--sidebar-chrome-opacity", value: "0.21", type: "size" },
-  { name: "--radius-library-bar", value: "4px", type: "size" },
+  { name: "--radius", value: "6px", type: "size" },
   { name: "--border-width", value: "1px", type: "size" },
-  { name: "--radius-control", value: "4px", type: "size" },
   { name: "--control-height", value: "32px", type: "size" },
   { name: "--control-padding-x", value: "10px", type: "size" },
   { name: "--control-font-size", value: "13px", type: "size" },
@@ -933,21 +919,15 @@ const DEFAULT_SIZES: ThemeVariable[] = [
   { name: "--tree-indent-hint-width", value: "1px", type: "size" },
   { name: "--tree-indent-hint-size", value: "14px", type: "size" },
   { name: "--tree-indent-hint-visible", value: "1", type: "size" },
-  { name: "--radius-code-block", value: "2px", type: "size" },
-  { name: "--radius-code-inline", value: "2px", type: "size" },
   { name: "--padding-code-inline-y", value: "1px", type: "size" },
   { name: "--padding-code-inline-x", value: "3px", type: "size" },
   { name: "--code-inline-border-width", value: "1px", type: "size" },
-  { name: "--radius-metadata", value: "2px", type: "size" },
   { name: "--margin-metadata-bottom", value: "40px", type: "size" },
   { name: "--blockquote-border-width", value: "3px", type: "size" },
   { name: "--padding-blockquote-y", value: "4px", type: "size" },
   { name: "--padding-blockquote-x", value: "16px", type: "size" },
-  { name: "--radius-table", value: "2px", type: "size" },
-  { name: "--radius-tag", value: "20px", type: "size" },
   { name: "--padding-tag-y", value: "2px", type: "size" },
   { name: "--padding-tag-x", value: "7px", type: "size" },
-  { name: "--radius-scrollbar", value: "2px", type: "size" },
   { name: "--scrollbar-size", value: "6px", type: "size" },
 ];
 
@@ -1067,7 +1047,7 @@ export function mergeWithSchema(
   parsed: ThemeVariable[],
   fallback?: Record<string, string>,
 ): ThemeVariable[] {
-  const byName = new Map(parsed.map((v) => [v.name, v]));
+  const byName = new Map(normalizeThemeVariables(parsed).map((v) => [v.name, v]));
   const defaults = fallback ?? LIGHT_DEFAULTS;
   const parsedColors: Record<string, string> = {};
   for (const v of parsed) {

@@ -55,8 +55,10 @@
   --font-mono-size: 14px;
   --sidebar-chrome-opacity: 0.21;
   --sidebar-tab-active-opacity-delta: 0.18;
-  --radius-library-bar: 4px;
-  --radius-control: 4px;
+  /* Single theme radius — all UI corners follow this value */
+  --radius: 6px;
+  --radius-library-bar: var(--radius);
+  --radius-control: var(--radius);
   --control-height: 32px;
   --control-padding-x: 10px;
   --control-font-size: 13px;
@@ -66,21 +68,21 @@
   --tree-indent-hint-size: 14px;
   --tree-indent-hint-visible: 1;
   --border-width: 1px;
-  --radius-code-block: 2px;
-  --radius-code-inline: 2px;
+  --radius-code-block: var(--radius);
+  --radius-code-inline: var(--radius);
   --padding-code-inline-y: 1px;
   --padding-code-inline-x: 3px;
   --code-inline-border-width: 1px;
-  --radius-metadata: 2px;
+  --radius-metadata: var(--radius);
   --margin-metadata-bottom: 40px;
   --blockquote-border-width: 3px;
   --padding-blockquote-y: 4px;
   --padding-blockquote-x: 16px;
-  --radius-table: 2px;
-  --radius-tag: 20px;
+  --radius-table: var(--radius);
+  --radius-tag: var(--radius);
   --padding-tag-y: 2px;
   --padding-tag-x: 7px;
-  --radius-scrollbar: 2px;
+  --radius-scrollbar: var(--radius);
   --scrollbar-size: 6px;
 
   /* CodeMirror syntax — overridden by active code theme */

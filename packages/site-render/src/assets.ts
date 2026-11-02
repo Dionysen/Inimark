@@ -18,7 +18,7 @@ ${selector}::-webkit-scrollbar-track {
 }
 ${selector}::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb, #888);
-  border-radius: var(--radius-scrollbar, 4px);
+  border-radius: var(--radius, 6px);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
