@@ -3,12 +3,17 @@ import { isTauri } from "../platform/env.ts";
 import { loadSettings } from "../settings/store.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
 import {
+  messageForUpdateDownloadError,
+  messageForUpdateNoLongerAvailable,
+} from "./update-user-messages.ts";
+import {
   checkForUpdate,
   classifyUpdateError,
   downloadUpdate,
   formatProgressPercent,
   installDownloadedUpdate,
   isDevUpdateInstallBlocked,
+  isUpdateDownloadCancelled,
   relaunchApp,
   type UpdateErrorKind,
 } from "../updater.ts";
@@ -51,7 +56,14 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
-export function createAutoUpdateService(): AutoUpdateService {
+export interface AutoUpdateServiceOptions {
+  /** Show a short, user-visible message when background install fails. */
+  onNotify?: (message: string) => void;
+}
+
+export function createAutoUpdateService(
+  options: AutoUpdateServiceOptions = {},
+): AutoUpdateService {
   let state: AutoUpdateState = { phase: "idle", version: null, progress: 0 };
   const listeners = new Set<(state: AutoUpdateState) => void>();
   let checking = false;
@@ -136,6 +148,7 @@ export function createAutoUpdateService(): AutoUpdateService {
         useSystemProxy: settings.useSystemProxyForUpdates,
       });
       if (!info) {
+        options.onNotify?.(messageForUpdateNoLongerAvailable());
         state = { phase: "idle", version: null, progress: 0 };
         emit();
         return;
@@ -159,7 +172,15 @@ export function createAutoUpdateService(): AutoUpdateService {
       await installDownloadedUpdate();
       await relaunchApp();
     } catch (error) {
-      if (isDevUpdateInstallBlocked(error)) {
+      if (isUpdateDownloadCancelled(error)) {
+        state = { phase: "available", version, progress: 0 };
+        emit();
+        return;
+      }
+      const message = messageForUpdateDownloadError(error);
+      if (message) {
+        options.onNotify?.(message);
+      } else if (isDevUpdateInstallBlocked(error)) {
         console.warn(t("settings.about.installBlockedOnMacDev"));
       }
       state = { phase: "available", version, progress: 0 };

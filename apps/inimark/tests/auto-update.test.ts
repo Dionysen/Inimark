@@ -112,6 +112,26 @@ describe("createAutoUpdateService", () => {
     service.stop();
   });
 
+  test("startInstall returns to available and notifies on download failure", async () => {
+    checkForUpdate.mockResolvedValue({ version: "1.2.0" });
+    downloadUpdate.mockRejectedValue(new Error("connection timed out"));
+    const onNotify = vi.fn();
+
+    const service = createAutoUpdateService({ onNotify });
+    service.start();
+    await vi.runOnlyPendingTimersAsync();
+
+    await service.startInstall();
+
+    expect(onNotify).toHaveBeenCalled();
+    expect(service.getState()).toEqual({
+      phase: "available",
+      version: "1.2.0",
+      progress: 0,
+    });
+    service.stop();
+  });
+
   test("startInstall aborts when preflight is declined", async () => {
     checkForUpdate.mockResolvedValue({ version: "1.2.0" });
     requestUpdatePreflight.mockResolvedValue(false);

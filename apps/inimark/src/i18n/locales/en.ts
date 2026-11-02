@@ -964,7 +964,12 @@ export const en: Dictionary = {
       failedNetwork: "Network error. Check your connection and try again.",
       failedOther: "Something went wrong while checking for updates. Please contact the developer.",
       downloadFailedNetwork: "Download failed. Check your connection and try again.",
+      downloadStalledNetwork:
+        "Download hasn't made progress for a while. Check your network or proxy settings, then try updating again.",
+      downloadTimedOutNetwork:
+        "Download didn't finish within 10 minutes. Check your network and try updating again.",
       downloadFailedOther: "Something went wrong while installing the update. Please contact the developer.",
+      updateNoLongerAvailable: "This update is no longer available. Check for updates again.",
       installBlockedOnMacDev:
         "Installing updates is disabled in macOS dev builds (it would replace the dev bundle).",
       desktopOnly: "Updates are available in the desktop app.",

@@ -950,7 +950,11 @@ export const zhCN: Dictionary = {
       failedNetwork: "网络连接异常，请检查网络后重试。",
       failedOther: "检查更新时出现问题，请联系开发者。",
       downloadFailedNetwork: "下载更新失败，请检查网络后重试。",
+      downloadStalledNetwork:
+        "下载长时间没有进度，可能是网络或代理异常。请检查网络设置后再次点击更新。",
+      downloadTimedOutNetwork: "下载已超过 10 分钟仍未完成，请检查网络后再次点击更新。",
       downloadFailedOther: "安装更新时出现问题，请联系开发者。",
+      updateNoLongerAvailable: "该更新已不可用，请重新检查更新。",
       installBlockedOnMacDev: "macOS 开发模式不支持安装更新（会替换 dev bundle）。",
       desktopOnly: "请在桌面应用中检查更新。",
       github: "GitHub",

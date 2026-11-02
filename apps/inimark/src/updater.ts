@@ -1,5 +1,6 @@
 import { Update, type DownloadOptions } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { createDownloadStallTracker } from "./update/download-stall-tracker.ts";
 import { isTauri } from "./platform/env.ts";
 import { detectPlatform } from "./platform/platform.ts";
 
@@ -20,6 +21,20 @@ export class UpdateDownloadCancelled extends Error {
   constructor() {
     super("Update download cancelled.");
     this.name = "UpdateDownloadCancelled";
+  }
+}
+
+export class UpdateDownloadStalled extends Error {
+  constructor() {
+    super("Update download stalled with no progress.");
+    this.name = "UpdateDownloadStalled";
+  }
+}
+
+export class UpdateDownloadTimedOut extends Error {
+  constructor() {
+    super("Update download exceeded the maximum duration.");
+    this.name = "UpdateDownloadTimedOut";
   }
 }
 
@@ -49,6 +64,12 @@ let cancelDownload: (() => void) | null = null;
 
 /** Prevent update checks/downloads from hanging indefinitely behind a proxy. */
 export const UPDATE_REQUEST_TIMEOUT_MS = 30_000;
+
+/** No download progress (0 B/s) for this long is treated as a network stall. */
+export const UPDATE_DOWNLOAD_STALL_MS = 60_000;
+
+/** Maximum wall-clock time for a full update package download. */
+export const UPDATE_DOWNLOAD_MAX_MS = 10 * 60 * 1000;
 
 function buildDownloadOptions(): DownloadOptions {
   return { timeout: UPDATE_REQUEST_TIMEOUT_MS };
@@ -108,6 +129,7 @@ const TRANSIENT_HTTP_STATUS = /\b(408|502|503|504|522|524)\b/;
 
 /** Classify updater failures so the UI can show actionable messages. */
 export function classifyUpdateError(error: unknown): UpdateErrorKind {
+  if (isUpdateDownloadStalled(error) || isUpdateDownloadTimedOut(error)) return "network";
   const text = errorMessage(error).trim().toLowerCase();
   if (!text) return "other";
   if (TRANSIENT_HTTP_STATUS.test(text)) return "network";
@@ -165,6 +187,14 @@ export function isUpdateDownloadCancelled(error: unknown): boolean {
   return error instanceof UpdateDownloadCancelled;
 }
 
+export function isUpdateDownloadStalled(error: unknown): boolean {
+  return error instanceof UpdateDownloadStalled;
+}
+
+export function isUpdateDownloadTimedOut(error: unknown): boolean {
+  return error instanceof UpdateDownloadTimedOut;
+}
+
 export function isDevUpdateInstallBlocked(error: unknown): boolean {
   return error instanceof DevUpdateInstallBlocked;
 }
@@ -180,35 +210,87 @@ export async function downloadUpdate(
   let downloaded = 0;
   let contentLength: number | null = null;
   let aborted = false;
+  let stalled = false;
+  let timedOut = false;
+  let maxDurationTimer: ReturnType<typeof setTimeout> | null = null;
 
-  cancelDownload = () => {
+  const clearMaxDurationTimer = (): void => {
+    if (maxDurationTimer != null) {
+      clearTimeout(maxDurationTimer);
+      maxDurationTimer = null;
+    }
+  };
+
+  const abortDownload = (): void => {
     aborted = true;
     void update.close().catch(() => {});
     cachedUpdate = null;
   };
 
+  cancelDownload = () => {
+    abortDownload();
+  };
+
+  const stallTracker = createDownloadStallTracker({
+    stallMs: UPDATE_DOWNLOAD_STALL_MS,
+    onStall: () => {
+      if (aborted) return;
+      stalled = true;
+      abortDownload();
+    },
+  });
+
   try {
+    maxDurationTimer = setTimeout(() => {
+      if (aborted) return;
+      timedOut = true;
+      abortDownload();
+    }, UPDATE_DOWNLOAD_MAX_MS);
+
+    stallTracker.start();
     await update.download((event) => {
       if (aborted) return;
       switch (event.event) {
         case "Started":
           contentLength = event.data.contentLength ?? null;
           onProgress?.(0, contentLength);
+          stallTracker.noteProgress(0);
           break;
         case "Progress":
           downloaded += event.data.chunkLength;
           onProgress?.(downloaded, contentLength);
+          stallTracker.noteProgress(downloaded);
           break;
         case "Finished":
           onProgress?.(downloaded, contentLength);
+          stallTracker.stop();
           break;
       }
     }, buildDownloadOptions());
 
+    if (timedOut) {
+      throw new UpdateDownloadTimedOut();
+    }
+    if (stalled) {
+      throw new UpdateDownloadStalled();
+    }
     if (aborted) {
       throw new UpdateDownloadCancelled();
     }
+  } catch (error) {
+    if (timedOut) {
+      throw new UpdateDownloadTimedOut();
+    }
+    if (stalled) {
+      throw new UpdateDownloadStalled();
+    }
+    if (aborted) {
+      throw new UpdateDownloadCancelled();
+    }
+    throw error;
   } finally {
+    clearMaxDurationTimer();
+    stallTracker.stop();
     cancelDownload = null;
   }
 }

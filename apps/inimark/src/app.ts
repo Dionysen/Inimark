@@ -114,7 +114,9 @@ export function mountApp(host: HTMLElement): AppController {
   const navHistory = new FileNavigationHistory();
   let openDocumentSearch: (() => void) | null = null;
   let titlebarUpdateCapsule: TitlebarUpdateCapsuleController | null = null;
-  const autoUpdate = createAutoUpdateService();
+  const autoUpdate = createAutoUpdateService({
+    onNotify: (message) => showStatusToast(shell.mainColumn, message),
+  });
 
   async function copyToClipboard(text: string): Promise<void> {
     try {

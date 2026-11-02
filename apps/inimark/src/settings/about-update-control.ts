@@ -5,13 +5,16 @@ import { createButton } from "../ui/widgets/button.ts";
 import { requestUpdatePreflight } from "../update-bridge.ts";
 import { loadSettings } from "./store.ts";
 import {
+  messageForUpdateCheckError,
+  messageForUpdateDownloadError,
+  messageForUpdateNoLongerAvailable,
+} from "../update/update-user-messages.ts";
+import {
   cancelUpdateDownload,
   checkForUpdate,
-  classifyUpdateError,
   downloadUpdate,
   formatProgressPercent,
   installDownloadedUpdate,
-  isDevUpdateInstallBlocked,
   isUpdateDownloadCancelled,
   relaunchApp,
 } from "../updater.ts";
@@ -26,23 +29,6 @@ function checkCircleIcon(): string {
   return `<svg class="inimark-icon inimark-about-update-check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75"/><path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="m8 12.5 2.5 2.5 5.5-6"/></svg>`;
 }
 
-function updateErrorMessage(error: unknown): string {
-  if (isUpdateDownloadCancelled(error)) return "";
-  const kind = classifyUpdateError(error);
-  return kind === "network"
-    ? t("settings.about.failedNetwork")
-    : t("settings.about.failedOther");
-}
-
-function downloadErrorMessage(error: unknown): string {
-  if (isUpdateDownloadCancelled(error)) return "";
-  if (isDevUpdateInstallBlocked(error)) return t("settings.about.installBlockedOnMacDev");
-  const kind = classifyUpdateError(error);
-  return kind === "network"
-    ? t("settings.about.downloadFailedNetwork")
-    : t("settings.about.downloadFailedOther");
-}
-
 /** About-page software update control with check, install, progress, and cancel states. */
 export function mountAboutUpdateControl(): AboutUpdateControl {
   const root = document.createElement("div");
@@ -52,6 +38,7 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
   let pendingVersion: string | null = null;
   let busy = false;
   let progressPct = 0;
+  let installHint = "";
 
   const render = (): void => {
     root.replaceChildren();
@@ -156,11 +143,22 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
       },
     });
     btn.classList.add("inimark-about-update-action");
+    if (state === "available" && installHint) {
+      const wrap = document.createElement("div");
+      wrap.className = "inimark-about-update-error-wrap";
+      const hint = document.createElement("p");
+      hint.className = "inimark-about-update-error";
+      hint.textContent = installHint;
+      wrap.append(hint, btn);
+      root.append(wrap);
+      return;
+    }
     root.append(btn);
   };
 
-  const setState = (next: UpdateUiState, errorMessage = ""): void => {
+  const setState = (next: UpdateUiState, errorMessage = "", hint = ""): void => {
     state = next;
+    installHint = next === "available" ? hint : "";
     if (errorMessage) root.dataset.errorMessage = errorMessage;
     else delete root.dataset.errorMessage;
     render();
@@ -192,7 +190,7 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
         setState("available");
       }
     } catch (error) {
-      setState("error", updateErrorMessage(error));
+      setState("error", messageForUpdateCheckError(error));
     } finally {
       busy = false;
       render();
@@ -211,7 +209,7 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
     try {
       const info = await checkForUpdate(updateOptions());
       if (!info) {
-        setState("latest");
+        setState("error", messageForUpdateNoLongerAvailable());
         return;
       }
       pendingVersion = info.version;
@@ -224,7 +222,16 @@ export function mountAboutUpdateControl(): AboutUpdateControl {
         setState("available");
         return;
       }
-      setState("error", downloadErrorMessage(error));
+      const message = messageForUpdateDownloadError(error);
+      if (!message) {
+        setState("available");
+        return;
+      }
+      if (pendingVersion) {
+        setState("available", "", message);
+        return;
+      }
+      setState("error", message);
     } finally {
       busy = false;
       render();

@@ -3,7 +3,11 @@ import { describe, expect, test } from "vitest";
 import {
   classifyUpdateError,
   UpdateDownloadCancelled,
+  UpdateDownloadStalled,
+  UpdateDownloadTimedOut,
   isUpdateDownloadCancelled,
+  isUpdateDownloadStalled,
+  isUpdateDownloadTimedOut,
 } from "../src/updater.ts";
 
 describe("classifyUpdateError", () => {
@@ -40,6 +44,13 @@ describe("classifyUpdateError", () => {
 });
 
 describe("isUpdateDownloadCancelled", () => {
+  test("treats stalled and timed-out downloads as network errors", () => {
+    expect(classifyUpdateError(new UpdateDownloadStalled())).toBe("network");
+    expect(isUpdateDownloadStalled(new UpdateDownloadStalled())).toBe(true);
+    expect(classifyUpdateError(new UpdateDownloadTimedOut())).toBe("network");
+    expect(isUpdateDownloadTimedOut(new UpdateDownloadTimedOut())).toBe(true);
+  });
+
   test("detects cancelled download errors", () => {
     expect(isUpdateDownloadCancelled(new UpdateDownloadCancelled())).toBe(true);
     expect(isUpdateDownloadCancelled(new Error("other"))).toBe(false);
