@@ -612,4 +612,62 @@ describe("click focus", () => {
       host.remove();
     }
   });
+
+  test("task checkbox clicks are not redirected to caret placement", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "- [ ] todo" });
+
+    try {
+      const view = editor.view;
+      const checkbox = host.querySelector(".checkbox") as HTMLElement | null;
+      expect(checkbox).not.toBeNull();
+      expect(needsClickRedirect(view, 0, 0, checkbox!)).toBe(false);
+
+      let defaultPrevented = false;
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 0,
+        clientY: 0,
+        button: 0,
+      });
+      Object.defineProperty(down, "target", { value: checkbox });
+      down.preventDefault = () => {
+        defaultPrevented = true;
+      };
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(false);
+      expect(defaultPrevented).toBe(false);
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("clicking a task checkbox toggles checked state", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const editor = createEditor(host, { initialContent: "- [ ] todo" });
+
+    try {
+      const view = editor.view;
+      const checkbox = host.querySelector(".checkbox") as HTMLElement | null;
+      expect(checkbox).not.toBeNull();
+      expect(host.querySelector(".checkbox")?.getAttribute("data-checked")).toBe("0");
+
+      checkbox!.dispatchEvent(
+        new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }),
+      );
+      checkbox!.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
+      );
+
+      expect(host.querySelector(".checkbox")?.getAttribute("data-checked")).toBe("1");
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
 });

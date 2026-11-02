@@ -154,7 +154,7 @@ function buildNodeView() {
       e.preventDefault();
     };
     const onClick = (e: MouseEvent): void => {
-      if (!cb.contains(e.target as Node) && e.target !== cb) return;
+      if (!dom.contains(e.target as Node)) return;
       e.preventDefault();
       e.stopPropagation();
       const pos = getPos();

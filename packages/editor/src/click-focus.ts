@@ -52,6 +52,7 @@ function isInteractiveEditorTarget(target: Element): boolean {
   if (target.closest(".file-input")) return true;
   if (target.closest(".wiki-link-autocomplete")) return true;
   if (target.closest(".wiki-link-widget, .wiki-embed-note, .wiki-embed-image")) return true;
+  if (target.closest(".checkbox-frame, .checkbox")) return true;
   if (target.closest("input, textarea, select, button")) return true;
   return false;
 }
