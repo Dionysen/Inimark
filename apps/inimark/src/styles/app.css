@@ -458,7 +458,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   min-width: 1.1rem;
   height: 0.875rem;
   padding: 0 0.2rem;
-  border-radius: 3px;
+  border-radius: var(--radius, 6px);
   background: color-mix(in srgb, var(--inimark-fg) 8%, transparent);
   color: var(--inimark-muted-fg);
   font-size: 0.625rem;
@@ -851,7 +851,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   min-width: 28px;
   padding: 0;
   border: 1px solid var(--inimark-border);
-  border-radius: 6px;
+  border-radius: var(--radius, 6px);
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -885,7 +885,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   height: 28px;
   padding: 0 8px;
   border: 1px solid var(--inimark-border);
-  border-radius: 6px;
+  border-radius: var(--radius, 6px);
   background: var(--inimark-bg);
   color: var(--inimark-fg);
   font-size: 12px;
@@ -1021,7 +1021,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   font: inherit;
   font-size: 12px;
   padding: 0.3rem 0.35rem;
-  border-radius: 4px;
+  border-radius: var(--radius, 6px);
   cursor: pointer;
 }
 
@@ -1137,7 +1137,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   gap: 6px;
   width: 100%;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius, 6px);
   background: transparent;
   color: var(--inimark-fg);
   padding: 4px 2px;
@@ -1184,7 +1184,7 @@ html.platform-windows .inimark-shell:not(.is-right-sidebar-closed) .inimark-titl
   flex-direction: column;
   margin: 4px 0 0;
   border: 1px solid color-mix(in srgb, var(--inimark-border) 90%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius, 6px);
   background: color-mix(in srgb, var(--inimark-content-bg) 70%, var(--inimark-bg));
   overflow: hidden;
   box-sizing: border-box;

@@ -14,7 +14,7 @@
   max-width: 90vw;
   overflow: hidden;
   border: 1px solid var(--inimark-border);
-  border-radius: 16px;
+  border-radius: var(--radius, 6px);
   background: var(--inimark-bg);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(24px) saturate(180%);
@@ -62,7 +62,7 @@
   gap: 10px;
   margin: 2px 8px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius, 6px);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -196,7 +196,7 @@
   margin: 0 2px;
   padding: 2px 6px;
   border: 1px solid var(--inimark-border);
-  border-radius: 4px;
+  border-radius: var(--radius, 6px);
   background: var(--inimark-surface);
   font-family: var(--inimark-font-mono);
   font-size: 11px;

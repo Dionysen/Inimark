@@ -87,7 +87,7 @@ html.platform-windows .inimark-settings-nav-topbar {
   flex-shrink: 0;
   padding: 0.12rem 0.38rem;
   border: 1px solid var(--inimark-border);
-  border-radius: 4px;
+  border-radius: var(--radius, 6px);
   background: color-mix(in srgb, var(--inimark-fg) 6%, transparent);
   color: var(--inimark-fg);
   font-family: var(--inimark-font-mono);
@@ -173,7 +173,7 @@ html.platform-windows .inimark-settings-nav-topbar {
 
 .inimark-settings-search-mark {
   padding: 0 0.12em;
-  border-radius: 3px;
+  border-radius: var(--radius, 6px);
   background: color-mix(in srgb, var(--inimark-accent) 28%, transparent);
   color: inherit;
   font: inherit;
@@ -337,7 +337,7 @@ html.platform-windows .inimark-settings-nav-topbar {
 .inimark-about-icon {
   width: 88px;
   height: 88px;
-  border-radius: 20px;
+  border-radius: var(--radius, 6px);
   object-fit: cover;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   user-select: none;
@@ -524,7 +524,7 @@ html.platform-windows .inimark-settings-nav-topbar {
   min-width: var(--inimark-control-height);
   height: var(--inimark-control-height);
   border: 1px solid var(--inimark-border);
-  border-radius: 999px;
+  border-radius: var(--radius, 6px);
   background: var(--inimark-hover);
   color: var(--inimark-muted-fg);
 }
