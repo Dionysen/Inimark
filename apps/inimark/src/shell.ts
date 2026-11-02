@@ -276,10 +276,66 @@ export function mountShell(
   let pointerY = -1;
   let pointerMoveHideTimer: ReturnType<typeof setTimeout> | null = null;
 
+  function titlebarRevealBandHeightPx(): number {
+    const styles = getComputedStyle(document.documentElement);
+    const titlebarHeight = parseFloat(styles.getPropertyValue("--inimark-titlebar-height"));
+    const space2 = parseFloat(styles.getPropertyValue("--inimark-space-2"));
+    if (Number.isFinite(titlebarHeight) && titlebarHeight > 0) {
+      return titlebarHeight + (Number.isFinite(space2) ? space2 : 0);
+    }
+    return titlebarZone.getBoundingClientRect().height;
+  }
+
+  function pointerInColumnTopBand(
+    rect: DOMRect,
+    clientX: number,
+    clientY: number,
+    bandHeight: number,
+  ): boolean {
+    if (rect.width <= 0 || rect.height <= 0 || bandHeight <= 0) return false;
+    if (clientY < rect.top || clientY > rect.top + bandHeight) return false;
+    return clientX >= rect.left && clientX <= rect.right;
+  }
+
+  /** Top strip where auto-hide chrome should reveal (matches .inimark-titlebar-zone height). */
+  function pointerInTitlebarRevealBand(clientX: number, clientY: number): boolean {
+    if (!isAutoHideTitlebarEnabled()) return false;
+    const bandHeight = titlebarRevealBandHeightPx();
+    if (pointerInColumnTopBand(mainColumn.getBoundingClientRect(), clientX, clientY, bandHeight)) {
+      return true;
+    }
+    if (sidebarOpen && !sidebarHost.classList.contains("is-collapsed")) {
+      if (
+        pointerInColumnTopBand(sidebarHost.getBoundingClientRect(), clientX, clientY, bandHeight)
+      ) {
+        return true;
+      }
+    }
+    if (rightSidebarOpen && !rightSidebarHost.classList.contains("is-collapsed")) {
+      if (
+        pointerInColumnTopBand(
+          rightSidebarHost.getBoundingClientRect(),
+          clientX,
+          clientY,
+          bandHeight,
+        )
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function onDocumentPointerMove(event: PointerEvent): void {
     pointerX = event.clientX;
     pointerY = event.clientY;
-    if (!isAutoHideTitlebarEnabled() || !titlebarZone.classList.contains("is-revealed")) {
+    if (!isAutoHideTitlebarEnabled()) return;
+
+    if (pointerInTitlebarRevealBand(pointerX, pointerY)) {
+      revealTitlebarZone();
+    }
+
+    if (!titlebarZone.classList.contains("is-revealed")) {
       return;
     }
     if (pointerMoveHideTimer != null) clearTimeout(pointerMoveHideTimer);
@@ -310,6 +366,7 @@ export function mountShell(
   }
 
   function pointerOverTitlebarReveal(): boolean {
+    if (pointerInTitlebarRevealBand(pointerX, pointerY)) return true;
     const hit = elementUnderPointer();
     if (hit && isTitlebarRevealElement(hit)) return true;
     // Fallback before the first pointermove (e.g. tests).
