@@ -179,6 +179,14 @@ function posInsideListItem(view: EditorView, pos: number): boolean {
   return false;
 }
 
+function posInsideBlockquote(view: EditorView, pos: number): boolean {
+  const $pos = view.state.doc.resolve(pos);
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    if ($pos.node(depth).type.name === "blockquote") return true;
+  }
+  return false;
+}
+
 function contentBoxAt(view: EditorView, pos: number): {
   left: number;
   right: number;
@@ -216,9 +224,11 @@ function contentBoxAt(view: EditorView, pos: number): {
  * screen X and the search collapses to the line start (whole-line snap when
  * dragging up/left from a list/heading title).
  *
- * In the list/heading gutter, or in inter-block vertical gaps, probe toward
- * content so the head still tracks instead of falling through to coarse
- * `posInBlock` (whole top-level list start/end).
+ * Callouts/blockquotes are treated like body text with tall line-spacing:
+ * title chrome and vertical padding keep the same X on the content line
+ * instead of snapping to the line start. List gutters still map to the
+ * first glyph. Inter-block gaps probe toward nearby content so the head
+ * does not fall through to coarse `posInBlock`.
  */
 function posAlongLine(view: EditorView, clientX: number, clientY: number): number | null {
   const resolveHit = (x: number, y: number) => {
@@ -233,7 +243,8 @@ function posAlongLine(view: EditorView, clientX: number, clientY: number): numbe
     const editorRect = view.dom.getBoundingClientRect();
     // Prefer slight upward probes first so a drag just below a heading/list
     // line still extends within that line instead of waiting for the next block.
-    const dys = [0, -4, 4, -12, 12, -24, 24, -36, 36];
+    // Larger vertical probes cover callout title chrome / padding.
+    const dys = [0, -4, 4, -12, 12, -24, 24, -40, 40, -64, 64];
     const dxs = [0, 8, 20, 40, 64];
     outer: for (const dy of dys) {
       for (const dx of dxs) {
@@ -249,7 +260,19 @@ function posAlongLine(view: EditorView, clientX: number, clientY: number): numbe
   const box = contentBoxAt(view, hit.pos);
   if (!box) return hit.pos;
 
+  // Vertical padding / callout title row: same "tall line" — keep X, clamp Y
+  // into the content box so the head does not jump to the line start.
+  if (clientX >= box.left - 2 && (clientY < box.top || clientY > box.bottom)) {
+    const y = clientY < box.top ? box.top + 1 : box.bottom - 1;
+    const clamped = resolveHit(clientX, y);
+    if (clamped) return clamped.pos;
+  }
+
   // Pointer is over the content box (with a small left slop): trust the hit.
+  if (clientX >= box.left - 2 && clientY >= box.top - 2 && clientY <= box.bottom + 2) {
+    return hit.pos;
+  }
+
   if (clientX >= box.left - 2) return hit.pos;
 
   // True gutter hit — map to the first glyph on this line.
@@ -654,9 +677,9 @@ function applyPreciseSelection(
 }
 
 /**
- * Native Chromium drag-select through list/heading lines that start with
- * hidden markdown delims (`**…**`) — or through large heading margins —
- * snaps the head or skips the first line. Own the gesture and map by coords.
+ * Native Chromium drag-select through list/heading/callout lines — hidden
+ * markdown delims, large margins, or callout title chrome — snaps the head
+ * or skips the first line. Own the gesture and map by coords.
  * Leave double/triple-click to the browser for word/line select.
  */
 function shouldOwnPreciseSelection(view: EditorView, event: MouseEvent): boolean {
@@ -667,10 +690,11 @@ function shouldOwnPreciseSelection(view: EditorView, event: MouseEvent): boolean
   if (isInteractiveEditorTarget(target)) return false;
   if (shouldPreserveSelectionOnClick(target)) return false;
   if (isRenderedNavigablePointer(view, event)) return false;
-  if (target.closest("li, h1, h2, h3, h4, h5, h6")) return true;
+  if (target.closest("li, h1, h2, h3, h4, h5, h6, blockquote")) return true;
   const hit = view.posAtCoords({ left: event.clientX, top: event.clientY });
   if (!hit) return false;
   if (posInsideListItem(view, hit.pos)) return true;
+  if (posInsideBlockquote(view, hit.pos)) return true;
   return view.state.doc.resolve(hit.pos).parent.type.name === "heading";
 }
 

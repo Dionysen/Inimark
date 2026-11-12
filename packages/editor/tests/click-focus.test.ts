@@ -882,21 +882,22 @@ describe("click focus", () => {
       expect(view.state.selection.head).toBeGreaterThan(headingBlock.from);
       expect(view.state.selection.head).toBeLessThan(anchor);
 
-      // Drag into the gap just below the heading — still extends on/at first line,
-      // not an empty selection waiting for the second block.
+      // Drag into the gap just below the heading (slightly aside) — still maps
+      // onto the heading line instead of an empty wait for the next block.
       window.dispatchEvent(
         new MouseEvent("mousemove", {
           bubbles: true,
           cancelable: true,
-          clientX: downX,
+          clientX: contentLeft + 7 * 10 + 2,
           clientY: headingBlock.bottom + 4,
           button: 0,
           buttons: 1,
         }),
       );
       expect(view.state.selection.empty).toBe(false);
-      expect(view.state.selection.from).toBeLessThanOrEqual(anchor);
-      expect(view.state.selection.to).toBeGreaterThanOrEqual(anchor);
+      expect(view.state.selection.anchor).toBe(anchor);
+      expect(view.state.selection.head).toBeGreaterThan(anchor);
+      expect(view.state.selection.head).toBeLessThanOrEqual(headingBlock.to);
 
       // Continue into the first paragraph — selection reaches that block.
       window.dispatchEvent(
@@ -918,6 +919,114 @@ describe("click focus", () => {
           cancelable: true,
           clientX: contentLeft + 6 * 10 + 2,
           clientY: firstPara.top + 8,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
+
+  test("callout drag-select treats title chrome as tall line-spacing, not whole-line snap", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "> [!TIP]\n> This is a warning.",
+    });
+
+    try {
+      const view = editor.view;
+      const callout = view.dom.querySelector("blockquote.md-alert");
+      expect(callout).not.toBeNull();
+
+      let textFrom = 0;
+      let textTo = 0;
+      view.state.doc.descendants((node, pos) => {
+        if (!node.isTextblock) return;
+        textFrom = pos + 1;
+        textTo = pos + node.nodeSize - 1;
+        return false;
+      });
+      expect(textTo).toBeGreaterThan(textFrom + 4);
+
+      const contentTop = 70;
+      const contentBottom = 90;
+      const titleTop = 36;
+      const contentLeft = 110;
+      view.coordsAtPos = ((p: number) => {
+        const clamped = Math.max(textFrom, Math.min(textTo, p));
+        const left = contentLeft + (clamped - textFrom) * 8;
+        return { top: contentTop, bottom: contentBottom, left, right: left + 8 };
+      }) as EditorView["coordsAtPos"];
+      view.posAtCoords = ((coords: { left: number; top: number }) => {
+        // Title chrome / padding above the paragraph has no direct text hit.
+        if (coords.top < contentTop - 2 || coords.top > contentBottom + 2) return null;
+        const offset = Math.max(0, Math.round((coords.left - contentLeft) / 8));
+        return {
+          pos: Math.max(textFrom, Math.min(textTo, textFrom + offset)),
+          inside: textFrom,
+        };
+      }) as EditorView["posAtCoords"];
+      view.nodeDOM = (() => {
+        const fake = document.createElement("p");
+        fake.getBoundingClientRect = () =>
+          ({
+            top: contentTop,
+            bottom: contentBottom,
+            left: contentLeft,
+            right: contentLeft + (textTo - textFrom) * 8,
+            width: (textTo - textFrom) * 8,
+            height: contentBottom - contentTop,
+            x: contentLeft,
+            y: contentTop,
+            toJSON() {
+              return this;
+            },
+          }) as DOMRect;
+        return fake;
+      }) as EditorView["nodeDOM"];
+
+      const anchorPos = textFrom + 12;
+      const midPos = textFrom + 6;
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: contentLeft + 12 * 8 + 2,
+        clientY: contentTop + 8,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: callout });
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      const anchor = view.state.selection.anchor;
+
+      // Drag up into the Tip/Danger title chrome — keep X on the content line.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: contentLeft + 6 * 8 + 2,
+          clientY: titleTop + 4,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+
+      expect(view.state.selection.empty).toBe(false);
+      expect(view.state.selection.anchor).toBe(anchor);
+      expect(view.state.selection.head).toBeGreaterThan(textFrom);
+      expect(Math.abs(view.state.selection.head - midPos)).toBeLessThanOrEqual(2);
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: contentLeft + 6 * 8 + 2,
+          clientY: titleTop + 4,
           button: 0,
           buttons: 0,
         }),

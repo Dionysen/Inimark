@@ -1468,6 +1468,8 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
+  /* Decorative title chrome — must not steal drag-select hit-testing. */
+  pointer-events: none;
 }
 
 .ProseMirror blockquote.md-alert::after {
@@ -1479,6 +1481,7 @@ html[data-glass="true"] .cb-lang-menu.inimark-glass {
   font-size: 0.9em;
   font-weight: 700;
   line-height: 1.35;
+  pointer-events: none;
 }
 
 .ProseMirror blockquote.md-alert > * {
