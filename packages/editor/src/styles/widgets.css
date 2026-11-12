@@ -134,23 +134,37 @@
 .ProseMirror a { cursor: pointer; }
 
 /* ─── method-B syntax hints ──────────────────────────────────────── */
+/* Delims are real doc text — do not set user-select:none; that fights
+ * leftward drag-select and makes the selection endpoint jump. */
 .ProseMirror .syntax-hint {
   color: #b0b0b0;
   font-weight: normal;
   font-style: normal;
-  user-select: none;
 }
 .ProseMirror .syntax-hint-italic {
   color: #b0b0b0;
   font-style: italic;
   font-weight: normal;
-  user-select: none;
 }
 /* Delim char is present in the doc text but visually absent when the
  * cursor is outside the mark's surrounding span. PM pos still tracks
  * it; arrow keys may briefly land on a hidden delim and the char
- * becomes visible as soon as the cursor enters the span. */
-.ProseMirror .syntax-hidden { font-size: 0; }
+ * becomes visible as soon as the cursor enters the span.
+ *
+ * Do NOT use bare `font-size: 0` — Chromium remaps leftward drag-select
+ * through zero-size inline text to the line start (especially on list
+ * items that begin with hidden `**`). Clip with width:0 and keep the
+ * span out of hit-testing so native/owned selection follows the pointer. */
+.ProseMirror .syntax-hidden {
+  display: inline-block;
+  width: 0;
+  max-width: 0;
+  overflow: hidden;
+  vertical-align: baseline;
+  font-size: inherit;
+  line-height: 0;
+  pointer-events: none;
+}
 
 .typora-web-wrap.tw-focus-mode .ProseMirror .tw-focus-muted {
   opacity: 0.32;

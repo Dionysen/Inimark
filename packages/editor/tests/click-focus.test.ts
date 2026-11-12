@@ -670,4 +670,114 @@ describe("click focus", () => {
       host.remove();
     }
   });
+
+  test("list-item leftward drag-select follows pointer X instead of snapping to line start", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "- **栏杆创建**：栏杆创建时，栏杆扶手、立柱等子构件类型均为BICU_GAP_RAILING",
+    });
+
+    try {
+      const view = editor.view;
+      const li = view.dom.querySelector("li");
+      expect(li).not.toBeNull();
+
+      let textFrom = 0;
+      let textTo = 0;
+      view.state.doc.descendants((node, pos) => {
+        if (!node.isTextblock) return;
+        textFrom = pos + 1;
+        textTo = pos + node.nodeSize - 1;
+        return false;
+      });
+      expect(textTo).toBeGreaterThan(textFrom + 10);
+
+      const top = 40;
+      const bottom = 58;
+      const contentLeft = 120;
+      // Map each doc pos to a distinct screen X so leftward drag can be asserted.
+      view.coordsAtPos = ((p: number) => {
+        const clamped = Math.max(textFrom, Math.min(textTo, p));
+        const left = contentLeft + (clamped - textFrom) * 8;
+        return { top, bottom, left, right: left + 8 };
+      }) as EditorView["coordsAtPos"];
+      view.posAtCoords = ((coords: { left: number; top: number }) => {
+        if (coords.top < top - 2 || coords.top > bottom + 2) return null;
+        const offset = Math.max(0, Math.round((coords.left - contentLeft) / 8));
+        const pos = Math.max(textFrom, Math.min(textTo, textFrom + offset));
+        return { pos, inside: textFrom };
+      }) as EditorView["posAtCoords"];
+      view.nodeDOM = (() => {
+        const fake = document.createElement("p");
+        fake.getBoundingClientRect = () =>
+          ({
+            top,
+            bottom,
+            left: contentLeft,
+            right: contentLeft + (textTo - textFrom) * 8,
+            width: (textTo - textFrom) * 8,
+            height: bottom - top,
+            x: contentLeft,
+            y: top,
+            toJSON() {
+              return this;
+            },
+          }) as DOMRect;
+        return fake;
+      }) as EditorView["nodeDOM"];
+
+      const anchorPos = textFrom + 24;
+      const headPos = textFrom + 10;
+      const anchorCoords = view.coordsAtPos(anchorPos);
+      const headCoords = view.coordsAtPos(headPos);
+
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: anchorCoords.left + 2,
+        clientY: top + 4,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: li });
+
+      // List items own the drag gesture (native Chromium snaps to line start).
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      expect(view.state.selection.empty).toBe(true);
+      const anchor = view.state.selection.anchor;
+
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: headCoords.left + 2,
+          clientY: top + 4,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+
+      expect(view.state.selection.empty).toBe(false);
+      expect(view.state.selection.anchor).toBe(anchor);
+      // Head must track the pointer — not jump to the textblock/list start.
+      expect(view.state.selection.head).toBeGreaterThan(textFrom + 4);
+      expect(Math.abs(view.state.selection.head - headPos)).toBeLessThanOrEqual(2);
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: headCoords.left + 2,
+          clientY: top + 4,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
 });

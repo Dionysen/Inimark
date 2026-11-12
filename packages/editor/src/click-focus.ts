@@ -165,6 +165,92 @@ function posFromCoordsHit(view: EditorView, clientX: number, clientY: number): n
   return hit.pos;
 }
 
+function textblockRangeAt(view: EditorView, pos: number): { from: number; to: number } | null {
+  const $pos = view.state.doc.resolve(pos);
+  if (!$pos.parent.isTextblock) return null;
+  return { from: $pos.start(), to: $pos.end() };
+}
+
+function posInsideListItem(view: EditorView, pos: number): boolean {
+  const $pos = view.state.doc.resolve(pos);
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    if ($pos.node(depth).type.name === "list_item") return true;
+  }
+  return false;
+}
+
+/**
+ * Map screen coords to a doc position along the line under the pointer.
+ * Unlike `posInBlock` (Y-only → block start/end), this binary-searches by X
+ * so leftward drag-select in list items does not snap to the line start when
+ * the pointer is still over text (or only slightly into the list gutter).
+ */
+function posAlongLine(view: EditorView, clientX: number, clientY: number): number | null {
+  let hit = view.posAtCoords({ left: clientX, top: clientY });
+  if (!hit || hitIsInsideOpaqueBlock(view, hit.pos)) {
+    // List gutter / padding often misses; probe right into the content column.
+    const editorRect = view.dom.getBoundingClientRect();
+    hit = null;
+    for (const dx of [4, 12, 24, 40, 64]) {
+      const x = Math.min(clientX + dx, editorRect.right - 2);
+      const probe = view.posAtCoords({ left: x, top: clientY });
+      if (probe && !hitIsInsideOpaqueBlock(view, probe.pos)) {
+        hit = probe;
+        break;
+      }
+    }
+  }
+  if (!hit) return null;
+
+  const range = textblockRangeAt(view, hit.pos);
+  if (!range || range.from >= range.to) return hit.pos;
+
+  let contentLeft = clientX;
+  let contentRight = clientX;
+  try {
+    const $pos = view.state.doc.resolve(hit.pos);
+    const dom = view.nodeDOM($pos.before($pos.depth));
+    if (dom instanceof HTMLElement) {
+      const rect = dom.getBoundingClientRect();
+      contentLeft = rect.left;
+      contentRight = rect.right;
+    } else {
+      const start = view.coordsAtPos(range.from);
+      const end = view.coordsAtPos(range.to);
+      contentLeft = Math.min(start.left, end.left);
+      contentRight = Math.max(start.right, end.right);
+    }
+  } catch {
+    return hit.pos;
+  }
+
+  // Gutter → first glyph on this line; otherwise search within the content box.
+  const x = Math.max(contentLeft + 1, Math.min(clientX, Math.max(contentLeft + 1, contentRight - 1)));
+
+  let lo = range.from;
+  let hi = range.to;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    let coords: { left: number; top: number; bottom: number };
+    try {
+      coords = view.coordsAtPos(mid);
+    } catch {
+      break;
+    }
+    if (coords.bottom < clientY - 2) {
+      lo = mid + 1;
+      continue;
+    }
+    if (coords.top > clientY + 2) {
+      hi = mid;
+      continue;
+    }
+    if (coords.left < x) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
 /** Map a screen click to the nearest prose caret / selection position. */
 export function focusPosFromClick(
   view: EditorView,
@@ -363,7 +449,9 @@ function applyNearestSelection(view: EditorView, anchor: number, clientX: number
   // Only pass in-editor targets so host/chrome hits use Y-based nearest mapping.
   const target = el && view.dom.contains(el) ? el : null;
   const doc = view.state.doc;
-  const head = focusPosFromClick(view, x, y, target) ?? anchor;
+  // Prefer X-accurate line mapping so list-item leftward drags follow the
+  // pointer instead of snapping via posInBlock → block.from.
+  const head = posAlongLine(view, x, y) ?? focusPosFromClick(view, x, y, target) ?? anchor;
   const next =
     head === anchor
       ? TextSelection.create(doc, anchor)
@@ -519,10 +607,15 @@ function posAtPoint(
   nearest = false,
 ): number | null {
   if (!nearest) {
+    const along = posAlongLine(view, clientX, clientY);
+    if (along != null) return along;
     const hit = view.posAtCoords({ left: clientX, top: clientY });
     if (hit) return hit.pos;
   }
-  return focusPosFromClick(view, clientX, clientY, target);
+  return (
+    posAlongLine(view, clientX, clientY) ??
+    focusPosFromClick(view, clientX, clientY, target)
+  );
 }
 
 function applyPreciseSelection(
@@ -550,6 +643,24 @@ function applyPreciseSelection(
   if (!sel.eq(view.state.selection)) {
     view.dispatch(view.state.tr.setSelection(sel));
   }
+}
+
+/**
+ * Native Chromium drag-select through list items that start with hidden
+ * markdown delims (`**…**`) snaps the head to the line start. Own the
+ * gesture and map by screen X instead.
+ */
+function shouldOwnListSelection(view: EditorView, event: MouseEvent): boolean {
+  if (!view.editable || event.button !== 0) return false;
+  const target = event.target;
+  if (!(target instanceof Element)) return false;
+  if (!view.dom.contains(target)) return false;
+  if (isInteractiveEditorTarget(target)) return false;
+  if (shouldPreserveSelectionOnClick(target)) return false;
+  if (isRenderedNavigablePointer(view, event)) return false;
+  if (target.closest("li")) return true;
+  const hit = view.posAtCoords({ left: event.clientX, top: event.clientY });
+  return !!(hit && posInsideListItem(view, hit.pos));
 }
 
 /** Block PM's Ctrl/Cmd+click paragraph select; keep normal click + drag behavior. */
@@ -615,6 +726,10 @@ export function handleEditorSurfaceMouseDown(
     return startPreciseSelectionAtClick(view, event);
   }
 
+  if (shouldOwnListSelection(view, event)) {
+    return startPreciseSelectionAtClick(view, event);
+  }
+
   if (view.dom.contains(target) && !needsClickRedirect(view, event.clientX, event.clientY, target)) {
     armNativeEdgeContinuation(view, event);
     return false;
@@ -646,6 +761,9 @@ export function clickFocusPlugin(): Plugin {
         mousedown(view, event) {
           if (isRenderedNavigablePointer(view, event)) return false;
           if (shouldNeutralizeModifiedClick(view, event)) {
+            return startPreciseSelectionAtClick(view, event);
+          }
+          if (shouldOwnListSelection(view, event)) {
             return startPreciseSelectionAtClick(view, event);
           }
           if (shouldCaptureClick(view, event)) {

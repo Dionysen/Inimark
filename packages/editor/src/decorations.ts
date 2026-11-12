@@ -238,6 +238,14 @@ export function syntaxHintsPlugin(): Plugin<DecorationSet> {
   // wikilink"). Freeze the decoration set until composition ends.
   let imeDepth = 0;
 
+  // Same failure class for pointer drag-select: the first non-empty selection
+  // makes `cursor = null`, flipping visible `.syntax-hint` delims (e.g. `**`)
+  // to `.syntax-hidden` (font-size:0). Layout shifts mid-drag and Chromium
+  // remaps the live DOM selection toward the line/block start. Freeze chrome
+  // until the primary button is released, then rebuild once.
+  let pointerSelecting = false;
+  let pointerUpCleanup: (() => void) | null = null;
+
   /** Rebuild chrome after IME; collapse any leftover composition range to a caret. */
   const settleAfterIme = (view: EditorView) => {
     if (!view.dom.isConnected) return;
@@ -252,12 +260,46 @@ export function syntaxHintsPlugin(): Plugin<DecorationSet> {
     view.dispatch(tr);
   };
 
+  const refreshChrome = (view: EditorView) => {
+    if (!view.dom.isConnected) return;
+    view.dispatch(view.state.tr.setMeta(syntaxHintsKey, { refresh: true }));
+  };
+
+  const endPointerSelecting = (view: EditorView) => {
+    if (!pointerSelecting) return;
+    pointerSelecting = false;
+    pointerUpCleanup?.();
+    pointerUpCleanup = null;
+    // Rebuild after the browser has finished the native selection gesture.
+    queueMicrotask(() => refreshChrome(view));
+  };
+
+  const beginPointerSelecting = (view: EditorView) => {
+    if (pointerSelecting) return;
+    pointerSelecting = true;
+    const onUp = () => endPointerSelecting(view);
+    document.addEventListener("mouseup", onUp, true);
+    document.addEventListener("pointerup", onUp, true);
+    document.addEventListener("pointercancel", onUp, true);
+    pointerUpCleanup = () => {
+      document.removeEventListener("mouseup", onUp, true);
+      document.removeEventListener("pointerup", onUp, true);
+      document.removeEventListener("pointercancel", onUp, true);
+    };
+  };
+
   return new Plugin<DecorationSet>({
     key: syntaxHintsKey,
     state: {
       init: (_, state) => buildDecorationSet(state),
       apply: (tr, old, _oldState, newState) => {
-        if (imeDepth > 0 && !tr.getMeta(syntaxHintsKey)) return old;
+        if (tr.getMeta(syntaxHintsKey)) return buildDecorationSet(newState);
+        if (imeDepth > 0) return old;
+        if (pointerSelecting) {
+          // Selection-only drag must not rebuild chrome. Doc edits during a
+          // held button (rare) still need mapped decorations.
+          return tr.docChanged ? old.map(tr.mapping, tr.doc) : old;
+        }
         return buildDecorationSet(newState);
       },
     },
@@ -266,6 +308,17 @@ export function syntaxHintsPlugin(): Plugin<DecorationSet> {
         return syntaxHintsKey.getState(state);
       },
       handleDOMEvents: {
+        pointerdown(view, event) {
+          if (event.isPrimary && event.button === 0) {
+            beginPointerSelecting(view);
+          }
+          return false;
+        },
+        mousedown(view, event) {
+          // Some environments deliver mousedown without a prior pointerdown.
+          if (event.button === 0) beginPointerSelecting(view);
+          return false;
+        },
         compositionstart() {
           imeDepth += 1;
           return false;
@@ -279,6 +332,15 @@ export function syntaxHintsPlugin(): Plugin<DecorationSet> {
           return false;
         },
       },
+    },
+    view() {
+      return {
+        destroy() {
+          pointerUpCleanup?.();
+          pointerUpCleanup = null;
+          pointerSelecting = false;
+        },
+      };
     },
   });
 }
