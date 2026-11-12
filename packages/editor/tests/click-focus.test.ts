@@ -780,4 +780,151 @@ describe("click focus", () => {
       host.remove();
     }
   });
+
+  test("heading vertical drag-select extends on the first line and into the next", () => {
+    const host = document.createElement("div");
+    host.className = "inimark-editor-host";
+    document.body.appendChild(host);
+    const editor = createEditor(host, {
+      initialContent: "# 栏杆创建标题\n\n第一段内容在这里\n\n第二段内容在这里",
+    });
+
+    try {
+      const view = editor.view;
+      const heading = view.dom.querySelector("h1");
+      expect(heading).not.toBeNull();
+
+      const blocks: Array<{ from: number; to: number; top: number; bottom: number }> = [];
+      let pos = 0;
+      for (let i = 0; i < view.state.doc.childCount; i++) {
+        const node = view.state.doc.child(i);
+        const top = 30 + i * 40;
+        blocks.push({
+          from: pos + 1,
+          to: pos + node.nodeSize - 1,
+          top,
+          bottom: top + 28,
+        });
+        pos += node.nodeSize;
+      }
+      expect(blocks.length).toBeGreaterThanOrEqual(3);
+
+      const contentLeft = 100;
+      view.coordsAtPos = ((p: number) => {
+        const block =
+          blocks.find((b) => p >= b.from && p <= b.to) ?? blocks[blocks.length - 1]!;
+        const left = contentLeft + Math.max(0, p - block.from) * 10;
+        return { top: block.top, bottom: block.bottom, left, right: left + 10 };
+      }) as EditorView["coordsAtPos"];
+      view.posAtCoords = ((coords: { left: number; top: number }) => {
+        const block =
+          blocks.find((b) => coords.top >= b.top && coords.top <= b.bottom) ?? null;
+        if (!block) return null;
+        const offset = Math.max(0, Math.round((coords.left - contentLeft) / 10));
+        return {
+          pos: Math.max(block.from, Math.min(block.to, block.from + offset)),
+          inside: block.from,
+        };
+      }) as EditorView["posAtCoords"];
+      view.nodeDOM = ((nodePos: number) => {
+        const block =
+          blocks.find((b) => nodePos + 1 >= b.from && nodePos + 1 <= b.to) ??
+          blocks.find((b) => nodePos >= b.from - 1 && nodePos <= b.to + 1) ??
+          blocks[0]!;
+        const fake = document.createElement(block === blocks[0] ? "h1" : "p");
+        fake.getBoundingClientRect = () =>
+          ({
+            top: block.top,
+            bottom: block.bottom,
+            left: contentLeft,
+            right: contentLeft + 400,
+            width: 400,
+            height: block.bottom - block.top,
+            x: contentLeft,
+            y: block.top,
+            toJSON() {
+              return this;
+            },
+          }) as DOMRect;
+        return fake;
+      }) as EditorView["nodeDOM"];
+
+      const headingBlock = blocks[0]!;
+      const firstPara = blocks[1]!;
+      const anchorPos = headingBlock.from + 4;
+      const downX = contentLeft + 4 * 10 + 2;
+      const down = new MouseEvent("mousedown", {
+        bubbles: true,
+        cancelable: true,
+        clientX: downX,
+        clientY: headingBlock.top + 8,
+        button: 0,
+        buttons: 1,
+      });
+      Object.defineProperty(down, "target", { value: heading });
+
+      expect(handleEditorSurfaceMouseDown(view, down, host)).toBe(true);
+      const anchor = view.state.selection.anchor;
+
+      // Drag upward within the heading — must not snap to heading start.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: contentLeft + 2 * 10 + 2,
+          clientY: headingBlock.top + 6,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+      expect(view.state.selection.empty).toBe(false);
+      expect(view.state.selection.anchor).toBe(anchor);
+      expect(view.state.selection.head).toBeGreaterThan(headingBlock.from);
+      expect(view.state.selection.head).toBeLessThan(anchor);
+
+      // Drag into the gap just below the heading — still extends on/at first line,
+      // not an empty selection waiting for the second block.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: downX,
+          clientY: headingBlock.bottom + 4,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+      expect(view.state.selection.empty).toBe(false);
+      expect(view.state.selection.from).toBeLessThanOrEqual(anchor);
+      expect(view.state.selection.to).toBeGreaterThanOrEqual(anchor);
+
+      // Continue into the first paragraph — selection reaches that block.
+      window.dispatchEvent(
+        new MouseEvent("mousemove", {
+          bubbles: true,
+          cancelable: true,
+          clientX: contentLeft + 6 * 10 + 2,
+          clientY: firstPara.top + 8,
+          button: 0,
+          buttons: 1,
+        }),
+      );
+      expect(view.state.selection.head).toBeGreaterThanOrEqual(firstPara.from);
+      expect(view.state.selection.head).toBeLessThanOrEqual(firstPara.to);
+
+      window.dispatchEvent(
+        new MouseEvent("mouseup", {
+          bubbles: true,
+          cancelable: true,
+          clientX: contentLeft + 6 * 10 + 2,
+          clientY: firstPara.top + 8,
+          button: 0,
+          buttons: 0,
+        }),
+      );
+    } finally {
+      editor.destroy();
+      host.remove();
+    }
+  });
 });

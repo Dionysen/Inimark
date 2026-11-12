@@ -179,76 +179,84 @@ function posInsideListItem(view: EditorView, pos: number): boolean {
   return false;
 }
 
+function contentBoxAt(view: EditorView, pos: number): {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+} | null {
+  try {
+    const $pos = view.state.doc.resolve(pos);
+    if (!$pos.parent.isTextblock) return null;
+    const dom = view.nodeDOM($pos.before($pos.depth));
+    if (dom instanceof HTMLElement) {
+      const rect = dom.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+    }
+    const range = textblockRangeAt(view, pos);
+    if (!range) return null;
+    const start = view.coordsAtPos(range.from);
+    const end = view.coordsAtPos(range.to);
+    return {
+      left: Math.min(start.left, end.left),
+      right: Math.max(start.right, end.right),
+      top: Math.min(start.top, end.top),
+      bottom: Math.max(start.bottom, end.bottom),
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Map screen coords to a doc position along the line under the pointer.
- * Unlike `posInBlock` (Y-only → block start/end), this binary-searches by X
- * so leftward drag-select in list items does not snap to the line start when
- * the pointer is still over text (or only slightly into the list gutter).
+ * Map screen coords to a doc position for owned drag-select.
+ *
+ * Over text: trust `posAtCoords` directly. Re-binary-searching by X is unsafe
+ * around zero-width hidden delims (`**`, etc.) — many positions share one
+ * screen X and the search collapses to the line start (whole-line snap when
+ * dragging up/left from a list/heading title).
+ *
+ * In the list/heading gutter, or in inter-block vertical gaps, probe toward
+ * content so the head still tracks instead of falling through to coarse
+ * `posInBlock` (whole top-level list start/end).
  */
 function posAlongLine(view: EditorView, clientX: number, clientY: number): number | null {
-  let hit = view.posAtCoords({ left: clientX, top: clientY });
-  if (!hit || hitIsInsideOpaqueBlock(view, hit.pos)) {
-    // List gutter / padding often misses; probe right into the content column.
+  const resolveHit = (x: number, y: number) => {
+    const hit = view.posAtCoords({ left: x, top: y });
+    if (!hit || hitIsInsideOpaqueBlock(view, hit.pos)) return null;
+    return hit;
+  };
+
+  let hit = resolveHit(clientX, clientY);
+
+  if (!hit) {
     const editorRect = view.dom.getBoundingClientRect();
-    hit = null;
-    for (const dx of [4, 12, 24, 40, 64]) {
-      const x = Math.min(clientX + dx, editorRect.right - 2);
-      const probe = view.posAtCoords({ left: x, top: clientY });
-      if (probe && !hitIsInsideOpaqueBlock(view, probe.pos)) {
-        hit = probe;
-        break;
+    // Prefer slight upward probes first so a drag just below a heading/list
+    // line still extends within that line instead of waiting for the next block.
+    const dys = [0, -4, 4, -12, 12, -24, 24, -36, 36];
+    const dxs = [0, 8, 20, 40, 64];
+    outer: for (const dy of dys) {
+      for (const dx of dxs) {
+        const x = Math.min(Math.max(editorRect.left + 2, clientX + dx), editorRect.right - 2);
+        const y = clientY + dy;
+        hit = resolveHit(x, y);
+        if (hit) break outer;
       }
     }
   }
   if (!hit) return null;
 
+  const box = contentBoxAt(view, hit.pos);
+  if (!box) return hit.pos;
+
+  // Pointer is over the content box (with a small left slop): trust the hit.
+  if (clientX >= box.left - 2) return hit.pos;
+
+  // True gutter hit — map to the first glyph on this line.
+  const edge = resolveHit(box.left + 1, Math.min(Math.max(clientY, box.top + 1), box.bottom - 1));
+  if (edge) return edge.pos;
   const range = textblockRangeAt(view, hit.pos);
-  if (!range || range.from >= range.to) return hit.pos;
-
-  let contentLeft = clientX;
-  let contentRight = clientX;
-  try {
-    const $pos = view.state.doc.resolve(hit.pos);
-    const dom = view.nodeDOM($pos.before($pos.depth));
-    if (dom instanceof HTMLElement) {
-      const rect = dom.getBoundingClientRect();
-      contentLeft = rect.left;
-      contentRight = rect.right;
-    } else {
-      const start = view.coordsAtPos(range.from);
-      const end = view.coordsAtPos(range.to);
-      contentLeft = Math.min(start.left, end.left);
-      contentRight = Math.max(start.right, end.right);
-    }
-  } catch {
-    return hit.pos;
-  }
-
-  // Gutter → first glyph on this line; otherwise search within the content box.
-  const x = Math.max(contentLeft + 1, Math.min(clientX, Math.max(contentLeft + 1, contentRight - 1)));
-
-  let lo = range.from;
-  let hi = range.to;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    let coords: { left: number; top: number; bottom: number };
-    try {
-      coords = view.coordsAtPos(mid);
-    } catch {
-      break;
-    }
-    if (coords.bottom < clientY - 2) {
-      lo = mid + 1;
-      continue;
-    }
-    if (coords.top > clientY + 2) {
-      hi = mid;
-      continue;
-    }
-    if (coords.left < x) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
+  return range?.from ?? hit.pos;
 }
 
 /** Map a screen click to the nearest prose caret / selection position. */
@@ -646,21 +654,24 @@ function applyPreciseSelection(
 }
 
 /**
- * Native Chromium drag-select through list items that start with hidden
- * markdown delims (`**…**`) snaps the head to the line start. Own the
- * gesture and map by screen X instead.
+ * Native Chromium drag-select through list/heading lines that start with
+ * hidden markdown delims (`**…**`) — or through large heading margins —
+ * snaps the head or skips the first line. Own the gesture and map by coords.
+ * Leave double/triple-click to the browser for word/line select.
  */
-function shouldOwnListSelection(view: EditorView, event: MouseEvent): boolean {
-  if (!view.editable || event.button !== 0) return false;
+function shouldOwnPreciseSelection(view: EditorView, event: MouseEvent): boolean {
+  if (!view.editable || event.button !== 0 || event.detail >= 2) return false;
   const target = event.target;
   if (!(target instanceof Element)) return false;
   if (!view.dom.contains(target)) return false;
   if (isInteractiveEditorTarget(target)) return false;
   if (shouldPreserveSelectionOnClick(target)) return false;
   if (isRenderedNavigablePointer(view, event)) return false;
-  if (target.closest("li")) return true;
+  if (target.closest("li, h1, h2, h3, h4, h5, h6")) return true;
   const hit = view.posAtCoords({ left: event.clientX, top: event.clientY });
-  return !!(hit && posInsideListItem(view, hit.pos));
+  if (!hit) return false;
+  if (posInsideListItem(view, hit.pos)) return true;
+  return view.state.doc.resolve(hit.pos).parent.type.name === "heading";
 }
 
 /** Block PM's Ctrl/Cmd+click paragraph select; keep normal click + drag behavior. */
@@ -726,7 +737,7 @@ export function handleEditorSurfaceMouseDown(
     return startPreciseSelectionAtClick(view, event);
   }
 
-  if (shouldOwnListSelection(view, event)) {
+  if (shouldOwnPreciseSelection(view, event)) {
     return startPreciseSelectionAtClick(view, event);
   }
 
@@ -763,7 +774,7 @@ export function clickFocusPlugin(): Plugin {
           if (shouldNeutralizeModifiedClick(view, event)) {
             return startPreciseSelectionAtClick(view, event);
           }
-          if (shouldOwnListSelection(view, event)) {
+          if (shouldOwnPreciseSelection(view, event)) {
             return startPreciseSelectionAtClick(view, event);
           }
           if (shouldCaptureClick(view, event)) {
