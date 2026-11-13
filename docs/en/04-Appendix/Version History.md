@@ -29,6 +29,21 @@ Prefer **Latest** unless you are debugging an older build.
 
 ---
 
+## 1.1.0 — 2026-11-13
+
+**Release page:** [v1.1.0](https://github.com/Dionysen/Inimark/releases/tag/v1.1.0)
+
+### What's new
+
+- Drag-select: more reliable partial selection on list items, headings, and callouts (less whole-line snap; callout title chrome treated like tall line-spacing)
+- Syntax hints: hide delimiters without `font-size: 0` so leftward drag-select no longer jumps to the line start; freeze chrome while the pointer is held
+- Titlebar auto-hide on pointer movement, with smoother show/hide while controls stay reachable
+- Updater: download stall tracking and clearer update error handling
+- Editor checkbox interaction improvements
+- UI: consolidate corner radius into a single `--radius` token across chrome
+
+---
+
 ## 1.0.13 — 2026-10-29
 
 **Release page:** [v1.0.13](https://github.com/Dionysen/Inimark/releases/tag/v1.0.13)
